@@ -1,0 +1,19 @@
+
+Js跳转
+
+<a href="" id="hao123"></a>
+<script type="text/javascript">
+var arr = {
+'1.xxx.com': 'https://baidu.com',
+'2.xxx.com': 'http://qq.com',
+}
+var strU = arr[window.location.hostname]+window.location.pathname+window.location.search;
+hao123.href=strU;
+if(document.all){
+document.getElementById("hao123").click();
+}else {
+var e=document.createEvent("MouseEvents");
+e.initEvent("click",true,true);
+document.getElementById("hao123").dispatchEvent(e);
+}
+</script>
