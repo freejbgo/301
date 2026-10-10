@@ -136,3 +136,17 @@ cd redi-multi
 cd /home/go/src/redi-multi
 nohup go run main.go &
 ```
+
+---
+
+## 节点包与「跳转次数」统计
+
+主控域名列表的 **跳转次数**（`skip_num`）由节点在 `GET /api.js?d=...` 时写库。本仓库 `node/` 下三个包对比如下：
+
+| 文件 | 是否递增 `skip_num` | 说明 |
+|------|---------------------|------|
+| `redi-multi.tar.gz` | **是** | `api/api.go` 中查询跳转后执行 `UPDATE ... skip_num=skip_num+1` |
+| `redi-multi_Yk7RxC.tar.zip` | **是** | 与上同为标准节点（内层 tar 代码一致） |
+| `redi-multi-mysql版.zip` | **否** | 仅查询跳转 URL，**不更新** `skip_num`，不适合需要统计的场景 |
+
+需要点击/跳转统计时，请部署 **redi-multi.tar.gz** 或 **redi-multi_Yk7RxC.tar.zip**，并确保节点 `mysqlconnect` 连接的是主控同一库 `redi_admin`。

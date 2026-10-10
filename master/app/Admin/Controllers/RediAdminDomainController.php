@@ -10,10 +10,11 @@ use Dcat\Admin\Http\Controllers\AdminController;
 use Dcat\Admin\Widgets\Dropdown;
 use Illuminate\Support\Facades\DB;
 use Dcat\Admin\Admin;
-use App\Models\RediAdminDomain as RediAdminGroup;
 use Dcat\Admin\Layout\Content;
-
 use App\Admin\Actions\Modal\memberModal;
+use App\Admin\Actions\Exports\DomainImportTemplateExport;
+use App\Services\DomainRecordNormalizer;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 class RediAdminDomainController extends AdminController
@@ -41,8 +42,8 @@ class RediAdminDomainController extends AdminController
             $grid->model()->with(['group']);
 
             $grid->column('id')->sortable();
-            $grid->column('group_id', '分组名称')->display(function ($groupId){
-                return ($this->group)->name;
+            $grid->column('group_id', '分组名称')->display(function () {
+                return $this->group?->name ?? '（分组不存在）';
             });
             $grid->column('original_url', '原始域名');
             $grid->column('skip_url', '跳转地址');
@@ -120,16 +121,26 @@ class RediAdminDomainController extends AdminController
 
             $form->saving(function (Form $form) {
                 $request = request()->all();
-                $form->input('original_url', preg_replace('#^https?://#', '', rtrim($request['original_url'],'/')));
-
-                if ( count(explode('://', $request['skip_url']))>1 ){
-                    $skip_url = $request['skip_url'];
-                }else{
-                    $skip_url = 'http://'.$request['skip_url'];
-                }
-
-                $form->input('skip_url', $skip_url);
+                $form->input(
+                    'original_url',
+                    DomainRecordNormalizer::normalizeOriginalUrl($request['original_url'] ?? '')
+                );
+                $form->input(
+                    'skip_url',
+                    DomainRecordNormalizer::normalizeSkipUrl($request['skip_url'] ?? '')
+                );
             });
         });
+    }
+
+    /**
+     * 下载批量导入 Excel 模板
+     */
+    public function importTemplate()
+    {
+        return Excel::download(
+            new DomainImportTemplateExport(),
+            'domain-import-template.xlsx'
+        );
     }
 }

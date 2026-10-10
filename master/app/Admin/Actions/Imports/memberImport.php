@@ -6,6 +6,9 @@ use App\Models\Member;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 
+/**
+ * @deprecated 请使用 DomainImport（多租户校验、URL 规范化、模板下载）
+ */
 class memberImport implements ToModel, WithStartRow
 {
     /**
