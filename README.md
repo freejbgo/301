@@ -2,11 +2,11 @@
 
 ## 主控安装包
 
-`301.tar.gz`（约 35MB）因超过 GitHub 网页单文件 25MB 限制，通过 **Release** 分发：
+主控安装包 `301.tar.gz`（约 32MB）：
 
-- 发布页：<https://github.com/freejbgo/301/releases/tag/301master>
-- 最新 Release：<https://github.com/freejbgo/301/releases/latest>
-- 直接下载：<https://github.com/freejbgo/301/releases/download/301master/301.tar.gz>
+- 仓库内：`master/301.tar.gz`（克隆仓库即可；`git push` 上传，网页 Upload 仍受 25MB 限制）
+- Release：<https://github.com/freejbgo/301/releases/tag/301master>
+- 直链下载：<https://github.com/freejbgo/301/releases/download/301master/301.tar.gz>
 
 ## 目录说明
 
