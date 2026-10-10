@@ -1,5 +1,8 @@
 # CentOS 7.x 部署：1 台主控 + 1～5 台节点（无宝塔）
 
+**占位 IP 逐步示例（1.2.3.4 主控 + 5.6.7.8 节点）** → [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)  
+**批量节点授权** → 复制 [scripts/centos7/vars.example.env](scripts/centos7/vars.example.env) 为 `vars.env`，执行 `grant-nodes-from-vars.sh`。
+
 节点数量不固定时：**每增加一台节点，重复文末「新增节点」三步**即可。
 
 假设：
