@@ -2,9 +2,11 @@
 
 namespace App\Admin\Forms;
 
-use Dcat\Admin\Widgets\Form;
-use Dcat\Admin\Traits\LazyWidget;
+use App\Services\DomainRecordNormalizer;
+use Dcat\Admin\Admin;
 use Dcat\Admin\Contracts\LazyRenderable;
+use Dcat\Admin\Traits\LazyWidget;
+use Dcat\Admin\Widgets\Form;
 use Illuminate\Support\Facades\DB;
 
 class UrlSetByGroup extends Form implements LazyRenderable
@@ -23,14 +25,30 @@ class UrlSetByGroup extends Form implements LazyRenderable
 
         // return $this->response()->error('Your error message.');
 
-        if(empty($input['id'])){
+        $groupId = (int) ($input['id'] ?? 0);
+        $adminId = (int) Admin::user()->id;
+        $skipUrl = DomainRecordNormalizer::normalizeSkipUrl($input['skip_url'] ?? '');
+
+        if ($groupId <= 0) {
             return $this->response()->error('分组id异常');
         }
-        if(empty($input['skip_url'])){
+        if ($skipUrl === '') {
             return $this->response()->error('跳转链接异常');
         }
 
-        $ret = DB::table("redi_admin_domain")->where('group_id', $input['id'])->update(['skip_url'=>$input['skip_url']]);
+        $ownsGroup = DB::table('redi_admin_group')
+            ->where('id', $groupId)
+            ->where('admin_id', $adminId)
+            ->exists();
+
+        if (! $ownsGroup) {
+            return $this->response()->error('分组无效或不属于当前账号');
+        }
+
+        DB::table('redi_admin_domain')
+            ->where('group_id', $groupId)
+            ->where('admin_id', $adminId)
+            ->update(['skip_url' => $skipUrl]);
 
         return $this
 				->response()

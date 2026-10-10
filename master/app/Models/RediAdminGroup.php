@@ -2,14 +2,23 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToAdminTenant;
 use Dcat\Admin\Traits\HasDateTimeFormatter;
-
 use Illuminate\Database\Eloquent\Model;
 
 class RediAdminGroup extends Model
 {
-	use HasDateTimeFormatter;
+    use BelongsToAdminTenant;
+    use HasDateTimeFormatter;
+
     protected $table = 'redi_admin_group';
+
+    protected $fillable = [
+        'name',
+        'status',
+        'admin_id',
+        'admin_name',
+    ];
 
     protected static function booted(): void
     {

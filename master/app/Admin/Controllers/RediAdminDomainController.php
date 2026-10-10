@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\DB;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Layout\Content;
 use App\Admin\Actions\Modal\BatchDomainModal;
+use App\Models\RediAdminGroup;
 use App\Services\DomainRecordNormalizer;
+use Illuminate\Validation\ValidationException;
 
 
 class RediAdminDomainController extends AdminController
@@ -110,22 +112,55 @@ class RediAdminDomainController extends AdminController
             $form->text('original_url', '原始域名');
             $form->text('skip_url', '跳转链接');
             $form->radio('status', '状态')->options([1=>'启用', 2=>'停用'])->default(1);
-            $form->hidden('admin_id')->value(Admin::user()->id);
-            $form->hidden('admin_name')->value(Admin::user()->username);
+            if ($form->isCreating()) {
+                $form->hidden('admin_id')->value(Admin::user()->id);
+                $form->hidden('admin_name')->value(Admin::user()->username);
+            }
 
             $form->display('created_at');
             $form->display('updated_at');
 
             $form->saving(function (Form $form) {
                 $request = request()->all();
-                $form->input(
-                    'original_url',
-                    DomainRecordNormalizer::normalizeOriginalUrl($request['original_url'] ?? '')
-                );
-                $form->input(
-                    'skip_url',
-                    DomainRecordNormalizer::normalizeSkipUrl($request['skip_url'] ?? '')
-                );
+                $adminId = (int) Admin::user()->id;
+
+                $originalUrl = DomainRecordNormalizer::normalizeOriginalUrl($request['original_url'] ?? '');
+                $skipUrl = DomainRecordNormalizer::normalizeSkipUrl($request['skip_url'] ?? '');
+                $groupId = (int) ($request['group_id'] ?? 0);
+
+                if ($originalUrl === '' || $skipUrl === '') {
+                    throw ValidationException::withMessages([
+                        'original_url' => '原始域名与跳转链接不能为空',
+                    ]);
+                }
+
+                $groupOk = RediAdminGroup::query()
+                    ->where('admin_id', $adminId)
+                    ->where('id', $groupId)
+                    ->exists();
+
+                if (! $groupOk) {
+                    throw ValidationException::withMessages([
+                        'group_id' => '分组无效或不属于当前账号',
+                    ]);
+                }
+
+                if ($form->isCreating()) {
+                    $duplicate = \App\Models\RediAdminDomain::query()
+                        ->where('admin_id', $adminId)
+                        ->where('original_url', $originalUrl)
+                        ->exists();
+                    if ($duplicate) {
+                        throw ValidationException::withMessages([
+                            'original_url' => '该原始域名已存在',
+                        ]);
+                    }
+                    $form->input('admin_id', $adminId);
+                    $form->input('admin_name', Admin::user()->username);
+                }
+
+                $form->input('original_url', $originalUrl);
+                $form->input('skip_url', $skipUrl);
             });
         });
     }
