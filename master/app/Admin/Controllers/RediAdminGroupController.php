@@ -89,19 +89,6 @@ class RediAdminGroupController extends AdminController
 
             $form->display('created_at');
             $form->display('updated_at');
-
-            $form->deleting(function (Form $form) {
-
-                // 获取待删除行数据，这里获取的是一个二维数组
-                $data = $form->model()->toArray();
-
-                if ($status = 1) {
-                    return $form->response()->error('分组不为空');
-                } else {
-                    
-                }
-
-            });
         });
     }
 }
