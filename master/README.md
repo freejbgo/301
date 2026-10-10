@@ -27,7 +27,7 @@
 
 超级管理员登录后：**站点配置 → 系统外观**，可修改 Logo、系统名称、浏览器标题、登录框标题、Favicon。设置保存在 `admin_settings` 表；上传图片需已执行 `php artisan storage:link`。
 
-后台底部版权栏已默认隐藏。
+后台布局已覆盖 Dcat 默认页脚，**不再显示**「Powered by Dcat Admin」等版权行（历史上有人曾在 vendor 里改成 BestOneCDN / Viikin 等字样，全新部署不会带上这些）。
 
 ---
 
