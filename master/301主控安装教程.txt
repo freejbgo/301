@@ -1,5 +1,9 @@
 301主控安装：
 
+【安装包下载】301.tar.gz 见 GitHub Release（勿在仓库 master 目录找压缩包）：
+https://github.com/freejbgo/301/releases/tag/301master
+直接下载：https://github.com/freejbgo/301/releases/download/301master/301.tar.gz
+
 1、bt安装 apache mysql5.6 php7.4
 
 2、网站设置 运行目录设置为public，重定向：login301到301login/admin
