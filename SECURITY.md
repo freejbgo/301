@@ -1,30 +1,29 @@
-# 301 系统安全与运营检查清单
+# 301 系统安全说明
 
-对外运营前请逐项确认（主控 `master/`、节点 `node/redi-multi/`、库 `db/redi_admin.sql`）。
+**新手请先看 [DEPLOY.md](DEPLOY.md)**，按步骤部署即可。
 
-## 必做（上线前）
+## 已在代码/库里做好的事
 
-1. **修改所有默认密码**：导入 `db/redi_admin.sql` 后，在后台重置 `admin_users` 账号密码；不要使用仓库 dump 中的 bcrypt 哈希对应弱口令。
-2. **节点数据库连接**：通过环境变量配置，勿使用历史压缩包内硬编码密码（已改为 `REDI_DB_*`）。MySQL 仅允许主控/节点内网 IP 访问 `3306`。
-3. **删除/忽略敏感文件**：勿提交 `.env`、`.env.swp`、真实 `config.json` 生产 IP；`master/.env` 设置 `APP_DEBUG=false` 并生成 `APP_KEY`。
-4. **HTTPS**：主控后台与对外域名启用 TLS；节点跳转脚本尽量走 HTTPS，降低脚本被篡改风险。
-5. **多租户**：已为主控域名/分组模型增加 `admin_id` 全局作用域；批量改跳转已校验分组归属。仍建议为每个客户使用独立后台账号并配置 Dcat 角色权限。
+- 数据库 `redi_admin.sql`：单管理员 `admin`、默认密码见 DEPLOY.md；域名表 **唯一索引** `(admin_id, original_url)`。
+- 主控：多租户隔离、跳转 URL 仅允许 `http/https`、`.env.example` 默认 `APP_DEBUG=false`。
+- 节点：`REDI_DB_*` 环境变量；`status=1` 才跳转计数；`api.js` JSON 输出 + 按 IP 限速；**不再清空整表 iptables OUTPUT**。
+- `composer.json` 已恢复 Laravel 8 + Dcat Admin 依赖声明，部署时执行 `composer install`。
 
-## 架构风险（需运维配合）
+## 你必须在服务器上完成的
 
-| 风险 | 说明 | 建议 |
-|------|------|------|
-| 节点直连 MySQL | 边缘节点可读改 `redi_admin_domain` | 防火墙白名单；DB 账号最小权限（仅必要表 UPDATE/SELECT） |
-| `/api.js` 无鉴权 | 任何人可查询某 host 的跳转目标 | 内网监听、限速、或改为主控 API + 签名 |
-| 跳转 URL 写入 JS | 恶意 `skip_url` 可能影响访客 | 主控校验 URL；节点侧应对输出做 JSON 编码（后续可增强） |
-| `skip_num` 刷量 | 对 `/api.js` 重复请求可抬高统计 | 已要求 `status=1` 才计数；可加 WAF/限速 |
+1. **修改所有默认密码**（后台 admin、MySQL、`.env` 的 `DB_PASSWORD`）。
+2. **MySQL 不对公网开放 3306**（见 `db/mysql_setup.example.sql` 仅内网/本机授权示例）。
+3. **主控启用 HTTPS**（`ADMIN_HTTPS=true` 且证书配置正确）。
+4. **防火墙** 只开放业务端口。
 
-## 数据库
+## 架构说明（已知限制）
 
-- 建议增加唯一索引：`UNIQUE(admin_id, original_url)`，避免重复域名（可执行 `db/patches/001_unique_domain_per_tenant.sql`）。
-- 定期备份 `redi_admin`；勿将含真实用户数据的 dump 提交到公开仓库。
+| 项 | 现状 | 建议 |
+|----|------|------|
+| 节点直连 MySQL | 仍为当前架构，便于部署 | DB 账号最小权限；IP 白名单；长期可改主控 API |
+| `/api.js` 无登录 | 跳转业务需要可被浏览器访问 | 防火墙 + 限速（已部分实现） |
+| `lagran` | 需 root/CAP_NET_ADMIN | 仅在跳转节点启用；评估是否必须 |
 
-## 依赖与版本
+## 依赖
 
-- 主控基于 Laravel 8 + Dcat Admin，计划升级 PHP/Laravel 并锁定完整 `composer.lock`。
-- 节点发布：以 `node/redi-multi/` 源码为准重新 `go build`，勿混用压缩包内多个不一致二进制。
+主控目录执行：`composer install --no-dev`（需 PHP 7.3+ 与 composer）。不要用仓库里残留的残缺 `vendor` 代替完整安装。

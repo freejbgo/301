@@ -9,6 +9,7 @@ import (
 var (
 	Debug              bool
 	Addr               string
+	ApiListen          string
 	ServerIp           string
 	DefaultRedirectUrl string
 	Redirector         map[string]interface{}
@@ -27,6 +28,9 @@ func Init() {
 	}
 	Debug = payload["debug"].(bool)
 	Addr = payload["addr"].(string)
+	if v, ok := payload["api_listen"].(string); ok {
+		ApiListen = v
+	}
 	ServerIp = payload["server_ip"].(string)
 	DefaultRedirectUrl = payload["default_redirect_url"].(string)
 	Redirector = payload["redirector"].(map[string]interface{})

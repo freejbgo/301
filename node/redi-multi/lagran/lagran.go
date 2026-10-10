@@ -84,10 +84,7 @@ func setIptable(sport string) {
 		logrus.Errorf("[lagran] Iptabels new error:%v\n", err)
 	}
 
-	logrus.Infoln("⇨ starting to clear iptables OUTPUT chain.")
-	if err := ipt.ClearChain("filter", "OUTPUT"); err != nil {
-		logrus.Errorln("[lagran] failed to clear iptables OUTPUT chain.")
-	}
+	// 仅追加本程序所需 NFQUEUE 规则，不再清空整个 OUTPUT 链，避免影响服务器其它出站策略
 	if config.Lagran["syn_ack"].(bool) {
 		err = ipt.AppendUnique("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "SYN,ACK", "-j", "NFQUEUE", "--queue-balance", "1000:1127")
 		if err != nil {

@@ -1,8 +1,9 @@
 {
   "debug": false,
   "addr": "0.0.0.0:80",
-  "server_ip": "23.91.96.174",
-  "default_redirect_url": "https://www.baidu.com",
+  "api_listen": "0.0.0.0:8080",
+  "server_ip": "YOUR_NODE_PUBLIC_IP",
+  "default_redirect_url": "https://www.example.com",
   "lagran": {
     "port": "80",
     "syn_ack": true,
