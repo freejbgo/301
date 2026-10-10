@@ -104,7 +104,7 @@ CREATE TABLE `admin_menu` (
 
 LOCK TABLES `admin_menu` WRITE;
 /*!40000 ALTER TABLE `admin_menu` DISABLE KEYS */;
-INSERT INTO `admin_menu` VALUES (1,0,1,'Index','feather icon-bar-chart-2','/domain','',0,'2023-02-22 00:32:10','2023-04-11 05:42:08'),(2,0,5,'Admin','feather icon-settings',NULL,'',1,'2023-02-22 00:32:10','2023-04-11 02:33:32'),(3,2,6,'Users',NULL,'auth/users','',1,'2023-02-22 00:32:10','2023-04-11 02:27:59'),(4,2,7,'Roles',NULL,'auth/roles','',1,'2023-02-22 00:32:10','2023-04-11 02:28:08'),(5,2,8,'Permission',NULL,'auth/permissions','',1,'2023-02-22 00:32:10','2023-04-11 02:28:16'),(6,2,9,'Menu',NULL,'auth/menu','',1,'2023-02-22 00:32:10','2023-04-11 02:28:23'),(7,2,10,'Extensions',NULL,'auth/extensions','',1,'2023-02-22 00:32:10','2023-04-11 02:28:30'),(8,0,2,'站点配置','fa-desktop',NULL,'',1,'2023-02-26 08:21:11','2023-02-26 08:23:03'),(9,8,3,'分组管理',NULL,'group','',1,'2023-02-26 08:22:50','2023-04-06 00:25:45'),(10,8,4,'域名管理',NULL,'domain','',1,'2023-02-27 02:06:08','2023-04-06 00:25:53'),(11,8,5,'系统外观','fa-paint-brush','platform-settings','',1,'2026-03-28 00:00:00','2026-03-28 00:00:00');
+INSERT INTO `admin_menu` VALUES (1,0,1,'Index','feather icon-bar-chart-2','/domain','',0,'2023-02-22 00:32:10','2023-04-11 05:42:08'),(2,0,5,'Admin','feather icon-settings',NULL,'',1,'2023-02-22 00:32:10','2023-04-11 02:33:32'),(3,2,6,'Users',NULL,'auth/users','',1,'2023-02-22 00:32:10','2023-04-11 02:27:59'),(4,2,7,'Roles',NULL,'auth/roles','',1,'2023-02-22 00:32:10','2023-04-11 02:28:08'),(5,2,8,'Permission',NULL,'auth/permissions','',1,'2023-02-22 00:32:10','2023-04-11 02:28:16'),(6,2,9,'Menu',NULL,'auth/menu','',1,'2023-02-22 00:32:10','2023-04-11 02:28:23'),(7,2,10,'Extensions',NULL,'auth/extensions','',1,'2023-02-22 00:32:10','2023-04-11 02:28:30'),(8,0,2,'站点配置','fa-desktop',NULL,'',1,'2023-02-26 08:21:11','2023-02-26 08:23:03'),(9,8,3,'分组管理',NULL,'group','',1,'2023-02-26 08:22:50','2023-04-06 00:25:45'),(10,8,4,'域名管理',NULL,'domain','',1,'2023-02-27 02:06:08','2023-04-06 00:25:53'),(11,8,5,'系统外观','fa-paint-brush','platform-settings','',1,'2026-03-28 00:00:00','2026-03-28 00:00:00'),(12,8,6,'DNS与节点池','fa-globe','platform-dns','',1,'2026-03-28 12:00:00','2026-03-28 12:00:00'),(13,8,7,'节点管理','fa-server','nodes','',1,'2026-03-28 12:00:00','2026-03-28 12:00:00');
 /*!40000 ALTER TABLE `admin_menu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -130,7 +130,7 @@ CREATE TABLE `admin_permission_menu` (
 
 LOCK TABLES `admin_permission_menu` WRITE;
 /*!40000 ALTER TABLE `admin_permission_menu` DISABLE KEYS */;
-INSERT INTO `admin_permission_menu` VALUES (2,3,'2023-04-11 02:27:59','2023-04-11 02:27:59'),(3,4,'2023-04-11 02:28:08','2023-04-11 02:28:08'),(4,5,'2023-04-11 02:28:16','2023-04-11 02:28:16'),(5,6,'2023-04-11 02:28:23','2023-04-11 02:28:23'),(6,7,'2023-04-11 02:28:30','2023-04-11 02:28:30'),(7,8,'2023-04-06 00:27:11','2023-04-06 00:27:11'),(7,9,'2023-04-11 02:27:42','2023-04-11 02:27:42'),(7,10,'2023-04-11 02:27:28','2023-04-11 02:27:28'),(8,9,'2023-04-06 00:27:33','2023-04-06 00:27:33'),(9,10,'2023-04-06 00:28:15','2023-04-06 00:28:15'),(10,11,'2026-03-28 00:00:00','2026-03-28 00:00:00');
+INSERT INTO `admin_permission_menu` VALUES (2,3,'2023-04-11 02:27:59','2023-04-11 02:27:59'),(3,4,'2023-04-11 02:28:08','2023-04-11 02:28:08'),(4,5,'2023-04-11 02:28:16','2023-04-11 02:28:16'),(5,6,'2023-04-11 02:28:23','2023-04-11 02:28:23'),(6,7,'2023-04-11 02:28:30','2023-04-11 02:28:30'),(7,8,'2023-04-06 00:27:11','2023-04-06 00:27:11'),(7,9,'2023-04-11 02:27:42','2023-04-11 02:27:42'),(7,10,'2023-04-11 02:27:28','2023-04-11 02:27:28'),(8,9,'2023-04-06 00:27:33','2023-04-06 00:27:33'),(9,10,'2023-04-06 00:28:15','2023-04-06 00:28:15'),(10,11,'2026-03-28 00:00:00','2026-03-28 00:00:00'),(11,12,'2026-03-28 12:00:00','2026-03-28 12:00:00'),(12,13,'2026-03-28 12:00:00','2026-03-28 12:00:00');
 /*!40000 ALTER TABLE `admin_permission_menu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -162,7 +162,7 @@ CREATE TABLE `admin_permissions` (
 
 LOCK TABLES `admin_permissions` WRITE;
 /*!40000 ALTER TABLE `admin_permissions` DISABLE KEYS */;
-INSERT INTO `admin_permissions` VALUES (1,'Auth management','auth-management','','',1,0,'2023-02-22 00:32:10',NULL),(2,'Users','users','','/auth/users*',2,1,'2023-02-22 00:32:10',NULL),(3,'Roles','roles','','/auth/roles*',3,1,'2023-02-22 00:32:10',NULL),(4,'Permissions','permissions','','/auth/permissions*',4,1,'2023-02-22 00:32:10',NULL),(5,'Menu','menu','','/auth/menu*',5,1,'2023-02-22 00:32:10',NULL),(6,'Extension','extension','','/auth/extensions*',6,1,'2023-02-22 00:32:10',NULL),(7,'UrlSkip','UrlSkip','','',7,0,'2023-04-06 00:27:11','2023-04-06 00:27:11'),(8,'group','group','','/group*',8,7,'2023-04-06 00:27:33','2023-04-11 02:31:12'),(9,'domain','domain','','/domain*',9,7,'2023-04-06 00:28:15','2023-04-11 02:31:20'),(10,'Platform branding','platform-branding','','/platform-settings*',10,7,'2026-03-28 00:00:00','2026-03-28 00:00:00');
+INSERT INTO `admin_permissions` VALUES (1,'Auth management','auth-management','','',1,0,'2023-02-22 00:32:10',NULL),(2,'Users','users','','/auth/users*',2,1,'2023-02-22 00:32:10',NULL),(3,'Roles','roles','','/auth/roles*',3,1,'2023-02-22 00:32:10',NULL),(4,'Permissions','permissions','','/auth/permissions*',4,1,'2023-02-22 00:32:10',NULL),(5,'Menu','menu','','/auth/menu*',5,1,'2023-02-22 00:32:10',NULL),(6,'Extension','extension','','/auth/extensions*',6,1,'2023-02-22 00:32:10',NULL),(7,'UrlSkip','UrlSkip','','',7,0,'2023-04-06 00:27:11','2023-04-06 00:27:11'),(8,'group','group','','/group*',8,7,'2023-04-06 00:27:33','2023-04-11 02:31:12'),(9,'domain','domain','','/domain*',9,7,'2023-04-06 00:28:15','2023-04-11 02:31:20'),(10,'Platform branding','platform-branding','','/platform-settings*',10,7,'2026-03-28 00:00:00','2026-03-28 00:00:00'),(11,'Platform DNS','platform-dns','','/platform-dns*',11,7,'2026-03-28 12:00:00','2026-03-28 12:00:00'),(12,'Nodes','nodes','','/nodes*',12,7,'2026-03-28 12:00:00','2026-03-28 12:00:00');
 /*!40000 ALTER TABLE `admin_permissions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -188,7 +188,7 @@ CREATE TABLE `admin_role_menu` (
 
 LOCK TABLES `admin_role_menu` WRITE;
 /*!40000 ALTER TABLE `admin_role_menu` DISABLE KEYS */;
-INSERT INTO `admin_role_menu` VALUES (1,2,'2023-04-11 02:33:32','2023-04-11 02:33:32'),(1,3,'2023-04-11 02:27:59','2023-04-11 02:27:59'),(1,4,'2023-04-11 02:28:08','2023-04-11 02:28:08'),(1,5,'2023-04-11 02:28:16','2023-04-11 02:28:16'),(1,6,'2023-04-11 02:28:23','2023-04-11 02:28:23'),(1,7,'2023-04-11 02:28:30','2023-04-11 02:28:30'),(1,8,'2023-04-06 00:21:34','2023-04-06 00:21:34'),(1,9,'2023-04-06 00:21:14','2023-04-06 00:21:14'),(1,10,'2023-04-06 00:21:21','2023-04-06 00:21:21'),(1,11,'2026-03-28 00:00:00','2026-03-28 00:00:00'),(2,8,'2023-04-11 02:33:41','2023-04-11 02:33:41'),(2,9,'2023-03-29 04:25:29','2023-03-29 04:25:29'),(2,10,'2023-03-29 04:25:29','2023-03-29 04:25:29'),(3,8,'2023-04-11 02:33:41','2023-04-11 02:33:41'),(3,9,'2023-04-06 00:22:53','2023-04-06 00:22:53'),(3,10,'2023-04-06 00:22:53','2023-04-06 00:22:53');
+INSERT INTO `admin_role_menu` VALUES (1,2,'2023-04-11 02:33:32','2023-04-11 02:33:32'),(1,3,'2023-04-11 02:27:59','2023-04-11 02:27:59'),(1,4,'2023-04-11 02:28:08','2023-04-11 02:28:08'),(1,5,'2023-04-11 02:28:16','2023-04-11 02:28:16'),(1,6,'2023-04-11 02:28:23','2023-04-11 02:28:23'),(1,7,'2023-04-11 02:28:30','2023-04-11 02:28:30'),(1,8,'2023-04-06 00:21:34','2023-04-06 00:21:34'),(1,9,'2023-04-06 00:21:14','2023-04-06 00:21:14'),(1,10,'2023-04-06 00:21:21','2023-04-06 00:21:21'),(1,11,'2026-03-28 00:00:00','2026-03-28 00:00:00'),(1,12,'2026-03-28 12:00:00','2026-03-28 12:00:00'),(1,13,'2026-03-28 12:00:00','2026-03-28 12:00:00'),(2,8,'2023-04-11 02:33:41','2023-04-11 02:33:41'),(2,9,'2023-03-29 04:25:29','2023-03-29 04:25:29'),(2,10,'2023-03-29 04:25:29','2023-03-29 04:25:29'),(3,8,'2023-04-11 02:33:41','2023-04-11 02:33:41'),(3,9,'2023-04-06 00:22:53','2023-04-06 00:22:53'),(3,10,'2023-04-06 00:22:53','2023-04-06 00:22:53');
 /*!40000 ALTER TABLE `admin_role_menu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -214,7 +214,7 @@ CREATE TABLE `admin_role_permissions` (
 
 LOCK TABLES `admin_role_permissions` WRITE;
 /*!40000 ALTER TABLE `admin_role_permissions` DISABLE KEYS */;
-INSERT INTO `admin_role_permissions` VALUES (1,10,'2026-03-28 00:00:00','2026-03-28 00:00:00'),(2,8,'2023-04-11 03:57:48','2023-04-11 03:57:48'),(2,9,'2023-04-11 03:57:48','2023-04-11 03:57:48'),(3,8,'2023-04-06 00:28:29','2023-04-06 00:28:29'),(3,9,'2023-04-06 00:28:29','2023-04-06 00:28:29');
+INSERT INTO `admin_role_permissions` VALUES (1,10,'2026-03-28 00:00:00','2026-03-28 00:00:00'),(1,11,'2026-03-28 12:00:00','2026-03-28 12:00:00'),(1,12,'2026-03-28 12:00:00','2026-03-28 12:00:00'),(2,8,'2023-04-11 03:57:48','2023-04-11 03:57:48'),(2,9,'2023-04-11 03:57:48','2023-04-11 03:57:48'),(3,8,'2023-04-06 00:28:29','2023-04-06 00:28:29'),(3,9,'2023-04-06 00:28:29','2023-04-06 00:28:29');
 /*!40000 ALTER TABLE `admin_role_permissions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -410,6 +410,128 @@ LOCK TABLES `personal_access_tokens` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `redi_platform_dns`
+--
+
+DROP TABLE IF EXISTS `redi_platform_dns`;
+CREATE TABLE `redi_platform_dns` (
+  `id` tinyint(3) unsigned NOT NULL,
+  `edge_zone` varchar(255) NOT NULL DEFAULT '',
+  `pool_host` varchar(63) NOT NULL DEFAULT 'pool',
+  `dns_mode` varchar(16) NOT NULL DEFAULT 'manual',
+  `dns_driver` varchar(32) NOT NULL DEFAULT 'manual',
+  `api_credentials` text,
+  `dns_zone_id` varchar(128) DEFAULT NULL,
+  `acme_contact_email` varchar(255) DEFAULT NULL,
+  `acme_staging` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `redi_platform_dns` VALUES (1,'','pool','manual','manual',NULL,NULL,NULL,0,NOW(),NOW());
+
+DROP TABLE IF EXISTS `redi_acme_challenges`;
+CREATE TABLE `redi_acme_challenges` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `domain_name` varchar(255) NOT NULL,
+  `token` varchar(128) NOT NULL,
+  `response_body` text NOT NULL,
+  `expires_at` timestamp NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `redi_acme_challenges_domain_name_unique` (`domain_name`),
+  KEY `redi_acme_challenges_expires_at_index` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `jobs`;
+CREATE TABLE `jobs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `queue` varchar(255) NOT NULL,
+  `payload` longtext NOT NULL,
+  `attempts` tinyint(3) unsigned NOT NULL,
+  `reserved_at` int(10) unsigned DEFAULT NULL,
+  `available_at` int(10) unsigned NOT NULL,
+  `created_at` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `jobs_queue_index` (`queue`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `redi_nodes`;
+CREATE TABLE `redi_nodes` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `public_ip` varchar(45) NOT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `api_token_hash` varchar(255) DEFAULT NULL,
+  `last_heartbeat_at` timestamp NULL DEFAULT NULL,
+  `agent_version` varchar(32) DEFAULT NULL,
+  `note` text,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `redi_nodes_public_ip_unique` (`public_ip`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `redi_tenant_edge`;
+CREATE TABLE `redi_tenant_edge` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `admin_id` int(10) unsigned NOT NULL,
+  `token` varchar(32) NOT NULL,
+  `edge_fqdn` varchar(255) NOT NULL,
+  `dns_synced_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `redi_tenant_edge_admin_id_unique` (`admin_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `redi_domain_certs`;
+CREATE TABLE `redi_domain_certs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `domain_id` int(10) unsigned NOT NULL,
+  `admin_id` int(10) unsigned NOT NULL,
+  `domain_name` varchar(255) NOT NULL,
+  `status` varchar(32) NOT NULL DEFAULT 'none',
+  `method` varchar(16) NOT NULL DEFAULT 'http-01',
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `certificate` text,
+  `private_key` text,
+  `last_error` text,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `redi_domain_certs_domain_id_unique` (`domain_id`),
+  KEY `redi_domain_certs_admin_id_status_index` (`admin_id`,`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `redi_cert_deployments`;
+CREATE TABLE `redi_cert_deployments` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `cert_id` int(10) unsigned NOT NULL,
+  `node_id` int(10) unsigned NOT NULL,
+  `status` varchar(32) NOT NULL DEFAULT 'pending',
+  `last_error` text,
+  `deployed_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `redi_cert_deployments_cert_id_node_id_unique` (`cert_id`,`node_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `redi_dns_sync_logs`;
+CREATE TABLE `redi_dns_sync_logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `action` varchar(64) NOT NULL,
+  `status` varchar(16) NOT NULL,
+  `message` text,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
 -- Table structure for table `redi_admin_domain`
 --
 
@@ -422,6 +544,7 @@ CREATE TABLE `redi_admin_domain` (
   `original_url` varchar(255) NOT NULL DEFAULT '' COMMENT '原始域名',
   `skip_url` varchar(255) NOT NULL DEFAULT '' COMMENT '跳转链接',
   `status` tinyint(4) unsigned NOT NULL DEFAULT '1' COMMENT '状态：1启用 2停用',
+  `force_https` tinyint(1) NOT NULL DEFAULT '0',
   `admin_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '添加人id',
   `admin_name` varchar(50) NOT NULL DEFAULT '' COMMENT '添加人名字',
   `skip_num` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '跳转数量',

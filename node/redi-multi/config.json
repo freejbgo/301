@@ -1,11 +1,12 @@
 {
   "debug": false,
   "addr": "0.0.0.0:80",
+  "tls_addr": "0.0.0.0:443",
   "api_listen": "0.0.0.0:8080",
   "server_ip": "YOUR_NODE_PUBLIC_IP",
   "default_redirect_url": "https://www.example.com",
   "lagran": {
-    "port": "80",
+    "port": "80,443",
     "syn_ack": true,
     "ack": true,
     "psh_ack": true,

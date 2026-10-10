@@ -9,6 +9,7 @@ import (
 var (
 	Debug              bool
 	Addr               string
+	TlsAddr            string
 	ApiListen          string
 	ServerIp           string
 	DefaultRedirectUrl string
@@ -28,6 +29,12 @@ func Init() {
 	}
 	Debug = payload["debug"].(bool)
 	Addr = payload["addr"].(string)
+	if v, ok := payload["tls_addr"].(string); ok {
+		TlsAddr = v
+	}
+	if TlsAddr == "" {
+		TlsAddr = "0.0.0.0:443"
+	}
 	if v, ok := payload["api_listen"].(string); ok {
 		ApiListen = v
 	}

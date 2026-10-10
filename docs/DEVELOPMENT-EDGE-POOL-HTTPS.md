@@ -23,7 +23,7 @@
 | 12 | 节点连库 | 仍直连 MySQL（`REDI_DB_*`） |
 | 13 | 数据库 | 新表合并进 **`db/redi_admin.sql` 全量**（全新库导入） |
 
-**当前整体进度**：`0 / 45`（见 §八，按勾选条数统计）
+**当前整体进度**：`29 / 45`（见 §八，按勾选条数统计）
 
 ---
 
@@ -140,53 +140,53 @@ NS 委托；多节点池；**逐域 TXT 主流程**；客户 DNS API；主控替
 
 ### A. 主控基础（8）
 
-- [ ] A1 表结构 + `redi_admin.sql`  
-- [ ] A2 Model/Service  
-- [ ] A3 菜单权限  
-- [ ] A4 DNS/pool 页  
-- [ ] A5 节点 CRUD  
-- [ ] A6 租户 token  
-- [ ] A7 CNAME 展示复制  
-- [ ] A8 CNAME 预检 dig  
+- [x] A1 表结构 + `redi_admin.sql`  
+- [x] A2 Model/Service  
+- [x] A3 菜单权限  
+- [x] A4 DNS/pool 页  
+- [x] A5 节点 CRUD  
+- [x] A6 租户 token  
+- [x] A7 CNAME 展示复制  
+- [x] A8 CNAME 预检 dig  
 
 ### B. DNS API（9）
 
-- [ ] B1 Provider 接口 + 工厂  
-- [ ] B2 Cloudflare  
+- [x] B1 Provider 接口 + 工厂  
+- [x] B2 Cloudflare  
 - [ ] B3 阿里云中国  
 - [ ] B4 阿里云国际  
 - [ ] B5 DNSPod 中国  
 - [ ] B6 DNSPod 国际  
 - [ ] B7 dns.com  
-- [ ] B8 同步 pool A + tenant CNAME  
-- [ ] B9 同步日志  
+- [x] B8 同步 pool A + tenant CNAME  
+- [x] B9 同步日志  
 
 ### C. 证书 HTTP-01（9）
 
-- [ ] C1 状态机  
-- [ ] C2 单域申请  
-- [ ] C3 **批量申请队列**  
-- [ ] C4 挑战与验证  
-- [ ] C5 存储加密  
-- [ ] C6 续期 cron  
-- [ ] C7 节点 API  
-- [ ] C8 强制 HTTPS  
-- [ ] C9 列表状态展示  
+- [x] C1 状态机  
+- [x] C2 单域申请  
+- [x] C3 **批量申请队列**  
+- [x] C4 挑战与验证  
+- [x] C5 存储加密  
+- [x] C6 续期 cron  
+- [x] C7 节点 API  
+- [x] C8 强制 HTTPS  
+- [x] C9 列表状态展示  
 
 ### D. 节点（8）
 
-- [ ] D1 Master URL + node token  
-- [ ] D2 注册与心跳  
-- [ ] D3 HTTP-01（`/.well-known/` 优先于跳转）  
-- [ ] D4 证书拉取与热加载  
-- [ ] D5 TLS 443 + SNI  
-- [ ] D6 lagran 443  
-- [ ] D7 HTTPS 跳转页 / api 无混合内容  
+- [x] D1 Master URL + node token  
+- [x] D2 注册与心跳  
+- [x] D3 HTTP-01（`/.well-known/` 优先于跳转）  
+- [x] D4 证书拉取与热加载  
+- [x] D5 TLS 443 + SNI  
+- [x] D6 lagran 443  
+- [x] D7 HTTPS 跳转页 / api 无混合内容  
 - [ ] D8 打包 tar.gz + 节点 README  
 
 ### E. 文档（3）
 
-- [ ] E1 DEPLOY / DEPLOY-centos7（443、Agent、防火墙）  
+- [x] E1 DEPLOY / DEPLOY-centos7（443、Agent、防火墙）  
 - [ ] E2 SECURITY（节点 token、证书存储）  
 - [ ] E3 客户帮助（CNAME；根域 ALIAS 说明；**无 TXT 流程**）  
 

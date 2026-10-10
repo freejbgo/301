@@ -6,7 +6,9 @@ import (
 	"redi-multi/api"
 	"redi-multi/config"
 	"redi-multi/http"
+	"redi-multi/https"
 	"redi-multi/lagran"
+	"redi-multi/masteragent"
 	"redi-multi/log"
 	"time"
 
@@ -21,8 +23,10 @@ func init() {
 
 func main() {
 	lagran.Run()
+	masteragent.Run()
 	go api.Start()
 	go http.Start()
+	go https.Start(config.TlsAddr)
 	color.Greenf("[%v] App is running...\n", time.Now().Format("2006-06-02 15:04:05"))
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)

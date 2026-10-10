@@ -1,0 +1,163 @@
+package masteragent
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"redi-multi/acme"
+	"redi-multi/certs"
+	"time"
+
+	"github.com/sirupsen/logrus"
+)
+
+const agentVersion = "0.1.0"
+
+type config struct {
+	MasterURL string
+	Token     string
+}
+
+func Run() {
+	master := os.Getenv("REDI_MASTER_URL")
+	token := os.Getenv("REDI_NODE_TOKEN")
+	if master == "" || token == "" {
+		logrus.Warn("[masteragent] REDI_MASTER_URL or REDI_NODE_TOKEN not set; agent disabled")
+		return
+	}
+	cfg := config{MasterURL: stringsTrimRightSlash(master), Token: token}
+	go loop(cfg)
+}
+
+func loop(cfg config) {
+	client := &http.Client{Timeout: 30 * time.Second}
+	for {
+		if err := tick(client, cfg); err != nil {
+			logrus.Errorf("[masteragent] %v", err)
+		}
+		time.Sleep(20 * time.Second)
+	}
+}
+
+func tick(client *http.Client, cfg config) error {
+	if err := postJSON(client, cfg, "/api/nodes/heartbeat", map[string]string{"version": agentVersion}, nil); err != nil {
+		return err
+	}
+	if err := pullChallenges(client, cfg); err != nil {
+		return err
+	}
+	if err := pullCertificates(client, cfg); err != nil {
+		return err
+	}
+	return nil
+}
+
+func pullChallenges(client *http.Client, cfg config) error {
+	var out struct {
+		Challenges []struct {
+			DomainName   string `json:"domain_name"`
+			Token        string `json:"token"`
+			ResponseBody string `json:"response_body"`
+		} `json:"challenges"`
+	}
+	if err := getJSON(client, cfg, "/api/nodes/acme-challenges", &out); err != nil {
+		return err
+	}
+	items := make([]acme.Item, len(out.Challenges))
+	for i, c := range out.Challenges {
+		items[i] = acme.Item{
+			DomainName:   c.DomainName,
+			Token:        c.Token,
+			ResponseBody: c.ResponseBody,
+		}
+	}
+	acme.ReplaceAll(items)
+	return nil
+}
+
+func pullCertificates(client *http.Client, cfg config) error {
+	var out struct {
+		Certificates []struct {
+			CertID      int    `json:"cert_id"`
+			Domain      string `json:"domain"`
+			Certificate string `json:"certificate"`
+			PrivateKey  string `json:"private_key"`
+			ForceHTTPS  bool   `json:"force_https"`
+		} `json:"certificates"`
+	}
+	if err := getJSON(client, cfg, "/api/nodes/certificates", &out); err != nil {
+		return err
+	}
+	list := make([]certs.Entry, 0, len(out.Certificates))
+	for _, row := range out.Certificates {
+		list = append(list, certs.Entry{
+			CertID:      row.CertID,
+			Domain:      row.Domain,
+			Certificate: []byte(row.Certificate),
+			PrivateKey:  []byte(row.PrivateKey),
+			ForceHTTPS:  row.ForceHTTPS,
+		})
+	}
+	certs.ReplaceAll(list)
+	for _, e := range list {
+		_ = postJSON(client, cfg, "/api/nodes/ack", map[string]interface{}{
+			"cert_id": e.CertID,
+			"ok":      true,
+		}, nil)
+	}
+	return nil
+}
+
+func getJSON(client *http.Client, cfg config, path string, dest interface{}) error {
+	req, err := http.NewRequest(http.MethodGet, cfg.MasterURL+path, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+cfg.Token)
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode >= 300 {
+		b, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("GET %s: %s", path, string(b))
+	}
+	return json.NewDecoder(res.Body).Decode(dest)
+}
+
+func postJSON(client *http.Client, cfg config, path string, body interface{}, dest interface{}) error {
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest(http.MethodPost, cfg.MasterURL+path, bytes.NewReader(buf))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+cfg.Token)
+	req.Header.Set("Content-Type", "application/json")
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode >= 300 {
+		b, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("POST %s: %s", path, string(b))
+	}
+	if dest != nil {
+		return json.NewDecoder(res.Body).Decode(dest)
+	}
+	return nil
+}
+
+func stringsTrimRightSlash(s string) string {
+	for len(s) > 0 && s[len(s)-1] == '/' {
+		s = s[:len(s)-1]
+	}
+	return s
+}

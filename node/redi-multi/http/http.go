@@ -39,6 +39,6 @@ func Start() {
 			continue
 		}
 		// 对每个新连接创建一个协程进行收发数据
-		go redirect.Process(conn)
+		go redirect.Process(conn, false)
 	}
 }

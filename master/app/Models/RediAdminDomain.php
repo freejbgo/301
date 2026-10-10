@@ -18,12 +18,22 @@ class RediAdminDomain extends Model
         'original_url',
         'skip_url',
         'status',
+        'force_https',
         'admin_id',
         'admin_name',
+    ];
+
+    protected $casts = [
+        'force_https' => 'boolean',
     ];
 
     public function group()
     {
         return $this->belongsTo(RediAdminGroup::class, 'group_id', 'id');
+    }
+
+    public function certificate()
+    {
+        return $this->hasOne(RediDomainCert::class, 'domain_id');
     }
 }

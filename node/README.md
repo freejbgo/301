@@ -159,6 +159,15 @@ nohup go run main.go &
 
 另请修改 `config.json` 中 `server_ip` 等为当前节点外网 IP。
 
+### 主控 Agent（边缘池 / 证书）
+
+| 变量 | 说明 |
+|------|------|
+| `REDI_MASTER_URL` | 主控 HTTPS 根地址 |
+| `REDI_NODE_TOKEN` | 后台「节点管理」创建节点时一次性 Token |
+
+`config.json`：`tls_addr`（默认 `0.0.0.0:443`）、`lagran.port` 建议 `80,443`。Agent 拉取 ACME 挑战与 TLS 证书（443 SNI）。
+
 ### 已移除的冗余包（对比结论）
 
 | 已删除文件 | 与 `redi-multi.tar.gz` 关系 |

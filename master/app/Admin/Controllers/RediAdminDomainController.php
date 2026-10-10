@@ -14,6 +14,10 @@ use Dcat\Admin\Layout\Content;
 use App\Admin\Actions\Modal\BatchDomainModal;
 use App\Models\RediAdminGroup;
 use App\Services\DomainRecordNormalizer;
+use App\Services\CnamePrecheckService;
+use App\Services\TenantEdgeService;
+use App\Admin\Actions\Grid\ApplyCertificate;
+use App\Admin\Actions\Grid\BatchApplyCertificate;
 use Illuminate\Validation\ValidationException;
 
 
@@ -36,16 +40,40 @@ class RediAdminDomainController extends AdminController
             $grid->tools(function (Grid\Tools $tools) {
                 $tools->append(new BatchDomainModal());
             });
+
+            $grid->batchActions(function ($batch) {
+                $batch->add(new BatchApplyCertificate());
+            });
+
+            $grid->actions(function (Grid\Displayers\Actions $actions) {
+                $actions->append(new ApplyCertificate());
+            });
             
             $grid->model()->where('admin_id', '=', Admin::user()->id);
-            $grid->model()->with(['group']);
+            $grid->model()->with(['group', 'certificate']);
 
             $grid->column('id')->sortable();
             $grid->column('group_id', '分组名称')->display(function () {
                 return $this->group?->name ?? '（分组不存在）';
             });
             $grid->column('original_url', '原始域名');
+            $grid->column('cname_target', 'CNAME 目标')->display(function () {
+                return TenantEdgeService::cnameTargetForAdmin((int) Admin::user()->id);
+            });
+            $grid->column('cname_ok', '解析预检')->display(function () {
+                $edgeFqdn = TenantEdgeService::cnameTargetForAdmin((int) Admin::user()->id);
+                if ($edgeFqdn === '' || strncmp($edgeFqdn, '（', 3) === 0) {
+                    return '—';
+                }
+                $ok = CnamePrecheckService::pointsToEdge($this->original_url, $edgeFqdn);
+
+                return $ok ? '<span class="text-success">已指向</span>' : '<span class="text-warning">未检测到</span>';
+            });
             $grid->column('skip_url', '跳转地址');
+            $grid->column('cert_status', '证书')->display(function () {
+                $cert = $this->certificate;
+                return $cert ? $cert->statusLabel() : '未申请';
+            });
             $grid->column('skip_num', '跳转次数');
             $grid->column('status', '状态')->using([1 => "启用", 2 => "停用"]);
             $grid->column('admin_name', '添加人');
@@ -109,9 +137,15 @@ class RediAdminDomainController extends AdminController
 
             $form->display('id');
             $form->select('group_id', '分组')->options($groupList);
-            $form->text('original_url', '原始域名');
+            $cname = TenantEdgeService::cnameTargetForAdmin((int) Admin::user()->id);
+            $form->html(
+                '<div class="alert alert-info">请将客户域名 CNAME 到：<code>'.$cname.'</code>（本账号下所有域名共用）</div>',
+                '接入说明'
+            );
+            $form->text('original_url', '原始域名')->help('客户主域名，如 foo.com');
             $form->text('skip_url', '跳转链接');
             $form->radio('status', '状态')->options([1=>'启用', 2=>'停用'])->default(1);
+            $form->switch('force_https', '强制 HTTPS')->help('启用后节点对 HTTP 请求 301 到 HTTPS');
             if ($form->isCreating()) {
                 $form->hidden('admin_id')->value(Admin::user()->id);
                 $form->hidden('admin_name')->value(Admin::user()->username);
@@ -161,6 +195,13 @@ class RediAdminDomainController extends AdminController
 
                 $form->input('original_url', $originalUrl);
                 $form->input('skip_url', $skipUrl);
+
+                TenantEdgeService::ensureForAdmin($adminId);
+            });
+
+            $form->saved(function (Form $form) {
+                $adminId = (int) Admin::user()->id;
+                TenantEdgeService::ensureForAdmin($adminId);
             });
         });
     }

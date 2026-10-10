@@ -21,4 +21,7 @@ Route::group([
     $router->resource('group', 'RediAdminGroupController');
     $router->resource('domain', 'RediAdminDomainController');
     $router->get('platform-settings', 'PlatformSettingsController@index');
+    $router->get('platform-dns', 'PlatformDnsController@index');
+    $router->post('platform-dns/sync', 'PlatformDnsController@sync');
+    $router->resource('nodes', 'RediNodeController');
 });
