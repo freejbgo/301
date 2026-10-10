@@ -12,7 +12,8 @@
 ## 你必须在服务器上完成的
 
 1. **修改所有默认密码**（后台 admin、MySQL、`.env` 的 `DB_PASSWORD`）。
-2. **MySQL 不对公网开放 3306**（见 `db/mysql_setup.example.sql` 仅内网/本机授权示例）。
+2. **MySQL 不对公网开放 3306**（见 `db/mysql_setup.example.sql`；节点 IP 用 `scripts/centos7/grant-node-mysql.sh` + 防火墙仅放行这些 IP）。
+3. **关闭 DNS 反查**：主控执行 `scripts/centos7/apply-mysql-skip-name-resolve.sh`（无需手改 `my.cnf`）。
 3. **主控启用 HTTPS**（`ADMIN_HTTPS=true` 且证书配置正确）。
 4. **防火墙** 只开放业务端口。
 

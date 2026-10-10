@@ -1,0 +1,7 @@
+# 301 系统推荐：关闭 MySQL 连接时的 DNS 反向解析，减轻压力、避免连接变慢。
+# 由 scripts/centos7/apply-mysql-skip-name-resolve.sh 安装到 /etc/my.cnf.d/
+# 启用 skip-name-resolve 后，授权必须使用 IP（如 'user'@'1.2.3.4'），不要用主机名。
+
+[mysqld]
+skip-name-resolve
+skip-external-locking
