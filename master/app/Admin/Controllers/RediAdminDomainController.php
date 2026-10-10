@@ -11,10 +11,8 @@ use Dcat\Admin\Widgets\Dropdown;
 use Illuminate\Support\Facades\DB;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Layout\Content;
-use App\Admin\Actions\Modal\memberModal;
-use App\Admin\Actions\Exports\DomainImportTemplateExport;
+use App\Admin\Actions\Modal\BatchDomainModal;
 use App\Services\DomainRecordNormalizer;
-use Maatwebsite\Excel\Facades\Excel;
 
 
 class RediAdminDomainController extends AdminController
@@ -33,9 +31,8 @@ class RediAdminDomainController extends AdminController
     {
         return Grid::make(new RediAdminDomain(), function (Grid $grid) {
             
-            $grid->tools(function  (Grid\Tools  $tools)  { 
-                //Excel导入
-                $tools->append(new  memberModal());  
+            $grid->tools(function (Grid\Tools $tools) {
+                $tools->append(new BatchDomainModal());
             });
             
             $grid->model()->where('admin_id', '=', Admin::user()->id);
@@ -131,16 +128,5 @@ class RediAdminDomainController extends AdminController
                 );
             });
         });
-    }
-
-    /**
-     * 下载批量导入 Excel 模板
-     */
-    public function importTemplate()
-    {
-        return Excel::download(
-            new DomainImportTemplateExport(),
-            'domain-import-template.xlsx'
-        );
     }
 }
