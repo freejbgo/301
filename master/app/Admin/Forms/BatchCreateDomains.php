@@ -51,14 +51,31 @@ class BatchCreateDomains extends Form
             $groupList[$group->id] = $group->name;
         }
 
+        $max = DomainBatchCreator::MAX_LINES_PER_BATCH;
+
         $this->select('group_id', '分组')->options($groupList)->required();
         $this->radio('status', '状态')->options([1 => '启用', 2 => '停用'])->default(1);
         $this->text('default_skip_url', '统一跳转地址')
-            ->help('若下面每行只写原始域名，将统一跳转到此地址；也可在每一行写「原始域名,跳转地址」覆盖。');
+            ->help('方式一：填写此项后，下面每行可只写原始域名，全部跳到同一地址。');
+
+        $placeholder = <<<TXT
+【填写说明，点击输入后本提示消失】
+· 单次最多 {$max} 条（一行一条，空行不算；# 开头为注释）
+· 方式一：上面填「统一跳转地址」，这里每行只写原始域名，如：example.com
+· 方式二：每行写「原始域名,跳转地址」，逗号/竖线/Tab 均可，如：foo.com,https://a.com
+· 原始域名不要带 http://；本账号已存在的域名会自动跳过
+· 本批共用上方所选分组与状态
+
+示例：
+example.com
+foo.com,https://target.example.com
+# 下面再写更多域名…
+TXT;
+
         $this->textarea('lines', '域名列表')
-            ->rows(12)
+            ->rows(14)
             ->required()
-            ->placeholder("示例：\nexample.com\nfoo.com,https://target.com\n# 井号开头为注释")
-            ->help('每行一条。支持：仅域名；或 原始域名,跳转地址（逗号/竖线/Tab 分隔）。');
+            ->placeholder($placeholder)
+            ->help("最多 {$max} 条/次。点击输入框后灰色提示会消失，属正常现象。");
     }
 }
