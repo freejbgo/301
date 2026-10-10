@@ -1,9 +1,6 @@
 301主控安装：
 
-【安装包下载】301.tar.gz：
-- 本仓库 master/301.tar.gz
-- 或 Release：https://github.com/freejbgo/301/releases/tag/301master
-  直链：https://github.com/freejbgo/301/releases/download/301master/301.tar.gz
+【安装包下载】301.tar.gz：本仓库 master/301.tar.gz
 
 1、bt安装 apache mysql5.6 php7.4
 
