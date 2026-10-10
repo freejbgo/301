@@ -2,7 +2,7 @@
 
 按顺序操作即可；代码里能配好的已写好，**你只需要在服务器上改密码和 IP**。
 
-**CentOS 7、一台主控 + 多台公网节点**：见 **[DEPLOY-centos7.md](DEPLOY-centos7.md)**（含复制粘贴命令、MySQL 关闭 DNS 反查一键脚本）。
+**CentOS 7、一台主控 + 多台公网节点**：见 **[DEPLOY-centos7.md](DEPLOY-centos7.md)**；占位 IP 逐步示例见 **[DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)**。
 
 ## 1. 数据库（主控服务器）
 
