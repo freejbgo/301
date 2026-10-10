@@ -47,5 +47,17 @@ go build -o redi-multi .
 | HTTPS | 主控域名申请证书（宝塔/Let’s Encrypt 等） |
 | 防火墙 | 关闭公网 3306；仅开放 80/443（及节点所需端口） |
 | 改密码 | 后台 admin、MySQL `redi_admin` 用户、`.env` 里 `DB_PASSWORD` |
+| 旧环境 | 若曾用过旧节点包内置数据库密码，务必在 MySQL 里 **轮换密码** 并同步 `env.sh` / `.env` |
+
+防火墙示例（Ubuntu `ufw`，按你实际 IP 改）：
+
+```bash
+ufw default deny incoming
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+# 节点机：若访客浏览器要访问节点上的 8080（api.js），再开放；否则用 Nginx 反代到 127.0.0.1:8080 可不对外开放 8080
+ufw enable
+```
 
 更完整说明见 [SECURITY.md](SECURITY.md)。
