@@ -445,6 +445,18 @@ CREATE TABLE `redi_acme_challenges` (
   KEY `redi_acme_challenges_expires_at_index` (`expires_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+DROP TABLE IF EXISTS `redi_acme_challenge_node_sync`;
+CREATE TABLE `redi_acme_challenge_node_sync` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `node_id` int(10) unsigned NOT NULL,
+  `domain_name` varchar(255) NOT NULL,
+  `synced_at` timestamp NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `redi_acme_challenge_node_sync_node_id_domain_name_unique` (`node_id`,`domain_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 DROP TABLE IF EXISTS `jobs`;
 CREATE TABLE `jobs` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,

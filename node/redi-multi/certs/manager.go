@@ -2,6 +2,7 @@ package certs
 
 import (
 	"crypto/tls"
+	"fmt"
 	"strings"
 	"sync"
 )
@@ -49,13 +50,26 @@ func GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	e, ok := entries[host]
 	mu.RUnlock()
 	if !ok {
-		return nil, nil
+		return nil, fmt.Errorf("no certificate for %s", host)
 	}
 	cert, err := tls.X509KeyPair(e.Certificate, e.PrivateKey)
 	if err != nil {
 		return nil, err
 	}
 	return &cert, nil
+}
+
+func InstallEntry(e Entry) error {
+	_, err := tls.X509KeyPair(e.Certificate, e.PrivateKey)
+	if err != nil {
+		return err
+	}
+	mu.Lock()
+	d := strings.ToLower(strings.TrimSpace(e.Domain))
+	entries[d] = e
+	byID[e.CertID] = e
+	mu.Unlock()
+	return nil
 }
 
 func PendingAcks() []int {

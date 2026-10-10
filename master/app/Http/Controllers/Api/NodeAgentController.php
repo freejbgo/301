@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\RediAcmeChallenge;
+use App\Models\RediAcmeChallengeNodeSync;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use App\Services\CertificateDeployService;
@@ -12,6 +13,43 @@ use Illuminate\Support\Facades\DB;
 
 class NodeAgentController extends Controller
 {
+    public function register(Request $request)
+    {
+        /** @var RediNode $node */
+        $node = $request->attributes->get('redi_node');
+        if ($request->filled('public_ip')) {
+            $node->public_ip = $request->input('public_ip');
+        }
+        if ($request->filled('name')) {
+            $node->name = $request->input('name');
+        }
+        $node->last_heartbeat_at = now();
+        $node->agent_version = $request->input('version');
+        $node->save();
+
+        return response()->json(['ok' => true, 'node_id' => $node->id]);
+    }
+
+    public function challengesSynced(Request $request)
+    {
+        /** @var RediNode $node */
+        $node = $request->attributes->get('redi_node');
+        $domains = (array) $request->input('domains', []);
+        $now = now();
+        foreach ($domains as $domain) {
+            $domain = strtolower(trim((string) $domain, '.'));
+            if ($domain === '') {
+                continue;
+            }
+            RediAcmeChallengeNodeSync::updateOrCreate(
+                ['node_id' => $node->id, 'domain_name' => $domain],
+                ['synced_at' => $now]
+            );
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
     public function heartbeat(Request $request)
     {
         /** @var RediNode $node */
@@ -35,6 +73,7 @@ class NodeAgentController extends Controller
     public function certificates()
     {
         $certs = RediDomainCert::query()
+            ->with('domain')
             ->whereIn('status', [
                 RediDomainCert::STATUS_ISSUED,
                 RediDomainCert::STATUS_DEPLOYING,

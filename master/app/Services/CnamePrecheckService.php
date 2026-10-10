@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\RediPlatformDns;
+
 class CnamePrecheckService
 {
     /**
-     * 检查客户域名是否 CNAME 到租户 edge（或解析链最终指向 pool 的 A）。
+     * 检查客户域名是否 CNAME 到租户 edge，或解析结果与 pool 节点 A 一致。
      */
     public static function pointsToEdge(string $customerDomain, string $edgeFqdn): bool
     {
@@ -20,16 +22,76 @@ class CnamePrecheckService
             return false;
         }
 
-        $records = @dns_get_record($customerDomain, DNS_CNAME);
-        if (is_array($records)) {
-            foreach ($records as $row) {
+        $poolFqdn = RediPlatformDns::instance()->poolFqdn();
+        $allowedTargets = array_filter([$edgeFqdn, $poolFqdn]);
+
+        $cnames = @dns_get_record($customerDomain, DNS_CNAME);
+        if (is_array($cnames)) {
+            foreach ($cnames as $row) {
                 $target = strtolower(rtrim($row['target'] ?? '', '.'));
-                if ($target === $edgeFqdn) {
+                if (in_array($target, $allowedTargets, true)) {
+                    return true;
+                }
+                if (self::cnameChainReaches($target, $allowedTargets, 4)) {
                     return true;
                 }
             }
         }
 
+        $poolIps = self::resolveA($poolFqdn);
+        if ($poolIps !== []) {
+            $customerIps = self::resolveA($customerDomain);
+            if ($customerIps !== [] && count(array_intersect($customerIps, $poolIps)) > 0) {
+                return true;
+            }
+        }
+
         return false;
+    }
+
+    protected static function cnameChainReaches(string $host, array $targets, int $depth): bool
+    {
+        if ($depth <= 0) {
+            return false;
+        }
+        $host = strtolower(rtrim($host, '.'));
+        if (in_array($host, $targets, true)) {
+            return true;
+        }
+        $rows = @dns_get_record($host, DNS_CNAME);
+        if (! is_array($rows)) {
+            return false;
+        }
+        foreach ($rows as $row) {
+            $next = strtolower(rtrim($row['target'] ?? '', '.'));
+            if (in_array($next, $targets, true) || self::cnameChainReaches($next, $targets, $depth - 1)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return string[]
+     */
+    protected static function resolveA(string $host): array
+    {
+        $host = strtolower(trim($host, '.'));
+        if ($host === '') {
+            return [];
+        }
+        $rows = @dns_get_record($host, DNS_A);
+        if (! is_array($rows)) {
+            return [];
+        }
+        $ips = [];
+        foreach ($rows as $row) {
+            if (! empty($row['ip'])) {
+                $ips[] = $row['ip'];
+            }
+        }
+
+        return array_values(array_unique($ips));
     }
 }

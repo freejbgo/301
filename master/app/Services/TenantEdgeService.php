@@ -48,6 +48,20 @@ class TenantEdgeService
         return '（保存域名后将自动生成）';
     }
 
+    public static function rebuildAllEdgeFqdn(string $zone): void
+    {
+        $zone = strtolower(trim($zone, '.'));
+        if ($zone === '') {
+            return;
+        }
+
+        RediTenantEdge::query()->each(function (RediTenantEdge $edge) use ($zone) {
+            $edge->edge_fqdn = strtolower($edge->token.'.'.$zone);
+            $edge->dns_synced_at = null;
+            $edge->save();
+        });
+    }
+
     protected static function generateToken(): string
     {
         do {

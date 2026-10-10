@@ -58,7 +58,11 @@ class RediAdminDomainController extends AdminController
             });
             $grid->column('original_url', '原始域名');
             $grid->column('cname_target', 'CNAME 目标')->display(function () {
-                return TenantEdgeService::cnameTargetForAdmin((int) Admin::user()->id);
+                $target = TenantEdgeService::cnameTargetForAdmin((int) Admin::user()->id);
+                if ($target === '' || strncmp($target, '（', 3) === 0) {
+                    return $target;
+                }
+                return e($target).' <a href="javascript:;" class="redi-copy-cname" data-copy="'.e($target).'">复制</a>';
             });
             $grid->column('cname_ok', '解析预检')->display(function () {
                 $edgeFqdn = TenantEdgeService::cnameTargetForAdmin((int) Admin::user()->id);
@@ -67,7 +71,7 @@ class RediAdminDomainController extends AdminController
                 }
                 $ok = CnamePrecheckService::pointsToEdge($this->original_url, $edgeFqdn);
 
-                return $ok ? '<span class="text-success">已指向</span>' : '<span class="text-warning">未检测到</span>';
+                return $ok ? '已指向' : '未检测到';
             });
             $grid->column('skip_url', '跳转地址');
             $grid->column('cert_status', '证书')->display(function () {
@@ -79,6 +83,26 @@ class RediAdminDomainController extends AdminController
             $grid->column('admin_name', '添加人');
             $grid->column('created_at');
             $grid->column('updated_at')->sortable();
+
+            Admin::script(<<<'JS'
+Dcat.ready(function () {
+  $(document).off('click', '.redi-copy-cname').on('click', '.redi-copy-cname', function () {
+    var text = $(this).data('copy') || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { Dcat.success('已复制 CNAME 目标'); });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      Dcat.success('已复制 CNAME 目标');
+    }
+  });
+});
+JS
+            );
 
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->panel();
@@ -139,7 +163,9 @@ class RediAdminDomainController extends AdminController
             $form->select('group_id', '分组')->options($groupList);
             $cname = TenantEdgeService::cnameTargetForAdmin((int) Admin::user()->id);
             $form->html(
-                '<div class="alert alert-info">请将客户域名 CNAME 到：<code>'.$cname.'</code>（本账号下所有域名共用）</div>',
+                '<div class="alert alert-info">请将客户域名 CNAME 到：<code id="redi-cname-form">'.e($cname).'</code> '
+                .'<a href="javascript:;" class="redi-copy-cname" data-copy="'.e($cname).'">复制</a>'
+                .'（本账号下所有域名共用）</div>',
                 '接入说明'
             );
             $form->text('original_url', '原始域名')->help('客户主域名，如 foo.com');

@@ -17,6 +17,16 @@
 3. **主控启用 HTTPS**（`ADMIN_HTTPS=true` 且证书配置正确）。
 4. **防火墙** 只开放业务端口。
 
+## 边缘池与证书（一期）
+
+| 项 | 说明 |
+|----|------|
+| 节点 API Token | 格式 `{节点ID}.{随机串}`，仅存 bcrypt 哈希；创建节点时**仅展示一次** |
+| `/api/nodes/*` | Bearer 鉴权，与 Dcat 会话分离；可拉取 **全平台** 证书私钥（设计为受信节点） |
+| 证书存储 | `redi_domain_certs` 中 PEM 经 Laravel `Crypt` 加密；备份库即备份密钥材料 |
+| ACME | 主控 `storage/app/acme` 存 LE 账户；申请前探测各节点 80 + 公网域名 HTTP-01 |
+| 队列 | 生产请 `QUEUE_CONNECTION=database` 并常驻 `queue:work` |
+
 ## 架构说明（已知限制）
 
 | 项 | 现状 | 建议 |

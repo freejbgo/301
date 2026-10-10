@@ -53,7 +53,15 @@ class IssueDomainCertificateJob implements ShouldQueue
         $edge = \App\Models\RediTenantEdge::where('admin_id', $domain->admin_id)->first();
         $edgeFqdn = $edge ? $edge->edge_fqdn : '';
 
-        if ($edgeFqdn && ! CnamePrecheckService::pointsToEdge($domain->original_url, $edgeFqdn)) {
+        if ($edgeFqdn === '') {
+            $cert->status = RediDomainCert::STATUS_PENDING_DNS;
+            $cert->last_error = '平台主域名或租户 edge 未配置';
+            $cert->save();
+
+            return;
+        }
+
+        if (! CnamePrecheckService::pointsToEdge($domain->original_url, $edgeFqdn)) {
             $cert->status = RediDomainCert::STATUS_PENDING_DNS;
             $cert->last_error = 'CNAME 尚未指向 '.$edgeFqdn;
             $cert->save();

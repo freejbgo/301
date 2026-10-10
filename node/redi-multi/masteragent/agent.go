@@ -9,12 +9,13 @@ import (
 	"os"
 	"redi-multi/acme"
 	"redi-multi/certs"
+	"redi-multi/rules"
 	"time"
 
 	"github.com/sirupsen/logrus"
 )
 
-const agentVersion = "0.1.0"
+const agentVersion = "0.1.1"
 
 type config struct {
 	MasterURL string
@@ -34,22 +35,32 @@ func Run() {
 
 func loop(cfg config) {
 	client := &http.Client{Timeout: 30 * time.Second}
+	registered := false
 	for {
-		if err := tick(client, cfg); err != nil {
+		if err := tick(client, cfg, &registered); err != nil {
 			logrus.Errorf("[masteragent] %v", err)
 		}
-		time.Sleep(20 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }
 
-func tick(client *http.Client, cfg config) error {
-	if err := postJSON(client, cfg, "/api/nodes/heartbeat", map[string]string{"version": agentVersion}, nil); err != nil {
-		return err
+func tick(client *http.Client, cfg config, registered *bool) error {
+	if !*registered {
+		if err := postJSON(client, cfg, "/api/nodes/register", map[string]string{"version": agentVersion}, nil); err != nil {
+			return err
+		}
+		*registered = true
 	}
 	if err := pullChallenges(client, cfg); err != nil {
 		return err
 	}
+	if err := pullRedirectRules(client, cfg); err != nil {
+		return err
+	}
 	if err := pullCertificates(client, cfg); err != nil {
+		return err
+	}
+	if err := postJSON(client, cfg, "/api/nodes/heartbeat", map[string]string{"version": agentVersion}, nil); err != nil {
 		return err
 	}
 	return nil
@@ -67,14 +78,39 @@ func pullChallenges(client *http.Client, cfg config) error {
 		return err
 	}
 	items := make([]acme.Item, len(out.Challenges))
+	domains := make([]string, 0, len(out.Challenges))
 	for i, c := range out.Challenges {
 		items[i] = acme.Item{
 			DomainName:   c.DomainName,
 			Token:        c.Token,
 			ResponseBody: c.ResponseBody,
 		}
+		domains = append(domains, c.DomainName)
 	}
 	acme.ReplaceAll(items)
+	if len(domains) > 0 {
+		_ = postJSON(client, cfg, "/api/nodes/challenges-synced", map[string]interface{}{
+			"domains": domains,
+		}, nil)
+	}
+	return nil
+}
+
+func pullRedirectRules(client *http.Client, cfg config) error {
+	var out struct {
+		Rules []struct {
+			OriginalURL string `json:"original_url"`
+			ForceHTTPS  bool   `json:"force_https"`
+		} `json:"rules"`
+	}
+	if err := getJSON(client, cfg, "/api/nodes/redirect-rules", &out); err != nil {
+		return err
+	}
+	m := map[string]bool{}
+	for _, r := range out.Rules {
+		m[r.OriginalURL] = r.ForceHTTPS
+	}
+	rules.ReplaceForceHTTPS(m)
 	return nil
 }
 
@@ -93,21 +129,28 @@ func pullCertificates(client *http.Client, cfg config) error {
 	}
 	list := make([]certs.Entry, 0, len(out.Certificates))
 	for _, row := range out.Certificates {
-		list = append(list, certs.Entry{
+		entry := certs.Entry{
 			CertID:      row.CertID,
 			Domain:      row.Domain,
 			Certificate: []byte(row.Certificate),
 			PrivateKey:  []byte(row.PrivateKey),
 			ForceHTTPS:  row.ForceHTTPS,
-		})
-	}
-	certs.ReplaceAll(list)
-	for _, e := range list {
+		}
+		if err := certs.InstallEntry(entry); err != nil {
+			_ = postJSON(client, cfg, "/api/nodes/ack", map[string]interface{}{
+				"cert_id": row.CertID,
+				"ok":      false,
+				"error":   err.Error(),
+			}, nil)
+			continue
+		}
+		list = append(list, entry)
 		_ = postJSON(client, cfg, "/api/nodes/ack", map[string]interface{}{
-			"cert_id": e.CertID,
+			"cert_id": row.CertID,
 			"ok":      true,
 		}, nil)
 	}
+	certs.ReplaceAll(list)
 	return nil
 }
 

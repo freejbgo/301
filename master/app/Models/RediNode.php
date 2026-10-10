@@ -30,6 +30,15 @@ class RediNode extends Model
         return Str::random(48);
     }
 
+    public function issueApiTokenPlain(): string
+    {
+        $secret = Str::random(48);
+        $plain = $this->id.'.'.$secret;
+        $this->setApiTokenPlain($plain);
+
+        return $plain;
+    }
+
     public function setApiTokenPlain(string $plain): void
     {
         $this->api_token_hash = Hash::make($plain);

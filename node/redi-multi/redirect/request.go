@@ -2,6 +2,7 @@ package redirect
 
 import (
 	"bufio"
+	"io"
 	"net"
 	"strings"
 )
@@ -20,7 +21,7 @@ func readRequest(conn net.Conn) (*httpRequest, error) {
 	}
 	parts := strings.Split(strings.TrimSpace(line), " ")
 	if len(parts) < 2 {
-		return nil, err
+		return nil, io.ErrUnexpectedEOF
 	}
 	req := &httpRequest{Method: parts[0], Path: parts[1]}
 	for {
@@ -28,7 +29,7 @@ func readRequest(conn net.Conn) (*httpRequest, error) {
 		if err != nil {
 			return req, nil
 		}
-		h = strings.TrimSpace(h)
+		h = strings.TrimRight(h, "\r\n")
 		if h == "" {
 			break
 		}

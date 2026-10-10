@@ -6,6 +6,7 @@ import (
 	"redi-multi/acme"
 	"redi-multi/certs"
 	"redi-multi/config"
+	"redi-multi/rules"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -63,7 +64,7 @@ func Process(conn net.Conn, tls bool) {
 	if tls {
 		scheme = "https"
 	}
-	if !tls && certs.ForceHTTPS(host) {
+	if !tls && (certs.ForceHTTPS(host) || rules.ForceHTTPS(host)) {
 		location := "https://" + host + req.Path
 		writeRedirect(conn, 301, location)
 		return

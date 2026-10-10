@@ -46,16 +46,14 @@ class RediNodeController extends AdminController
 
             $plainToken = null;
 
-            $form->saving(function (Form $form) use (&$plainToken) {
-                if ($form->isCreating()) {
-                    $plainToken = RediNode::generateApiToken();
-                    $form->model()->setApiTokenPlain($plainToken);
-                }
-            });
-
             $form->saved(function (Form $form) use (&$plainToken) {
-                if ($plainToken) {
-                    admin_toastr('节点 API Token（仅显示一次，请保存）：'.$plainToken, 'warning', ['timeOut' => 0]);
+                if ($form->isCreating()) {
+                    $node = RediNode::find($form->getKey());
+                    if ($node) {
+                        $plainToken = $node->issueApiTokenPlain();
+                        $node->save();
+                        admin_toastr('节点 API Token（仅显示一次，请保存）：'.$plainToken, 'warning', ['timeOut' => 0]);
+                    }
                 }
             });
         });

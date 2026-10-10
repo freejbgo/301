@@ -55,7 +55,7 @@ class CloudflareDnsProvider implements DnsProviderInterface
 
         $zoneId = $this->zoneId();
         $name = $this->recordNameForFqdn($fqdn);
-        $existing = $this->listRecords($zoneId, 'A', $name);
+        $existing = $this->listRecords($zoneId, 'A', $fqdn);
 
         foreach ($existing as $row) {
             $this->http->delete("zones/{$zoneId}/dns_records/{$row['id']}");
@@ -84,7 +84,8 @@ class CloudflareDnsProvider implements DnsProviderInterface
         }
 
         $zoneId = $this->zoneId();
-        $existing = $this->listRecords($zoneId, 'CNAME', $name);
+        $cnameFqdn = $name === '@' ? $zone : $name.'.'.$zone;
+        $existing = $this->listRecords($zoneId, 'CNAME', $cnameFqdn);
         foreach ($existing as $row) {
             $this->http->delete("zones/{$zoneId}/dns_records/{$row['id']}");
         }

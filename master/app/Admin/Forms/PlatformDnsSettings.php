@@ -3,6 +3,7 @@
 namespace App\Admin\Forms;
 
 use App\Models\RediPlatformDns;
+use App\Services\TenantEdgeService;
 use Dcat\Admin\Contracts\LazyRenderable;
 use Dcat\Admin\Traits\LazyWidget;
 use Dcat\Admin\Widgets\Form;
@@ -14,6 +15,7 @@ class PlatformDnsSettings extends Form implements LazyRenderable
     public function handle(array $input)
     {
         $platform = RediPlatformDns::instance();
+        $oldZone = trim($platform->edge_zone ?? '');
         $platform->edge_zone = trim($input['edge_zone'] ?? '');
         $platform->pool_host = trim($input['pool_host'] ?? 'pool') ?: 'pool';
         $platform->dns_mode = $input['dns_mode'] ?? 'manual';
@@ -30,6 +32,11 @@ class PlatformDnsSettings extends Form implements LazyRenderable
         }
 
         $platform->save();
+
+        $newZone = trim($platform->edge_zone ?? '');
+        if ($oldZone !== $newZone && $newZone !== '') {
+            TenantEdgeService::rebuildAllEdgeFqdn($newZone);
+        }
 
         return $this->response()->success('已保存')->refresh();
     }

@@ -7,7 +7,9 @@ use App\Models\RediAcmeChallenge;
 use App\Models\RediDomainCert;
 use App\Models\RediPlatformDns;
 use App\Services\CertificateDeployService;
+use App\Services\Acme\Http01PropagationWaiter;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
@@ -53,12 +55,16 @@ class CertificateIssuer
 
             $file = $authorization->getFile();
             $token = basename($file->getFilename());
+            $body = $file->getContents();
+            DB::table('redi_acme_challenge_node_sync')->where('domain_name', $domain)->delete();
             RediAcmeChallenge::upsertForDomain(
                 $domain,
                 $token,
-                $file->getContents(),
+                $body,
                 Carbon::now()->addHours(2)
             );
+
+            app(Http01PropagationWaiter::class)->wait($domain, $token, $body);
 
             $client->validate($authorization->getHttpChallenge(), 15);
         }

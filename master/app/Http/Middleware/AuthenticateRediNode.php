@@ -15,13 +15,7 @@ class AuthenticateRediNode
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $node = null;
-        foreach (RediNode::enabled()->get() as $candidate) {
-            if ($candidate->verifyApiToken($header)) {
-                $node = $candidate;
-                break;
-            }
-        }
+        $node = $this->resolveNode($header);
 
         if (! $node) {
             return response()->json(['message' => 'Unauthorized'], 401);
@@ -30,5 +24,23 @@ class AuthenticateRediNode
         $request->attributes->set('redi_node', $node);
 
         return $next($request);
+    }
+
+    protected function resolveNode(string $token): ?RediNode
+    {
+        if (preg_match('/^(\d+)\.(.+)$/', $token, $m)) {
+            $candidate = RediNode::enabled()->find((int) $m[1]);
+            if ($candidate && $candidate->verifyApiToken($token)) {
+                return $candidate;
+            }
+        }
+
+        foreach (RediNode::enabled()->get() as $candidate) {
+            if ($candidate->verifyApiToken($token)) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 }

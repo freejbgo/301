@@ -144,6 +144,18 @@ sudo nginx -t && sudo systemctl reload nginx
 
 有域名后：改 `.env` 的 `APP_URL`、`ADMIN_HTTPS=true`，用 certbot 或自有证书配 HTTPS。
 
+**边缘池 / 证书（可选，见 [docs/DEVELOPMENT-EDGE-POOL-HTTPS.md](docs/DEVELOPMENT-EDGE-POOL-HTTPS.md)）**：
+
+```bash
+cd /opt/301/master
+# .env：QUEUE_CONNECTION=database（默认示例已改）
+php artisan migrate --force   # 升级库时
+php artisan queue:work --sleep=3 --tries=3 &
+# crontab：* * * * * cd /opt/301/master && php artisan schedule:run
+```
+
+后台配置「DNS 与节点池」「节点管理」；租户域名 CNAME 后批量/单个申请证书。
+
 ---
 
 ## 2. 每一台节点机（CentOS 7）
@@ -160,6 +172,7 @@ sudo yum install -y tar firewalld
 sudo systemctl enable --now firewalld
 sudo firewall-cmd --permanent --add-service=ssh
 sudo firewall-cmd --permanent --add-port=80/tcp
+sudo firewall-cmd --permanent --add-port=443/tcp
 sudo firewall-cmd --permanent --add-port=8080/tcp
 sudo firewall-cmd --reload
 
@@ -176,6 +189,8 @@ export REDI_DB_PORT=3306
 export REDI_DB_USER=redi_admin
 export REDI_DB_PASSWORD=${DB_PASS}
 export REDI_DB_NAME=redi_admin
+export REDI_MASTER_URL=https://你的主控域名或暂用http://${MASTER_IP}
+export REDI_NODE_TOKEN=在后台节点管理创建节点后保存的一次性Token
 EOF
 chmod 600 env.sh
 
