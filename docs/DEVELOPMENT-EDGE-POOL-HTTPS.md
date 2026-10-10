@@ -230,12 +230,17 @@ DnsProviderInterface::testConnection()
 - [ ] `setIptable` / `UnsetIptable` 对两端口均 append/delete 规则  
 - [ ] 与 TLS 层顺序：实现阶段确定（TLS 终止在 Go 内则 lagran 针对 443 sport；若前置代理则 lagran 可能仅 80）  
 
-### 6.4 跳转页与 api.js
+### 6.4 HTTP-01 挑战（与 80 共存）
+
+- [ ] 收到主控挑战后，在 **80** 对 `Host: foo.com` 且路径 `/.well-known/acme-challenge/*` 返回明文 token（**优先于**跳转 HTML）  
+- [ ] 挑战结束后可删除或覆盖；lagran 需保证该响应能到达 LE（实现时联调）  
+
+### 6.5 跳转页与 api.js
 
 - [ ] HTTPS 页面中脚本 URL 改为 **https** 或相对协议（`//host:8080` → 建议 **同 host 443 反代 api** 或 `https://{server_ip}:8080`）  
 - [ ] 避免混合内容导致浏览器拦截  
 
-### 6.5 强制 HTTPS
+### 6.6 强制 HTTPS
 
 - [ ] 主控 `force_https` 标记同步到节点（查库或缓存）  
 - [ ] 80 上对已强制域名返回 301 Location `https://...`  
