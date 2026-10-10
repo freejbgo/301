@@ -1,0 +1,105 @@
+301主控安装：
+
+1、bt安装 apache mysql5.6 php7.4
+
+2、网站设置 运行目录设置为public，重定向：login301到301login/admin
+
+3、mysql访问权限设置所有人或指定ip访问
+
+4、底部footer位置:
+
+vendor/dcat/laravel-admin/resouce/views/layouts/container.blade.php
+
+
+5、mysql日志显示[Warning] IP address 'xxxx' could not be resolved: Name or service not known，那是因为mysql默认会反向解析DNS，对于访问者Mysql不会判断是hosts还是ip都会进行dns反向解析，频繁地查询数据库和权限检查，这大大增加了数据库的压力，导致数据库连接缓慢，严重的时候甚至死机，出现“连接数据库时出错”等字样。
+
+解决办法：禁用dns反查即可
+
+找到mysql的配置文件my.cnf（linux环境下）或者my.ini(windows环境下)进行编辑加入如下一行即可：
+
+[mysqld]
+skip-name-resolve
+skip-external-locking
+
+
+6、添加计划任务
+
+每隔2小时备份mysql
+
+每隔3个小时重启一下mysql
+脚本命令：/etc/init.d/mysqld restart
+
+
+
+7、迁移301系统的时候 不要相信宝塔面板的打包 因为打包的文件都不全 需要人工打包根目录 然后再迁移文件包。
+
+
+
+
+
+节点：
+
+301跳转程序自启动任务：
+
+1. 创建启动脚本(复制下面代码到EOF,并粘贴到ssh)
+cat <<'EOF' >redi-multi.sh
+#!/bin/bash
+
+cd /home/go/src/redi-multi
+nohup go run main.go &
+EOF
+
+
+2.授予脚本执行权限：
+chmod +x redi-multi.sh
+
+
+3.打开用户的 crontab 文件：
+crontab -e
+
+
+4.在文件中添加以下内容：
+@reboot  /root/redi-multi.sh
+
+
+5.重启crond程序使之生效：
+systemctl restart crond
+
+
+
+
+
+
+
+修改301数据库连接：
+
+vi /home/go/src/redi-multi/mysqlconnect/mysqlconnect.go
+
+
+杀死进程：
+
+killall main
+
+
+重启301：
+
+cd /home/go/src/redi-multi
+nohup go run main.go &
+
+
+执行第二个命令之后需要等到10秒钟 
+
+别忘了执行命令之前，先iptables -F , iptables -X 清空防火墙规则。
+
+
+
+开启启动：
+vi /etc/rc.loacl
+
+cd /home/go/src/redi-multi
+nohup go run main.go &
+
+
+
+
+
