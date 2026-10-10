@@ -63,3 +63,5 @@ ufw enable
 ```
 
 更完整说明见 [SECURITY.md](SECURITY.md)。
+
+边缘 CNAME、证书与节点池 **一期开发规格** 见 [docs/DEVELOPMENT-EDGE-POOL-HTTPS.md](docs/DEVELOPMENT-EDGE-POOL-HTTPS.md)。
