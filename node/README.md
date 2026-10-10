@@ -2,42 +2,72 @@
 
 出处：http://www.topgoer.com/开发环境/go的安装.html
 
-## 1.1 下载地址
+## 1.1. 下载地址
 
-- Go 官网：https://golang.org/dl/
-- Go 语言资源站：https://studygolang.com/dl
+Go官网下载地址：https://golang.org/dl/
 
-## 1.2 Linux 下安装
+Go语言资源站：https://studygolang.com/dl
 
-1. SSH 远程登录 Linux 服务器  
-2. 安装 mercurial：`yum install mercurial -y`  
-3. 安装 git：`yum install git -y`  
-4. 安装 gcc：`yum install gcc -y`  
-5. 下载 Go 压缩包（可选最新版本）：
+## 1.2. Linux下安装
+
+1. SSH远程登录你的linux服务器  
+2. 安装 mercurial包：
+
+```bash
+yum install mercurial -y
+```
+
+3. 安装git包：
+
+```bash
+yum install git -y
+```
+
+4. 安装gcc：
+
+```bash
+yum install gcc -y
+```
+
+5. 下载Go的压缩包:(可选择最新的Go版本)
 
 ```bash
 cd /usr/local/
 wget https://go.dev/dl/go1.20.2.linux-amd64.tar.gz
 ```
 
-注意：若无法访问外网，可到 Go 语言资源站下载后通过 FTP 上传到该目录。
+注意：如果不能翻墙，去go语言资源站 下载相应的包。然后通过ftp上传到此目录。
 
-6. 解压：
+6. 下载完成 or ftp上传完成，用tar 命令来解压压缩包。
 
 ```bash
 tar -zxvf go1.20.2.linux-amd64.tar.gz
 ```
 
-7. 建立 Go 工作空间（GOPATH）。在 `/home` 下建 `go` 目录，再建三个子目录 `src`、`pkg`、`bin`：
+7. 建立Go的工作空间（workspace，也就是GOPATH环境变量指向的目录）
 
-```bash
-cd /home/
-mkdir go
-cd go/
-mkdir bin src pkg
+GO代码必须在工作空间内。工作空间是一个目录，其中包含三个子目录：
+
+- src ---- 里面每一个子目录，就是一个包。包内是Go的源码文件  
+- pkg ---- 编译后生成的，包的目标文件  
+- bin ---- 生成的可执行文件  
+
+这里，我们在/home目录下, 建立一个名为go(可以不是go, 任意名字都可以)的文件夹， 然后再建立三个子文件夹(子文件夹名必须为src、pkg、bin)。
+
+```text
+[root@localhost local]# cd /home/
+[root@localhost home]# mkdir go
+[root@localhost home]# cd go/
+[root@localhost go]# mkdir bin src pkg
 ```
 
-8. 配置环境变量，编辑 `/etc/profile`，加入：
+8. 添加PATH环境变量and设置GOPATH环境变量
+
+```bash
+vi /etc/profile
+```
+
+加入下面这三行:
 
 ```bash
 export GOROOT=/usr/local/go
@@ -45,26 +75,41 @@ export PATH=$GOROOT/bin:$PATH
 export GOPATH=/home/go
 ```
 
-保存后执行 `source /etc/profile`。
+保存后，执行以下命令，使环境变量立即生效:
 
-9. 验证：`go version`（应显示如 `go version go1.20.2 linux/amd64`）
+```bash
+source /etc/profile
+```
 
-10. 查看环境：`go env`
+至此，Go语言的环境已经安装完毕。
 
-## 1.3 清空防火墙规则
+9. 验证一下是否安装成功，如果出现下面的信息说明安装成功了
+
+```text
+[root@localhost go]# go version
+go version go1.20.2 linux/amd64
+```
+
+10. 查看Go语言的环境信息
+
+```text
+[root@localhost go]# go env
+```
+
+## 1.3. 清空防护墙的规则
 
 ```bash
 systemctl status firewalld.service
 systemctl stop firewalld.service
 iptables -nvL
-iptables -F   # 清空所有防火墙规则
+iptables -F   # 清空所有的防火墙规则
 iptables -X   # 删除用户自定义的空链
 iptables -Z   # 清空计数
 ```
 
-## 1.4 配置 301 跳转服务器
+## 1.4. 配置301跳转服务器
 
-将源文件 `redi-multi` 复制到 `/home/go/src`：
+把源文件redi-multi复制到/home/go/src目录里面：
 
 ```bash
 cp redi-multi.zip /home/go/src
@@ -73,15 +118,19 @@ unzip redi-multi.zip
 cd redi-multi
 ```
 
-## 1.5 修改数据库 IP
+## 1.5. 修改源文件中的数据库IP地址为后台IP
 
-修改源文件中的数据库 IP 为**后台（主控）IP**。
+![修改数据库 IP - 图1](docs/images/image1.png)
 
-## 1.6 修改 config.json
+![修改数据库 IP - 图2](docs/images/image2.png)
 
-将 `config.json` 中的 IP 改为**跳转服务器外网 IP**。
+## 1.6. 修改源文件中config.json的IP地址为跳转服务器的外网IP
 
-## 1.7 启动 301 跳转程序
+![修改 config.json - 图1](docs/images/image3.png)
+
+![修改 config.json - 图2](docs/images/image4.png)
+
+## 1.7. 启动301跳转程序
 
 ```bash
 cd /home/go/src/redi-multi
