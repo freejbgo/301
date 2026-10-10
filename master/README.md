@@ -1,64 +1,83 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# 301 主控安装
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+1. 宝塔安装 Apache、MySQL 5.6、PHP 7.4
 
-## About Laravel
+2. 网站设置：运行目录设置为 `public`；重定向：`login301` → `301login/admin`
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+3. MySQL 访问权限：设置为所有人或指定 IP 访问
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+4. 底部 footer 位置：
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+`vendor/dcat/laravel-admin/resouce/views/layouts/container.blade.php`
 
-## Learning Laravel
+5. MySQL 日志若出现 `[Warning] IP address 'xxxx' could not be resolved: Name or service not known`，那是因为 MySQL 默认会反向解析 DNS，对于访问者 MySQL 不会判断是 hosts 还是 IP 都会进行 DNS 反向解析，频繁地查询数据库和权限检查，这大大增加了数据库的压力，导致数据库连接缓慢，严重的时候甚至死机，出现「连接数据库时出错」等字样。
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+**解决办法：** 禁用 DNS 反查即可。
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+找到 MySQL 的配置文件 `my.cnf`（Linux）或 `my.ini`（Windows），编辑并加入：
 
-## Laravel Sponsors
+```ini
+[mysqld]
+skip-name-resolve
+skip-external-locking
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+6. 添加计划任务
 
-### Premium Partners
+- 每隔 2 小时备份 MySQL
+- 每隔 3 个小时重启一下 MySQL，脚本命令：`/etc/init.d/mysqld restart`
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+7. 迁移 301 系统的时候，不要相信宝塔面板的打包，因为打包的文件都不全，需要人工打包根目录，然后再迁移文件包。
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 节点
 
-## Code of Conduct
+### 301 跳转程序自启动任务
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. 创建启动脚本（复制下面代码到 EOF，并粘贴到 SSH）：
 
-## Security Vulnerabilities
+```bash
+cat <<'EOF' >redi-multi.sh
+#!/bin/bash
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+cd /home/go/src/redi-multi
+nohup go run main.go &
+EOF
+```
 
-## License
+2. 授予脚本执行权限：`chmod +x redi-multi.sh`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+3. 打开用户的 crontab 文件：`crontab -e`
+
+4. 在文件中添加以下内容：`@reboot  /root/redi-multi.sh`
+
+5. 重启 crond 程序使之生效：`systemctl restart crond`
+
+### 修改 301 数据库连接
+
+`vi /home/go/src/redi-multi/mysqlconnect/mysqlconnect.go`
+
+### 杀死进程
+
+`killall main`
+
+### 重启 301
+
+```bash
+cd /home/go/src/redi-multi
+nohup go run main.go &
+```
+
+执行第二个命令之后需要等到 10 秒钟。
+
+别忘了执行命令之前，先 `iptables -F`、`iptables -X` 清空防火墙规则。
+
+### 开启启动
+
+`vi /etc/rc.loacl`
+
+```bash
+cd /home/go/src/redi-multi
+nohup go run main.go &
+```
