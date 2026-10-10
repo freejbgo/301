@@ -7,6 +7,9 @@ use App\Models\RediAdminGroup;
 
 class DomainBatchCreator
 {
+    /** 单次批量添加上限（有效数据行，不含空行与 # 注释） */
+    public const MAX_LINES_PER_BATCH = 500;
+
     /**
      * @return array{imported: int, skipped: int, errors: string[]}
      */
@@ -37,6 +40,18 @@ class DomainBatchCreator
 
         if (! $groupOk) {
             $result['errors'][] = '分组无效或不属于当前账号';
+
+            return $result;
+        }
+
+        $dataLineCount = $this->countDataLines($lines);
+        if ($dataLineCount === 0) {
+            $result['errors'][] = '请至少填写一行域名';
+
+            return $result;
+        }
+        if ($dataLineCount > self::MAX_LINES_PER_BATCH) {
+            $result['errors'][] = '单次最多添加 '.self::MAX_LINES_PER_BATCH.' 条域名，当前为 '.$dataLineCount.' 条，请分批提交。';
 
             return $result;
         }
@@ -95,10 +110,20 @@ class DomainBatchCreator
             $result['imported']++;
         }
 
-        if ($rowIndex === 0) {
-            $result['errors'][] = '请至少填写一行域名';
+        return $result;
+    }
+
+    protected function countDataLines(string $lines): int
+    {
+        $count = 0;
+        foreach (preg_split('/\r\n|\r|\n/', $lines) as $line) {
+            $line = trim($line);
+            if ($line === '' || (isset($line[0]) && $line[0] === '#')) {
+                continue;
+            }
+            $count++;
         }
 
-        return $result;
+        return $count;
     }
 }
