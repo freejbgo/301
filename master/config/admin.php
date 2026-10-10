@@ -11,7 +11,7 @@ return [
     | login page.
     |
     */
-    'name' => 'BestOneCDN 301',
+    'name' => '301 跳转系统',
 
     /*
     |--------------------------------------------------------------------------
@@ -22,7 +22,7 @@ return [
     | `img` tag, eg '<img src="http://logo-url" alt="Admin logo">'.
     |
     */
-    'logo' => '<img src="/vendor/dcat-admin/images/logo.png" width="35"> &nbsp;BestOneCDN 301',
+    'logo' => '<img src="/vendor/dcat-admin/images/logo.png" width="35"> &nbsp;301 跳转系统',
 
     /*
     |--------------------------------------------------------------------------
@@ -96,7 +96,7 @@ return [
     | Html title for all pages.
     |
     */
-    'title' => 'BestOneCDN 301',
+    'title' => '301 跳转系统',
 
     /*
     |--------------------------------------------------------------------------

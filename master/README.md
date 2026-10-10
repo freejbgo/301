@@ -23,6 +23,12 @@
 
 分组下仍有域名时不允许删除。列表中对已删分组显示「（分组不存在）」。
 
+### 系统外观（全平台一套）
+
+超级管理员登录后：**站点配置 → 系统外观**，可修改 Logo、系统名称、浏览器标题、登录框标题、Favicon。设置保存在 `admin_settings` 表；上传图片需已执行 `php artisan storage:link`。
+
+后台底部版权栏已默认隐藏。
+
 ---
 
 1. 宝塔安装 Apache、MySQL 5.6、PHP 7.4
@@ -31,11 +37,7 @@
 
 3. MySQL 访问权限：设置为所有人或指定 IP 访问
 
-4. 底部 footer 位置：
-
-`vendor/dcat/laravel-admin/resouce/views/layouts/container.blade.php`
-
-5. MySQL 日志若出现 `[Warning] IP address 'xxxx' could not be resolved: Name or service not known`，那是因为 MySQL 默认会反向解析 DNS，对于访问者 MySQL 不会判断是 hosts 还是 IP 都会进行 DNS 反向解析，频繁地查询数据库和权限检查，这大大增加了数据库的压力，导致数据库连接缓慢，严重的时候甚至死机，出现「连接数据库时出错」等字样。
+4. MySQL 日志若出现 `[Warning] IP address 'xxxx' could not be resolved: Name or service not known`，那是因为 MySQL 默认会反向解析 DNS，对于访问者 MySQL 不会判断是 hosts 还是 IP 都会进行 DNS 反向解析，频繁地查询数据库和权限检查，这大大增加了数据库的压力，导致数据库连接缓慢，严重的时候甚至死机，出现「连接数据库时出错」等字样。
 
 **解决办法：** 禁用 DNS 反查即可。
 

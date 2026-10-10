@@ -23,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        if (! $this->app->runningInConsole()) {
+            $this->app->booted(function () {
+                \App\Support\PlatformBranding::applyLoginPageName();
+            });
+        }
     }
 }

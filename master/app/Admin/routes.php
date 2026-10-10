@@ -20,4 +20,5 @@ Route::group([
 
     $router->resource('group', 'RediAdminGroupController');
     $router->resource('domain', 'RediAdminDomainController');
+    $router->get('platform-settings', 'PlatformSettingsController@index');
 });

@@ -1,10 +1,19 @@
 <?php
 
+use App\Support\PlatformBranding;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid\Filter;
 use Dcat\Admin\Show;
+
+Admin::booting(function () {
+    PlatformBranding::applyAdminConfig();
+});
+
+Admin::style(<<<'CSS'
+.main-footer { display: none !important; }
+CSS);
 
 /**
  * Dcat-admin - admin builder based on Laravel.
