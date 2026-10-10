@@ -1,6 +1,9 @@
 -- MySQL dump 10.13  Distrib 5.6.50, for Linux (x86_64)
 --
 -- Host: localhost    Database: redi_admin
+--
+-- 初始后台账号：用户名 admin ，密码 Redi301@Install2026 （首次登录后请立即修改）
+-- 表 redi_admin_domain 已含 (admin_id, original_url) 唯一约束，无需额外补丁脚本
 -- ------------------------------------------------------
 -- Server version	5.6.50-log
 
@@ -237,7 +240,7 @@ CREATE TABLE `admin_role_users` (
 
 LOCK TABLES `admin_role_users` WRITE;
 /*!40000 ALTER TABLE `admin_role_users` DISABLE KEYS */;
-INSERT INTO `admin_role_users` VALUES (1,1,'2023-02-22 00:32:10','2023-02-22 00:32:10'),(2,2,'2023-04-11 03:58:05','2023-04-11 03:58:05');
+INSERT INTO `admin_role_users` VALUES (1,1,'2023-02-22 00:32:10','2023-02-22 00:32:10');
 /*!40000 ALTER TABLE `admin_role_users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -312,7 +315,7 @@ CREATE TABLE `admin_users` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `admin_users_username_unique` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -321,7 +324,7 @@ CREATE TABLE `admin_users` (
 
 LOCK TABLES `admin_users` WRITE;
 /*!40000 ALTER TABLE `admin_users` DISABLE KEYS */;
-INSERT INTO `admin_users` VALUES (1,'adminjb','$2y$10$YU2fxKt4yq3.Pv8KqshZ9.iyVQN4Fb6e4PNsHya2pBf.cnz/anKru','admin',NULL,NULL,'2023-02-22 00:32:10','2024-11-26 07:06:21'),(2,'testjb','$2y$10$FJ0JQpVZ/HXYUXDS1WU7eOhvbDWPvXcnIdGe/bOG5RbC1mVkljc1i','test',NULL,NULL,'2023-03-29 04:26:19','2024-11-26 07:06:48');
+INSERT INTO `admin_users` VALUES (1,'admin','$2b$10$H1daH3IQEcnNNKkGJxQQoeVvxw0RXPjBAXHMPqwttW8/BAIUYKEYS','管理员',NULL,NULL,'2023-02-22 00:32:10',NOW());
 /*!40000 ALTER TABLE `admin_users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -427,8 +430,9 @@ CREATE TABLE `redi_admin_domain` (
   PRIMARY KEY (`id`),
   KEY `idx_group` (`group_id`),
   KEY `idx_original_url` (`original_url`(191)),
-  KEY `idx_admin` (`admin_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7422 DEFAULT CHARSET=utf8mb4;
+  KEY `idx_admin` (`admin_id`),
+  UNIQUE KEY `uniq_admin_original_url` (`admin_id`,`original_url`(191))
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

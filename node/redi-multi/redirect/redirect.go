@@ -42,7 +42,7 @@ func Process(conn net.Conn) {
 
 		if _, err = conn.Write([]byte("HTTP/1.1 200\r\n" +
 			"Content-Type: text/html\r\n" +
-			"Cache-Control: max-age=86400\r\n" +
+			"Cache-Control: no-store\r\n" +
 			"Content-Length: " + length + "\r\n" +
 			"Connection: close\r\n\r\n" + content)); err != nil {
 			logrus.Errorf("write to client failed, err: %v\n", err)

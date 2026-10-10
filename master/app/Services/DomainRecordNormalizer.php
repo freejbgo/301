@@ -19,10 +19,25 @@ class DomainRecordNormalizer
             return '';
         }
 
-        if (preg_match('#^https?://#i', $url)) {
-            return $url;
+        if (! preg_match('#^https?://#i', $url)) {
+            $url = 'http://'.$url;
         }
 
-        return 'http://'.$url;
+        if (! self::isAllowedRedirectUrl($url)) {
+            return '';
+        }
+
+        return $url;
+    }
+
+    public static function isAllowedRedirectUrl(string $url): bool
+    {
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+
+        return in_array($scheme, ['http', 'https'], true);
     }
 }
