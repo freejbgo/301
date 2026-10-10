@@ -19,6 +19,5 @@ Route::group([
     $router->get('/', 'HomeController@index');
 
     $router->resource('group', 'RediAdminGroupController');
-    $router->get('domain/import-template', 'RediAdminDomainController@importTemplate');
     $router->resource('domain', 'RediAdminDomainController');
 });
