@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToAdminTenant;
 use Dcat\Admin\Traits\HasDateTimeFormatter;
-
 use Illuminate\Database\Eloquent\Model;
 
 class RediAdminDomain extends Model
 {
-	use HasDateTimeFormatter;
+    use BelongsToAdminTenant;
+    use HasDateTimeFormatter;
+
     protected $table = 'redi_admin_domain';
 
     protected $fillable = [
@@ -18,7 +20,6 @@ class RediAdminDomain extends Model
         'status',
         'admin_id',
         'admin_name',
-        'skip_num',
     ];
 
     public function group()

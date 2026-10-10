@@ -1,5 +1,7 @@
 # 301 主控安装
 
+完整安全与上线清单见仓库根目录 [SECURITY.md](../SECURITY.md)。
+
 ## 功能说明（维护）
 
 ### 批量添加域名
@@ -13,15 +15,13 @@
 
 弹窗内输入框使用灰色占位说明，**点击开始输入后占位文字会自动消失**（浏览器默认行为）。
 
-无需安装 Excel 相关 Composer 包。
-
 ### 跳转次数（点击统计）
 
-列表字段 **跳转次数** 对应表 `redi_admin_domain.skip_num`。主控本身不累计，由 **节点程序** 在访问时直连同一 MySQL，执行 `skip_num = skip_num + 1`。请使用带统计逻辑的节点包（见仓库 `node/README.md` 末尾说明）。
+列表字段 **跳转次数** 对应表 `redi_admin_domain.skip_num`。由节点在访问且域名 **启用（status=1）** 时写库递增。节点配置见 `node/README.md`。
 
 ### 分组删除
 
-分组下仍有域名时不允许删除（避免域名列表因 `group` 为空报错）。请先迁移或删除域名后再删分组。
+分组下仍有域名时不允许删除。列表中对已删分组显示「（分组不存在）」。
 
 ---
 
@@ -81,7 +81,7 @@ EOF
 
 ### 修改 301 数据库连接
 
-`vi /home/go/src/redi-multi/mysqlconnect/mysqlconnect.go`
+`vi /home/go/src/redi-multi/mysqlconnect/mysqlconnect.go`（或使用环境变量 `REDI_DB_HOST` 等，见 `node/README.md`）
 
 ### 杀死进程
 

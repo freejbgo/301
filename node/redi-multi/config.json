@@ -1,0 +1,18 @@
+{
+  "debug": false,
+  "addr": "0.0.0.0:80",
+  "server_ip": "23.91.96.174",
+  "default_redirect_url": "https://www.baidu.com",
+  "lagran": {
+    "port": "80",
+    "syn_ack": true,
+    "ack": true,
+    "psh_ack": true,
+    "fin_ack": true
+  },
+  "redirector": {
+    "domain1.com": "http://www.1.com",
+    "domain2.com": "http:/www.2.com",
+    "127.0.0.1": "https://www.baidu.com"
+  }
+}

@@ -84,8 +84,10 @@ class RediAdminGroupController extends AdminController
             $form->radio('status', '状态')->options([1=>'启用', 2=>'停用'])->default(1);
             //$form->text('status');
 
-            $form->hidden('admin_id')->value(Admin::user()->id);
-            $form->hidden('admin_name')->value(Admin::user()->username);
+            if ($form->isCreating()) {
+                $form->hidden('admin_id')->value(Admin::user()->id);
+                $form->hidden('admin_name')->value(Admin::user()->username);
+            }
 
             $form->display('created_at');
             $form->display('updated_at');

@@ -141,11 +141,23 @@ nohup go run main.go &
 
 ## 节点程序包
 
-仓库仅保留 **`redi-multi.tar.gz`**（标准节点，含跳转次数统计）。
+源码目录 **`redi-multi/`** 与发布包 **`redi-multi.tar.gz`**（已去掉历史内置二进制，仅含源码与配置）。
 
 ### 跳转次数（`skip_num`）
 
-主控 **跳转次数** 由节点在 `GET /api.js?d=...` 时直连 MySQL，在 `api/api.go` 中执行 `UPDATE redi_admin_domain SET skip_num=skip_num+1`。部署后请修改 `mysqlconnect/mysqlconnect.go` 与 `config.json` 中的数据库地址、本机外网 IP 等（勿使用压缩包内自带的示例 IP）。
+主控 **跳转次数** 由节点在 `GET /api.js?d=...` 时直连 MySQL；仅当域名 **启用（status=1）** 时跳转并执行 `skip_num=skip_num+1`。
+
+### 数据库环境变量（上线必填）
+
+| 变量 | 说明 |
+|------|------|
+| `REDI_DB_HOST` | MySQL 地址 |
+| `REDI_DB_PORT` | 端口，默认 `3306` |
+| `REDI_DB_USER` | 用户，默认 `redi_admin` |
+| `REDI_DB_PASSWORD` | 密码（勿写入仓库） |
+| `REDI_DB_NAME` | 库名，默认 `redi_admin` |
+
+另请修改 `config.json` 中 `server_ip` 等为当前节点外网 IP。
 
 ### 已移除的冗余包（对比结论）
 

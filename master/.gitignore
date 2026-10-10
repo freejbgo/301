@@ -13,3 +13,7 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+*.swp
+.*.swp
+.env.swp
+nohup.out
