@@ -1,0 +1,2 @@
+# 部署时本地密码，勿提交
+scripts/centos7/vars.env
