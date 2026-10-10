@@ -7,13 +7,11 @@ use Dcat\Admin\Form;
 use Dcat\Admin\Grid\Filter;
 use Dcat\Admin\Show;
 
+app('view')->prependNamespace('admin', resource_path('views/admin'));
+
 Admin::booting(function () {
     PlatformBranding::applyAdminConfig();
 });
-
-Admin::style(<<<'CSS'
-.main-footer { display: none !important; }
-CSS);
 
 /**
  * Dcat-admin - admin builder based on Laravel.
