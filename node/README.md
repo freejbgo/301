@@ -139,14 +139,17 @@ nohup go run main.go &
 
 ---
 
-## 节点包与「跳转次数」统计
+## 节点程序包
 
-主控域名列表的 **跳转次数**（`skip_num`）由节点在 `GET /api.js?d=...` 时写库。本仓库 `node/` 下三个包对比如下：
+仓库仅保留 **`redi-multi.tar.gz`**（标准节点，含跳转次数统计）。
 
-| 文件 | 是否递增 `skip_num` | 说明 |
-|------|---------------------|------|
-| `redi-multi.tar.gz` | **是** | `api/api.go` 中查询跳转后执行 `UPDATE ... skip_num=skip_num+1` |
-| `redi-multi_Yk7RxC.tar.zip` | **是** | 与上同为标准节点（内层 tar 代码一致） |
-| `redi-multi-mysql版.zip` | **否** | 仅查询跳转 URL，**不更新** `skip_num`，不适合需要统计的场景 |
+### 跳转次数（`skip_num`）
 
-需要点击/跳转统计时，请部署 **redi-multi.tar.gz** 或 **redi-multi_Yk7RxC.tar.zip**，并确保节点 `mysqlconnect` 连接的是主控同一库 `redi_admin`。
+主控 **跳转次数** 由节点在 `GET /api.js?d=...` 时直连 MySQL，在 `api/api.go` 中执行 `UPDATE redi_admin_domain SET skip_num=skip_num+1`。部署后请修改 `mysqlconnect/mysqlconnect.go` 与 `config.json` 中的数据库地址、本机外网 IP 等（勿使用压缩包内自带的示例 IP）。
+
+### 已移除的冗余包（对比结论）
+
+| 已删除文件 | 与 `redi-multi.tar.gz` 关系 |
+|------------|------------------------------|
+| `redi-multi_Yk7RxC.tar.zip` | `api.go`、编译产物与标准包**完全一致**；仅 `config.json` / `mysqlconnect` 里示例 IP 不同 |
+| `redi-multi-mysql版.zip` | **不同**：`api.go` **不递增** `skip_num`，不适合需要统计的场景 |
