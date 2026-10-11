@@ -151,7 +151,8 @@ cd /opt/301/master
 # .env：QUEUE_CONNECTION=database（默认示例已改）
 php artisan migrate --force   # 升级库时
 php artisan queue:work --sleep=3 --tries=3 &
-# crontab：* * * * * cd /opt/301/master && php artisan schedule:run
+# 证书续期：每天一次即可，例如 03:10：
+# 10 3 * * * cd /opt/301/master && php artisan redi:renew-certificates >> /var/log/redi-renew.log 2>&1
 ```
 
 后台配置「DNS 与节点池」「节点管理」；租户域名 CNAME 后批量/单个申请证书。

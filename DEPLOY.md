@@ -34,8 +34,15 @@ php artisan migrate --force   # 已有库升级时执行；全新导入 redi_adm
 ```bash
 # .env 建议 QUEUE_CONNECTION=database（需 jobs 表，见迁移或全量 SQL）
 php artisan queue:work --sleep=3 --tries=3
-php artisan schedule:work   # 或 crontab 调用 schedule:run，用于证书续期
 ```
+
+证书**自动续期**每天跑一次即可（不必每分钟 `schedule:run`）。在 crontab 里加一行，例如每天 03:10：
+
+```bash
+10 3 * * * cd /path/to/master && php artisan redi:renew-certificates >> /var/log/redi-renew.log 2>&1
+```
+
+（若你更喜欢 Laravel 调度器，也可每天 03:10 执行一次 `php artisan schedule:run`，效果与上类似。）
 
 节点通过 `POST/GET /api/nodes/*` 拉取 ACME 挑战与证书（Bearer 节点 Token）。
 
@@ -78,4 +85,5 @@ ufw enable
 
 更完整说明见 [SECURITY.md](SECURITY.md)。
 
-边缘 CNAME、证书与节点池 **一期开发规格** 见 [docs/DEVELOPMENT-EDGE-POOL-HTTPS.md](docs/DEVELOPMENT-EDGE-POOL-HTTPS.md)。
+边缘 CNAME、证书与节点池 **一期开发规格** 见 [docs/DEVELOPMENT-EDGE-POOL-HTTPS.md](docs/DEVELOPMENT-EDGE-POOL-HTTPS.md)。  
+客户侧 CNAME/HTTPS 说明见 [docs/CUSTOMER-CNAME-HTTPS.md](docs/CUSTOMER-CNAME-HTTPS.md)。
