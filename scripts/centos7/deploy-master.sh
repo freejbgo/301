@@ -105,8 +105,9 @@ if compgen -G "/etc/yum.repos.d/epel*.repo" > /dev/null; then
 fi
 yum install -y "https://rpms.remirepo.net/enterprise/remi-release-7.rpm"
 yum-config-manager --enable remi-php80
+# Remi PHP 8.0 没有独立的 php-json / php-zip 包。json 在 php-common 里，zip 是 php-pecl-zip。
 yum install -y nginx firewalld tar policycoreutils-python \
-  php php-cli php-fpm php-mysqlnd php-mbstring php-xml php-json php-zip \
+  php php-cli php-fpm php-mysqlnd php-mbstring php-xml php-pecl-zip \
   php-gd php-bcmath php-opcache php-process
 
 rpm --import https://archive.mariadb.org/PublicKey
@@ -123,9 +124,9 @@ yum install -y MariaDB-server MariaDB-client MariaDB-common MariaDB-compat
 php -r 'if (PHP_VERSION_ID < 70300 || PHP_VERSION_ID >= 80100) { fwrite(STDERR, "需要 PHP 7.3 或 8.0，当前 ".PHP_VERSION."\n"); exit(1); }'
 echo "PHP $(php -r 'echo PHP_VERSION;')"
 
-step "启动 MariaDB、Nginx、PHP-FPM、firewalld"
-systemctl enable --now mariadb
+step "先开防火墙，再启动 MariaDB"
 systemctl enable --now firewalld
+systemctl enable --now mariadb
 ok=0
 for _ in $(seq 1 60); do
   if mysqladmin --protocol=socket -u root ping --silent >/dev/null 2>&1 \
@@ -138,6 +139,8 @@ done
 [[ "$ok" == 1 ]] || die "MariaDB 60 秒内没有就绪"
 
 write_root_cnf() {
+  local prev
+  prev=$(umask)
   umask 077
   cat > /root/.redi-mysql.cnf <<EOF
 [client]
@@ -145,6 +148,7 @@ user=root
 password=${MYSQL_ROOT_PASS}
 EOF
   chmod 600 /root/.redi-mysql.cnf
+  umask "$prev"
 }
 
 mysql_root() {
@@ -184,6 +188,7 @@ cat > /etc/my.cnf.d/redi-bind-address.cnf <<'EOF'
 [mysqld]
 bind-address=0.0.0.0
 EOF
+chmod 644 /etc/my.cnf.d/redi-bind-address.cnf
 bash "${SCRIPT_DIR}/apply-mysql-skip-name-resolve.sh"
 
 step "创建库和本机账号"
@@ -221,6 +226,8 @@ else
 fi
 
 step "解压主控发布包到 ${APP}"
+# 解压会套用当前 umask。保持 022，避免 PHP 文件变成 600 后 Nginx 无法读取。
+umask 022
 mkdir -p "$MASTER_INSTALL_ROOT"
 env_bak=""
 if [[ -f "${APP}/.env" ]]; then
@@ -349,6 +356,9 @@ server {
 EOF
 else
   echo "已有 /etc/nginx/conf.d/301-master.conf，保持不变"
+fi
+if [[ -f /etc/nginx/conf.d/default.conf ]]; then
+  mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.disabled.redi
 fi
 nginx -t
 systemctl enable --now nginx

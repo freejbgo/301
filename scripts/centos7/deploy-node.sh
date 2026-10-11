@@ -121,6 +121,7 @@ if ldd "${APP}/bin/redi-multi" 2>&1 | grep -q 'GLIBC\|libc.so'; then
   die "这个二进制仍依赖动态 libc，不能在 CentOS 7 上运行。请换仓库里重新打包的 node/redi-multi.tar.gz"
 fi
 
+prev_umask=$(umask)
 umask 077
 cat > "${APP}/env.sh" <<EOF
 REDI_DB_HOST=${MASTER_IP}
@@ -132,6 +133,7 @@ REDI_MASTER_URL=${REDI_MASTER_URL}
 REDI_NODE_TOKEN=${REDI_NODE_TOKEN}
 EOF
 chmod 600 "${APP}/env.sh"
+umask "$prev_umask"
 
 [[ -f "${APP}/config.json" ]] || cp "${APP}/config.json.example" "${APP}/config.json"
 url_sed=${DEFAULT_REDIRECT_URL//&/\\&}
