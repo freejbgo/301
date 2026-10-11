@@ -1,0 +1,30 @@
+name: Publish release packages
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check packages
+        run: |
+          test -s master/master.tar.gz
+          test -s node/redi-multi.tar.gz
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "master/master.tar.gz#master.tar.gz" \
+            "node/redi-multi.tar.gz#redi-multi.tar.gz" \
+            --title "CentOS 7 主控与节点 ${GITHUB_REF_NAME}" \
+            --notes "主控包 master.tar.gz（含 vendor，不含 .env）。节点包 redi-multi.tar.gz（CentOS 7 静态二进制）。部署步骤见仓库 DEPLOY-centos7.md。"
