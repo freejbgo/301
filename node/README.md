@@ -149,6 +149,8 @@ nohup go run main.go &
 ./scripts/build-node-tar.sh
 ```
 
+发布包与源码同步：改完节点代码后请执行上述命令并提交 `node/redi-multi.tar.gz`（CI/部署默认解压该包）。
+
 ### 跳转次数（`skip_num`）
 
 主控 **跳转次数** 由节点在 `GET /api.js?d=...` 时直连 MySQL；仅当域名 **启用（status=1）** 时跳转并执行 `skip_num=skip_num+1`。
@@ -177,7 +179,8 @@ nohup go run main.go &
 | 配置项 | 含义 |
 |--------|------|
 | `addr` | HTTP 监听，如 `0.0.0.0:80` |
-| `tls_addr` | HTTPS 监听，如 `0.0.0.0:443`；**写空字符串 `""` 可关闭 HTTPS**（不写该字段则默认 `0.0.0.0:443`） |
+| `tls_addr` | HTTPS 监听，如 `0.0.0.0:443`；**`""` 或 JSON `null` 关闭 HTTPS**（不写该字段则默认 `0.0.0.0:443`）。可用环境变量 `REDI_TLS_LISTEN` 覆盖 |
+| `addr` | 可用 `REDI_HTTP_LISTEN` 覆盖 |
 | `lagran` | 可省略，程序使用与示例相同的默认开关；**不要整段删掉后留空对象**（已兼容缺失时自动默认） |
 | `lagran.port` | **出站** TCP 源端口，供 iptables `--sport` / `multiport` 匹配；格式 **`80,443`**（逗号分隔、不要空格） |
 
