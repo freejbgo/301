@@ -29,6 +29,7 @@ class DnspodDnsProvider implements DnsProviderInterface
             throw new RuntimeException('DNSPod API ID / Token 未配置（填在 API Key / Secret）');
         }
         $this->loginToken = $id.','.$token;
+        $this->recordLine = $recordLine;
         $this->http = new Client([
             'base_uri' => rtrim($apiBase, '/').'/',
             'timeout' => 30,
@@ -53,7 +54,7 @@ class DnspodDnsProvider implements DnsProviderInterface
                 'domain' => $parts['domain'],
                 'sub_domain' => $parts['rr'] === '@' ? '@' : $parts['rr'],
                 'record_type' => 'A',
-                'record_line' => '默认',
+                'record_line' => $this->recordLine,
                 'value' => $ip,
                 'ttl' => 120,
             ]);
