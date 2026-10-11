@@ -20,11 +20,15 @@ class DnsProviderFactory
             case 'cloudflare':
                 return new CloudflareDnsProvider($platform);
             case 'aliyun_cn':
+                return new AliyunCnDnsProvider($platform);
             case 'aliyun_intl':
+                return new AliyunIntlDnsProvider($platform);
             case 'dnspod_cn':
+                return new DnspodCnDnsProvider($platform);
             case 'dnspod_intl':
+                return new DnspodIntlDnsProvider($platform);
             case 'dns_com':
-                return new StubDnsProvider($driver);
+                return new DnsComDnsProvider($platform);
             default:
                 return new ManualDnsProvider();
         }

@@ -55,9 +55,9 @@ class PlatformDnsSettings extends Form implements LazyRenderable
             'dnspod_intl' => 'DNSPod 国际',
             'dns_com' => 'dns.com',
         ])->default('manual');
-        $this->text('dns_zone_id', 'Zone ID')->help('Cloudflare 等需要');
-        $this->text('api_key', 'API Key / Token')->help('留空则不修改已存凭证');
-        $this->password('api_secret', 'API Secret');
+        $this->text('dns_zone_id', 'Zone ID')->help('Cloudflare 必填；其他厂商可留空');
+        $this->text('api_key', 'API Key / Token')->help('Cloudflare=API Token；阿里云=AccessKey ID；DNSPod=API ID；dns.com=API Key。留空不修改');
+        $this->password('api_secret', 'API Secret')->help('阿里云=AccessKey Secret；DNSPod=Token；dns.com=API Secret');
         $this->email('acme_contact_email', 'ACME 联系邮箱')->help('Let\'s Encrypt 注册邮箱');
         $this->switch('acme_staging', 'ACME 测试环境')->help('勾选则使用 Let\'s Encrypt Staging');
     }

@@ -23,7 +23,7 @@
 | 12 | 节点连库 | 仍直连 MySQL（`REDI_DB_*`） |
 | 13 | 数据库 | 新表合并进 **`db/redi_admin.sql` 全量**（全新库导入） |
 
-**当前整体进度**：`31 / 45`（见 §八；F 验收需联调后勾选）
+**当前整体进度**：`37 / 45`（见 §八；**F1–F8 需在环境执行** [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) 后勾选）
 
 ---
 
@@ -125,7 +125,7 @@ DNS 驱动：manual、cloudflare、aliyun_cn/intl、dnspod_cn/intl、dns_com。
 
 ## 六、主控 ↔ 节点 API（草案）
 
-- `POST /api/nodes/register`、`POST .../heartbeat`  
+- `POST /api/nodes/register`、`POST .../heartbeat`、`POST .../challenges-synced`  
 - `GET .../acme-challenges`、`GET .../certificates`、`POST .../ack`  
 
 ---
@@ -153,11 +153,11 @@ NS 委托；多节点池；**逐域 TXT 主流程**；客户 DNS API；主控替
 
 - [x] B1 Provider 接口 + 工厂  
 - [x] B2 Cloudflare  
-- [ ] B3 阿里云中国  
-- [ ] B4 阿里云国际  
-- [ ] B5 DNSPod 中国  
-- [ ] B6 DNSPod 国际  
-- [ ] B7 dns.com  
+- [x] B3 阿里云中国  
+- [x] B4 阿里云国际  
+- [x] B5 DNSPod 中国  
+- [x] B6 DNSPod 国际  
+- [x] B7 dns.com  
 - [x] B8 同步 pool A + tenant CNAME  
 - [x] B9 同步日志  
 
@@ -182,7 +182,7 @@ NS 委托；多节点池；**逐域 TXT 主流程**；客户 DNS API；主控替
 - [x] D5 TLS 443 + SNI  
 - [x] D6 lagran 443  
 - [x] D7 HTTPS 跳转页 / api 无混合内容  
-- [ ] D8 打包 tar.gz + 节点 README  
+- [x] D8 打包 tar.gz + 节点 README  
 
 ### E. 文档（3）
 

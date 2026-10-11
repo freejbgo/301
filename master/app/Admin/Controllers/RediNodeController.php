@@ -44,9 +44,7 @@ class RediNodeController extends AdminController
             $form->switch('enabled', '启用')->default(1);
             $form->textarea('note', '备注');
 
-            $plainToken = null;
-
-            $form->saved(function (Form $form) use (&$plainToken) {
+            $form->saved(function (Form $form) {
                 if ($form->isCreating()) {
                     $node = RediNode::find($form->getKey());
                     if ($node) {

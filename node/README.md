@@ -141,7 +141,13 @@ nohup go run main.go &
 
 ## 节点程序包
 
-源码目录 **`redi-multi/`** 与发布包 **`redi-multi.tar.gz`**（已去掉历史内置二进制，仅含源码与配置）。
+源码目录 **`redi-multi/`** 与发布包 **`redi-multi.tar.gz`**（含源码、`config.json`、`env.example` 及 `bin/redi-multi` 编译产物）。
+
+重新打包（含 Agent / 443）：
+
+```bash
+./scripts/build-node-tar.sh
+```
 
 ### 跳转次数（`skip_num`）
 

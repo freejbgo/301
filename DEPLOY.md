@@ -46,6 +46,8 @@ php artisan queue:work --sleep=3 --tries=3
 
 节点通过 `POST/GET /api/nodes/*` 拉取 ACME 挑战与证书（Bearer 节点 Token）。
 
+队列常驻示例：`scripts/systemd/redi-queue.service.example`。节点包重建：`./scripts/build-node-tar.sh`。
+
 ## 3. 节点（node/redi-multi）
 
 ```bash
