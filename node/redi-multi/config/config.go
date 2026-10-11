@@ -30,7 +30,7 @@ func Init() {
 
 	Debug = jsonBool(payload, "debug", false)
 	Addr = jsonStringRequired(payload, "addr")
-	_, TlsAddr = resolveTlsAddrFromJSON(payload)
+	TlsAddr = resolveTlsAddrFromJSON(payload)
 	ApiListen = jsonStringOptional(payload, "api_listen", "")
 	ServerIp = jsonStringRequired(payload, "server_ip")
 	DefaultRedirectUrl = jsonStringRequired(payload, "default_redirect_url")
@@ -41,6 +41,7 @@ func Init() {
 	} else {
 		Lagran = DefaultLagran()
 	}
+	normalizeLagranMap()
 
 	applyEnvOverrides()
 	mergeLagranPortsFromListeners()

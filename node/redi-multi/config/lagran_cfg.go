@@ -15,9 +15,12 @@ func LagranBool(key string, defaultVal bool) bool {
 	if Lagran == nil {
 		return defaultVal
 	}
-	v, ok := Lagran[key].(bool)
-	if !ok {
+	v, ok := Lagran[key]
+	if !ok || v == nil {
 		return defaultVal
 	}
-	return v
+	if b, ok := v.(bool); ok {
+		return b
+	}
+	return scalarToBool(v, defaultVal)
 }

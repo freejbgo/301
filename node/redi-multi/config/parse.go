@@ -59,16 +59,15 @@ func jsonStringMapOptional(payload map[string]interface{}, key string) map[strin
 }
 
 // resolveTlsAddrFromJSON 未写 tls_addr → 默认 443；null 或 "" → 关闭 HTTPS。
-func resolveTlsAddrFromJSON(payload map[string]interface{}) (present bool, addr string) {
+func resolveTlsAddrFromJSON(payload map[string]interface{}) string {
 	v, ok := payload["tls_addr"]
 	if !ok {
-		return false, "0.0.0.0:443"
+		return "0.0.0.0:443"
 	}
-	present = true
 	if v == nil {
-		return true, ""
+		return ""
 	}
-	return true, jsonStringValue(v, "tls_addr")
+	return jsonStringValue(v, "tls_addr")
 }
 
 func applyEnvOverrides() {
@@ -84,10 +83,7 @@ func applyEnvOverrides() {
 }
 
 func mergeLagranPortsFromListeners() {
-	existing := ""
-	if v, ok := Lagran["port"].(string); ok {
-		existing = v
-	}
+	existing := lagranPortFromMap()
 	Lagran["port"] = MergeListenerPorts(existing, Addr, TlsAddr)
 }
 

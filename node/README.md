@@ -181,6 +181,8 @@ nohup go run main.go &
 | `addr` | HTTP 监听，如 `0.0.0.0:80` |
 | `tls_addr` | HTTPS 监听，如 `0.0.0.0:443`；**`""` 或 JSON `null` 关闭 HTTPS**（不写该字段则默认 `0.0.0.0:443`）。可用环境变量 `REDI_TLS_LISTEN` 覆盖 |
 | `addr` | 可用 `REDI_HTTP_LISTEN` 覆盖 |
+| `debug` | 可省略，默认 `false` |
+| `lagran.port` | 可为字符串 `"80,443"` 或数字 `80`（JSON 数字） |
 | `lagran` | 可省略，程序使用与示例相同的默认开关；**不要整段删掉后留空对象**（已兼容缺失时自动默认） |
 | `lagran.port` | **出站** TCP 源端口，供 iptables `--sport` / `multiport` 匹配；格式 **`80,443`**（逗号分隔、不要空格） |
 
