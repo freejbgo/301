@@ -1,11 +1,11 @@
 # 一期开发规格与进度：边缘 CNAME（模型 2）+ 证书一键（HTTP-01）+ 全平台节点池
 
-> **原则**：**一期做完**，不按多期拆分上线。进度在 **§八** 勾选；请你确认的范围在 **§零**。  
-> **路径**：`docs/DEVELOPMENT-EDGE-POOL-HTTPS.md`
+> 这是设计说明，不是操作步骤。部署见 [DEPLOY.md](../DEPLOY.md)，后台见 [CONSOLE.md](CONSOLE.md)。  
+> **原则**：下面的范围已经按单期实现。真实环境验收仍用 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) 的 F1–F8。
 
 ---
 
-## 零、请你确认的范围清单（回复「确认」或逐条修改）
+## 零、已实现的范围
 
 | # | 确认项 | 规格（一期） |
 |---|--------|----------------|
@@ -23,7 +23,7 @@
 | 12 | 节点连库 | 仍直连 MySQL（`REDI_DB_*`） |
 | 13 | 数据库 | 新表合并进 **`db/redi_admin.sql` 全量**（全新库导入） |
 
-**当前整体进度**：`37 / 45`（见 §八；**F1–F8 需在环境执行** [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) 后勾选）
+代码侧范围已按上表落地。F1–F8 仍要在真实 DNS 和 Let's Encrypt 环境里按 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) 验收。§八里的勾选是开发过程记录。
 
 ---
 

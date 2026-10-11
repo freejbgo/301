@@ -4,6 +4,7 @@ After=network.target mariadb.service
 
 [Service]
 Type=simple
+# CentOS 7 的 Nginx/PHP 用户改为 nginx
 User=www-data
 WorkingDirectory=/opt/301/master/master
 # 证书等锁见任务 retryUntil（入队后 24 小时）；签发异常 $maxExceptions=3
