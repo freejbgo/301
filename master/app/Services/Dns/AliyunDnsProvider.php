@@ -73,6 +73,7 @@ class AliyunDnsProvider implements DnsProviderInterface
 
     protected function deleteRecords(string $domain, string $rr, string $type): void
     {
+        $ids = [];
         $page = 1;
         do {
             $res = $this->client->call('DescribeDomainRecords', [
@@ -84,7 +85,7 @@ class AliyunDnsProvider implements DnsProviderInterface
             ]);
             $records = $res['DomainRecords']['Record'] ?? [];
             if ($records === []) {
-                return;
+                break;
             }
             if (isset($records['RecordId'])) {
                 $records = [$records];
@@ -96,11 +97,15 @@ class AliyunDnsProvider implements DnsProviderInterface
                     continue;
                 }
                 if (! empty($row['RecordId'])) {
-                    $this->client->call('DeleteDomainRecord', ['RecordId' => $row['RecordId']]);
+                    $ids[] = $row['RecordId'];
                 }
             }
             $page++;
         } while (count($records) === 100 && $page <= 20);
+
+        foreach ($ids as $id) {
+            $this->client->call('DeleteDomainRecord', ['RecordId' => $id]);
+        }
     }
 
     protected function zoneName(): string

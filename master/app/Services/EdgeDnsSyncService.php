@@ -39,6 +39,7 @@ class EdgeDnsSyncService
         $poolTarget = $poolHost.'.'.$zone;
 
         $edges = RediTenantEdge::query()->where('edge_fqdn', '!=', '')->get();
+        $synced = 0;
         foreach ($edges as $edge) {
             $fqdn = strtolower(rtrim($edge->edge_fqdn, '.'));
             if ($fqdn === '' || ! Str::endsWith($fqdn, '.'.$zone)) {
@@ -48,12 +49,13 @@ class EdgeDnsSyncService
             $provider->upsertCname($label, $zone, $poolTarget);
             $edge->dns_synced_at = now();
             $edge->save();
+            $synced++;
         }
 
         RediDnsSyncLog::record('sync_pool_and_tenant_cname', 'ok', sprintf(
             'pool A x%d, tenant CNAME x%d',
             count($ips),
-            $edges->count()
+            $synced
         ));
     }
 }

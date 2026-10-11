@@ -111,8 +111,8 @@ func pullChallenges(client *http.Client, cfg config) error {
 func pullRedirectRules(client *http.Client, cfg config) error {
 	var out struct {
 		Rules []struct {
-			OriginalURL string `json:"original_url"`
-			ForceHTTPS  bool   `json:"force_https"`
+			OriginalURL string   `json:"original_url"`
+			ForceHTTPS  flexBool `json:"force_https"`
 		} `json:"rules"`
 	}
 	if err := getJSON(client, cfg, "/api/nodes/redirect-rules", &out); err != nil {
@@ -120,7 +120,7 @@ func pullRedirectRules(client *http.Client, cfg config) error {
 	}
 	m := map[string]bool{}
 	for _, r := range out.Rules {
-		m[r.OriginalURL] = r.ForceHTTPS
+		m[r.OriginalURL] = bool(r.ForceHTTPS)
 	}
 	rules.ReplaceForceHTTPS(m)
 	return nil
@@ -129,16 +129,17 @@ func pullRedirectRules(client *http.Client, cfg config) error {
 func pullCertificates(client *http.Client, cfg config) error {
 	var out struct {
 		Certificates []struct {
-			CertID      int    `json:"cert_id"`
-			Domain      string `json:"domain"`
-			Certificate string `json:"certificate"`
-			PrivateKey  string `json:"private_key"`
-			ForceHTTPS  bool   `json:"force_https"`
+			CertID      int      `json:"cert_id"`
+			Domain      string   `json:"domain"`
+			Certificate string   `json:"certificate"`
+			PrivateKey  string   `json:"private_key"`
+			ForceHTTPS  flexBool `json:"force_https"`
 		} `json:"certificates"`
 	}
 	if err := getJSON(client, cfg, "/api/nodes/certificates", &out); err != nil {
 		return err
 	}
+	failed := false
 	list := make([]certs.Entry, 0, len(out.Certificates))
 	for _, row := range out.Certificates {
 		entry := certs.Entry{
@@ -146,9 +147,10 @@ func pullCertificates(client *http.Client, cfg config) error {
 			Domain:      row.Domain,
 			Certificate: []byte(row.Certificate),
 			PrivateKey:  []byte(row.PrivateKey),
-			ForceHTTPS:  row.ForceHTTPS,
+			ForceHTTPS:  bool(row.ForceHTTPS),
 		}
 		if err := certs.InstallEntry(entry); err != nil {
+			failed = true
 			if ackErr := postJSON(client, cfg, "/api/nodes/ack", map[string]interface{}{
 				"cert_id": row.CertID,
 				"ok":      false,
@@ -167,6 +169,9 @@ func pullCertificates(client *http.Client, cfg config) error {
 		}
 	}
 	certs.ReplaceAll(list)
+	if failed {
+		return fmt.Errorf("one or more certificates failed to install")
+	}
 	return nil
 }
 

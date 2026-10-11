@@ -72,7 +72,7 @@ class DnspodDnsProvider implements DnsProviderInterface
             'domain' => $zone,
             'sub_domain' => $sub,
             'record_type' => 'CNAME',
-            'record_line' => '默认',
+            'record_line' => $this->recordLine,
             'value' => $targetFqdn,
             'ttl' => 120,
         ]);
@@ -80,6 +80,7 @@ class DnspodDnsProvider implements DnsProviderInterface
 
     protected function deleteRecords(string $domain, string $sub, string $type): void
     {
+        $ids = [];
         $offset = 0;
         do {
             $res = $this->request('Record.List', [
@@ -97,14 +98,18 @@ class DnspodDnsProvider implements DnsProviderInterface
                     continue;
                 }
                 if (! empty($row['id'])) {
-                    $this->request('Record.Remove', [
-                        'domain' => $domain,
-                        'record_id' => $row['id'],
-                    ]);
+                    $ids[] = $row['id'];
                 }
             }
             $offset += count($records);
         } while (count($records) === 100);
+
+        foreach ($ids as $id) {
+            $this->request('Record.Remove', [
+                'domain' => $domain,
+                'record_id' => $id,
+            ]);
+        }
     }
 
     protected function request(string $action, array $params = []): array

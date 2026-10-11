@@ -44,16 +44,38 @@ class CertificateDeployService
                 'deployed_at' => $ok ? now() : null,
             ]);
 
-        $pending = RediCertDeployment::where('cert_id', $cert->id)
+        $liveNodeIds = RediNode::enabled()
+            ->where('last_heartbeat_at', '>=', now()->subMinutes(15))
+            ->pluck('id');
+
+        $livePending = RediCertDeployment::where('cert_id', $cert->id)
             ->where('status', 'pending')
+            ->whereIn('node_id', $liveNodeIds)
             ->exists();
 
-        if (! $pending) {
-            $failed = RediCertDeployment::where('cert_id', $cert->id)
-                ->where('status', 'failed')
-                ->exists();
-            $cert->status = $failed ? RediDomainCert::STATUS_FAILED : RediDomainCert::STATUS_ACTIVE;
+        if ($livePending) {
+            $cert->status = RediDomainCert::STATUS_DEPLOYING;
             $cert->save();
+
+            return;
         }
+
+        $failedCount = RediCertDeployment::where('cert_id', $cert->id)
+            ->where('status', 'failed')
+            ->count();
+        $okCount = RediCertDeployment::where('cert_id', $cert->id)
+            ->where('status', 'ok')
+            ->count();
+
+        if ($okCount === 0 && $failedCount > 0) {
+            $cert->status = RediDomainCert::STATUS_FAILED;
+            $cert->last_error = '全部已响应节点安装失败';
+        } elseif ($okCount > 0) {
+            $cert->status = RediDomainCert::STATUS_ACTIVE;
+            $cert->last_error = $failedCount > 0 ? '部分节点安装失败，其余节点仍保留该证书' : null;
+        } else {
+            $cert->status = RediDomainCert::STATUS_DEPLOYING;
+        }
+        $cert->save();
     }
 }

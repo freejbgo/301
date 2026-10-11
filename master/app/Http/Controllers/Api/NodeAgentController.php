@@ -146,7 +146,15 @@ class NodeAgentController extends Controller
     {
         $rows = DB::table('redi_admin_domain')
             ->where('status', 1)
-            ->get(['original_url', 'skip_url', 'force_https']);
+            ->get(['original_url', 'skip_url', 'force_https'])
+            ->map(function ($row) {
+                return [
+                    'original_url' => $row->original_url,
+                    'skip_url' => $row->skip_url,
+                    'force_https' => (bool) $row->force_https,
+                ];
+            })
+            ->values();
 
         return response()->json(['rules' => $rows]);
     }

@@ -76,7 +76,15 @@ class RediAdminDomainController extends AdminController
             $grid->column('skip_url', '跳转地址');
             $grid->column('cert_status', '证书')->display(function () {
                 $cert = $this->certificate;
-                return $cert ? $cert->statusLabel() : '未申请';
+                if (! $cert) {
+                    return '未申请';
+                }
+                $label = e($cert->statusLabel());
+                if ($cert->last_error) {
+                    return $label.'<br><span class="text-danger">'.e($cert->last_error).'</span>';
+                }
+
+                return $label;
             });
             $grid->column('skip_num', '跳转次数');
             $grid->column('status', '状态')->using([1 => "启用", 2 => "停用"]);
