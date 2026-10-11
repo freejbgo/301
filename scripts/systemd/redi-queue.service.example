@@ -4,7 +4,8 @@ After=network.target mariadb.service
 
 [Service]
 Type=simple
-# CentOS 7 的 Nginx/PHP 用户改为 nginx
+# CentOS 7 自动部署脚本会写成 User=nginx、WorkingDirectory=/opt/301/master
+# 从 git 克隆手动安装时，工作目录是仓库里的 master/master
 User=www-data
 WorkingDirectory=/opt/301/master/master
 # 证书等锁见任务 retryUntil（入队后 24 小时）；签发异常 $maxExceptions=3

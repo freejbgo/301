@@ -1,241 +1,98 @@
 # CentOS 7 部署
 
-这是 [DEPLOY.md](DEPLOY.md) 在 CentOS 7 上的命令。架构、端口和上线顺序以那篇为准。填好 IP 和密码的示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。
+系统是 CentOS 7.x。内核小版本可以不同，脚本不按内核编译，也不编译内核模块。
 
-假设主控安装到 `/opt/301`，节点程序解压到 `/opt/redi-multi/redi-multi`。PHP 使用 Remi 的 **8.0**。不要安装 PHP 8.1 或更高版本，当前 `composer.json` 不接受。
+| 机器 | 脚本 | 装好之后 |
+|------|------|----------|
+| 主控 | `scripts/centos7/deploy-master.sh` | 程序在 `/opt/301/master`，网站根目录 `/opt/301/master/public` |
+| 每台节点 | `scripts/centos7/deploy-node.sh` | 程序在 `/opt/redi-multi/redi-multi` |
 
-## 0. 变量
+发布包：
 
-在主控上先导出这些值，后面的命令会用到：
+- `master/master.tar.gz`：PHP 程序，已经包含 `vendor`，没有 `.env`。服务器不用装 Composer。
+- `node/redi-multi.tar.gz`：静态二进制 `bin/redi-multi`，不依赖 glibc 2.32/2.34，CentOS 7 的 glibc 2.17 可以直接跑。
 
-```bash
-MASTER_IP="主控公网IP"
-DB_PASS="redi_admin的强密码"
-MYSQL_ROOT_PASS="MySQL root 密码"
-GIT_REPO="https://github.com/freejbgo/301.git"
-INSTALL_ROOT="/opt/301"
-```
+源码在仓库的 `master/master/`。那是给开发和重新打包用的。自动安装不要把仓库克隆到 `/opt/301`，否则会和发布包解压出来的 `/opt/301/master` 叠在一起。
 
-## 1. 主控
+填好 IP 的示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。后台操作见 [docs/CONSOLE.md](docs/CONSOLE.md)。
 
-### 1.1 软件
+## 1. 准备变量
 
-```bash
-sudo yum install -y epel-release
-sudo yum install -y https://rpms.remirepo.net/enterprise/remi-release-7.rpm
-sudo yum install -y yum-utils
-sudo yum-config-manager --enable remi-php80
-sudo yum install -y git unzip nginx mariadb-server mariadb \
-  php php-fpm php-mysqlnd php-mbstring php-xml php-json php-zip php-gd php-bcmath \
-  firewalld
-sudo systemctl enable --now firewalld mariadb nginx php-fpm
-```
-
-看 PHP-FPM 实际监听地址，Nginx 里的 `fastcgi_pass` 必须和它一致：
+在要部署的机器上先有这份仓库（`git clone` 到 `/root/301` 这类目录即可）。
 
 ```bash
-grep -E '^listen' /etc/php-fpm.d/www.conf
-```
-
-### 1.2 代码、数据库
-
-```bash
-sudo mkdir -p "$INSTALL_ROOT"
-sudo git clone "$GIT_REPO" "$INSTALL_ROOT"
-cd "$INSTALL_ROOT"
-sudo bash scripts/centos7/apply-mysql-skip-name-resolve.sh
-```
-
-把 `db/mysql_setup.example.sql` 里的 `change_this_db_password` 换成 `$DB_PASS` 后导入，或：
-
-```bash
-sed "s/change_this_db_password/${DB_PASS}/g" db/mysql_setup.example.sql | mysql -u root -p
-mysql -u root -p redi_admin < db/redi_admin.sql
-```
-
-每台节点的出口 IP 授权一次。不要对全网开放 3306。
-
-```bash
-export MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASS"
-sudo -E bash scripts/centos7/grant-node-mysql.sh "节点出口IP" "$DB_PASS"
-sudo bash scripts/centos7/firewalld-allow-mysql-from-node.sh "节点出口IP"
-```
-
-多台节点：
-
-```bash
+cd /root/301
 cp scripts/centos7/vars.example.env scripts/centos7/vars.env
 chmod 600 scripts/centos7/vars.env
-# 编辑 vars.env 的 NODE_IPS
-sudo bash scripts/centos7/grant-nodes-from-vars.sh
+vi scripts/centos7/vars.env
 ```
+
+密码、Token 和 URL 不要包含空格、引号、反引号、`$`、`#` 或反斜杠。`vars.env` 不要提交。
+
+主控至少要填 `MASTER_IP`、`DB_PASS`、`MYSQL_ROOT_PASS`、`MASTER_URL`、`ADMIN_HTTPS`。还没有证书、只用 IP 访问时：`MASTER_URL="http://主控IP"`，`ADMIN_HTTPS="false"`。已知节点 IP 就写进 `NODE_IPS`，空格分隔。
+
+节点还要填本机的 `NODE_PUBLIC_IP`、`DEFAULT_REDIRECT_URL`、`REDI_MASTER_URL`。Token 等主控后台创建节点后再填 `REDI_NODE_TOKEN`。
+
+## 2. 部署主控
 
 ```bash
-sudo firewall-cmd --permanent --add-service=ssh
-sudo firewall-cmd --permanent --add-service=http
-sudo firewall-cmd --permanent --add-service=https
-sudo firewall-cmd --reload
+sudo bash scripts/centos7/deploy-master.sh
 ```
 
-### 1.3 Laravel
+脚本会：
+
+1. 把已经失效的 CentOS 7 源换成 `vault.centos.org`，EPEL 换成 Fedora 归档。
+2. 安装 Remi 的 PHP 8.0、Nginx、firewalld。不安装 PHP 8.1 或更高版本。
+3. 安装 MariaDB 10.6。CentOS 7 自带的 5.5 导不进这份 `utf8mb4` 库。
+4. 设置 root 密码，关闭反向域名解析，数据库监听 IPv4。3306 不对全网开放，只放行 `NODE_IPS`。
+5. 库是空的才导入 `db/redi_admin.sql`。已经有 `admin_users` 时不会覆盖。
+6. 把 `master/master.tar.gz` 解压到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、`migrate`、`storage:link`。
+7. 配置 PHP-FPM（用户 `nginx`，sock `/var/run/php-fpm/www.sock`）和 Nginx。开启 SELinux 时会放行网站访问网络和数据库。
+8. 安装队列 `redi-queue`：`queue:work --sleep=3 --timeout=320 --tries=100`。每天 03:10 以用户 `nginx` 执行 `redi:renew-certificates`。
+9. 防火墙开放 22、80、443。
+
+重复执行不会重置已有 `.env`、`APP_KEY` 和业务数据。Nginx 站点文件 `/etc/nginx/conf.d/301-master.conf` 如果已经存在，脚本不覆盖，避免冲掉后来加的 HTTPS。
+
+打开 `http://主控IP/admin`。用户名 `admin`，密码 `Redi301@Install2026`，登录后马上修改。
+
+有域名之后：把 `vars.env` 的 `MASTER_URL` 改成 `https://主控域名`、`ADMIN_HTTPS` 改成 `true`，再改服务器上的 `/opt/301/master/.env`（已有 `.env` 时脚本不会重写它），给 Nginx 配上证书，然后 `systemctl restart php-fpm redi-queue`。这张证书只保护后台。
+
+## 3. 部署节点
+
+先在主控后台「节点管理」新建一条节点，主公网 IP 填这台机器的 IPv4，复制只显示一次的 Token。主控的 `NODE_IPS` 里也要有这个 IP；如果部署主控时还没写，补上后在主控再执行一次 `deploy-master.sh`，它会补授权和防火墙。
+
+把同一份仓库放到节点上（或只把 `redi-multi.tar.gz`、`deploy-node.sh`、`vars.env` 拷过去）。`vars.env` 里填好 `REDI_NODE_TOKEN`。
 
 ```bash
-cd "$INSTALL_ROOT/master/master"
-cp .env.example .env
-sed -i "s|change_this_db_password|${DB_PASS}|g" .env
+sudo bash scripts/centos7/deploy-node.sh
 ```
 
-有域名和证书时，把 `APP_URL` 改成 `https://主控域名`，`ADMIN_HTTPS` 保持 `true`。暂时只用 IP 访问时：
+脚本会安装 firewalld、iptables、`setcap` 和 MySQL 客户端，尝试加载 `nfnetlink_queue`（编进内核时加载失败可以忽略），解压发布包，写 `env.sh`（没有 `export`），把 `config.json` 的 `server_ip` 和 `default_redirect_url` 改成变量里的值，执行 `setcap cap_net_admin+ep`，并用 systemd 启动。防火墙只开放 22、80、443，不开放 8080。
+
+Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证书同步也不会做。补上 Token 后再执行一次脚本。
+
+同一台机器的其他公网 IP 填在后台该节点的「其他公网 IP」，不要再部署第二个进程。
+
+自测连库失败时，脚本会停下来。先确认主控已经对这台机器的出口 IP 授权。
+
+## 4. 后台里接着做
+
+1. 「DNS 与节点池」填写平台主域名。
+2. 节点状态正常后，手动模式去 DNS 厂商按参考表添加 pool 的 A 和租户 CNAME。API 模式点同步。
+3. 「分组管理」建分组，「域名管理」添加客户域名，把 CNAME 目标交给客户。客户 CNAME 到这个目标，不要把域名 A 到某一台节点。
+4. 预检为「已指向」后点「申请证书」。
+
+## 5. 以后加一台节点
+
+在主控的 `vars.env` 里把新 IP 加进 `NODE_IPS`，执行 `sudo bash scripts/centos7/deploy-master.sh`。然后在新机器上执行 `deploy-node.sh`。后台新建节点，把 Token 写进新机器的 `vars.env` 再执行一次节点脚本。pool 的 A 记录要包含新 IP。删除节点不会自动删 DNS 记录。
+
+## 6. 重新打包
+
+改了主控依赖或节点源码后，在开发机执行：
 
 ```bash
-sed -i "s|https://your-master-domain.com|http://${MASTER_IP}|g" .env
-sed -i 's/ADMIN_HTTPS=true/ADMIN_HTTPS=false/' .env
+./scripts/build-master-tar.sh
+./scripts/build-node-tar.sh
 ```
 
-```bash
-curl -sS https://getcomposer.org/installer | php
-sudo mv composer.phar /usr/local/bin/composer
-composer install --no-dev --optimize-autoloader
-php artisan key:generate
-php artisan migrate --force
-php artisan storage:link
-sudo chown -R nginx:nginx storage bootstrap/cache
-sudo chmod -R ug+rwx storage bootstrap/cache
-```
-
-SELinux 开启时，允许 Nginx 连接本机 PHP-FPM，并让网站用户能写 `storage`：
-
-```bash
-sudo setsebool -P httpd_can_network_connect 1
-sudo chcon -R -t httpd_sys_rw_content_t storage bootstrap/cache
-```
-
-Nginx 站点 `/etc/nginx/conf.d/301-master.conf`。下面的 sock 请改成 `www.conf` 里的 `listen`：
-
-```nginx
-server {
-    listen 80;
-    server_name _;
-    root /opt/301/master/master/public;
-    index index.php;
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-    location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php-fpm/www.sock;
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        include fastcgi_params;
-    }
-}
-```
-
-```bash
-sudo nginx -t && sudo systemctl reload nginx
-```
-
-打开 `http://主控IP/admin`。用户名 `admin`，密码 `Redi301@Install2026`，登录后立即修改。
-
-有域名后把 `.env` 的 `APP_URL` 改为 https，`ADMIN_HTTPS=true`，再用 certbot 或已有证书给这个 Nginx 站点配 HTTPS。
-
-### 1.4 队列和续期
-
-```bash
-sudo tee /etc/systemd/system/redi-queue.service <<'EOF'
-[Unit]
-Description=301 Master queue worker (certificates)
-After=network.target mariadb.service
-
-[Service]
-Type=simple
-User=nginx
-WorkingDirectory=/opt/301/master/master
-ExecStart=/usr/bin/php artisan queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-sudo systemctl daemon-reload
-sudo systemctl enable --now redi-queue
-```
-
-```bash
-echo '10 3 * * * cd /opt/301/master/master && php artisan redi:renew-certificates >> /var/log/redi-renew.log 2>&1' | sudo tee /etc/cron.d/redi-renew
-sudo chmod 644 /etc/cron.d/redi-renew
-```
-
-仓库里的 `scripts/systemd/redi-queue.service.example` 是同一份单元，用户写成了 Debian 的 `www-data`。CentOS 用上面的 `nginx`。
-
-## 2. 每台节点
-
-先在主控上完成该节点出口 IP 的授权和 firewalld 放行。
-
-```bash
-NODE_PUBLIC_IP="本机主公网IP"
-MASTER_IP="主控公网IP"
-DB_PASS="与主控相同"
-INSTALL_ROOT="/opt/redi-multi"
-
-sudo yum install -y tar firewalld
-sudo systemctl enable --now firewalld
-sudo firewall-cmd --permanent --add-service=ssh
-sudo firewall-cmd --permanent --add-port=80/tcp
-sudo firewall-cmd --permanent --add-port=443/tcp
-sudo firewall-cmd --reload
-
-sudo mkdir -p "$INSTALL_ROOT"
-# 在主控上：scp /opt/301/node/redi-multi.tar.gz 节点:/tmp/
-sudo tar xzf /tmp/redi-multi.tar.gz -C "$INSTALL_ROOT"
-cd "$INSTALL_ROOT/redi-multi"
-
-cat > env.sh <<EOF
-REDI_DB_HOST=${MASTER_IP}
-REDI_DB_PORT=3306
-REDI_DB_USER=redi_admin
-REDI_DB_PASSWORD=${DB_PASS}
-REDI_DB_NAME=redi_admin
-REDI_MASTER_URL=https://主控域名
-REDI_NODE_TOKEN=后台节点管理里的一次性Token
-EOF
-chmod 600 env.sh
-
-sed -i "s/YOUR_NODE_PUBLIC_IP/${NODE_PUBLIC_IP}/g" config.json
-# 再用编辑器把 default_redirect_url 改成默认跳转页
-
-sudo setcap cap_net_admin+ep bin/redi-multi
-sudo cp /opt/301/scripts/centos7/redi-multi.service.example /etc/systemd/system/redi-multi.service
-```
-
-节点上如果没有仓库，把主控的 `scripts/centos7/redi-multi.service.example` 用 scp 拷过来再安装。单元里的路径已经是 `/opt/redi-multi/redi-multi`，与上面的解压位置一致。`env.sh` 不要加 `export`，CentOS 7 的 systemd 不认这个前缀。
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now redi-multi
-sudo systemctl status redi-multi
-```
-
-自测连库：
-
-```bash
-mysql -h "$MASTER_IP" -u redi_admin -p"$DB_PASS" -e "SELECT 1" redi_admin
-```
-
-同一台机器还有别的公网 IP 时，不要再部署第二个进程。回到后台这条节点，把那些 IP 填进「其他公网 IP」。
-
-## 3. 以后加一台节点
-
-在主控：
-
-```bash
-cd /opt/301
-export MYSQL_ROOT_PASSWORD='root密码'
-sudo -E bash scripts/centos7/grant-node-mysql.sh "新节点出口IP" "库密码"
-sudo bash scripts/centos7/firewalld-allow-mysql-from-node.sh "新节点出口IP"
-```
-
-在新机器上重复第 2 节。然后在后台「节点管理」新建一条节点，把 Token 写入这台机器的 `env.sh`，重启 `redi-multi`。pool 的 A 记录要包含新 IP：手动模式去 DNS 厂商添加，API 模式在「DNS 与节点池」再同步一次。
-
-## 4. MySQL 日志里的 Name or service not known
-
-这是 MySQL 在对客户端 IP 做反向解析。`apply-mysql-skip-name-resolve.sh` 会把 `db/my.cnf.d/redi-skip-name-resolve.cnf` 放到 `/etc/my.cnf.d/` 并重启数据库。启用之后授权只能写 IP，不能写主机名。
+把新的 `master/master.tar.gz` 和 `node/redi-multi.tar.gz` 提交。节点打包会拒绝仍然动态链接 libc 的二进制。

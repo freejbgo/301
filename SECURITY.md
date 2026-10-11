@@ -7,7 +7,7 @@
 - 数据库 `redi_admin.sql`：单管理员 `admin`、默认密码见 DEPLOY.md；域名表 **唯一索引** `(admin_id, original_url)`。
 - 主控：多租户隔离、跳转 URL 仅允许 `http/https`、`.env.example` 默认 `APP_DEBUG=false`。
 - 节点：`REDI_DB_*` 环境变量；`status=1` 才跳转计数；`api.js` JSON 输出 + 按 IP 限速；**不再清空整表 iptables OUTPUT**。
-- `composer.json` 已恢复 Laravel 8 + Dcat Admin 依赖声明，部署时执行 `composer install`。
+- `composer.json` 声明 Laravel 8 + Dcat Admin。CentOS 7 用发布包里的 `vendor`，不用在服务器上执行 `composer install`。
 
 ## 你必须在服务器上完成的
 
@@ -39,4 +39,4 @@
 
 ## 依赖
 
-主控目录执行：`composer install --no-dev`（PHP 7.3 或 8.0，以及 composer）。`vendor` 不在仓库里，必须在服务器上安装。
+发布包 `master/master.tar.gz` 已含 `composer install --no-dev` 的 `vendor`，不含 `.env`。服务器使用 PHP 7.3 或 8.0。`vendor` 目录本身不进 git。

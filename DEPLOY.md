@@ -2,7 +2,7 @@
 
 按这个顺序做：先主控和数据库，再节点，最后到后台把 DNS、节点和域名配好。控制台里每一步点哪里，见 [docs/CONSOLE.md](docs/CONSOLE.md)。
 
-CentOS 7 的可复制命令见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。把 IP 换成 `1.2.3.4` / `5.6.7.8` 的填空示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。
+CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。填好的变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。下面是通用步骤；CentOS 7 不要按克隆目录手工装，直接跑脚本。
 
 ## 这套程序怎么接流量
 
@@ -74,7 +74,7 @@ chown -R nginx:nginx storage bootstrap/cache
 
 `chown` 的用户按网站运行用户改。Debian/Ubuntu 常见是 `www-data`，CentOS 的 Nginx 常见是 `nginx`。
 
-网站根目录必须是 `master/master/public`。Nginx 将请求交给 `index.php`。PHP-FPM 的监听地址以 `/etc/php-fpm.d/www.conf`（或发行版对应文件）里的 `listen` 为准，不要猜 sock 路径。
+从仓库手动安装时，网站根目录是 `master/master/public`。CentOS 7 脚本使用发布包，网站根目录是 `/opt/301/master/public`。Nginx 将请求交给 `index.php`。PHP-FPM 的监听地址以 `/etc/php-fpm.d/www.conf`（或发行版对应文件）里的 `listen` 为准，不要猜 sock 路径。
 
 队列要常驻。证书任务会等待全局锁，超时和重试必须用下面这组参数：
 
@@ -86,8 +86,10 @@ php artisan queue:work --sleep=3 --timeout=320 --tries=100
 
 证书续期每天一次：
 
+`/etc/cron.d/` 里必须写用户名。发布包安装的程序目录是 `/opt/301/master`；git 克隆时把路径换成 `master/master`：
+
 ```bash
-10 3 * * * cd /opt/301/master/master && php artisan redi:renew-certificates >> /var/log/redi-renew.log 2>&1
+10 3 * * * nginx cd /opt/301/master && /usr/bin/php artisan redi:renew-certificates >> storage/logs/renew.log 2>&1
 ```
 
 主控域名的 HTTPS 证书用面板或 certbot 签在 Nginx 上。这张证书只保护后台，和客户域名的跳转证书不是同一张。
@@ -142,7 +144,7 @@ sudo systemctl enable --now redi-multi
 mysql -h 主控IP -u redi_admin -p -e 'SELECT 1' redi_admin
 ```
 
-节点程序改过之后，在开发机执行 `./scripts/build-node-tar.sh`，再把新的 `node/redi-multi.tar.gz` 提交。线上部署解压的是这个包。
+节点程序改过之后，在开发机执行 `./scripts/build-node-tar.sh`，再把新的 `node/redi-multi.tar.gz` 提交。主控依赖变了就执行 `./scripts/build-master-tar.sh`。线上部署解压的是这两个包。`build-node-tar.sh` 会拒绝仍然动态链接 libc 的二进制。
 
 ## 4. 上线顺序
 

@@ -20,6 +20,8 @@ if ! command -v firewall-cmd &>/dev/null; then
 fi
 
 RULE="rule family=ipv4 source address=${NODE_IP} port port=3306 protocol=tcp accept"
-firewall-cmd --permanent --add-rich-rule="${RULE}"
+if ! firewall-cmd --permanent --query-rich-rule="${RULE}" >/dev/null; then
+  firewall-cmd --permanent --add-rich-rule="${RULE}"
+fi
 firewall-cmd --reload
 echo "已允许 ${NODE_IP} -> 本机 3306"

@@ -4,6 +4,8 @@
 
 发布包是 **`redi-multi.tar.gz`**。解压后目录为 `redi-multi/`，里面有源码、`config.json`、`env.example` 和编译好的 `bin/redi-multi`。线上运行这个二进制，不要 `go run main.go`。
 
+`bin/redi-multi` 是 `CGO_ENABLED=0` 的静态二进制，不依赖 glibc 2.32/2.34。CentOS 7.x 内核小版本不同也不用重编，也不编译内核模块。lagran 使用系统里的 `nfnetlink_queue`。
+
 改完 `node/redi-multi` 源码后执行：
 
 ```bash
