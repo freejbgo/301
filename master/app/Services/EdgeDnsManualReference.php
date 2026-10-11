@@ -24,7 +24,7 @@ class EdgeDnsManualReference
 
         $pool = [];
         if ($poolFqdn !== '') {
-            $ips = RediNode::enabled()->orderBy('id')->pluck('public_ip')->all();
+            $ips = RediNode::enabledPublicIps();
             if ($ips === []) {
                 $pool[] = ['A', $poolFqdn, '（请先在节点管理添加启用节点 IP）'];
             } else {

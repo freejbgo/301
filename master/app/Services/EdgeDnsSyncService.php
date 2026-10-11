@@ -32,7 +32,7 @@ class EdgeDnsSyncService
         $provider = DnsProviderFactory::make($platform);
         $provider->testConnection();
 
-        $ips = RediNode::enabled()->orderBy('id')->pluck('public_ip')->all();
+        $ips = RediNode::enabledPublicIps();
         $provider->upsertARecords($poolFqdn, $ips);
 
         $poolHost = strtolower(trim($platform->pool_host, '.'));
