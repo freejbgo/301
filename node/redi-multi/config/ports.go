@@ -1,21 +1,21 @@
 package config
 
 import (
-	"fmt"
+	"net"
 	"strconv"
 	"strings"
 )
 
-// LagranSport 供 lagran / iptables 使用的出站源端口列表（逗号分隔，无空格）。
+// LagranSport 供 lagran / iptables 使用（Init 时已合并，此处仅规范化读取）。
 func LagranSport() string {
 	if Lagran == nil {
-		return ""
+		return "80"
 	}
 	raw, ok := Lagran["port"].(string)
-	if !ok {
-		raw = ""
+	if !ok || strings.TrimSpace(raw) == "" {
+		return "80"
 	}
-	return NormalizePortList(MergeListenerPorts(raw, Addr, TlsAddr))
+	return NormalizePortList(raw)
 }
 
 func portFromListenAddr(listen string) string {
@@ -23,28 +23,21 @@ func portFromListenAddr(listen string) string {
 	if listen == "" {
 		return ""
 	}
-	if strings.HasPrefix(listen, ":") {
-		return strings.TrimPrefix(listen, ":")
+	host, port, err := net.SplitHostPort(listen)
+	if err != nil {
+		// 仅端口，如 ":80" 或 "80"
+		if strings.HasPrefix(listen, ":") {
+			return strings.TrimPrefix(listen, ":")
+		}
+		return listen
 	}
-	_, port, err := splitHostPort(listen)
-	if err != nil || port == "" {
-		return ""
+	if port != "" {
+		return port
 	}
-	return port
+	return portFromListenAddr(host)
 }
 
-func splitHostPort(addr string) (host, port string, err error) {
-	if !strings.Contains(addr, ":") {
-		return "", addr, nil
-	}
-	i := strings.LastIndex(addr, ":")
-	if i < 0 {
-		return "", "", fmt.Errorf("invalid listen address")
-	}
-	return addr[:i], addr[i+1:], nil
-}
-
-// MergeListenerPorts 把 HTTP/HTTPS 监听端口并入 lagran.port（用户可只写 "80"，会自动补上 443）。
+// MergeListenerPorts 把 HTTP/HTTPS 监听端口并入 lagran.port（用户可只写 "80"，会自动补上 tls 端口）。
 func MergeListenerPorts(lagranPorts string, httpAddr string, tlsAddr string) string {
 	set := map[string]struct{}{}
 	for _, p := range strings.Split(lagranPorts, ",") {
@@ -65,7 +58,6 @@ func MergeListenerPorts(lagranPorts string, httpAddr string, tlsAddr string) str
 	for p := range set {
 		keys = append(keys, p)
 	}
-	// 数字端口按数值排序，便于阅读与对比
 	sortPortStrings(keys)
 	return strings.Join(keys, ",")
 }

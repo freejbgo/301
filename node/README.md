@@ -172,7 +172,18 @@ nohup go run main.go &
 | `REDI_MASTER_URL` | 主控 HTTPS 根地址 |
 | `REDI_NODE_TOKEN` | 后台「节点管理」创建节点时一次性 Token |
 
-`config.json`：`tls_addr`（默认 `0.0.0.0:443`）、`lagran.port` 建议 `80,443`。Agent 拉取 ACME 挑战与 TLS 证书（443 SNI）。
+### 80 / 443 与 lagran（防火墙 NFQUEUE）
+
+| 配置项 | 含义 |
+|--------|------|
+| `addr` | HTTP 监听，如 `0.0.0.0:80` |
+| `tls_addr` | HTTPS 监听，如 `0.0.0.0:443`；**写空字符串 `""` 可关闭 HTTPS**（不写该字段则默认 `0.0.0.0:443`） |
+| `lagran` | 可省略，程序使用与示例相同的默认开关；**不要整段删掉后留空对象**（已兼容缺失时自动默认） |
+| `lagran.port` | **出站** TCP 源端口，供 iptables `--sport` / `multiport` 匹配；格式 **`80,443`**（逗号分隔、不要空格） |
+
+程序启动时会用 `addr` + `tls_addr` **自动合并**进 `lagran.port`（仅合并非空监听端口）：若关闭 HTTPS，则 lagran 不会并入 443。
+
+示例见 `redi-multi/config.json.example`。Agent 拉取 ACME 与 TLS 证书（443 SNI）。
 
 ### 已移除的冗余包（对比结论）
 

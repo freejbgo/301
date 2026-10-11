@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"strings"
 )
 
 var (
 	Debug              bool
 	Addr               string
 	TlsAddr            string
+	TlsConfigured      bool
 	ApiListen          string
 	ServerIp           string
 	DefaultRedirectUrl string
@@ -29,10 +31,13 @@ func Init() {
 	}
 	Debug = payload["debug"].(bool)
 	Addr = payload["addr"].(string)
-	if v, ok := payload["tls_addr"].(string); ok {
-		TlsAddr = v
-	}
-	if TlsAddr == "" {
+	TlsConfigured = false
+	if v, ok := payload["tls_addr"]; ok {
+		TlsConfigured = true
+		if s, ok := v.(string); ok {
+			TlsAddr = strings.TrimSpace(s)
+		}
+	} else {
 		TlsAddr = "0.0.0.0:443"
 	}
 	if v, ok := payload["api_listen"].(string); ok {
@@ -41,14 +46,16 @@ func Init() {
 	ServerIp = payload["server_ip"].(string)
 	DefaultRedirectUrl = payload["default_redirect_url"].(string)
 	Redirector = payload["redirector"].(map[string]interface{})
-	Lagran = payload["lagran"].(map[string]interface{})
 
-	// lagran.port 与 addr / tls_addr 对齐：iptables multiport 格式为 "80,443"（逗号、无空格）
-	if Lagran != nil {
-		existing := ""
-		if v, ok := Lagran["port"].(string); ok {
-			existing = v
-		}
-		Lagran["port"] = MergeListenerPorts(existing, Addr, TlsAddr)
+	if raw, ok := payload["lagran"].(map[string]interface{}); ok && raw != nil {
+		Lagran = raw
+	} else {
+		Lagran = DefaultLagran()
 	}
+
+	existing := ""
+	if v, ok := Lagran["port"].(string); ok {
+		existing = v
+	}
+	Lagran["port"] = MergeListenerPorts(existing, Addr, TlsAddr)
 }
