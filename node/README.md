@@ -120,15 +120,103 @@ cd redi-multi
 
 ## 1.5. 修改源文件中的数据库IP地址为后台IP
 
-![修改数据库 IP - 图1](docs/images/image1.png)
+改这个文件：`/home/go/src/redi-multi/mysqlconnect/mysqlconnect.go`
 
-![修改数据库 IP - 图2](docs/images/image2.png)
+工程目录是 `redi-multi`（上一节解压到 `/home/go/src` 之后的目录）。目录树里数据库连接在子目录 `mysqlconnect` 下，文件名是 `mysqlconnect.go`。同目录里还可能有编辑器临时文件 `mysql.go.swp`，不用改。
+
+把变量 `ipAddrees` 的值改成后台服务器的 IP（源文件里这个变量名就是 `ipAddrees`）。
+
+```go
+package mysqlconnect
+
+import (
+	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
+)
+
+var (
+	userName  string = "redi_admin"
+	password  string = "WNKfdMyX4iLZ3XTH"
+	ipAddrees string = "127.0.0.1"
+	port      int    = 3306
+	dbName    string = "redi_admin"
+	charset   string = "utf8"
+)
+
+func ConnectMysql() *sqlx.DB {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s", userName, password, ipAddrees, port, dbName, charset)
+	Db, err := sqlx.Open("mysql", dsn)
+	if err != nil {
+		fmt.Printf("mysql connect failed, detail is [%v]", err.Error())
+	}
+
+	return Db
+}
+```
+
+要改的就是上面这段变量，其中 `ipAddrees` 当前是 `127.0.0.1`：
+
+```go
+var (
+	userName  string = "redi_admin"
+	password  string = "WNKfdMyX4iLZ3XTH"
+	ipAddrees string = "127.0.0.1"
+	port      int    = 3306
+	dbName    string = "redi_admin"
+	charset   string = "utf8"
+)
+```
 
 ## 1.6. 修改源文件中config.json的IP地址为跳转服务器的外网IP
 
-![修改 config.json - 图1](docs/images/image3.png)
+改这个文件：`/home/go/src/redi-multi/config.json`
 
-![修改 config.json - 图2](docs/images/image4.png)
+在 `redi-multi` 目录下执行 `ll`，`config.json` 和 `main.go`、`mysqlconnect`、`Makefile` 在同一层。终端提示符是 `[root@192-168-0-115 redi-multi]#`，当前目录就是这个 `redi-multi`。
+
+```text
+[root@192-168-0-115 redi-multi]# ll
+total 19112
+drwxr-xr-x 2 root root     20 Apr  6 16:04 api
+drwxr-xr-x 2 root root     24 Feb 18 15:31 bin
+drwxr-xr-x 2 root root     23 Apr  4 10:26 config
+-rw-r--r-- 1 root root    375 Apr  6 16:11 config.json
+-rw-r--r-- 1 root root   1729 Feb 20 16:32 go.mod
+-rw-r--r-- 1 root root  14494 Feb 20 16:32 go.sum
+drwxr-xr-x 2 root root     20 Mar 29 23:56 http
+drwxr-xr-x 2 root root     23 Apr  6 15:56 lagran
+drwxr-xr-x 2 root root     20 Feb  2 18:06 log
+-rwxr-xr-x 1 root root 9791986 Feb 18 15:31 main
+-rw-r--r-- 1 root root    183 Feb 18 15:31 main.go
+drwxr-xr-x 2 root root     54 Apr  6 16:04 mysqlconnect
+-rw-r--r-- 1 root root    829 Apr  6 15:54 Makefile
+-rwxr-xr-x 1 root root 9810489 Feb 18 15:31 redi-multi
+drwxr-xr-x 3 root root     20 Feb 18 15:31 redirect
+drwxr-xr-x 2 root root     20 Feb 18 15:31 util
+```
+
+打开上面的 `config.json`，把 `server_ip` 改成这台跳转服务器的外网 IP。文件内容如下，其中 `server_ip` 当前是 `127.0.0.1`：
+
+```json
+{
+  "debug": false,
+  "addr": "0.0.0.0:80",
+  "server_ip": "127.0.0.1",
+  "default_redirect_url": "https://www.baidu.com",
+  "lagran": {
+    "port": "80",
+    "syn_ack": true,
+    "ack": true,
+    "psh_ack": true,
+    "fin_ack": true
+  },
+  "redirector": {
+    "domain1.com": "http://www.1.com",
+    "domain2.com": "http://www.2.com",
+    "127.0.0.1": "http://baidu.com"
+  }
+}
+```
 
 ## 1.7. 启动301跳转程序
 
