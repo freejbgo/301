@@ -21,7 +21,7 @@ class IssueDomainCertificateJob implements ShouldQueue
 
     public int $domainId;
 
-    /** 含等锁时的 release；真实异常另见 $maxExceptions。 */
+    /** 等锁会增加 attempts；在 retryUntil 之前不会因此失败。 */
     public int $tries = 100;
 
     /** Let's Encrypt 或探测失败只重试有限次，等锁不计入。 */
@@ -30,6 +30,14 @@ class IssueDomainCertificateJob implements ShouldQueue
     public int $timeout = 300;
 
     public int $backoff = 120;
+
+    /**
+     * 批量排队时等锁不占失败次数，直到入队后 24 小时。
+     */
+    public function retryUntil(): \DateTimeInterface
+    {
+        return now()->addHours(24);
+    }
 
     public function middleware(): array
     {

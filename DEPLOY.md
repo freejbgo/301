@@ -35,7 +35,7 @@ php artisan migrate --force   # 旧库升级必做。全新导入 redi_admin.sql
 ```bash
 # .env 建议 QUEUE_CONNECTION=database（需 jobs 表，见迁移或全量 SQL）
 php artisan queue:work --sleep=3 --timeout=320 --tries=100
-# --tries=100 只覆盖排队等锁；证书签发失败由任务自身限制为 3 次异常
+# 证书等锁在入队后 24 小时内不会因尝试次数失败；签发异常仍最多 3 次
 ```
 
 证书**自动续期**每天跑一次即可（不必每分钟 `schedule:run`）。在 crontab 里加一行，例如每天 03:10：
