@@ -278,10 +278,3 @@ nohup go run main.go &
 程序启动时会用 `addr` + `tls_addr` **自动合并**进 `lagran.port`（仅合并非空监听端口）：若关闭 HTTPS，则 lagran 不会并入 443。
 
 示例见 `redi-multi/config.json.example`。Agent 拉取 ACME 与 TLS 证书（443 SNI）。
-
-### 已移除的冗余包（对比结论）
-
-| 已删除文件 | 与 `redi-multi.tar.gz` 关系 |
-|------------|------------------------------|
-| `redi-multi_Yk7RxC.tar.zip` | `api.go`、编译产物与标准包**完全一致**；仅 `config.json` / `mysqlconnect` 里示例 IP 不同 |
-| `redi-multi-mysql版.zip` | **不同**：`api.go` **不递增** `skip_num`，不适合需要统计的场景 |
