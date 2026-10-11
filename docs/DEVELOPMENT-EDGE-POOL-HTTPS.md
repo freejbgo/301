@@ -250,7 +250,7 @@ NS 委托；多节点池；**逐域 TXT 主流程**；客户 DNS API；主控替
 
 | 项 | 说明 |
 |----|------|
-| LE 限流 | 批量申请需队列 + 退避，避免短时间上千单域申请失败 |
+| LE 限流 | 批量入队每条间隔 20 秒，且全局同时只跑一个 ACME 任务（`WithoutOverlapping`） |
 | 主控队列 | Laravel `QUEUE_CONNECTION` 需可用（database/redis），不能只用 sync 跑批量 ACME |
 | 节点 API | 与 Dcat 后台会话分离，独立路由 + Bearer token |
 | HTTP-01 vs lagran | 必须联调：`/.well-known/` 优先；否则一键申请会失败 |
@@ -268,3 +268,4 @@ NS 委托；多节点池；**逐域 TXT 主流程**；客户 DNS API；主控替
 | 2026-03-28 | 初稿 + HTTP-01；§零 确认清单；不做逐域 TXT |
 | 2026-03-28 | 复核：任务数改为 45；展开 D/F；增 §十 风险 |
 | 2026-03-28 | 复核修复：HTTP-01 等待传播、队列默认、CF FQDN、节点 register/ack、E2/E3 |
+| 2026-10-11 | 复核修复：同源脚本、yaac lock、签发等待节点同步、证书入队鉴权、Token 重置、DNS 精确删除 |
