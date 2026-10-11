@@ -22,8 +22,9 @@ cd master
 cp .env.example .env
 # 编辑 .env：APP_URL、DB_*、执行 php artisan key:generate
 composer install --no-dev --optimize-autoloader
+# dcat/laravel-admin 2.x 只有 beta 包，composer.json 使用 minimum-stability=dev 且 prefer-stable=true
 php artisan key:generate
-php artisan migrate --force   # 已有库升级时执行；全新导入 redi_admin.sql 可跳过
+php artisan migrate --force   # 旧库升级必做。全新导入 redi_admin.sql 后再执行也安全（迁移已登记，不会重复建表）
 # 配置网站根目录为 master/public，并启用 HTTPS
 ```
 
@@ -33,7 +34,7 @@ php artisan migrate --force   # 已有库升级时执行；全新导入 redi_adm
 
 ```bash
 # .env 建议 QUEUE_CONNECTION=database（需 jobs 表，见迁移或全量 SQL）
-php artisan queue:work --sleep=3 --tries=3
+php artisan queue:work --sleep=3 --timeout=320 --tries=100
 ```
 
 证书**自动续期**每天跑一次即可（不必每分钟 `schedule:run`）。在 crontab 里加一行，例如每天 03:10：

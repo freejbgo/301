@@ -91,6 +91,11 @@ class DnspodDnsProvider implements DnsProviderInterface
             ]);
             $records = $res['records'] ?? [];
             foreach ($records as $row) {
+                $name = strtolower((string) ($row['name'] ?? ''));
+                $rowType = strtoupper((string) ($row['type'] ?? ''));
+                if ($name !== strtolower($sub) || $rowType !== strtoupper($type)) {
+                    continue;
+                }
                 if (! empty($row['id'])) {
                     $this->request('Record.Remove', [
                         'domain' => $domain,

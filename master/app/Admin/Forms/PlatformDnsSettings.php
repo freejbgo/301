@@ -14,12 +14,21 @@ class PlatformDnsSettings extends Form implements LazyRenderable
 
     public function handle(array $input)
     {
+        $mode = $input['dns_mode'] ?? 'manual';
+        $driver = $input['dns_driver'] ?? 'manual';
+        if ($mode === 'api' && ($driver === '' || $driver === 'manual')) {
+            return $this->response()->error('API 自动模式请选择具体 DNS 驱动，不能选「手动」');
+        }
+        if ($mode === 'manual') {
+            $driver = 'manual';
+        }
+
         $platform = RediPlatformDns::instance();
         $oldZone = trim($platform->edge_zone ?? '');
         $platform->edge_zone = trim($input['edge_zone'] ?? '');
         $platform->pool_host = trim($input['pool_host'] ?? 'pool') ?: 'pool';
-        $platform->dns_mode = $input['dns_mode'] ?? 'manual';
-        $platform->dns_driver = $input['dns_driver'] ?? 'manual';
+        $platform->dns_mode = $mode;
+        $platform->dns_driver = $driver;
         $platform->dns_zone_id = $input['dns_zone_id'] ?? null;
         $platform->acme_contact_email = trim($input['acme_contact_email'] ?? '') ?: null;
         $platform->acme_staging = ! empty($input['acme_staging']);

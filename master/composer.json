@@ -58,6 +58,6 @@
             "block-insecure": false
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }

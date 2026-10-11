@@ -11,6 +11,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Throwable;
 
@@ -20,9 +21,20 @@ class IssueDomainCertificateJob implements ShouldQueue
 
     public int $domainId;
 
-    public int $tries = 3;
+    public int $tries = 100;
+
+    public int $timeout = 300;
 
     public int $backoff = 120;
+
+    public function middleware(): array
+    {
+        return [
+            (new WithoutOverlapping('redi-acme-issue'))
+                ->releaseAfter(25)
+                ->expireAfter(300),
+        ];
+    }
 
     public function __construct(int $domainId)
     {

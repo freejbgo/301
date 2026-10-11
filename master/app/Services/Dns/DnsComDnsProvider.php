@@ -90,6 +90,14 @@ class DnsComDnsProvider implements DnsProviderInterface
                 break;
             }
             foreach ($list as $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+                $rowName = strtolower((string) ($row['record'] ?? $row['host'] ?? ''));
+                $rowType = strtoupper((string) ($row['type'] ?? ''));
+                if ($rowName !== strtolower($record) || ($rowType !== '' && $rowType !== strtoupper($type))) {
+                    continue;
+                }
                 $id = $row['record_id'] ?? $row['id'] ?? null;
                 if ($id) {
                     $this->signedPost('api/record/delete/', [

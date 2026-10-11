@@ -131,23 +131,23 @@ DNS 解析模式：
 - **HTTP 跳转**：`config.json` 的 `addr`（默认 `0.0.0.0:80`）；可用环境变量 `REDI_HTTP_LISTEN` 覆盖。
 - **HTTPS**：`tls_addr`（默认 `0.0.0.0:443`）；设为 `""` / `null` 或 `REDI_TLS_LISTEN=` 可关闭；证书由 Agent 拉取后 **SNI** 热加载。
 - **lagran**：`lagran.port` 建议 **`80,443`**（可与 `addr` / `tls_addr` 自动合并）；需 root/CAP_NET_ADMIN。
-- **管理 API**：`8080`（`api.js` / `c.js`）；HTTPS 跳转页使用与当前 scheme 一致的 `https://` 脚本地址，避免混合内容。
+- **管理 API**：`8080` 仍可直接访问 `api.js` / `c.js`（明文）。跳转页改为**当前域名相对路径** `/c.js`、`/api.js`，由 80/443 直接输出，HTTPS 不再请求 `https://IP:8080`。
 
 ### 5.2 Master Agent（`REDI_MASTER_URL` + `REDI_NODE_TOKEN`）
 
 约 **5 秒** 一轮（缺 env 则 Agent 不启动）：
 
-1. `POST /api/nodes/register`（含版本号，可上报 `public_ip` / `name`）  
-2. `GET /api/nodes/acme-challenges` → 本地内存表；若有挑战则 `POST /api/nodes/challenges-synced`  
-3. `GET /api/nodes/redirect-rules` → `force_https` 等（与库中启用域名一致）  
-4. `GET /api/nodes/certificates` → 安装 PEM 并对每条 `POST /api/nodes/ack`  
-5. `POST /api/nodes/heartbeat`  
+1. `POST /api/nodes/register`（仅版本号；**不能**改节点公网 IP 或名称）  
+2. `GET /api/nodes/revision`；与上次相同则只心跳  
+3. 有变化时：`GET /api/nodes/acme-challenges`（有挑战则 `POST /api/nodes/challenges-synced`）、`GET /api/nodes/redirect-rules`、`GET /api/nodes/certificates`（安装成功才 `POST /api/nodes/ack`）  
+4. `POST /api/nodes/heartbeat`  
 
 ### 5.3 请求处理顺序（80/443）
 
 1. `/.well-known/acme-challenge/*` **明文 200**（优先于跳转）  
-2. HTTP 且（证书或规则）**强制 HTTPS** → **301** 到 `https://`  
-3. 否则返回跳转 HTML（拉 `api.js` 完成 301 逻辑）
+2. `/c.js`、`/api.js` 由本进程输出（与 8080 相同逻辑）  
+3. HTTP 且（证书或规则）**强制 HTTPS** → **301** 到 `https://`  
+4. 否则返回跳转 HTML（相对路径加载 `/c.js`、`/api.js`）
 
 打包：`./scripts/build-node-tar.sh` → `node/redi-multi.tar.gz`；说明见 `node/README.md`。
 
@@ -160,7 +160,8 @@ DNS 解析模式：
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/register` | 注册/更新节点元数据、心跳时间 |
+| POST | `/register` | 登记心跳与版本；忽略 body 中的 IP/名称 |
+| GET | `/revision` | 挑战、证书、跳转规则的摘要；未变则节点不拉证书 |
 | POST | `/heartbeat` | 心跳 |
 | POST | `/challenges-synced` | 节点已应用 ACME 挑战列表（body: `domains[]`） |
 | GET | `/acme-challenges` | 当前有效 HTTP-01 挑战 |
@@ -168,7 +169,7 @@ DNS 解析模式：
 | POST | `/ack` | 证书安装结果 `cert_id`、`ok`、`error` |
 | GET | `/redirect-rules` | `original_url`、`skip_url`、`force_https`（`status=1`） |
 
-主控在 HTTP-01 签发前会探测：**每个启用节点公网 IP:80**（带 `Host: 客户域`）及 **公网 `http://客户域/.well-known/...`**。
+主控在 HTTP-01 签发前会等待：**每个启用节点已上报** `challenges-synced`，并且公网 `http://客户域/.well-known/...` 返回挑战内容。
 
 ---
 

@@ -8,9 +8,10 @@ import (
 )
 
 type httpRequest struct {
-	Method string
-	Path   string
-	Host   string
+	Method    string
+	Path      string
+	Host      string
+	UserAgent string
 }
 
 func readRequest(conn net.Conn) (*httpRequest, error) {
@@ -33,12 +34,21 @@ func readRequest(conn net.Conn) (*httpRequest, error) {
 		if h == "" {
 			break
 		}
-		if strings.HasPrefix(strings.ToLower(h), "host:") {
-			req.Host = strings.TrimSpace(h[5:])
-			if idx := strings.Index(req.Host, ":"); idx > 0 {
-				req.Host = req.Host[:idx]
-			}
+		lower := strings.ToLower(h)
+		if strings.HasPrefix(lower, "host:") {
+			req.Host = hostWithoutPort(strings.TrimSpace(h[5:]))
+		}
+		if strings.HasPrefix(lower, "user-agent:") {
+			req.UserAgent = strings.TrimSpace(h[len("user-agent:"):])
 		}
 	}
 	return req, nil
+}
+
+func hostWithoutPort(host string) string {
+	host = strings.TrimSpace(host)
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		return h
+	}
+	return host
 }

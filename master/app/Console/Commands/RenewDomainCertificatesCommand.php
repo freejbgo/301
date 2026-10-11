@@ -15,7 +15,11 @@ class RenewDomainCertificatesCommand extends Command
     public function handle(): int
     {
         $certs = RediDomainCert::query()
-            ->whereIn('status', [RediDomainCert::STATUS_ACTIVE, RediDomainCert::STATUS_ISSUED])
+            ->whereIn('status', [
+                RediDomainCert::STATUS_ACTIVE,
+                RediDomainCert::STATUS_ISSUED,
+                RediDomainCert::STATUS_DEPLOYING,
+            ])
             ->whereNotNull('expires_at')
             ->where('expires_at', '<=', now()->addDays(25))
             ->get();

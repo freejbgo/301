@@ -91,7 +91,7 @@ HTML;
         if ($platform->dns_mode !== 'api') {
             return response()->json([
                 'status' => true,
-                'message' => '当前为手动解析模式：请按页面「解析参考」表在 DNS 服务商自行配置，无需同步。',
+                'message' => '当前为手动解析模式：请按页面 Pool / 租户参考表在 DNS 服务商自行配置，无需同步。',
             ]);
         }
 

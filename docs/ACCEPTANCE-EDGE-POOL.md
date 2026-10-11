@@ -18,7 +18,7 @@
 ## F2 API 同步 pool
 
 1. DNS 驱动选 Cloudflare（或已配置的阿里云/DNSPod/dns.com）。
-2. 填写凭证，API 模式，点击「同步 Pool / 租户 CNAME」。
+2. 填写凭证，解析模式选 **API 自动**，点击「同步 Pool / 租户 CNAME 到 DNS 厂商」。
 3. 在厂商面板确认 pool A 与 token CNAME 与节点列表一致。
 
 ## F3 HTTP 跳转
@@ -39,7 +39,7 @@
 ## F6 强制 HTTPS
 
 1. 域名开启「强制 HTTPS」。
-2. `http://客户域/` 返回 301 到 `https://`。
+2. `http://客户域/` 返回 301 到 `https://`。HTTPS 页面脚本为同源 `/c.js`、`/api.js`（不访问 `https://节点IP:8080`）。
 
 ## F7 续期
 

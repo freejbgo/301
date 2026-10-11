@@ -3,9 +3,19 @@
 namespace App\Services;
 
 use App\Models\RediPlatformDns;
+use Illuminate\Support\Facades\Cache;
 
 class CnamePrecheckService
 {
+    public static function pointsToEdgeCached(string $customerDomain, string $edgeFqdn, int $seconds = 60): bool
+    {
+        $key = 'cname-precheck:'.md5(strtolower($customerDomain).'|'.strtolower($edgeFqdn));
+
+        return (bool) Cache::remember($key, $seconds, function () use ($customerDomain, $edgeFqdn) {
+            return self::pointsToEdge($customerDomain, $edgeFqdn);
+        });
+    }
+
     /**
      * 检查客户域名是否 CNAME 到租户 edge，或解析结果与 pool 节点 A 一致。
      */

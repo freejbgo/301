@@ -36,29 +36,39 @@ func Run() {
 func loop(cfg config) {
 	client := &http.Client{Timeout: 30 * time.Second}
 	registered := false
+	revision := ""
 	for {
-		if err := tick(client, cfg, &registered); err != nil {
+		if err := tick(client, cfg, &registered, &revision); err != nil {
 			logrus.Errorf("[masteragent] %v", err)
 		}
 		time.Sleep(5 * time.Second)
 	}
 }
 
-func tick(client *http.Client, cfg config, registered *bool) error {
+func tick(client *http.Client, cfg config, registered *bool, revision *string) error {
 	if !*registered {
 		if err := postJSON(client, cfg, "/api/nodes/register", map[string]string{"version": agentVersion}, nil); err != nil {
 			return err
 		}
 		*registered = true
 	}
-	if err := pullChallenges(client, cfg); err != nil {
+	var rev struct {
+		Revision string `json:"revision"`
+	}
+	if err := getJSON(client, cfg, "/api/nodes/revision", &rev); err != nil {
 		return err
 	}
-	if err := pullRedirectRules(client, cfg); err != nil {
-		return err
-	}
-	if err := pullCertificates(client, cfg); err != nil {
-		return err
+	if rev.Revision == "" || rev.Revision != *revision {
+		if err := pullChallenges(client, cfg); err != nil {
+			return err
+		}
+		if err := pullRedirectRules(client, cfg); err != nil {
+			return err
+		}
+		if err := pullCertificates(client, cfg); err != nil {
+			return err
+		}
+		*revision = rev.Revision
 	}
 	if err := postJSON(client, cfg, "/api/nodes/heartbeat", map[string]string{"version": agentVersion}, nil); err != nil {
 		return err
@@ -137,18 +147,22 @@ func pullCertificates(client *http.Client, cfg config) error {
 			ForceHTTPS:  row.ForceHTTPS,
 		}
 		if err := certs.InstallEntry(entry); err != nil {
-			_ = postJSON(client, cfg, "/api/nodes/ack", map[string]interface{}{
+			if ackErr := postJSON(client, cfg, "/api/nodes/ack", map[string]interface{}{
 				"cert_id": row.CertID,
 				"ok":      false,
 				"error":   err.Error(),
-			}, nil)
+			}, nil); ackErr != nil {
+				return ackErr
+			}
 			continue
 		}
 		list = append(list, entry)
-		_ = postJSON(client, cfg, "/api/nodes/ack", map[string]interface{}{
+		if ackErr := postJSON(client, cfg, "/api/nodes/ack", map[string]interface{}{
 			"cert_id": row.CertID,
 			"ok":      true,
-		}, nil)
+		}, nil); ackErr != nil {
+			return ackErr
+		}
 	}
 	certs.ReplaceAll(list)
 	return nil

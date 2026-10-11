@@ -17,12 +17,6 @@ class NodeAgentController extends Controller
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
-        if ($request->filled('public_ip')) {
-            $node->public_ip = $request->input('public_ip');
-        }
-        if ($request->filled('name')) {
-            $node->name = $request->input('name');
-        }
         $node->last_heartbeat_at = now();
         $node->agent_version = $request->input('version');
         $node->save();
@@ -48,6 +42,36 @@ class NodeAgentController extends Controller
         }
 
         return response()->json(['ok' => true]);
+    }
+
+    public function revision()
+    {
+        $challenges = RediAcmeChallenge::query()
+            ->where('expires_at', '>', now())
+            ->orderBy('id')
+            ->get(['domain_name', 'token', 'updated_at']);
+
+        $certs = RediDomainCert::query()
+            ->whereIn('status', [
+                RediDomainCert::STATUS_ISSUED,
+                RediDomainCert::STATUS_DEPLOYING,
+                RediDomainCert::STATUS_ACTIVE,
+            ])
+            ->orderBy('id')
+            ->get(['id', 'domain_name', 'updated_at']);
+
+        $rules = DB::table('redi_admin_domain')
+            ->where('status', 1)
+            ->orderBy('id')
+            ->get(['id', 'original_url', 'force_https', 'updated_at']);
+
+        $revision = sha1(json_encode([
+            'challenges' => $challenges,
+            'certs' => $certs,
+            'rules' => $rules,
+        ]));
+
+        return response()->json(['revision' => $revision]);
     }
 
     public function heartbeat(Request $request)

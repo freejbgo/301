@@ -6,7 +6,7 @@ After=network.target mariadb.service
 Type=simple
 User=www-data
 WorkingDirectory=/opt/301/master
-ExecStart=/usr/bin/php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+ExecStart=/usr/bin/php artisan queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600
 Restart=always
 RestartSec=5
 

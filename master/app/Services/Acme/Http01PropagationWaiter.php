@@ -2,6 +2,7 @@
 
 namespace App\Services\Acme;
 
+use App\Models\RediAcmeChallengeNodeSync;
 use App\Models\RediNode;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -9,7 +10,7 @@ use RuntimeException;
 class Http01PropagationWaiter
 {
     /**
-     * 等待全部启用节点与公网域名均可返回 HTTP-01 响应。
+     * 等待全部启用节点上报已同步挑战，且公网域名可返回 HTTP-01 响应。
      */
     public function wait(string $domain, string $token, string $expectedBody, int $maxSeconds = 120): void
     {
@@ -20,7 +21,7 @@ class Http01PropagationWaiter
         $deadline = time() + $maxSeconds;
 
         while (time() < $deadline) {
-            if ($this->allNodesServe($domain, $path, $expectedBody)) {
+            if ($this->allNodesSynced($domain)) {
                 try {
                     $response = Http::timeout(8)
                         ->withHeaders(['User-Agent' => 'redi-master-acme-probe/1.0'])
@@ -37,30 +38,24 @@ class Http01PropagationWaiter
         }
 
         throw new RuntimeException(
-            'HTTP-01 未在 '.$maxSeconds.' 秒内就绪：请确认全部节点 Agent、CNAME 与 80 端口可从公网访问'
+            'HTTP-01 未在 '.$maxSeconds.' 秒内就绪：请确认节点 Agent 已连上主控、CNAME 已生效，且公网 80 端口可访问 '.$publicUrl
         );
     }
 
-    protected function allNodesServe(string $domain, string $path, string $expectedBody): bool
+    protected function allNodesSynced(string $domain): bool
     {
-        $nodes = RediNode::enabled()->get();
-        if ($nodes->isEmpty()) {
+        $ids = RediNode::enabled()->pluck('id');
+        if ($ids->isEmpty()) {
             return false;
         }
 
-        foreach ($nodes as $node) {
-            try {
-                $response = Http::timeout(6)
-                    ->withHeaders(['Host' => $domain])
-                    ->get('http://'.$node->public_ip.$path);
-                if (! $response->successful() || trim($response->body()) !== $expectedBody) {
-                    return false;
-                }
-            } catch (\Throwable $e) {
-                return false;
-            }
-        }
+        $synced = RediAcmeChallengeNodeSync::query()
+            ->where('domain_name', $domain)
+            ->whereIn('node_id', $ids)
+            ->where('synced_at', '>=', now()->subMinutes(3))
+            ->pluck('node_id')
+            ->unique();
 
-        return true;
+        return $synced->count() >= $ids->count();
     }
 }

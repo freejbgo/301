@@ -71,12 +71,22 @@ func allowRate(ip string) bool {
 }
 
 func handleCjs(c echo.Context) error {
+	c.Response().Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	return c.String(http.StatusOK, cjsSource(c.RealIP(), c.Request().UserAgent()))
+}
+
+func handleApiJs(c echo.Context) error {
+	body, code := apiJsSource(c.QueryParam("d"))
+	c.Response().Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	return c.String(code, body)
+}
+
+func cjsSource(clientIP, userAgent string) string {
 	cinfo, _ := json.Marshal(map[string]string{
-		"cip": c.RealIP(),
-		"ua":  c.Request().UserAgent(),
+		"cip": clientIP,
+		"ua":  userAgent,
 	})
-	response := fmt.Sprintf("var cinfo = %s;", string(cinfo))
-	response += `
+	return fmt.Sprintf("var cinfo = %s;", string(cinfo)) + `
 function createXHR () {
 var XHR = [
 	function () { return new XMLHttpRequest () },
@@ -102,15 +112,12 @@ String.prototype.decode = function () {
 	return String.fromCharCode.apply(null,this.trim().split(","));
 }
 `
-	c.Response().Header().Set("Content-Type", "application/javascript; charset=utf-8")
-	return c.String(http.StatusOK, response)
 }
 
-func handleApiJs(c echo.Context) error {
-	Db := mysqlconnect.ConnectMysql()
-	encodedDomain := c.QueryParam("d")
+func apiJsSource(encodedDomain string) (string, int) {
+	db := mysqlconnect.ConnectMysql()
 	domain := domain2.Encoded{Content: encodedDomain}
-	skipUrl := GetSkipUrl(Db, domain.Decode())
+	skipUrl := GetSkipUrl(db, domain.Decode())
 	if skipUrl != "" && !isAllowedRedirectURL(skipUrl) {
 		skipUrl = ""
 	}
@@ -129,11 +136,9 @@ func handleApiJs(c echo.Context) error {
 	}
 	payload, err := json.Marshal(body)
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "// error")
+		return "// error", http.StatusInternalServerError
 	}
-	res := "var redirector = " + string(payload) + ";"
-	c.Response().Header().Set("Content-Type", "application/javascript; charset=utf-8")
-	return c.String(http.StatusOK, res)
+	return "var redirector = " + string(payload) + ";", http.StatusOK
 }
 
 func isAllowedRedirectURL(raw string) bool {

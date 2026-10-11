@@ -73,25 +73,34 @@ class AliyunDnsProvider implements DnsProviderInterface
 
     protected function deleteRecords(string $domain, string $rr, string $type): void
     {
-        $res = $this->client->call('DescribeDomainRecords', [
-            'DomainName' => $domain,
-            'RRKeyWord' => $rr === '@' ? '' : $rr,
-            'Type' => $type,
-            'PageNumber' => 1,
-            'PageSize' => 100,
-        ]);
-        $records = $res['DomainRecords']['Record'] ?? [];
-        if ($records === []) {
-            return;
-        }
-        if (isset($records['RecordId'])) {
-            $records = [$records];
-        }
-        foreach ($records as $row) {
-            if (! empty($row['RecordId'])) {
-                $this->client->call('DeleteDomainRecord', ['RecordId' => $row['RecordId']]);
+        $page = 1;
+        do {
+            $res = $this->client->call('DescribeDomainRecords', [
+                'DomainName' => $domain,
+                'RRKeyWord' => $rr === '@' ? '' : $rr,
+                'Type' => $type,
+                'PageNumber' => $page,
+                'PageSize' => 100,
+            ]);
+            $records = $res['DomainRecords']['Record'] ?? [];
+            if ($records === []) {
+                return;
             }
-        }
+            if (isset($records['RecordId'])) {
+                $records = [$records];
+            }
+            foreach ($records as $row) {
+                $rowRr = strtolower((string) ($row['RR'] ?? ''));
+                $rowType = strtoupper((string) ($row['Type'] ?? ''));
+                if ($rowRr !== strtolower($rr) || $rowType !== strtoupper($type)) {
+                    continue;
+                }
+                if (! empty($row['RecordId'])) {
+                    $this->client->call('DeleteDomainRecord', ['RecordId' => $row['RecordId']]);
+                }
+            }
+            $page++;
+        } while (count($records) === 100 && $page <= 20);
     }
 
     protected function zoneName(): string

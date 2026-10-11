@@ -69,7 +69,7 @@ class RediAdminDomainController extends AdminController
                 if ($edgeFqdn === '' || strncmp($edgeFqdn, '（', 3) === 0) {
                     return '—';
                 }
-                $ok = CnamePrecheckService::pointsToEdge($this->original_url, $edgeFqdn);
+                $ok = CnamePrecheckService::pointsToEdgeCached($this->original_url, $edgeFqdn);
 
                 return $ok ? '已指向' : '未检测到';
             });
