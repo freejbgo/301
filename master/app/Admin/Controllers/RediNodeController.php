@@ -49,7 +49,7 @@ class RediNodeController extends AdminController
             $form->text('name', '名称')->required();
             $form->ip('public_ip', '主公网 IP')->required()->help('这台机器对外的主 IP，也是节点程序所在机器。一台机器只建一条节点。');
             $form->textarea('extra_ips', '其他公网 IP')->rows(4)
-                ->help('同一台机器上还要写入 pool 的公网 IP，一行一个。仍然只跑一个节点进程、只用一个 Token。不要为这些 IP 再新建节点。')
+                ->help('同一台机器上还要写入 pool 的公网 IPv4，一行一个。Pool 只写 A 记录。仍然只跑一个节点进程、只用一个 Token。不要为这些 IP 再新建节点。')
                 ->customFormat(function ($value) {
                     if (is_array($value)) {
                         return implode("\n", $value);
@@ -67,10 +67,16 @@ class RediNodeController extends AdminController
             $form->textarea('note', '备注');
 
             $form->saving(function (Form $form) {
+                $inputs = (array) $form->input();
+                // 列表启用开关只提交 enabled。这里若按空 IP 校验，开关会失败，并可能把其他 IP 写成空。
+                if (! array_key_exists('public_ip', $inputs) && ! array_key_exists('extra_ips', $inputs)) {
+                    return;
+                }
+
                 $primary = trim((string) $form->input('public_ip'));
-                if (filter_var($primary, FILTER_VALIDATE_IP) === false) {
+                if (filter_var($primary, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === false) {
                     throw ValidationException::withMessages([
-                        'public_ip' => '主公网 IP 无效',
+                        'public_ip' => '主公网 IP 必须是 IPv4',
                     ]);
                 }
                 $extras = RediNode::parseExtraIps((string) $form->input('extra_ips'));

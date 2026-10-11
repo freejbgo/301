@@ -82,9 +82,9 @@ class RediNode extends Model
             if ($ip === '' || in_array($ip, $ips, true)) {
                 continue;
             }
-            if (filter_var($ip, FILTER_VALIDATE_IP) === false) {
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === false) {
                 throw ValidationException::withMessages([
-                    'extra_ips' => '无效的 IP：'.$ip,
+                    'extra_ips' => '请填写 IPv4，一行一个。无效：'.$ip,
                 ]);
             }
             $ips[] = $ip;
@@ -108,10 +108,11 @@ class RediNode extends Model
                 $taken[$ip] = true;
             }
         }
+        $primary = $ips[0] ?? null;
         foreach ($ips as $ip) {
             if (isset($taken[$ip])) {
                 throw ValidationException::withMessages([
-                    'public_ip' => 'IP 已被其他节点使用：'.$ip,
+                    ($ip === $primary ? 'public_ip' : 'extra_ips') => 'IP 已被其他节点使用：'.$ip,
                 ]);
             }
         }
