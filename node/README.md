@@ -177,22 +177,23 @@ var (
 ```text
 [root@192-168-0-115 redi-multi]# ll
 total 19112
-drwxr-xr-x 2 root root     20 Apr  6 16:04 api
-drwxr-xr-x 2 root root     24 Feb 18 15:31 bin
-drwxr-xr-x 2 root root     23 Apr  4 10:26 config
--rw-r--r-- 1 root root    375 Apr  6 16:11 config.json
--rw-r--r-- 1 root root   1729 Feb 20 16:32 go.mod
--rw-r--r-- 1 root root  14494 Feb 20 16:32 go.sum
-drwxr-xr-x 2 root root     20 Mar 29 23:56 http
-drwxr-xr-x 2 root root     23 Apr  6 15:56 lagran
-drwxr-xr-x 2 root root     20 Feb  2 18:06 log
--rwxr-xr-x 1 root root 9791986 Feb 18 15:31 main
--rw-r--r-- 1 root root    183 Feb 18 15:31 main.go
-drwxr-xr-x 2 root root     54 Apr  6 16:04 mysqlconnect
--rw-r--r-- 1 root root    829 Apr  6 15:54 Makefile
--rwxr-xr-x 1 root root 9810489 Feb 18 15:31 redi-multi
-drwxr-xr-x 3 root root     20 Feb 18 15:31 redirect
-drwxr-xr-x 2 root root     20 Feb 18 15:31 util
+drwxr-xr-x 2 root root      20 Apr  6 16:04 api
+drwxr-xr-x 2 root root      24 Feb 18 15:31 bin
+drwxr-xr-x 2 root root      23 Apr  4 10:26 config
+-rw-r--r-- 1 root root     375 Apr  6 16:11 config.json
+-rw-r--r-- 1 root root    1729 Feb 20 16:32 go.mod
+-rw-r--r-- 1 root root   14494 Feb 20 16:32 go.sum
+drwxr-xr-x 2 root root      21 Mar 29 23:56 http
+drwxr-xr-x 2 root root      23 Apr  6 15:56 lagran
+drwxr-xr-x 2 root root      20 Mar  2 18:06 log
+-rwxr-xr-x 1 root root 9719186 Feb 18 15:31 main
+-rw-r--r-- 1 root root     717 Apr  6 10:35 main.go
+-rw-r--r-- 1 root root     183 Feb 18 15:31 Makefile
+drwxr-xr-x 2 root root      50 Apr  6 10:34 mysqlconnect
+-rw------- 1 root root     823 Apr  6 15:54 nohup.out
+-rwxr-xr-x 1 root root 9810489 Feb 18 15:39 redi-multi
+drwxr-xr-x 2 root root      25 Apr  4 10:25 redirect
+drwxr-xr-x 3 root root      20 Feb 18 15:31 util
 ```
 
 打开上面的 `config.json`，把 `server_ip` 改成这台跳转服务器的外网 IP。文件内容如下，其中 `server_ip` 当前是 `127.0.0.1`：
@@ -212,7 +213,7 @@ drwxr-xr-x 2 root root     20 Feb 18 15:31 util
   },
   "redirector": {
     "domain1.com": "http://www.1.com",
-    "domain2.com": "http://www.2.com",
+    "domain2.com": "http:/www.2.com",
     "127.0.0.1": "http://baidu.com"
   }
 }
