@@ -18,14 +18,14 @@ mysql -u root -p redi_admin < db/redi_admin.sql
 ## 2. 主控（master 目录）
 
 ```bash
-cd master
+cd master/master
 cp .env.example .env
 # 编辑 .env：APP_URL、DB_*、执行 php artisan key:generate
 composer install --no-dev --optimize-autoloader
 # dcat/laravel-admin 2.x 只有 beta 包，composer.json 使用 minimum-stability=dev 且 prefer-stable=true
 php artisan key:generate
 php artisan migrate --force   # 旧库升级必做。全新导入 redi_admin.sql 后再执行也安全（迁移已登记，不会重复建表）
-# 配置网站根目录为 master/public，并启用 HTTPS
+# 配置网站根目录为 master/master/public，并启用 HTTPS
 ```
 
 `.env` 已默认 `APP_DEBUG=false`、`ADMIN_HTTPS=true`。
@@ -41,7 +41,7 @@ php artisan queue:work --sleep=3 --timeout=320 --tries=100
 证书**自动续期**每天跑一次即可（不必每分钟 `schedule:run`）。在 crontab 里加一行，例如每天 03:10：
 
 ```bash
-10 3 * * * cd /path/to/master && php artisan redi:renew-certificates >> /var/log/redi-renew.log 2>&1
+10 3 * * * cd /path/to/master/master && php artisan redi:renew-certificates >> /var/log/redi-renew.log 2>&1
 ```
 
 （若你更喜欢 Laravel 调度器，也可每天 03:10 执行一次 `php artisan schedule:run`，效果与上类似。）

@@ -5,7 +5,7 @@ After=network.target mariadb.service
 [Service]
 Type=simple
 User=www-data
-WorkingDirectory=/opt/301/master
+WorkingDirectory=/opt/301/master/master
 # 证书等锁见任务 retryUntil（入队后 24 小时）；签发异常 $maxExceptions=3
 ExecStart=/usr/bin/php artisan queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600
 Restart=always

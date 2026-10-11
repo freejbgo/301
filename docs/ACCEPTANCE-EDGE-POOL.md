@@ -5,7 +5,7 @@
 ## 环境前提
 
 - 主控：`composer install`、`migrate`、`QUEUE_CONNECTION=database`、`php artisan queue:work` 常驻
-- 续期 crontab：`10 3 * * * cd .../master && php artisan redi:renew-certificates`
+- 续期 crontab：`10 3 * * * cd .../master/master && php artisan redi:renew-certificates`
 - 节点：`REDI_MASTER_URL`、`REDI_NODE_TOKEN`、`REDI_DB_*`，防火墙 80/443/8080（按需）
 
 ## F1 手动 DNS

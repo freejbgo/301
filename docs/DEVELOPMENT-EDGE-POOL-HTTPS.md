@@ -156,7 +156,7 @@ DNS 解析模式：
 ## 六、主控 ↔ 节点 API
 
 - **鉴权**：`Authorization: Bearer {节点ID}.{创建时展示的 Secret}`（与 Dcat 后台会话无关）。  
-- **前缀**：`/api/nodes/*`（见 `master/routes/api.php`）。
+- **前缀**：`/api/nodes/*`（见 `master/master/routes/api.php`）。
 
 | 方法 | 路径 | 说明 |
 |------|------|------|

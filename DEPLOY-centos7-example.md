@@ -99,7 +99,7 @@ sudo firewall-cmd --reload
 ### 6. Laravel 后台（暂无域名）
 
 ```bash
-cd "$MASTER_INSTALL_ROOT/master"
+cd "$MASTER_INSTALL_ROOT/master/master"
 cp .env.example .env
 sed -i "s|change_this_db_password|${DB_PASS}|g" .env
 sed -i "s|https://your-master-domain.com|http://${MASTER_IP}|g" .env
@@ -119,7 +119,7 @@ sudo tee /etc/nginx/conf.d/301-master.conf <<NGINX
 server {
     listen 80;
     server_name _;
-    root ${MASTER_INSTALL_ROOT}/master/public;
+    root ${MASTER_INSTALL_ROOT}/master/master/public;
     index index.php;
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;

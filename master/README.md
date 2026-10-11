@@ -1,5 +1,9 @@
 # 301 主控安装
 
+程序在子目录 `master/`。发布包是同级的 `master.tar.gz`（解压后得到这个 `master/` 目录）。仓库里的 `vendor` 和 `.env` 不在包内，解压后在该目录执行 `composer install`。
+
+克隆整个仓库时，网站根目录是 `master/master/public`，队列和 `artisan` 的工作目录是 `master/master`。
+
 完整安全与上线清单见仓库根目录 [SECURITY.md](../SECURITY.md)。
 
 ## 功能说明（维护）

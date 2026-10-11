@@ -98,7 +98,7 @@ sudo firewall-cmd --reload
 ### 1.6 Laravel 主控
 
 ```bash
-cd "$INSTALL_ROOT/master"
+cd "$INSTALL_ROOT/master/master"
 cp .env.example .env
 sed -i "s|change_this_db_password|${DB_PASS}|g" .env
 sed -i "s|https://your-master-domain.com|http://${MASTER_IP}|g" .env
@@ -120,7 +120,7 @@ Nginx 站点示例（`/etc/nginx/conf.d/301-master.conf`）：
 server {
     listen 80;
     server_name _;
-    root /opt/301/master/public;
+    root /opt/301/master/master/public;
     index index.php;
     location / {
         try_files $uri $uri/ /index.php?$query_string;
@@ -147,12 +147,12 @@ sudo nginx -t && sudo systemctl reload nginx
 **边缘池 / 证书（可选，见 [docs/DEVELOPMENT-EDGE-POOL-HTTPS.md](docs/DEVELOPMENT-EDGE-POOL-HTTPS.md)）**：
 
 ```bash
-cd /opt/301/master
+cd /opt/301/master/master
 # .env：QUEUE_CONNECTION=database（默认示例已改）
 php artisan migrate --force   # 升级库时
 php artisan queue:work --sleep=3 --tries=3 &
 # 证书续期：每天一次即可，例如 03:10：
-# 10 3 * * * cd /opt/301/master && php artisan redi:renew-certificates >> /var/log/redi-renew.log 2>&1
+# 10 3 * * * cd /opt/301/master/master && php artisan redi:renew-certificates >> /var/log/redi-renew.log 2>&1
 ```
 
 后台配置「DNS 与节点池」「节点管理」；租户域名 CNAME 后批量/单个申请证书。
