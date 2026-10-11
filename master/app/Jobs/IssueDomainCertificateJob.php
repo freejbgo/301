@@ -21,7 +21,11 @@ class IssueDomainCertificateJob implements ShouldQueue
 
     public int $domainId;
 
+    /** 含等锁时的 release；真实异常另见 $maxExceptions。 */
     public int $tries = 100;
+
+    /** Let's Encrypt 或探测失败只重试有限次，等锁不计入。 */
+    public int $maxExceptions = 3;
 
     public int $timeout = 300;
 

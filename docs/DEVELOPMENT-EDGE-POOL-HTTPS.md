@@ -139,7 +139,7 @@ DNS 解析模式：
 
 1. `POST /api/nodes/register`（仅版本号；**不能**改节点公网 IP 或名称）  
 2. `GET /api/nodes/revision`；与上次相同则只心跳  
-3. 有变化时：`GET /api/nodes/acme-challenges`（有挑战则 `POST /api/nodes/challenges-synced`）、`GET /api/nodes/redirect-rules`、`GET /api/nodes/certificates`（安装成功才 `POST /api/nodes/ack`）  
+3. 有变化时：`GET /api/nodes/acme-challenges`（有挑战则必须 `POST /api/nodes/challenges-synced` 成功，失败则下轮重试）、`GET /api/nodes/redirect-rules`、`GET /api/nodes/certificates`（安装成功才 `POST /api/nodes/ack`）  
 4. `POST /api/nodes/heartbeat`  
 
 ### 5.3 请求处理顺序（80/443）
@@ -250,7 +250,7 @@ NS 委托；多节点池；**逐域 TXT 主流程**；客户 DNS API；主控替
 
 | 项 | 说明 |
 |----|------|
-| LE 限流 | 批量入队每条间隔 20 秒，且全局同时只跑一个 ACME 任务（`WithoutOverlapping`） |
+| LE 限流 | 批量入队每条间隔 20 秒，且全局同时只跑一个 ACME 任务。等锁不计入失败；签发异常最多 3 次（`$maxExceptions`） |
 | 主控队列 | Laravel `QUEUE_CONNECTION` 需可用（database/redis），不能只用 sync 跑批量 ACME |
 | 节点 API | 与 Dcat 后台会话分离，独立路由 + Bearer token |
 | HTTP-01 vs lagran | 必须联调：`/.well-known/` 优先；否则一键申请会失败 |
@@ -269,3 +269,4 @@ NS 委托；多节点池；**逐域 TXT 主流程**；客户 DNS API；主控替
 | 2026-03-28 | 复核：任务数改为 45；展开 D/F；增 §十 风险 |
 | 2026-03-28 | 复核修复：HTTP-01 等待传播、队列默认、CF FQDN、节点 register/ack、E2/E3 |
 | 2026-10-11 | 复核修复：同源脚本、yaac lock、签发等待节点同步、证书入队鉴权、Token 重置、DNS 精确删除 |
+| 2026-10-11 | 挑战同步失败不记 revision；证书异常最多重试 3 次 |

@@ -99,9 +99,11 @@ func pullChallenges(client *http.Client, cfg config) error {
 	}
 	acme.ReplaceAll(items)
 	if len(domains) > 0 {
-		_ = postJSON(client, cfg, "/api/nodes/challenges-synced", map[string]interface{}{
+		if err := postJSON(client, cfg, "/api/nodes/challenges-synced", map[string]interface{}{
 			"domains": domains,
-		}, nil)
+		}, nil); err != nil {
+			return err
+		}
 	}
 	return nil
 }
