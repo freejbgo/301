@@ -26,7 +26,7 @@ class EdgeDnsSyncService
         }
 
         if ($platform->dns_mode !== 'api') {
-            throw new RuntimeException('当前为手动 DNS 模式，请在面板按参考表配置记录。');
+            throw new RuntimeException('当前为手动解析模式：请在「DNS 与节点池」参考表中到 DNS 服务商自行配置，勿调用 API 同步。');
         }
 
         $provider = DnsProviderFactory::make($platform);

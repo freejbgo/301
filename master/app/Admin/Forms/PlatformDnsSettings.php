@@ -45,7 +45,8 @@ class PlatformDnsSettings extends Form implements LazyRenderable
     {
         $this->text('edge_zone', '平台主域名')->required()->help('例：123.com（你拥有 DNS 解析权的域名）');
         $this->text('pool_host', 'Pool 主机名')->default('pool')->help('最终 FQDN：pool.平台主域名');
-        $this->radio('dns_mode', '解析模式')->options(['manual' => '手动', 'api' => 'API 自动'])->default('manual');
+        $this->radio('dns_mode', '解析模式')->options(['manual' => '手动', 'api' => 'API 自动'])->default('manual')
+            ->help('手动：在下方「解析参考」表按记录在 DNS 服务商面板自行添加，无需点同步。API 自动：保存凭证后可一键同步 pool A 与各租户 token→pool CNAME。');
         $this->select('dns_driver', 'DNS 驱动')->options([
             'manual' => '手动',
             'cloudflare' => 'Cloudflare',

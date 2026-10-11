@@ -112,21 +112,63 @@ sequenceDiagram
 - **域名管理**：CNAME、**申请证书**、**批量申请**、状态、强制 HTTPS  
 - **批量证书**：多选入队、预检 CNAME、异步 Job、续期 cron  
 
-DNS 驱动：manual、cloudflare、aliyun_cn/intl、dnspod_cn/intl、dns_com。
+DNS 解析模式：
+
+| 模式 | 后台行为 | 你在 DNS 厂商侧 |
+|------|----------|-----------------|
+| **手动**（默认） | 展示 **Pool A** 与 **各租户 token→pool CNAME** 参考表；**不显示**「同步」按钮 | 按表自行添加/更新记录 |
+| **API 自动** | 配置驱动与凭证后，可 **一键同步** pool 多 A + 租户 CNAME | 以厂商面板为准做抽查 |
+
+驱动（仅 API 模式使用）：cloudflare、aliyun_cn/intl、dnspod_cn/intl、dns_com；`manual` 表示不调用 API。
 
 ---
 
 ## 五、节点（redi-multi）
 
-- Agent：注册、心跳、HTTP-01（`/.well-known/` 优先）、拉证书  
-- 443 SNI；lagran 80/443；HTTPS 跳转无混合内容；可选 80→443  
+### 5.1 进程与端口
+
+- 主进程仍连 **MySQL**（`REDI_DB_*` / `env.sh`）提供跳转与 `api.js`；**边缘池能力**由内置 **masteragent** 与主控 API 协作。
+- **HTTP 跳转**：`config.json` 的 `addr`（默认 `0.0.0.0:80`）；可用环境变量 `REDI_HTTP_LISTEN` 覆盖。
+- **HTTPS**：`tls_addr`（默认 `0.0.0.0:443`）；设为 `""` / `null` 或 `REDI_TLS_LISTEN=` 可关闭；证书由 Agent 拉取后 **SNI** 热加载。
+- **lagran**：`lagran.port` 建议 **`80,443`**（可与 `addr` / `tls_addr` 自动合并）；需 root/CAP_NET_ADMIN。
+- **管理 API**：`8080`（`api.js` / `c.js`）；HTTPS 跳转页使用与当前 scheme 一致的 `https://` 脚本地址，避免混合内容。
+
+### 5.2 Master Agent（`REDI_MASTER_URL` + `REDI_NODE_TOKEN`）
+
+约 **5 秒** 一轮（缺 env 则 Agent 不启动）：
+
+1. `POST /api/nodes/register`（含版本号，可上报 `public_ip` / `name`）  
+2. `GET /api/nodes/acme-challenges` → 本地内存表；若有挑战则 `POST /api/nodes/challenges-synced`  
+3. `GET /api/nodes/redirect-rules` → `force_https` 等（与库中启用域名一致）  
+4. `GET /api/nodes/certificates` → 安装 PEM 并对每条 `POST /api/nodes/ack`  
+5. `POST /api/nodes/heartbeat`  
+
+### 5.3 请求处理顺序（80/443）
+
+1. `/.well-known/acme-challenge/*` **明文 200**（优先于跳转）  
+2. HTTP 且（证书或规则）**强制 HTTPS** → **301** 到 `https://`  
+3. 否则返回跳转 HTML（拉 `api.js` 完成 301 逻辑）
+
+打包：`./scripts/build-node-tar.sh` → `node/redi-multi.tar.gz`；说明见 `node/README.md`。
 
 ---
 
-## 六、主控 ↔ 节点 API（草案）
+## 六、主控 ↔ 节点 API
 
-- `POST /api/nodes/register`、`POST .../heartbeat`、`POST .../challenges-synced`  
-- `GET .../acme-challenges`、`GET .../certificates`、`POST .../ack`  
+- **鉴权**：`Authorization: Bearer {节点ID}.{创建时展示的 Secret}`（与 Dcat 后台会话无关）。  
+- **前缀**：`/api/nodes/*`（见 `master/routes/api.php`）。
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/register` | 注册/更新节点元数据、心跳时间 |
+| POST | `/heartbeat` | 心跳 |
+| POST | `/challenges-synced` | 节点已应用 ACME 挑战列表（body: `domains[]`） |
+| GET | `/acme-challenges` | 当前有效 HTTP-01 挑战 |
+| GET | `/certificates` | 全平台已签发证书 PEM（受信节点模型） |
+| POST | `/ack` | 证书安装结果 `cert_id`、`ok`、`error` |
+| GET | `/redirect-rules` | `original_url`、`skip_url`、`force_https`（`status=1`） |
+
+主控在 HTTP-01 签发前会探测：**每个启用节点公网 IP:80**（带 `Host: 客户域`）及 **公网 `http://客户域/.well-known/...`**。
 
 ---
 
