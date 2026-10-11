@@ -33,7 +33,7 @@ func main() {
 	signal.Notify(sigs, os.Interrupt)
 	go func() {
 		<-sigs
-		lagran.UnsetIptable(config.Lagran["port"].(string))
+		lagran.UnsetIptable(config.LagranSport())
 		logrus.Debug("Unset iptables...")
 		done <- true
 	}()

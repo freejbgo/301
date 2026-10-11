@@ -42,4 +42,13 @@ func Init() {
 	DefaultRedirectUrl = payload["default_redirect_url"].(string)
 	Redirector = payload["redirector"].(map[string]interface{})
 	Lagran = payload["lagran"].(map[string]interface{})
+
+	// lagran.port 与 addr / tls_addr 对齐：iptables multiport 格式为 "80,443"（逗号、无空格）
+	if Lagran != nil {
+		existing := ""
+		if v, ok := Lagran["port"].(string); ok {
+			existing = v
+		}
+		Lagran["port"] = MergeListenerPorts(existing, Addr, TlsAddr)
+	}
 }

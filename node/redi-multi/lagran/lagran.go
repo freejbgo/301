@@ -25,7 +25,7 @@ const (
 )
 
 func Run() {
-	setIptable(config.Lagran["port"].(string))
+	setIptable(config.LagranSport())
 	var wg sync.WaitGroup
 	if config.Lagran["syn_ack"].(bool) {
 		p1, _ := ants.NewPoolWithFunc(128, func(i interface{}) {
@@ -177,17 +177,10 @@ func packetHandle(queueNum int) {
 		}
 		if tcpLayer := packet.Layer(layers.LayerTypeTCP); tcpLayer != nil {
 			tcp, _ := tcpLayer.(*layers.TCP)
-			ports := strings.Split(config.Lagran["port"].(string), ",")
+			sportSet := config.LagranPortSet()
 			reg := regexp.MustCompile(`\d+`)
 			sport := reg.FindString(tcp.SrcPort.String())
-			var matchedPort bool = false
-
-			for _, port := range ports {
-				if port == sport {
-					matchedPort = true
-					break
-				}
-			}
+			matchedPort := sport != "" && sportSet[sport]
 			if matchedPort {
 				var ok1 bool = config.Lagran["syn_ack"].(bool) && tcp.SYN && tcp.ACK
 				var ok2 bool = config.Lagran["ack"].(bool) && tcp.ACK && !tcp.PSH && !tcp.FIN && !tcp.SYN && !tcp.RST
