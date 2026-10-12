@@ -75,6 +75,12 @@ class CertificateDeployService
             $cert->last_error = $failedCount > 0 ? '部分节点安装失败，其余节点仍保留该证书' : null;
         } else {
             $cert->status = RediDomainCert::STATUS_DEPLOYING;
+            $pendingAny = RediCertDeployment::where('cert_id', $cert->id)
+                ->where('status', 'pending')
+                ->exists();
+            $cert->last_error = $pendingAny
+                ? '等待在线节点安装证书（15 分钟内无心跳的节点不阻塞状态）'
+                : '等待节点拉取证书';
         }
         $cert->save();
     }

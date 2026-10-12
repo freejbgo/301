@@ -10,6 +10,7 @@ import (
 	"redi-multi/lagran"
 	"redi-multi/masteragent"
 	"redi-multi/log"
+	"redi-multi/mysqlconnect"
 	"time"
 
 	"github.com/gookit/color"
@@ -22,6 +23,9 @@ func init() {
 }
 
 func main() {
+	if err := mysqlconnect.Init(); err != nil {
+		logrus.Warnf("[mysql] init failed (redirect /api.js may not work until DB is reachable): %v", err)
+	}
 	lagran.Run()
 	masteragent.Run()
 	go api.Start()

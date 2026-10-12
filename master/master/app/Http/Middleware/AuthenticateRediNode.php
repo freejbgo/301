@@ -28,17 +28,13 @@ class AuthenticateRediNode
 
     protected function resolveNode(string $token): ?RediNode
     {
-        if (preg_match('/^(\d+)\.(.+)$/', $token, $m)) {
-            $candidate = RediNode::enabled()->find((int) $m[1]);
-            if ($candidate && $candidate->verifyApiToken($token)) {
-                return $candidate;
-            }
+        if (! preg_match('/^(\d+)\.(.+)$/', $token, $m)) {
+            return null;
         }
 
-        foreach (RediNode::enabled()->get() as $candidate) {
-            if ($candidate->verifyApiToken($token)) {
-                return $candidate;
-            }
+        $candidate = RediNode::enabled()->find((int) $m[1]);
+        if ($candidate && $candidate->verifyApiToken($token)) {
+            return $candidate;
         }
 
         return null;

@@ -254,6 +254,15 @@ JS
             $form->saved(function (Form $form) {
                 $adminId = (int) Admin::user()->id;
                 TenantEdgeService::ensureForAdmin($adminId);
+
+                if ($form->isEditing()) {
+                    $domain = \App\Models\RediAdminDomain::query()->find($form->getKey());
+                    if ($domain) {
+                        RediDomainCert::query()
+                            ->where('domain_id', $domain->id)
+                            ->update(['domain_name' => $domain->original_url]);
+                    }
+                }
             });
         });
     }

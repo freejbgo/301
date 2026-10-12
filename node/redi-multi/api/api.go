@@ -62,12 +62,35 @@ func allowRate(ip string) bool {
 		}
 	}
 	if len(kept) >= rateLimit {
-		rateHits[ip] = kept
+		if len(kept) == 0 {
+			delete(rateHits, ip)
+		} else {
+			rateHits[ip] = kept
+		}
 		return false
 	}
 	kept = append(kept, now)
 	rateHits[ip] = kept
+	if len(rateHits) > 4096 {
+		pruneRateMap(cutoff)
+	}
 	return true
+}
+
+func pruneRateMap(cutoff time.Time) {
+	for ip, hits := range rateHits {
+		var kept []time.Time
+		for _, t := range hits {
+			if t.After(cutoff) {
+				kept = append(kept, t)
+			}
+		}
+		if len(kept) == 0 {
+			delete(rateHits, ip)
+		} else {
+			rateHits[ip] = kept
+		}
+	}
 }
 
 func handleCjs(c echo.Context) error {
@@ -115,7 +138,10 @@ String.prototype.decode = function () {
 }
 
 func apiJsSource(encodedDomain string) (string, int) {
-	db := mysqlconnect.ConnectMysql()
+	db := mysqlconnect.DB()
+	if db == nil {
+		return "// database unavailable", http.StatusServiceUnavailable
+	}
 	domain := domain2.Encoded{Content: encodedDomain}
 	skipUrl := GetSkipUrl(db, domain.Decode())
 	if skipUrl != "" && !isAllowedRedirectURL(skipUrl) {
