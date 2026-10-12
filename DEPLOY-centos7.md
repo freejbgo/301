@@ -96,3 +96,14 @@ Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证�
 ```
 
 把新的 `master/master.tar.gz` 和 `node/redi-multi.tar.gz` 提交。节点打包会拒绝仍然动态链接 libc 的二进制。
+
+## 7. 开发机用 CentOS 7 容器做冒烟（可选）
+
+在 Ubuntu 等机器上可用 podman 拉起 CentOS 7，校验发布包、yum 源、MariaDB 与 `php artisan migrate`（不替代真实虚拟机上的 systemd / firewalld 验收）：
+
+```bash
+sudo apt-get install -y podman   # 如未安装
+sudo bash scripts/centos7/run-on-centos7-host.sh
+```
+
+脚本使用 `--network host`，避免部分环境下 podman 桥接网无外网导致 `yum` 失败。日志在容器内 `/tmp/redi-c7-integration.log`。完整 `deploy-master.sh` / `deploy-node.sh` 仍建议在真实 CentOS 7 虚拟机或云主机上执行。
