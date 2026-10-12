@@ -7,7 +7,7 @@
 | 主控 | `scripts/centos7/deploy-master.sh` | 程序在 `/opt/301/master`，网站根目录 `/opt/301/master/public` |
 | 每台节点 | `scripts/centos7/deploy-node.sh` | 程序在 `/opt/redi-multi/redi-multi` |
 
-发布包在 [GitHub Releases](https://github.com/freejbgo/301/releases) 下载。克隆仓库时，同一份文件也在下面这两个路径，部署脚本直接用仓库里的文件：
+发布包在 [GitHub Releases](https://github.com/freejbgo/301/releases) 下载（当前推荐 **[v2026.10.13](https://github.com/freejbgo/301/releases/tag/v2026.10.13)** 或更高）。克隆仓库时，同一份文件也在下面这两个路径；也可在 `vars.env` 里设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` 指向下载的绝对路径：
 
 - `master/master.tar.gz`：PHP 程序，已经包含 `vendor`，没有 `.env`。服务器不用装 Composer。Release 上的文件名是 `master.tar.gz`。
 - `node/redi-multi.tar.gz`：静态二进制 `bin/redi-multi`，不依赖 glibc 2.32/2.34，CentOS 7 的 glibc 2.17 可以直接跑。Release 上的文件名是 `redi-multi.tar.gz`。

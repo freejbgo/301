@@ -11,9 +11,10 @@ set -euo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "${SCRIPT_DIR}/lib.sh"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 VARS_FILE="${VARS_FILE:-${SCRIPT_DIR}/vars.env}"
-TAR="${REDI_MASTER_TAR:-${REPO_ROOT}/master/master.tar.gz}"
 
 die() { echo "错误: $*" >&2; exit 1; }
 step() { echo ""; echo "==> $*"; }
@@ -34,6 +35,8 @@ if [[ ! -f "$VARS_FILE" ]]; then
 fi
 # shellcheck disable=SC1090
 source "$VARS_FILE"
+
+TAR="${REDI_MASTER_TAR:-${REPO_ROOT}/master/master.tar.gz}"
 
 : "${MASTER_IP:?vars.env 需要 MASTER_IP}"
 : "${DB_PASS:?vars.env 需要 DB_PASS}"
@@ -81,28 +84,9 @@ if [[ -d "${APP}/master" && -f "${APP}/master/artisan" ]]; then
 fi
 
 step "CentOS $(uname -r)。不按内核编译，安装 PHP 8.0 和 MariaDB 10.6"
-use_vault() {
-  local f
-  shopt -s nullglob
-  for f in /etc/yum.repos.d/CentOS-*.repo; do
-    sed -i \
-      -e 's/^mirrorlist=/#mirrorlist=/' \
-      -e 's/^# *baseurl=/baseurl=/' \
-      -e 's|http://mirror.centos.org/centos|https://vault.centos.org/centos|g' \
-      -e 's|https://mirror.centos.org/centos|https://vault.centos.org/centos|g' \
-      "$f"
-  done
-  shopt -u nullglob
-}
-use_vault
+redi_use_centos7_vault_repos
 yum install -y epel-release yum-utils
-if compgen -G "/etc/yum.repos.d/epel*.repo" > /dev/null; then
-  sed -i \
-    -e 's/^metalink=/#metalink=/' \
-    -e 's/^mirrorlist=/#mirrorlist=/' \
-    -e 's|^# *baseurl=.*epel/|baseurl=https://archives.fedoraproject.org/pub/archive/epel/|' \
-    /etc/yum.repos.d/epel*.repo
-fi
+redi_use_epel_archive_repo
 yum install -y "https://rpms.remirepo.net/enterprise/remi-release-7.rpm"
 yum-config-manager --enable remi-php80
 # Remi PHP 8.0 没有独立的 php-json / php-zip 包。json 在 php-common 里，zip 是 php-pecl-zip。
@@ -238,21 +222,12 @@ tar xzf "$TAR" -C "$MASTER_INSTALL_ROOT"
 if [[ -n "$env_bak" ]]; then
   cp -a "$env_bak" "${APP}/.env"
   rm -f "$env_bak"
-  echo "保留已有 .env"
+  echo "保留已有 .env，并按 vars.env 同步 APP_URL / DB_PASSWORD / ADMIN_HTTPS"
 else
   cp "${APP}/.env.example" "${APP}/.env"
-  php -r '
-    $p = $argv[1];
-    $env = file_get_contents($p);
-    $map = ["APP_URL" => getenv("MASTER_URL"), "DB_PASSWORD" => getenv("DB_PASS"), "ADMIN_HTTPS" => getenv("ADMIN_HTTPS")];
-    foreach ($map as $k => $v) {
-      $env = preg_replace("/^".preg_quote($k, "/")."=.*/m", $k."=".$v, $env, 1, $n);
-      if ($n !== 1) { fwrite(STDERR, "未写上 {$k}\n"); exit(1); }
-    }
-    file_put_contents($p, $env);
-  ' "${APP}/.env"
-  echo "已写入 .env"
+  echo "已创建 .env"
 fi
+redi_sync_master_env "${APP}/.env"
 
 mkdir -p \
   "${APP}/storage/app/public" \
@@ -270,6 +245,7 @@ if ! grep -q '^APP_KEY=base64:' .env; then
   php artisan key:generate --force
 fi
 php artisan migrate --force
+php artisan config:clear
 if [[ ! -L public/storage ]]; then
   php artisan storage:link
 fi
@@ -324,8 +300,8 @@ http {
 }
 EOF
 fi
-if [[ ! -f /etc/nginx/conf.d/301-master.conf ]]; then
 cat > /etc/nginx/conf.d/301-master.conf <<EOF
+# 301-master-managed — 由 deploy-master.sh 维护站点根路径；HTTPS 请另建 conf 或改 server_name
 server {
     listen 80 default_server;
     server_name _;
@@ -354,9 +330,6 @@ server {
     }
 }
 EOF
-else
-  echo "已有 /etc/nginx/conf.d/301-master.conf，保持不变"
-fi
 if [[ -f /etc/nginx/conf.d/default.conf ]]; then
   mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.disabled.redi
 fi

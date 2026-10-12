@@ -13,6 +13,8 @@ set -euo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "${SCRIPT_DIR}/lib.sh"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 VARS_FILE="${VARS_FILE:-${SCRIPT_DIR}/vars.env}"
 
@@ -35,6 +37,8 @@ if [[ ! -f "$VARS_FILE" ]]; then
 fi
 # shellcheck disable=SC1090
 source "$VARS_FILE"
+
+TAR="${REDI_NODE_TAR:-}"
 
 : "${MASTER_IP:?vars.env 需要 MASTER_IP}"
 : "${DB_PASS:?vars.env 需要 DB_PASS}"
@@ -73,7 +77,6 @@ is_ipv4 "$NODE_PUBLIC_IP" || die "NODE_PUBLIC_IP 必须是 IPv4"
 [[ "$DEFAULT_REDIRECT_URL" == http://* || "$DEFAULT_REDIRECT_URL" == https://* ]] || die "DEFAULT_REDIRECT_URL 要以 http:// 或 https:// 开头"
 [[ "$DEFAULT_REDIRECT_URL" != *'|'* ]] || die "DEFAULT_REDIRECT_URL 不要包含 |"
 
-TAR="${REDI_NODE_TAR:-}"
 if [[ -z "$TAR" && -f "${REPO_ROOT}/node/redi-multi.tar.gz" ]]; then
   TAR="${REPO_ROOT}/node/redi-multi.tar.gz"
 fi
@@ -83,16 +86,9 @@ fi
 [[ -n "$TAR" && -f "$TAR" ]] || die "找不到节点发布包。设置 REDI_NODE_TAR，或把 redi-multi.tar.gz 放到 /tmp"
 
 step "CentOS $(uname -r)。使用静态二进制，不编译内核模块"
-shopt -s nullglob
-for f in /etc/yum.repos.d/CentOS-*.repo; do
-  sed -i \
-    -e 's/^mirrorlist=/#mirrorlist=/' \
-    -e 's/^# *baseurl=/baseurl=/' \
-    -e 's|http://mirror.centos.org/centos|https://vault.centos.org/centos|g' \
-    -e 's|https://mirror.centos.org/centos|https://vault.centos.org/centos|g' \
-    "$f"
-done
-shopt -u nullglob
+redi_use_centos7_vault_repos
+yum install -y epel-release
+redi_use_epel_archive_repo
 yum install -y firewalld tar iptables libcap mariadb
 
 if modprobe nfnetlink_queue 2>/dev/null; then

@@ -33,5 +33,10 @@ trap 'rm -f "$sqlfile"' EXIT
   printf "FLUSH PRIVILEGES;\n"
 } > "$sqlfile"
 
-mysql -u root -p"${ROOT_PASS}" < "$sqlfile"
+if [[ -f /root/.redi-mysql.cnf ]] \
+  && mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SELECT 1" </dev/null >/dev/null 2>&1; then
+  mysql --defaults-extra-file=/root/.redi-mysql.cnf < "$sqlfile"
+else
+  mysql -u root -p"${ROOT_PASS}" < "$sqlfile"
+fi
 echo "已为节点 ${NODE_IP} 授权 redi_admin@'${NODE_IP}'"

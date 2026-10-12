@@ -14,6 +14,11 @@ class CertificateDeployService
         $cert->save();
 
         $nodes = RediNode::enabled()->get();
+        $enabledIds = $nodes->pluck('id')->all();
+        RediCertDeployment::where('cert_id', $cert->id)
+            ->whereNotIn('node_id', $enabledIds)
+            ->delete();
+
         foreach ($nodes as $node) {
             RediCertDeployment::updateOrCreate(
                 [
