@@ -47,7 +47,7 @@ func loop(cfg config) {
 
 func tick(client *http.Client, cfg config, registered *bool, revision *string) error {
 	if !*registered {
-		if err := postJSON(client, cfg, "/api/nodes/register", map[string]string{"version": agentVersion}, nil); err != nil {
+		if err := postJSON(client, cfg, "/api/nodes/register", map[string]string{"version": agentVersion}, nil, registered); err != nil {
 			return err
 		}
 		*registered = true
@@ -55,28 +55,28 @@ func tick(client *http.Client, cfg config, registered *bool, revision *string) e
 	var rev struct {
 		Revision string `json:"revision"`
 	}
-	if err := getJSON(client, cfg, "/api/nodes/revision", &rev); err != nil {
+	if err := getJSON(client, cfg, "/api/nodes/revision", &rev, registered); err != nil {
 		return err
 	}
 	if rev.Revision == "" || rev.Revision != *revision {
-		if err := pullChallenges(client, cfg); err != nil {
+		if err := pullChallenges(client, cfg, registered); err != nil {
 			return err
 		}
-		if err := pullRedirectRules(client, cfg); err != nil {
+		if err := pullRedirectRules(client, cfg, registered); err != nil {
 			return err
 		}
-		if err := pullCertificates(client, cfg); err != nil {
+		if err := pullCertificates(client, cfg, registered); err != nil {
 			return err
 		}
 		*revision = rev.Revision
 	}
-	if err := postJSON(client, cfg, "/api/nodes/heartbeat", map[string]string{"version": agentVersion}, nil); err != nil {
+	if err := postJSON(client, cfg, "/api/nodes/heartbeat", map[string]string{"version": agentVersion}, nil, registered); err != nil {
 		return err
 	}
 	return nil
 }
 
-func pullChallenges(client *http.Client, cfg config) error {
+func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 	var out struct {
 		Challenges []struct {
 			DomainName   string `json:"domain_name"`
@@ -84,7 +84,7 @@ func pullChallenges(client *http.Client, cfg config) error {
 			ResponseBody string `json:"response_body"`
 		} `json:"challenges"`
 	}
-	if err := getJSON(client, cfg, "/api/nodes/acme-challenges", &out); err != nil {
+	if err := getJSON(client, cfg, "/api/nodes/acme-challenges", &out, registered); err != nil {
 		return err
 	}
 	items := make([]acme.Item, len(out.Challenges))
@@ -101,21 +101,21 @@ func pullChallenges(client *http.Client, cfg config) error {
 	if len(domains) > 0 {
 		if err := postJSON(client, cfg, "/api/nodes/challenges-synced", map[string]interface{}{
 			"domains": domains,
-		}, nil); err != nil {
+		}, nil, registered); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func pullRedirectRules(client *http.Client, cfg config) error {
+func pullRedirectRules(client *http.Client, cfg config, registered *bool) error {
 	var out struct {
 		Rules []struct {
 			OriginalURL string   `json:"original_url"`
 			ForceHTTPS  flexBool `json:"force_https"`
 		} `json:"rules"`
 	}
-	if err := getJSON(client, cfg, "/api/nodes/redirect-rules", &out); err != nil {
+	if err := getJSON(client, cfg, "/api/nodes/redirect-rules", &out, registered); err != nil {
 		return err
 	}
 	m := map[string]bool{}
@@ -126,7 +126,7 @@ func pullRedirectRules(client *http.Client, cfg config) error {
 	return nil
 }
 
-func pullCertificates(client *http.Client, cfg config) error {
+func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 	var out struct {
 		Certificates []struct {
 			CertID      int      `json:"cert_id"`
@@ -136,7 +136,7 @@ func pullCertificates(client *http.Client, cfg config) error {
 			ForceHTTPS  flexBool `json:"force_https"`
 		} `json:"certificates"`
 	}
-	if err := getJSON(client, cfg, "/api/nodes/certificates", &out); err != nil {
+	if err := getJSON(client, cfg, "/api/nodes/certificates", &out, registered); err != nil {
 		return err
 	}
 	failed := false
@@ -155,7 +155,7 @@ func pullCertificates(client *http.Client, cfg config) error {
 				"cert_id": row.CertID,
 				"ok":      false,
 				"error":   err.Error(),
-			}, nil); ackErr != nil {
+			}, nil, registered); ackErr != nil {
 				return ackErr
 			}
 			continue
@@ -164,7 +164,7 @@ func pullCertificates(client *http.Client, cfg config) error {
 		if ackErr := postJSON(client, cfg, "/api/nodes/ack", map[string]interface{}{
 			"cert_id": row.CertID,
 			"ok":      true,
-		}, nil); ackErr != nil {
+		}, nil, registered); ackErr != nil {
 			return ackErr
 		}
 	}
@@ -175,7 +175,7 @@ func pullCertificates(client *http.Client, cfg config) error {
 	return nil
 }
 
-func getJSON(client *http.Client, cfg config, path string, dest interface{}) error {
+func getJSON(client *http.Client, cfg config, path string, dest interface{}, registered *bool) error {
 	req, err := http.NewRequest(http.MethodGet, cfg.MasterURL+path, nil)
 	if err != nil {
 		return err
@@ -186,6 +186,11 @@ func getJSON(client *http.Client, cfg config, path string, dest interface{}) err
 		return err
 	}
 	defer res.Body.Close()
+	if res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden {
+		if registered != nil {
+			*registered = false
+		}
+	}
 	if res.StatusCode >= 300 {
 		b, _ := io.ReadAll(res.Body)
 		return fmt.Errorf("GET %s: %s", path, string(b))
@@ -193,7 +198,7 @@ func getJSON(client *http.Client, cfg config, path string, dest interface{}) err
 	return json.NewDecoder(res.Body).Decode(dest)
 }
 
-func postJSON(client *http.Client, cfg config, path string, body interface{}, dest interface{}) error {
+func postJSON(client *http.Client, cfg config, path string, body interface{}, dest interface{}, registered *bool) error {
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return err
@@ -209,6 +214,11 @@ func postJSON(client *http.Client, cfg config, path string, body interface{}, de
 		return err
 	}
 	defer res.Body.Close()
+	if res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden {
+		if registered != nil {
+			*registered = false
+		}
+	}
 	if res.StatusCode >= 300 {
 		b, _ := io.ReadAll(res.Body)
 		return fmt.Errorf("POST %s: %s", path, string(b))

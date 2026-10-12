@@ -13,6 +13,7 @@ use Dcat\Admin\Admin;
 use Dcat\Admin\Layout\Content;
 use App\Admin\Actions\Modal\BatchDomainModal;
 use App\Models\RediAdminGroup;
+use App\Models\RediDomainCert;
 use App\Services\DomainRecordNormalizer;
 use App\Services\CnamePrecheckService;
 use App\Services\TenantEdgeService;
@@ -179,7 +180,7 @@ JS
             $form->text('original_url', '原始域名')->help('客户主域名，如 foo.com');
             $form->text('skip_url', '跳转链接');
             $form->radio('status', '状态')->options([1=>'启用', 2=>'停用'])->default(1);
-            $form->switch('force_https', '强制 HTTPS')->help('启用后节点对 HTTP 请求 301 到 HTTPS');
+            $form->switch('force_https', '强制 HTTPS')->help('证书状态为「已生效」后再打开。开启后节点对 HTTP 请求 301 到 HTTPS');
             if ($form->isCreating()) {
                 $form->hidden('admin_id')->value(Admin::user()->id);
                 $form->hidden('admin_name')->value(Admin::user()->username);
@@ -229,6 +230,23 @@ JS
 
                 $form->input('original_url', $originalUrl);
                 $form->input('skip_url', $skipUrl);
+
+                $wantsForceHttps = filter_var($request['force_https'] ?? false, FILTER_VALIDATE_BOOLEAN);
+                if ($wantsForceHttps) {
+                    $domainId = $form->isEditing() ? (int) $form->getKey() : null;
+                    $certActive = false;
+                    if ($domainId) {
+                        $certActive = RediDomainCert::query()
+                            ->where('domain_id', $domainId)
+                            ->where('status', RediDomainCert::STATUS_ACTIVE)
+                            ->exists();
+                    }
+                    if (! $certActive) {
+                        throw ValidationException::withMessages([
+                            'force_https' => '证书尚未生效，不能开启强制 HTTPS。请先申请证书并等到状态为「已生效」。',
+                        ]);
+                    }
+                }
 
                 TenantEdgeService::ensureForAdmin($adminId);
             });

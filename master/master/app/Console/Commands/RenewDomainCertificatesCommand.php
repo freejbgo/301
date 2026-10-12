@@ -24,9 +24,12 @@ class RenewDomainCertificatesCommand extends Command
             ->where('expires_at', '<=', now()->addDays(25))
             ->get();
 
+        $i = 0;
         foreach ($certs as $cert) {
-            IssueDomainCertificateJob::dispatch((int) $cert->domain_id);
+            IssueDomainCertificateJob::dispatch((int) $cert->domain_id)
+                ->delay(now()->addSeconds($i * 20));
             $this->info('Queued renew for '.$cert->domain_name);
+            $i++;
         }
 
         return 0;
