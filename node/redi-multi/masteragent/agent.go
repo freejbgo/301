@@ -17,7 +17,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const agentVersion = "0.1.1"
+const agentVersion = "0.1.2"
 
 type config struct {
 	MasterURL string
@@ -40,19 +40,26 @@ func Run() {
 	go loop(cfg)
 }
 
+type revisionState struct {
+	legacy       string
+	challenges   string
+	rules        string
+	certificates string
+}
+
 func loop(cfg config) {
 	client := &http.Client{Timeout: 30 * time.Second}
 	registered := false
-	revision := ""
+	revs := revisionState{}
 	for {
-		if err := tick(client, cfg, &registered, &revision); err != nil {
+		if err := tick(client, cfg, &registered, &revs); err != nil {
 			logrus.Errorf("[masteragent] %v", err)
 		}
 		time.Sleep(5 * time.Second)
 	}
 }
 
-func tick(client *http.Client, cfg config, registered *bool, revision *string) error {
+func tick(client *http.Client, cfg config, registered *bool, revs *revisionState) error {
 	if !*registered {
 		if err := postJSON(client, cfg, "/api/nodes/register", map[string]string{"version": agentVersion}, nil, registered); err != nil {
 			return err
@@ -60,12 +67,38 @@ func tick(client *http.Client, cfg config, registered *bool, revision *string) e
 		*registered = true
 	}
 	var rev struct {
-		Revision string `json:"revision"`
+		Revision             string `json:"revision"`
+		ChallengesRevision   string `json:"challenges_revision"`
+		RulesRevision        string `json:"rules_revision"`
+		CertificatesRevision string `json:"certificates_revision"`
 	}
 	if err := getJSON(client, cfg, "/api/nodes/revision", &rev, registered); err != nil {
 		return err
 	}
-	if rev.Revision != "" && rev.Revision != *revision {
+	split := rev.ChallengesRevision != "" || rev.RulesRevision != "" || rev.CertificatesRevision != ""
+	if split {
+		if rev.ChallengesRevision != "" && rev.ChallengesRevision != revs.challenges {
+			if err := pullChallenges(client, cfg, registered); err != nil {
+				return err
+			}
+			revs.challenges = rev.ChallengesRevision
+		}
+		if rev.RulesRevision != "" && rev.RulesRevision != revs.rules {
+			if err := pullRedirectRules(client, cfg, registered); err != nil {
+				return err
+			}
+			revs.rules = rev.RulesRevision
+		}
+		if rev.CertificatesRevision != "" && rev.CertificatesRevision != revs.certificates {
+			if err := pullCertificates(client, cfg, registered); err != nil {
+				return err
+			}
+			revs.certificates = rev.CertificatesRevision
+		}
+		if rev.Revision != "" {
+			revs.legacy = rev.Revision
+		}
+	} else if rev.Revision != "" && rev.Revision != revs.legacy {
 		if err := pullChallenges(client, cfg, registered); err != nil {
 			return err
 		}
@@ -75,7 +108,7 @@ func tick(client *http.Client, cfg config, registered *bool, revision *string) e
 		if err := pullCertificates(client, cfg, registered); err != nil {
 			return err
 		}
-		*revision = rev.Revision
+		revs.legacy = rev.Revision
 	}
 	if err := postJSON(client, cfg, "/api/nodes/heartbeat", map[string]string{"version": agentVersion}, nil, registered); err != nil {
 		return err
@@ -104,9 +137,7 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 		}
 		domains = append(domains, c.DomainName)
 	}
-	if len(items) > 0 {
-		acme.ReplaceAll(items)
-	}
+	acme.ReplaceAll(items)
 	if len(domains) > 0 {
 		if err := postJSON(client, cfg, "/api/nodes/challenges-synced", map[string]interface{}{
 			"domains": domains,
