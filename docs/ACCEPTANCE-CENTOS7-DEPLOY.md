@@ -83,6 +83,7 @@ sudo firewall-cmd --list-all
 | `curl` 后台 | **302** 或 **200** |
 | 3306 | 监听；**不要**对 `0.0.0.0/0` 在安全组全网开放 |
 | firewalld | 含 `ssh` `http` `https`；对节点 IP 有 mysql 相关 rich rule（若已配置 `NODE_IPS`） |
+| 节点 DB 权限 | 远程账号仅 `redi_admin_domain` 的 SELECT/UPDATE（重跑 `deploy-master.sh` 会收紧旧授权） |
 
 Nginx 重复部署行为：
 

@@ -104,11 +104,17 @@ class NodeAgentController extends Controller
     {
         $certs = RediDomainCert::query()
             ->with('domain')
-            ->whereIn('status', [
-                RediDomainCert::STATUS_ISSUED,
-                RediDomainCert::STATUS_DEPLOYING,
-                RediDomainCert::STATUS_ACTIVE,
-            ])
+            ->where(function ($query) {
+                $query->whereIn('status', [
+                    RediDomainCert::STATUS_ISSUED,
+                    RediDomainCert::STATUS_DEPLOYING,
+                    RediDomainCert::STATUS_ACTIVE,
+                ])->orWhere(function ($inner) {
+                    $inner->where('status', RediDomainCert::STATUS_VALIDATING)
+                        ->whereNotNull('certificate')
+                        ->where('certificate', '!=', '');
+                });
+            })
             ->get();
 
         $payload = [];

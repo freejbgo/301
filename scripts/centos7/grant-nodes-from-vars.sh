@@ -3,6 +3,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "${SCRIPT_DIR}/lib.sh"
 VARS_FILE="${VARS_FILE:-${SCRIPT_DIR}/vars.env}"
 
 if [[ ! -f "$VARS_FILE" ]]; then
@@ -23,13 +25,5 @@ if [[ -z "${NODE_IPS:-}" ]]; then
   exit 1
 fi
 
-export MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASS"
-ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-
-for ip in $NODE_IPS; do
-  echo "==> 节点 ${ip}"
-  sudo -E bash "${ROOT}/scripts/centos7/grant-node-mysql.sh" "$ip" "$DB_PASS"
-  sudo bash "${ROOT}/scripts/centos7/firewalld-allow-mysql-from-node.sh" "$ip"
-done
-
-echo "完成。节点数: $(echo "$NODE_IPS" | wc -w)"
+redi_sync_node_ips_access "${SCRIPT_DIR}" "$NODE_IPS" "$DB_PASS" "$MYSQL_ROOT_PASS"
+echo "完成。当前 NODE_IPS: ${NODE_IPS}"

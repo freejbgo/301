@@ -202,17 +202,16 @@ else
 fi
 
 if [[ -n "$NODE_IPS" ]]; then
-  export MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASS"
-  for ip in $NODE_IPS; do
-    [[ -z "$ip" ]] && continue
-    bash "${SCRIPT_DIR}/grant-node-mysql.sh" "$ip" "$DB_PASS"
-    bash "${SCRIPT_DIR}/firewalld-allow-mysql-from-node.sh" "$ip"
-  done
+  redi_sync_node_ips_access "${SCRIPT_DIR}" "$NODE_IPS" "$DB_PASS" "$MYSQL_ROOT_PASS"
 else
   echo "NODE_IPS 为空，尚未授权节点。加节点前写上 IP 并重新执行本脚本。"
+  redi_sync_node_ips_access "${SCRIPT_DIR}" "" "$DB_PASS" "$MYSQL_ROOT_PASS" || true
 fi
 
 step "解压主控发布包到 ${APP}"
+if systemctl is-active --quiet redi-queue 2>/dev/null; then
+  systemctl stop redi-queue || true
+fi
 # 解压会套用当前 umask。保持 022，避免 PHP 文件变成 600 后 Nginx 无法读取。
 umask 022
 mkdir -p "$MASTER_INSTALL_ROOT"
