@@ -214,6 +214,14 @@ JS
                     ]);
                 }
 
+                if ($form->isEditing()) {
+                    $existing = \App\Models\RediAdminDomain::query()->find($form->getKey());
+                    if ($existing) {
+                        $form->input('admin_id', $existing->admin_id);
+                        $form->input('admin_name', $existing->admin_name);
+                    }
+                }
+
                 if ($form->isCreating()) {
                     $duplicate = \App\Models\RediAdminDomain::query()
                         ->where('admin_id', $adminId)
