@@ -23,6 +23,11 @@ class RediDomainCert extends Model
 
     protected $table = 'redi_domain_certs';
 
+    protected $guarded = [
+        'certificate',
+        'private_key',
+    ];
+
     protected $fillable = [
         'domain_id',
         'admin_id',
@@ -30,8 +35,6 @@ class RediDomainCert extends Model
         'status',
         'method',
         'expires_at',
-        'certificate',
-        'private_key',
         'last_error',
     ];
 

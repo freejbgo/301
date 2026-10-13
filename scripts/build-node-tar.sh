@@ -12,6 +12,9 @@ if ldd bin/redi-multi 2>&1 | grep -q 'GLIBC\|libc.so'; then
   exit 1
 fi
 file bin/redi-multi
+if [[ ! -f config.json ]]; then
+  cp config.json.example config.json
+fi
 cd "$ROOT/node"
 echo "[pack] redi-multi.tar.gz"
 tar czf redi-multi.tar.gz \

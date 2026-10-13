@@ -43,6 +43,7 @@ func httpStatusLine(code int) string {
 func writeJS(conn net.Conn, statusLine, body string) {
 	_, _ = conn.Write([]byte(statusLine + "\r\n" +
 		"Content-Type: application/javascript; charset=utf-8\r\n" +
+		"X-Content-Type-Options: nosniff\r\n" +
 		"Cache-Control: no-store\r\n" +
 		"Content-Length: " + fmt.Sprintf("%d", len(body)) + "\r\n" +
 		"Connection: close\r\n\r\n" + body))

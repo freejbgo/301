@@ -88,12 +88,7 @@ class DomainBatchCreator
                 continue;
             }
 
-            $exists = RediAdminDomain::query()
-                ->where('admin_id', $adminId)
-                ->where('original_url', $originalUrl)
-                ->exists();
-
-            if ($exists) {
+            if (DomainOriginalUrlGuard::isTakenGlobally($originalUrl)) {
                 $result['skipped']++;
                 continue;
             }

@@ -2,6 +2,7 @@ package masteragent
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -139,8 +140,8 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 	if err := getJSON(client, cfg, "/api/nodes/certificates", &out, registered); err != nil {
 		return err
 	}
-	failed := false
 	list := make([]certs.Entry, 0, len(out.Certificates))
+	failed := false
 	for _, row := range out.Certificates {
 		entry := certs.Entry{
 			CertID:      row.CertID,
@@ -149,7 +150,7 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 			PrivateKey:  []byte(row.PrivateKey),
 			ForceHTTPS:  bool(row.ForceHTTPS),
 		}
-		if err := certs.InstallEntry(entry); err != nil {
+		if _, err := tls.X509KeyPair(entry.Certificate, entry.PrivateKey); err != nil {
 			failed = true
 			if ackErr := postJSON(client, cfg, "/api/nodes/ack", map[string]interface{}{
 				"cert_id": row.CertID,
@@ -161,14 +162,16 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 			continue
 		}
 		list = append(list, entry)
+	}
+	certs.ReplaceAll(list)
+	for _, entry := range list {
 		if ackErr := postJSON(client, cfg, "/api/nodes/ack", map[string]interface{}{
-			"cert_id": row.CertID,
+			"cert_id": entry.CertID,
 			"ok":      true,
 		}, nil, registered); ackErr != nil {
 			return ackErr
 		}
 	}
-	certs.ReplaceAll(list)
 	if failed {
 		return fmt.Errorf("one or more certificates failed to install")
 	}

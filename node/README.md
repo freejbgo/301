@@ -2,7 +2,7 @@
 
 部署整套系统见 [../DEPLOY.md](../DEPLOY.md)。这里只说明节点包本身。
 
-发布包是 **`redi-multi.tar.gz`**。解压后目录为 `redi-multi/`，里面有源码、`config.json`、`env.example` 和编译好的 `bin/redi-multi`。线上运行这个二进制，不要 `go run main.go`。
+发布包是 **`redi-multi.tar.gz`**。解压后目录为 `redi-multi/`，里面有源码、`config.json.example`、`env.example` 和编译好的 `bin/redi-multi`。首次部署从 example 复制 `config.json`（`deploy-node.sh` 会自动复制）。**`redirector` 字段不参与运行**，跳转来自 MySQL 与 `default_redirect_url`。线上运行这个二进制，不要 `go run main.go`。
 
 `bin/redi-multi` 是 `CGO_ENABLED=0` 的静态二进制，不依赖 glibc 2.32/2.34。CentOS 7.x 内核小版本不同也不用重编，也不编译内核模块。lagran 使用系统里的 `nfnetlink_queue`。
 
@@ -40,7 +40,7 @@
 |------|------|
 | `addr` | HTTP，默认 `0.0.0.0:80`。可用 `REDI_HTTP_LISTEN` 覆盖 |
 | `tls_addr` | HTTPS，默认 `0.0.0.0:443`。`""` 或 JSON `null` 关闭 HTTPS。可用 `REDI_TLS_LISTEN` 覆盖 |
-| `api_listen` | 默认 `0.0.0.0:8080`，明文提供 `/api.js`、`/c.js`。跳转页使用客户域名上的同源路径，不必对访客开放 8080 |
+| `api_listen` | 默认 `127.0.0.1:8080`（仅本机调试 Echo）；生产跳转走 80/443 同源 `/api.js` |
 | `lagran.port` | 出站 TCP 源端口，给 iptables `--sport` 用。字符串 `"80,443"` 或数字 `80`。逗号分隔，不要空格 |
 | `lagran` | 可整段省略。不要写成空对象后再指望程序猜开关；省略时按示例里的默认开关 |
 

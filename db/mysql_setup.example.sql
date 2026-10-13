@@ -12,6 +12,7 @@ CREATE USER IF NOT EXISTS 'redi_admin'@'127.0.0.1' IDENTIFIED BY 'change_this_db
 CREATE USER IF NOT EXISTS 'redi_admin'@'10.%' IDENTIFIED BY 'change_this_db_password';
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON `redi_admin`.* TO 'redi_admin'@'127.0.0.1';
-GRANT SELECT, INSERT, UPDATE, DELETE ON `redi_admin`.* TO 'redi_admin'@'10.%';
+-- 节点请用 grant-node-mysql.sh（仅 redi_admin_domain 的 SELECT + UPDATE(skip_num)），勿给整库写权限
+-- GRANT ... TO 'redi_admin'@'<节点公网IP>';
 
 FLUSH PRIVILEGES;

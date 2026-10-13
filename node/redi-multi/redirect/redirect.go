@@ -42,14 +42,22 @@ func htmlContent(scheme string) string {
 }
 
 func Process(conn net.Conn, tls bool) {
+	if !acquireConnection() {
+		conn.Close()
+		return
+	}
+	defer releaseConnection()
 	defer conn.Close()
 	req, err := readRequest(conn)
 	if err != nil {
 		logrus.Debugf("[redirect] read request: %v", err)
 		return
 	}
-	host := strings.ToLower(req.Host)
-	path := req.Path
+	host := sanitizeHost(req.Host)
+	if host == "" {
+		return
+	}
+	path := sanitizeRequestPath(req.Path)
 	if idx := strings.Index(path, "?"); idx >= 0 {
 		path = path[:idx]
 	}
@@ -68,7 +76,7 @@ func Process(conn net.Conn, tls bool) {
 		scheme = "https"
 	}
 	if !tls && (certs.ForceHTTPS(host) || rules.ForceHTTPS(host)) {
-		location := "https://" + host + req.Path
+		location := sanitizeLocationURL("https://" + host + path)
 		writeRedirect(conn, 301, location)
 		return
 	}
@@ -77,6 +85,7 @@ func Process(conn net.Conn, tls bool) {
 	length := fmt.Sprintf("%v", len(content))
 	if _, err = conn.Write([]byte("HTTP/1.1 200\r\n" +
 		"Content-Type: text/html\r\n" +
+		"X-Content-Type-Options: nosniff\r\n" +
 		"Cache-Control: no-store\r\n" +
 		"Content-Length: " + length + "\r\n" +
 		"Connection: close\r\n\r\n" + content)); err != nil {

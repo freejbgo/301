@@ -11,12 +11,15 @@ class RediNode extends Model
 {
     protected $table = 'redi_nodes';
 
+    protected $guarded = [
+        'api_token_hash',
+    ];
+
     protected $fillable = [
         'name',
         'public_ip',
         'extra_ips',
         'enabled',
-        'api_token_hash',
         'last_heartbeat_at',
         'agent_version',
         'note',

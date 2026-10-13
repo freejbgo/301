@@ -113,6 +113,9 @@ step "解压到 ${APP}"
 mkdir -p "$NODE_INSTALL_ROOT"
 tar xzf "$TAR" -C "$NODE_INSTALL_ROOT"
 [[ -x "${APP}/bin/redi-multi" ]] || die "解压后没有 ${APP}/bin/redi-multi"
+if [[ ! -f "${APP}/config.json" ]]; then
+  cp "${APP}/config.json.example" "${APP}/config.json"
+fi
 if ldd "${APP}/bin/redi-multi" 2>&1 | grep -q 'GLIBC\|libc.so'; then
   die "这个二进制仍依赖动态 libc，不能在 CentOS 7 上运行。请换仓库里重新打包的 node/redi-multi.tar.gz"
 fi

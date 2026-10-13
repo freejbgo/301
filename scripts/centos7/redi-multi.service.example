@@ -1,7 +1,8 @@
 # 复制到 /etc/systemd/system/redi-multi.service 后:
 #   systemctl daemon-reload && systemctl enable --now redi-multi
 #
-# lagran 需要 root 或 CAP_NET_ADMIN；生产环境请确认是否必须启用 lagran。
+# lagran 需要 root 或 CAP_NET_ADMIN。不需要时在 env.sh 设置 REDI_LAGRAN_DISABLED=1
+# （或 config.json 里 lagran.enabled=false），此时可评估用非 root 用户运行。
 
 [Unit]
 Description=301 redirect node (redi-multi)
@@ -14,6 +15,7 @@ EnvironmentFile=/opt/redi-multi/redi-multi/env.sh
 ExecStart=/opt/redi-multi/redi-multi/bin/redi-multi
 Restart=on-failure
 RestartSec=5
+LimitNOFILE=65535
 
 [Install]
 WantedBy=multi-user.target

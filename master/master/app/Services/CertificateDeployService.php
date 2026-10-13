@@ -39,15 +39,19 @@ class CertificateDeployService
         }
     }
 
-    public function markNodeAck(RediDomainCert $cert, RediNode $node, bool $ok, ?string $error = null): void
+    public function markNodeAck(RediDomainCert $cert, RediNode $node, bool $ok, ?string $error = null): bool
     {
-        RediCertDeployment::where('cert_id', $cert->id)
+        $updated = RediCertDeployment::where('cert_id', $cert->id)
             ->where('node_id', $node->id)
             ->update([
                 'status' => $ok ? 'ok' : 'failed',
                 'last_error' => $error,
                 'deployed_at' => $ok ? now() : null,
             ]);
+
+        if ($updated === 0) {
+            return false;
+        }
 
         $liveNodeIds = RediNode::enabled()
             ->where('last_heartbeat_at', '>=', now()->subMinutes(15))
@@ -62,7 +66,7 @@ class CertificateDeployService
             $cert->status = RediDomainCert::STATUS_DEPLOYING;
             $cert->save();
 
-            return;
+            return true;
         }
 
         $failedCount = RediCertDeployment::where('cert_id', $cert->id)
@@ -88,5 +92,7 @@ class CertificateDeployService
                 : '等待节点拉取证书';
         }
         $cert->save();
+
+        return true;
     }
 }

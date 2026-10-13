@@ -117,14 +117,18 @@ redi_sync_master_env() {
   php -r '
     $p = $argv[1];
     $env = file_get_contents($p);
+    $secure = getenv("ADMIN_HTTPS") === "true" ? "true" : "false";
     $map = [
       "APP_URL" => getenv("MASTER_URL"),
       "DB_PASSWORD" => getenv("DB_PASS"),
       "ADMIN_HTTPS" => getenv("ADMIN_HTTPS"),
+      "SESSION_SECURE_COOKIE" => $secure,
     ];
     foreach ($map as $k => $v) {
       $env = preg_replace("/^".preg_quote($k, "/")."=.*/m", $k."=".$v, $env, 1, $n);
-      if ($n !== 1) { fwrite(STDERR, "未写上 {$k}\n"); exit(1); }
+      if ($n !== 1) {
+        $env = rtrim($env, "\n")."\n".$k."=".$v."\n";
+      }
     }
     file_put_contents($p, $env);
   ' "$env_file"

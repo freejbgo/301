@@ -14,12 +14,20 @@ use Illuminate\Support\Facades\DB;
 
 class NodeAgentController extends Controller
 {
+    protected function sanitizeAgentVersion($value): ?string
+    {
+        $version = preg_replace('/[^\w.\-]/', '', (string) $value);
+        $version = substr($version, 0, 64);
+
+        return $version === '' ? null : $version;
+    }
+
     public function register(Request $request)
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
         $node->last_heartbeat_at = now();
-        $node->agent_version = $this->agentVersion($request);
+        $node->agent_version = $this->sanitizeAgentVersion($request->input('version'));
         $node->save();
 
         return response()->json(['ok' => true, 'node_id' => $node->id]);
@@ -33,7 +41,9 @@ class NodeAgentController extends Controller
         $allowed = RediAcmeChallenge::query()
             ->where('expires_at', '>', now())
             ->pluck('domain_name')
-            ->map(fn ($d) => strtolower(trim((string) $d, '.')))
+            ->map(function ($d) {
+                return strtolower(trim((string) $d, '.'));
+            })
             ->flip();
         $now = now();
         foreach ($domains as $domain) {
@@ -85,7 +95,7 @@ class NodeAgentController extends Controller
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
         $node->last_heartbeat_at = now();
-        $node->agent_version = $this->agentVersion($request);
+        $node->agent_version = $this->sanitizeAgentVersion($request->input('version'));
         $node->save();
 
         return response()->json(['ok' => true]);
@@ -114,6 +124,9 @@ class NodeAgentController extends Controller
                         ->whereNotNull('certificate')
                         ->where('certificate', '!=', '');
                 });
+            })
+            ->whereHas('domain', function ($query) {
+                $query->where('status', 1);
             })
             ->get();
 
@@ -182,15 +195,5 @@ class NodeAgentController extends Controller
             ->values();
 
         return response()->json(['rules' => $rows]);
-    }
-
-    protected function agentVersion(Request $request): ?string
-    {
-        $ver = $request->input('version');
-        if (! is_string($ver) || $ver === '') {
-            return null;
-        }
-
-        return mb_substr($ver, 0, 32);
     }
 }

@@ -5,8 +5,8 @@
 ## 已在代码/库里做好的事
 
 - 数据库 `redi_admin.sql`：单管理员 `admin`、默认密码见 DEPLOY.md；域名表 **唯一索引** `(admin_id, original_url)`。
-- 主控：多租户隔离、跳转 URL 仅允许 `http/https`、`.env.example` 默认 `APP_DEBUG=false`。
-- 节点：`REDI_DB_*` 环境变量；`status=1` 才跳转计数；`api.js` JSON 输出 + 按 IP 限速；**不再清空整表 iptables OUTPUT**。
+- 主控：多租户隔离、**原始域名全平台唯一**（与边缘节点按 Host 查库一致）、跳转 URL 仅允许 `http/https`、`.env.example` 默认 `APP_DEBUG=false` / `SESSION_SECURE_COOKIE=true`。
+- 节点：`REDI_DB_*` 环境变量；MySQL 仅 **SELECT + UPDATE(skip_num)** 于 `redi_admin_domain`（见 `grant-node-mysql.sh`）；`status=1` 才跳转计数；`api.js` JSON 输出 + 按 IP 限速；Echo 默认 **127.0.0.1:8080**；**不再清空整表 iptables OUTPUT**。
 - `composer.json` 声明 Laravel 8 + Dcat Admin。CentOS 7 用发布包里的 `vendor`，不用在服务器上执行 `composer install`。
 
 ## 你必须在服务器上完成的
@@ -38,7 +38,7 @@
 |----|------|------|
 | 节点直连 MySQL | 仍为当前架构，便于部署 | DB 账号最小权限；IP 白名单；长期可改主控 API |
 | `/api.js` 无登录 | 跳转业务需要可被浏览器访问 | 防火墙 + 限速（已部分实现） |
-| `lagran` | 需 root/CAP_NET_ADMIN | 仅在跳转节点启用；评估是否必须 |
+| `lagran` | 需 root/CAP_NET_ADMIN | 不需要时设 `REDI_LAGRAN_DISABLED=1` 或 `lagran.enabled=false` |
 
 ## 依赖
 
