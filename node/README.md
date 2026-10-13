@@ -54,7 +54,7 @@ sudo setcap cap_net_admin+ep bin/redi-multi
 
 ## 跳转次数
 
-访客打开跳转页时请求 `/api.js?d=...`。节点直连 MySQL，只有域名状态为启用（`status=1`）时才跳转，并把 `skip_num` 加 1。
+访客在 80/443 打开跳转页时请求同域名的 `/api.js?d=...`（HTTP、HTTPS 逻辑相同）。节点直连 MySQL：仅当该 **原始域名** 在后台为启用（`status=1`）时，`skip_num` 加 1 并返回跳转地址；否则只给默认跳转、**不加** 次数。开启「强制 HTTPS」时，HTTP 301 到 HTTPS 本身不计数，HTTPS 页加载 `api.js` 后计 1 次。
 
 ## 和主控的连接
 

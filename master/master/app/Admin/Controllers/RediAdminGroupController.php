@@ -89,6 +89,16 @@ class RediAdminGroupController extends AdminController
                 $form->hidden('admin_name')->value(Admin::user()->username);
             }
 
+            $form->saving(function (Form $form) {
+                if ($form->isEditing()) {
+                    $existing = \App\Models\RediAdminGroup::query()->find($form->getKey());
+                    if ($existing) {
+                        $form->input('admin_id', $existing->admin_id);
+                        $form->input('admin_name', $existing->admin_name);
+                    }
+                }
+            });
+
             $form->display('created_at');
             $form->display('updated_at');
         });

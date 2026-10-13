@@ -37,7 +37,7 @@ class NodeAgentController extends Controller
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
-        $domains = (array) $request->input('domains', []);
+        $domains = array_slice((array) $request->input('domains', []), 0, 200);
         $allowed = RediAcmeChallenge::query()
             ->where('expires_at', '>', now())
             ->pluck('domain_name')
@@ -48,7 +48,7 @@ class NodeAgentController extends Controller
         $now = now();
         foreach ($domains as $domain) {
             $domain = strtolower(trim((string) $domain, '.'));
-            if ($domain === '' || ! isset($allowed[$domain])) {
+            if ($domain === '' || ! $allowed->has($domain)) {
                 continue;
             }
             RediAcmeChallengeNodeSync::updateOrCreate(
@@ -114,11 +114,17 @@ class NodeAgentController extends Controller
     {
         $certs = RediDomainCert::query()
             ->with('domain')
-            ->whereIn('status', [
-                RediDomainCert::STATUS_ISSUED,
-                RediDomainCert::STATUS_DEPLOYING,
-                RediDomainCert::STATUS_ACTIVE,
-            ])
+            ->where(function ($query) {
+                $query->whereIn('status', [
+                    RediDomainCert::STATUS_ISSUED,
+                    RediDomainCert::STATUS_DEPLOYING,
+                    RediDomainCert::STATUS_ACTIVE,
+                ])->orWhere(function ($inner) {
+                    $inner->where('status', RediDomainCert::STATUS_VALIDATING)
+                        ->whereNotNull('certificate')
+                        ->where('certificate', '!=', '');
+                });
+            })
             ->whereHas('domain', function ($query) {
                 $query->where('status', 1);
             })
@@ -151,18 +157,24 @@ class NodeAgentController extends Controller
         $ok = (bool) $request->input('ok', true);
         $error = $request->input('error');
 
+        if ($certId < 1) {
+            return response()->json(['message' => 'invalid cert_id'], 422);
+        }
+
         $cert = RediDomainCert::find($certId);
         if (! $cert) {
             return response()->json(['message' => 'cert not found'], 404);
         }
 
-        $hasDeployment = RediCertDeployment::query()
-            ->where('cert_id', $cert->id)
+        $pendingDeploy = RediCertDeployment::query()
+            ->where('cert_id', $certId)
             ->where('node_id', $node->id)
             ->exists();
-        if (! $hasDeployment) {
+        if (! $pendingDeploy) {
             return response()->json(['message' => 'forbidden'], 403);
         }
+
+        $error = is_string($error) ? mb_substr($error, 0, 2000) : null;
 
         $deployService->markNodeAck($cert, $node, $ok, $error);
 

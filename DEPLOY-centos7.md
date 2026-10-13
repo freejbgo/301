@@ -86,6 +86,8 @@ Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证�
 
 在主控的 `vars.env` 里把新 IP 加进 `NODE_IPS`，执行 `sudo bash scripts/centos7/deploy-master.sh`。然后在新机器上执行 `deploy-node.sh`。后台新建节点，把 Token 写进新机器的 `vars.env` 再执行一次节点脚本。pool 的 A 记录要包含新 IP。删除节点不会自动删 DNS 记录。
 
+**从 `NODE_IPS` 里去掉某个 IP 后**，再跑一次 `deploy-master.sh` 会撤销该 IP 的 MySQL 远程账号和 firewalld 3306 规则（状态记在 `/var/lib/redi/authorized_node_ips`）。节点库账号仅允许读写 `redi_admin_domain` 表（跳转计数），不能访问证书等其它表。
+
 ## 6. 重新打包
 
 改了主控依赖或节点源码后，在开发机执行：

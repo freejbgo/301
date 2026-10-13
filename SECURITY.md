@@ -22,7 +22,10 @@
 | 项 | 说明 |
 |----|------|
 | 节点 API Token | 格式 `{节点ID}.{随机串}`，仅存 bcrypt 哈希；创建节点时**仅展示一次** |
-| `/api/nodes/*` | Bearer 鉴权，与 Dcat 会话分离；可拉取 **全平台** 证书私钥（设计为受信节点） |
+| `/api/nodes/*` | Bearer 鉴权，与 Dcat 会话分离；可拉取 **全平台** 证书私钥（设计为受信节点，须物理/网络隔离） |
+| 节点 `ack` | 仅当存在该节点对应的 `redi_cert_deployments` 行时才接受，避免伪造部署成功 |
+| 平台 DNS 表单 | 仅超级管理员可提交（与「DNS 与节点池」页面一致） |
+| Session Cookie | HTTPS 后台请设 `SESSION_SECURE_COOKIE=true`（见 `.env.example`） |
 | 证书存储 | `redi_domain_certs` 中 PEM 经 Laravel `Crypt` 加密；备份库即备份密钥材料 |
 | ACME | 主控 `storage/app/acme` 存 LE 账户；签发前要求节点上报挑战已同步，并探测公网域名 HTTP-01 |
 | 节点注册 | Agent 不能通过 API 修改节点公网 IP；IP 只在后台「节点管理」维护 |

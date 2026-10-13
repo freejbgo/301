@@ -175,11 +175,21 @@ if [[ "$active" != 1 ]]; then
 fi
 
 step "测试到主控数据库的连接"
-if mysql -h "$MASTER_IP" -u redi_admin -p"${DB_PASS}" -e "SELECT 1" redi_admin >/dev/null; then
+db_cnf=$(mktemp)
+chmod 600 "$db_cnf"
+cat > "$db_cnf" <<EOF
+[client]
+host=${MASTER_IP}
+user=redi_admin
+password=${DB_PASS}
+EOF
+if mysql --defaults-extra-file="$db_cnf" -e "SELECT 1" redi_admin >/dev/null; then
   echo "数据库连接正常"
 else
+  rm -f "$db_cnf"
   die "连不上 ${MASTER_IP} 的 redi_admin。请确认主控已对本机 IP 授权并放行 3306"
 fi
+rm -f "$db_cnf"
 
 echo
 echo "节点已安装到 ${APP}"

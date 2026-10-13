@@ -22,7 +22,7 @@ func htmlContent(scheme string) string {
 <body>
 	<a href="" id="hao123"></a>
 	<script type="text/javascript">
-		if(null!=redirector[window.location.hostname.encode()]){var strU=redirector[window.location.hostname.encode()].to.decode()+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e)}else{var e;strU=redirector.default_redirect_url.to+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e);		console.log("redirector err")}
+		if(null!=redirector[window.location.hostname.encode()]){var strU=redirector[window.location.hostname.encode()].to.decode()+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e)}else{var e;strU=redirector.default_redirect_url.to.decode()+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e);		console.log("redirector err")}
 	</script>
 </body>
 </html>`
@@ -35,7 +35,7 @@ func htmlContent(scheme string) string {
 <body>
 	<a href="" id="hao123"></a>
 	<script type="text/javascript">
-		if(null!=redirector[window.location.hostname.encode()]){var strU=redirector[window.location.hostname.encode()].to.decode()+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e)}else{var e;strU=redirector.default_redirect_url.to+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e);		console.log("redirector err")}
+		if(null!=redirector[window.location.hostname.encode()]){var strU=redirector[window.location.hostname.encode()].to.decode()+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e)}else{var e;strU=redirector.default_redirect_url.to.decode()+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e);		console.log("redirector err")}
 	</script>
 </body>
 </html>`

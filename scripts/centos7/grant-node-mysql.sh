@@ -34,10 +34,16 @@ trap 'rm -f "$sqlfile"' EXIT
   printf "FLUSH PRIVILEGES;\n"
 } > "$sqlfile"
 
-if [[ -f /root/.redi-mysql.cnf ]] \
-  && mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SELECT 1" </dev/null >/dev/null 2>&1; then
-  mysql --defaults-extra-file=/root/.redi-mysql.cnf < "$sqlfile"
-else
-  mysql -u root -p"${ROOT_PASS}" < "$sqlfile"
-fi
+mysql_run() {
+  if [[ -f /root/.redi-mysql.cnf ]] \
+    && mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SELECT 1" </dev/null >/dev/null 2>&1; then
+    mysql --defaults-extra-file=/root/.redi-mysql.cnf "$@"
+  else
+    mysql -u root -p"${ROOT_PASS}" "$@"
+  fi
+}
+
+# 收紧旧版「整库 DML」授权；全新用户尚无库级权限时 REVOKE 可能报错，忽略即可。
+mysql_run -e "REVOKE ALL PRIVILEGES, GRANT OPTION ON \`redi_admin\`.* FROM 'redi_admin'@'${NODE_IP}';" 2>/dev/null || true
+mysql_run < "$sqlfile"
 echo "已为节点 ${NODE_IP} 授权 redi_admin@'${NODE_IP}'"

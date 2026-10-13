@@ -46,6 +46,71 @@ redi_use_epel_archive_repo() {
   fi
 }
 
+redi_is_ipv4() {
+  local ip="$1" o
+  [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
+  IFS=. read -r a b c d <<< "$ip"
+  for o in "$a" "$b" "$c" "$d"; do
+    [[ "$o" =~ ^[0-9]+$ ]] || return 1
+    ((10#$o <= 255)) || return 1
+  done
+}
+
+# 按 vars.env 的 NODE_IPS 同步：新增授权/防火墙，移除已删 IP 的账号与规则。
+redi_sync_node_ips_access() {
+  local script_dir="$1"
+  local node_ips="${2:-}"
+  local db_pass="$3"
+  local mysql_root_pass="$4"
+  local state_file="/var/lib/redi/authorized_node_ips"
+
+  mkdir -p /var/lib/redi
+  export MYSQL_ROOT_PASSWORD="$mysql_root_pass"
+
+  local -a new_ips=()
+  local ip
+  for ip in $node_ips; do
+    [[ -z "$ip" ]] && continue
+    redi_is_ipv4 "$ip" || {
+      echo "错误: NODE_IPS 里有非法 IPv4: $ip" >&2
+      return 1
+    }
+    new_ips+=("$ip")
+  done
+
+  local -a old_ips=()
+  if [[ -f "$state_file" ]]; then
+    while IFS= read -r ip || [[ -n "$ip" ]]; do
+      [[ -z "$ip" ]] && continue
+      old_ips+=("$ip")
+    done < "$state_file"
+  fi
+
+  local old new found
+  for old in "${old_ips[@]}"; do
+    found=0
+    for new in "${new_ips[@]}"; do
+      [[ "$old" == "$new" ]] && found=1 && break
+    done
+    if [[ "$found" == 0 ]]; then
+      echo "移除节点 IP ${old} 的 MySQL 与防火墙"
+      bash "${script_dir}/revoke-node-mysql.sh" "$old" || true
+      bash "${script_dir}/firewalld-revoke-mysql-from-node.sh" "$old" || true
+    fi
+  done
+
+  for new in "${new_ips[@]}"; do
+    bash "${script_dir}/grant-node-mysql.sh" "$new" "$db_pass"
+    bash "${script_dir}/firewalld-allow-mysql-from-node.sh" "$new"
+  done
+
+  if [[ ${#new_ips[@]} -gt 0 ]]; then
+    printf '%s\n' "${new_ips[@]}" > "$state_file"
+  else
+    : > "$state_file"
+  fi
+}
+
 redi_sync_master_env() {
   local env_file="$1"
   export MASTER_URL DB_PASS ADMIN_HTTPS

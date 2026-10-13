@@ -4,6 +4,7 @@ namespace App\Admin\Forms;
 
 use App\Models\RediPlatformDns;
 use App\Services\TenantEdgeService;
+use Dcat\Admin\Admin;
 use Dcat\Admin\Contracts\LazyRenderable;
 use Dcat\Admin\Traits\LazyWidget;
 use Dcat\Admin\Widgets\Form;
@@ -14,6 +15,11 @@ class PlatformDnsSettings extends Form implements LazyRenderable
 
     public function handle(array $input)
     {
+        $user = Admin::user();
+        if (! $user || ! method_exists($user, 'isAdministrator') || ! $user->isAdministrator()) {
+            return $this->response()->error('仅超级管理员可修改平台 DNS / ACME 设置');
+        }
+
         $mode = $input['dns_mode'] ?? 'manual';
         $driver = $input['dns_driver'] ?? 'manual';
         if ($mode === 'api' && ($driver === '' || $driver === 'manual')) {

@@ -18,7 +18,6 @@ class RenewDomainCertificatesCommand extends Command
             ->whereIn('status', [
                 RediDomainCert::STATUS_ACTIVE,
                 RediDomainCert::STATUS_ISSUED,
-                RediDomainCert::STATUS_DEPLOYING,
             ])
             ->whereNotNull('expires_at')
             ->where('expires_at', '<=', now()->addDays(25))
