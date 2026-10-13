@@ -66,6 +66,7 @@ export MASTER_IP DB_PASS MYSQL_ROOT_PASS MASTER_URL ADMIN_HTTPS
 reject_text "DB_PASS" "$DB_PASS"
 reject_text "MYSQL_ROOT_PASS" "$MYSQL_ROOT_PASS"
 reject_text "MASTER_URL" "$MASTER_URL"
+reject_text "MASTER_INSTALL_ROOT" "$MASTER_INSTALL_ROOT"
 is_ipv4 "$MASTER_IP" || die "MASTER_IP 必须是 IPv4: $MASTER_IP"
 [[ "$MASTER_URL" == http://* || "$MASTER_URL" == https://* ]] || die "MASTER_URL 要以 http:// 或 https:// 开头"
 [[ "$ADMIN_HTTPS" == "true" || "$ADMIN_HTTPS" == "false" ]] || die "ADMIN_HTTPS 只能是 true 或 false"

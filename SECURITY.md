@@ -31,6 +31,8 @@
 | 节点注册 | Agent 不能通过 API 修改节点公网 IP；IP 只在后台「节点管理」维护 |
 | 证书队列 | 仅能为当前管理员名下域名入队；同一时刻只跑一个 ACME 任务 |
 | 队列 | 生产请 `QUEUE_CONNECTION=database`，并常驻 `queue:work --sleep=3 --timeout=320 --tries=100` |
+| ACME 并发 | 全局锁 `redi-acme-le-global` + 按域名锁；多 worker 时仍串行 LE 请求，不同域名可排队 |
+| 节点 Agent | `REDI_MASTER_URL` 必须 **https://**；可选 `REDI_DB_TLS=1` 加密节点→MySQL |
 
 ## 架构说明（已知限制）
 

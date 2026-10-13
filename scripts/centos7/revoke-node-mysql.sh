@@ -3,11 +3,19 @@
 # 用法: sudo MYSQL_ROOT_PASSWORD='root密码' ./revoke-node-mysql.sh <节点公网IP>
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "${SCRIPT_DIR}/lib.sh"
+
 NODE_IP="${1:-}"
 if [[ -z "$NODE_IP" ]]; then
   echo "用法: MYSQL_ROOT_PASSWORD='...' $0 <节点公网IP>" >&2
   exit 1
 fi
+redi_is_ipv4 "$NODE_IP" || {
+  echo "节点 IP 必须是 IPv4: $NODE_IP" >&2
+  exit 1
+}
 
 ROOT_PASS="${MYSQL_ROOT_PASSWORD:-}"
 if [[ -z "$ROOT_PASS" ]]; then

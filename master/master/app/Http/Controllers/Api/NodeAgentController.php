@@ -17,7 +17,7 @@ class NodeAgentController extends Controller
     protected function sanitizeAgentVersion($value): ?string
     {
         $version = preg_replace('/[^\w.\-]/', '', (string) $value);
-        $version = substr($version, 0, 64);
+        $version = substr($version, 0, 32);
 
         return $version === '' ? null : $version;
     }

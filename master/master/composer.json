@@ -55,7 +55,7 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "audit": {
-            "block-insecure": false
+            "block-insecure": true
         }
     },
     "minimum-stability": "dev",

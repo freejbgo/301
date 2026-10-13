@@ -139,6 +139,9 @@ String.prototype.decode = function () {
 }
 
 func apiJsSource(encodedDomain string) (string, int) {
+	if len(encodedDomain) > 4096 {
+		return "// invalid", http.StatusBadRequest
+	}
 	db := mysqlconnect.DB()
 	if db == nil {
 		return "// database unavailable", http.StatusServiceUnavailable

@@ -82,8 +82,10 @@ class RediAdminDomainController extends AdminController
                     return '未申请';
                 }
                 $label = e($cert->statusLabel());
-                if ($cert->last_error) {
-                    return $label.'<br><span class="text-danger">'.e($cert->last_error).'</span>';
+                if ($cert->storedCredentialsUnreadable()) {
+                    $label .= '<br><span class="text-danger">证书密文无法解密（检查 APP_KEY 是否变更）</span>';
+                } elseif ($cert->last_error) {
+                    $label .= '<br><span class="text-danger">'.e($cert->last_error).'</span>';
                 }
 
                 return $label;

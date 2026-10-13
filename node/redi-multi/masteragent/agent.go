@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"os"
 	"redi-multi/acme"
 	"redi-multi/certs"
@@ -23,12 +24,17 @@ type config struct {
 	Token     string
 }
 
+const maxMasterJSONBytes = 32 << 20
+
 func Run() {
 	master := os.Getenv("REDI_MASTER_URL")
 	token := os.Getenv("REDI_NODE_TOKEN")
 	if master == "" || token == "" {
 		logrus.Warn("[masteragent] REDI_MASTER_URL or REDI_NODE_TOKEN not set; agent disabled")
 		return
+	}
+	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(master)), "http://") {
+		logrus.Warn("[masteragent] REDI_MASTER_URL should use https:// to protect node token and certificate private keys")
 	}
 	cfg := config{MasterURL: stringsTrimRightSlash(master), Token: token}
 	go loop(cfg)
@@ -140,6 +146,9 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 	if err := getJSON(client, cfg, "/api/nodes/certificates", &out, registered); err != nil {
 		return err
 	}
+	if len(out.Certificates) == 0 {
+		return nil
+	}
 	list := make([]certs.Entry, 0, len(out.Certificates))
 	failed := false
 	for _, row := range out.Certificates {
@@ -162,6 +171,9 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 			continue
 		}
 		list = append(list, entry)
+	}
+	if len(list) == 0 {
+		return fmt.Errorf("all certificates failed PEM validation; keeping previous in-memory certs")
 	}
 	certs.ReplaceAll(list)
 	for _, entry := range list {
@@ -195,10 +207,10 @@ func getJSON(client *http.Client, cfg config, path string, dest interface{}, reg
 		}
 	}
 	if res.StatusCode >= 300 {
-		b, _ := io.ReadAll(res.Body)
+		b, _ := io.ReadAll(io.LimitReader(res.Body, maxMasterJSONBytes))
 		return fmt.Errorf("GET %s: %s", path, string(b))
 	}
-	return json.NewDecoder(res.Body).Decode(dest)
+	return json.NewDecoder(io.LimitReader(res.Body, maxMasterJSONBytes)).Decode(dest)
 }
 
 func postJSON(client *http.Client, cfg config, path string, body interface{}, dest interface{}, registered *bool) error {
@@ -223,11 +235,11 @@ func postJSON(client *http.Client, cfg config, path string, body interface{}, de
 		}
 	}
 	if res.StatusCode >= 300 {
-		b, _ := io.ReadAll(res.Body)
+		b, _ := io.ReadAll(io.LimitReader(res.Body, maxMasterJSONBytes))
 		return fmt.Errorf("POST %s: %s", path, string(b))
 	}
 	if dest != nil {
-		return json.NewDecoder(res.Body).Decode(dest)
+		return json.NewDecoder(io.LimitReader(res.Body, maxMasterJSONBytes)).Decode(dest)
 	}
 	return nil
 }

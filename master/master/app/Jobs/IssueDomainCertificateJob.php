@@ -42,9 +42,12 @@ class IssueDomainCertificateJob implements ShouldQueue
     public function middleware(): array
     {
         return [
+            (new WithoutOverlapping('redi-acme-le-global'))
+                ->releaseAfter(25)
+                ->expireAfter(400),
             (new WithoutOverlapping('redi-acme-domain-'.$this->domainId))
                 ->releaseAfter(25)
-                ->expireAfter(300),
+                ->expireAfter(400),
         ];
     }
 
@@ -57,6 +60,10 @@ class IssueDomainCertificateJob implements ShouldQueue
     {
         $domain = RediAdminDomain::query()->find($this->domainId);
         if (! $domain) {
+            return;
+        }
+
+        if ((int) $domain->status !== 1) {
             return;
         }
 

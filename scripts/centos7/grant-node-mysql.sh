@@ -4,6 +4,10 @@
 # CentOS 7 请先用 deploy-master.sh 安装 MariaDB 10.6。5.5 没有 CREATE USER IF NOT EXISTS，也吃不下这份 utf8mb4 库。
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "${SCRIPT_DIR}/lib.sh"
+
 NODE_IP="${1:-}"
 DB_PASS="${2:-}"
 
@@ -12,10 +16,10 @@ if [[ -z "$NODE_IP" || -z "$DB_PASS" ]]; then
   exit 1
 fi
 
-if [[ ! "$NODE_IP" =~ ^[0-9a-fA-F:.]+$ ]]; then
-  echo "节点标识必须是 IP（启用 skip-name-resolve 后不能用主机名）: $NODE_IP" >&2
+redi_is_ipv4 "$NODE_IP" || {
+  echo "节点标识必须是 IPv4（启用 skip-name-resolve 后不能用主机名）: $NODE_IP" >&2
   exit 1
-fi
+}
 
 ROOT_PASS="${MYSQL_ROOT_PASSWORD:-}"
 if [[ -z "$ROOT_PASS" ]]; then

@@ -43,6 +43,11 @@ class EdgeDnsSyncService
         foreach ($edges as $edge) {
             $fqdn = strtolower(rtrim($edge->edge_fqdn, '.'));
             if ($fqdn === '' || ! Str::endsWith($fqdn, '.'.$zone)) {
+                \Illuminate\Support\Facades\Log::warning('EdgeDnsSync: skip tenant edge (FQDN not under edge_zone)', [
+                    'edge_id' => $edge->id,
+                    'edge_fqdn' => $edge->edge_fqdn,
+                    'edge_zone' => $zone,
+                ]);
                 continue;
             }
             $label = substr($fqdn, 0, -strlen('.'.$zone));

@@ -31,7 +31,7 @@ func readRequest(conn net.Conn) (*httpRequest, error) {
 	for n := 0; n < maxHeaderLines; n++ {
 		h, err := readLimitedLine(reader, maxRequestLineLen)
 		if err != nil {
-			return req, nil
+			return nil, err
 		}
 		h = strings.TrimRight(h, "\r\n")
 		if h == "" {

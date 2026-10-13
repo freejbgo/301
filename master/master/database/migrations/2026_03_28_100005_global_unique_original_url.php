@@ -26,12 +26,15 @@ return new class extends Migration
             );
         }
 
-        Schema::table('redi_admin_domain', function (Blueprint $table) {
-            if ($this->indexExists('redi_admin_domain', 'uniq_admin_original_url')) {
+        if ($this->indexExists('redi_admin_domain', 'uniq_admin_original_url')) {
+            Schema::table('redi_admin_domain', function (Blueprint $table) {
                 $table->dropUnique('uniq_admin_original_url');
-            }
-            $table->unique('original_url', 'uniq_original_url_global');
-        });
+            });
+        }
+
+        DB::statement(
+            'ALTER TABLE `redi_admin_domain` ADD UNIQUE `uniq_original_url_global` (`original_url`(191))'
+        );
     }
 
     public function down(): void
@@ -42,10 +45,13 @@ return new class extends Migration
 
         Schema::table('redi_admin_domain', function (Blueprint $table) {
             $table->dropUnique('uniq_original_url_global');
-            if (! $this->indexExists('redi_admin_domain', 'uniq_admin_original_url')) {
-                $table->unique(['admin_id', 'original_url'], 'uniq_admin_original_url');
-            }
         });
+
+        if (! $this->indexExists('redi_admin_domain', 'uniq_admin_original_url')) {
+            DB::statement(
+                'ALTER TABLE `redi_admin_domain` ADD UNIQUE `uniq_admin_original_url` (`admin_id`, `original_url`(191))'
+            );
+        }
     }
 
     protected function indexExists(string $table, string $indexName): bool
