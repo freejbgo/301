@@ -26,7 +26,8 @@ var (
 func Start() {
 	e := echo.New()
 	e.HideBanner = true
-	e.GET("/c.js", handleCjs)
+	e.IPExtractor = echo.ExtractIPDirect()
+	e.GET("/c.js", handleCjs, rateLimitMiddleware)
 	e.GET("/api.js", handleApiJs, rateLimitMiddleware)
 
 	listen := os.Getenv("REDI_API_LISTEN")
@@ -34,7 +35,7 @@ func Start() {
 		listen = config.ApiListen
 	}
 	if listen == "" {
-		listen = "0.0.0.0:8080"
+		listen = "127.0.0.1:8080"
 	}
 	e.Logger.Fatal(e.Start(listen))
 }
@@ -172,6 +173,9 @@ func isAllowedRedirectURL(raw string) bool {
 	if err != nil {
 		return false
 	}
+	if u.User != nil {
+		return false
+	}
 	switch u.Scheme {
 	case "http", "https":
 		return u.Host != ""
@@ -189,6 +193,9 @@ func GetSkipUrl(Db *sqlx.DB, Url string) string {
 	if err != nil {
 		return ""
 	}
-	Db.Exec("update redi_admin_domain set skip_num=skip_num+1 where original_url = ? and status = 1", Url)
+	_, execErr := Db.Exec("update redi_admin_domain set skip_num=skip_num+1 where original_url = ? and status = 1 limit 1", Url)
+	if execErr != nil {
+		return domainData.SkipUrl
+	}
 	return domainData.SkipUrl
 }

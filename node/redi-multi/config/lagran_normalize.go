@@ -73,5 +73,4 @@ func scalarToBool(v interface{}, defaultVal bool) bool {
 		log.Fatalf("config.json: lagran flag must be boolean")
 		return defaultVal
 	}
-	return defaultVal
 }

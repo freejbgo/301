@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+const maxRequestLineLen = 8192
+const maxHeaderLines = 128
+
 type httpRequest struct {
 	Method    string
 	Path      string
@@ -16,7 +19,7 @@ type httpRequest struct {
 
 func readRequest(conn net.Conn) (*httpRequest, error) {
 	reader := bufio.NewReader(conn)
-	line, err := reader.ReadString('\n')
+	line, err := readLimitedLine(reader, maxRequestLineLen)
 	if err != nil {
 		return nil, err
 	}
@@ -25,8 +28,8 @@ func readRequest(conn net.Conn) (*httpRequest, error) {
 		return nil, io.ErrUnexpectedEOF
 	}
 	req := &httpRequest{Method: parts[0], Path: parts[1]}
-	for {
-		h, err := reader.ReadString('\n')
+	for n := 0; n < maxHeaderLines; n++ {
+		h, err := readLimitedLine(reader, maxRequestLineLen)
 		if err != nil {
 			return req, nil
 		}
@@ -51,4 +54,15 @@ func hostWithoutPort(host string) string {
 		return h
 	}
 	return host
+}
+
+func readLimitedLine(reader *bufio.Reader, max int) (string, error) {
+	line, err := reader.ReadString('\n')
+	if err != nil {
+		return line, err
+	}
+	if len(line) > max {
+		return "", io.ErrUnexpectedEOF
+	}
+	return line, nil
 }

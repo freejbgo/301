@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\RediAcmeChallenge;
 use App\Models\RediAcmeChallengeNodeSync;
+use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use App\Services\CertificateDeployService;
@@ -29,10 +30,17 @@ class NodeAgentController extends Controller
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
         $domains = (array) $request->input('domains', []);
+        $allowed = RediAcmeChallenge::query()
+            ->where('expires_at', '>', now())
+            ->pluck('domain_name')
+            ->map(function ($d) {
+                return strtolower(trim((string) $d, '.'));
+            })
+            ->flip();
         $now = now();
         foreach ($domains as $domain) {
             $domain = strtolower(trim((string) $domain, '.'));
-            if ($domain === '') {
+            if ($domain === '' || ! isset($allowed[$domain])) {
                 continue;
             }
             RediAcmeChallengeNodeSync::updateOrCreate(
@@ -135,6 +143,14 @@ class NodeAgentController extends Controller
         $cert = RediDomainCert::find($certId);
         if (! $cert) {
             return response()->json(['message' => 'cert not found'], 404);
+        }
+
+        $hasDeployment = RediCertDeployment::query()
+            ->where('cert_id', $cert->id)
+            ->where('node_id', $node->id)
+            ->exists();
+        if (! $hasDeployment) {
+            return response()->json(['message' => 'forbidden'], 403);
         }
 
         $deployService->markNodeAck($cert, $node, $ok, $error);

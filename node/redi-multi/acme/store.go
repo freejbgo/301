@@ -19,13 +19,11 @@ type Item struct {
 var (
 	mu         sync.RWMutex
 	byDomain   = map[string]challenge{}
-	byToken    = map[string]string{}
 )
 
 func ReplaceAll(items []Item) {
 	mu.Lock()
 	byDomain = map[string]challenge{}
-	byToken = map[string]string{}
 	for _, it := range items {
 		d := strings.ToLower(strings.TrimSpace(it.DomainName))
 		t := strings.TrimSpace(it.Token)
@@ -33,7 +31,6 @@ func ReplaceAll(items []Item) {
 			continue
 		}
 		byDomain[d] = challenge{token: t, response: it.ResponseBody}
-		byToken[t] = it.ResponseBody
 	}
 	mu.Unlock()
 }
@@ -54,10 +51,6 @@ func ResponseForPath(host, path string) (body string, ok bool) {
 	if ch, found := byDomain[host]; found && ch.token == token {
 		mu.RUnlock()
 		return ch.response, true
-	}
-	if body, found := byToken[token]; found {
-		mu.RUnlock()
-		return body, true
 	}
 	mu.RUnlock()
 	return "", false

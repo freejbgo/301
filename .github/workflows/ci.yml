@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: node/redi-multi/go.mod
+      - name: Vet and test node
+        working-directory: node/redi-multi
+        run: |
+          go vet ./...
+          go test ./...
+      - name: Build node release tarball
+        run: ./scripts/build-node-tar.sh
+
+  master-phpunit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.0"
+          tools: composer:v2
+      - name: Install dependencies
+        working-directory: master/master
+        run: composer install --no-interaction --prefer-dist
+      - name: PHPUnit
+        working-directory: master/master
+        run: ./vendor/bin/phpunit --testsuite Unit

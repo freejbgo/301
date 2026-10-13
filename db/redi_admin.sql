@@ -3,7 +3,7 @@
 -- Host: localhost    Database: redi_admin
 --
 -- 初始后台账号：用户名 admin ，密码 Redi301@Install2026 （首次登录后请立即修改）
--- 表 redi_admin_domain 已含 (admin_id, original_url) 唯一约束，无需额外补丁脚本
+-- 表 redi_admin_domain 已含 original_url 全平台唯一约束（uniq_original_url_global）
 -- ------------------------------------------------------
 -- Server version	5.6.50-log
 
@@ -567,7 +567,7 @@ CREATE TABLE `redi_admin_domain` (
   KEY `idx_group` (`group_id`),
   KEY `idx_original_url` (`original_url`(191)),
   KEY `idx_admin` (`admin_id`),
-  UNIQUE KEY `uniq_admin_original_url` (`admin_id`,`original_url`(191))
+  UNIQUE KEY `uniq_original_url_global` (`original_url`(191))
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

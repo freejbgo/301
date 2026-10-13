@@ -81,6 +81,7 @@ func setIptable(sport string) {
 	ipt, err := iptables.New()
 	if err != nil {
 		logrus.Errorf("[lagran] Iptabels new error:%v\n", err)
+		return
 	}
 
 	// 仅追加本程序所需 NFQUEUE 规则，不再清空整个 OUTPUT 链，避免影响服务器其它出站策略
@@ -113,6 +114,7 @@ func UnsetIptable(sport string) {
 	ipt, err := iptables.New()
 	if err != nil {
 		logrus.Errorf("[lagran] failed to new iptabels, err: %v\n", err)
+		return
 	}
 	if config.LagranBool("syn_ack", true) {
 		err = ipt.Delete("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "SYN,ACK", "-j", "NFQUEUE", "--queue-balance", "1000:1127")

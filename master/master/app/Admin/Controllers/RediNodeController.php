@@ -14,6 +14,15 @@ class RediNodeController extends AdminController
 {
     use EnsuresAdministrator;
 
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $this->ensureAdministrator();
+
+            return $next($request);
+        });
+    }
+
     public function title()
     {
         return '节点管理';
@@ -31,7 +40,9 @@ class RediNodeController extends AdminController
             });
             $grid->column('enabled', '启用')->switch();
             $grid->column('last_heartbeat_at', '最后心跳');
-            $grid->column('agent_version', 'Agent 版本');
+            $grid->column('agent_version', 'Agent 版本')->display(function ($version) {
+                return e((string) $version);
+            });
             $grid->column('updated_at', '更新时间');
 
             $grid->disableViewButton();

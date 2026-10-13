@@ -14,6 +14,7 @@ use Dcat\Admin\Layout\Content;
 use App\Admin\Actions\Modal\BatchDomainModal;
 use App\Models\RediAdminGroup;
 use App\Models\RediDomainCert;
+use App\Services\DomainOriginalUrlGuard;
 use App\Services\DomainRecordNormalizer;
 use App\Services\CnamePrecheckService;
 use App\Services\TenantEdgeService;
@@ -177,7 +178,7 @@ JS
                 .'（本账号下所有域名共用）</div>',
                 '接入说明'
             );
-            $form->text('original_url', '原始域名')->help('客户主域名，如 foo.com');
+            $form->text('original_url', '原始域名')->help('客户主域名，如 foo.com（全平台唯一，供边缘节点按 Host 查询）');
             $form->text('skip_url', '跳转链接');
             $form->radio('status', '状态')->options([1=>'启用', 2=>'停用'])->default(1);
             $form->switch('force_https', '强制 HTTPS')->help('证书状态为「已生效」后再打开。开启后节点对 HTTP 请求 301 到 HTTPS');
@@ -214,16 +215,14 @@ JS
                     ]);
                 }
 
+                $domainId = $form->isEditing() ? (int) $form->getKey() : null;
+                if (DomainOriginalUrlGuard::isTakenGlobally($originalUrl, $domainId)) {
+                    throw ValidationException::withMessages([
+                        'original_url' => '该原始域名已被其他账号或本账号使用（全平台唯一）',
+                    ]);
+                }
+
                 if ($form->isCreating()) {
-                    $duplicate = \App\Models\RediAdminDomain::query()
-                        ->where('admin_id', $adminId)
-                        ->where('original_url', $originalUrl)
-                        ->exists();
-                    if ($duplicate) {
-                        throw ValidationException::withMessages([
-                            'original_url' => '该原始域名已存在',
-                        ]);
-                    }
                     $form->input('admin_id', $adminId);
                     $form->input('admin_name', Admin::user()->username);
                 }

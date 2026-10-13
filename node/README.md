@@ -2,7 +2,7 @@
 
 部署整套系统见 [../DEPLOY.md](../DEPLOY.md)。这里只说明节点包本身。
 
-发布包是 **`redi-multi.tar.gz`**。解压后目录为 `redi-multi/`，里面有源码、`config.json`、`env.example` 和编译好的 `bin/redi-multi`。线上运行这个二进制，不要 `go run main.go`。
+发布包是 **`redi-multi.tar.gz`**。解压后目录为 `redi-multi/`，里面有源码、`config.json.example`、`env.example` 和编译好的 `bin/redi-multi`。首次部署从 example 复制 `config.json`（`deploy-node.sh` 会自动复制）。**`redirector` 字段不参与运行**，跳转来自 MySQL 与 `default_redirect_url`。线上运行这个二进制，不要 `go run main.go`。
 
 `bin/redi-multi` 是 `CGO_ENABLED=0` 的静态二进制，不依赖 glibc 2.32/2.34。CentOS 7.x 内核小版本不同也不用重编，也不编译内核模块。lagran 使用系统里的 `nfnetlink_queue`。
 

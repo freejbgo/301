@@ -141,4 +141,26 @@ class PlatformBranding
 
         return Storage::disk('public')->url($path);
     }
+
+    /**
+     * 上传文件仅存 public 盘相对路径；拒绝路径穿越与外链写入存储字段。
+     */
+    protected static function normalizeStoragePath(string $path): string
+    {
+        $path = trim($path);
+        if ($path === '') {
+            return '';
+        }
+
+        if (strpos($path, 'http://') === 0 || strpos($path, 'https://') === 0) {
+            return '';
+        }
+
+        $path = str_replace('\\', '/', $path);
+        if (strpos($path, '..') !== false || strpos($path, '/') === 0) {
+            return '';
+        }
+
+        return ltrim($path, '/');
+    }
 }

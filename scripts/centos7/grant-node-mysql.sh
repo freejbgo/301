@@ -29,7 +29,8 @@ trap 'rm -f "$sqlfile"' EXIT
 {
   printf "CREATE USER IF NOT EXISTS 'redi_admin'@'%s' IDENTIFIED BY '%s';\n" "$NODE_IP" "$sql_pass"
   printf "ALTER USER 'redi_admin'@'%s' IDENTIFIED BY '%s';\n" "$NODE_IP" "$sql_pass"
-  printf "GRANT SELECT, INSERT, UPDATE, DELETE ON \`redi_admin\`.* TO 'redi_admin'@'%s';\n" "$NODE_IP"
+  printf "GRANT SELECT ON \`redi_admin\`.\`redi_admin_domain\` TO 'redi_admin'@'%s';\n" "$NODE_IP"
+  printf "GRANT UPDATE (skip_num) ON \`redi_admin\`.\`redi_admin_domain\` TO 'redi_admin'@'%s';\n" "$NODE_IP"
   printf "FLUSH PRIVILEGES;\n"
 } > "$sqlfile"
 
