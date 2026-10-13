@@ -7,7 +7,7 @@
 | 主控 | `scripts/centos7/deploy-master.sh` | 程序在 `/opt/301/master`，网站根目录 `/opt/301/master/public` |
 | 每台节点 | `scripts/centos7/deploy-node.sh` | 程序在 `/opt/redi-multi/redi-multi` |
 
-发布包在 [GitHub Releases](https://github.com/freejbgo/301/releases) 下载（当前推荐 **[v2026.10.13](https://github.com/freejbgo/301/releases/tag/v2026.10.13)** 或更高）。克隆仓库时，同一份文件也在下面这两个路径；也可在 `vars.env` 里设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` 指向下载的绝对路径：
+发布包在 [GitHub Releases](https://github.com/freejbgo/301/releases) 下载（当前推荐 **[v2026.10.14](https://github.com/freejbgo/301/releases/tag/v2026.10.14)** 或更高）。克隆仓库时，同一份文件也在下面这两个路径；也可在 `vars.env` 里设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` 指向下载的绝对路径：
 
 - `master/master.tar.gz`：PHP 程序，已经包含 `vendor`，没有 `.env`。服务器不用装 Composer。Release 上的文件名是 `master.tar.gz`。
 - `node/redi-multi.tar.gz`：静态二进制 `bin/redi-multi`，不依赖 glibc 2.32/2.34，CentOS 7 的 glibc 2.17 可以直接跑。Release 上的文件名是 `redi-multi.tar.gz`。
@@ -51,7 +51,7 @@ sudo bash scripts/centos7/deploy-master.sh
 8. 安装队列 `redi-queue`：`queue:work --sleep=3 --timeout=320 --tries=100`。每天 03:10 以用户 `nginx` 执行 `redi:renew-certificates`。
 9. 防火墙开放 22、80、443。
 
-重复执行不会重置已有 `.env`、`APP_KEY` 和业务数据。Nginx 站点文件 `/etc/nginx/conf.d/301-master.conf` 如果已经存在，脚本不覆盖，避免冲掉后来加的 HTTPS。
+重复执行不会重置已有 `.env`、`APP_KEY` 和业务数据。`/etc/nginx/conf.d/301-master.conf` 若**没有** `301-master-managed` 标记则不会覆盖（便于你在同一文件里手工加 HTTPS）；带该标记或由脚本生成的文件会在重复部署时刷新 `root` 路径。HTTPS 也可单独增加 `conf.d` 片段。
 
 打开 `http://主控IP/admin`。用户名 `admin`，密码 `Redi301@Install2026`，登录后马上修改。
 
