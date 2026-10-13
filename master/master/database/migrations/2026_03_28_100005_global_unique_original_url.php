@@ -16,7 +16,7 @@ return new class extends Migration
             ->pluck('original_url');
 
         if ($dupes->isNotEmpty()) {
-            throw new RuntimeException(
+            throw new \RuntimeException(
                 '无法添加全局唯一约束：以下 original_url 被多个租户占用，请先合并或删除重复记录：'
                 .implode(', ', $dupes->all())
             );
