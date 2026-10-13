@@ -16,6 +16,7 @@ class DomainCertificateQueue
     {
         $ids = RediAdminDomain::query()
             ->where('admin_id', $adminId)
+            ->where('status', 1)
             ->whereIn('id', $domainIds)
             ->orderBy('id')
             ->pluck('id');

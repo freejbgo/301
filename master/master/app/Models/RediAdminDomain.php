@@ -22,6 +22,9 @@ class RediAdminDomain extends Model
             RediAcmeChallenge::query()
                 ->where('domain_name', $domain->original_url)
                 ->delete();
+            RediAcmeChallengeNodeSync::query()
+                ->where('domain_name', $domain->original_url)
+                ->delete();
         });
     }
 

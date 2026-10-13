@@ -9,6 +9,7 @@ use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use App\Services\CertificateDeployService;
+use App\Services\NodeAgentRevisionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -60,34 +61,9 @@ class NodeAgentController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function revision()
+    public function revision(NodeAgentRevisionService $revisions)
     {
-        $challenges = RediAcmeChallenge::query()
-            ->where('expires_at', '>', now())
-            ->orderBy('id')
-            ->get(['domain_name', 'token', 'updated_at']);
-
-        $certs = RediDomainCert::query()
-            ->whereIn('status', [
-                RediDomainCert::STATUS_ISSUED,
-                RediDomainCert::STATUS_DEPLOYING,
-                RediDomainCert::STATUS_ACTIVE,
-            ])
-            ->orderBy('id')
-            ->get(['id', 'domain_name', 'updated_at']);
-
-        $rules = DB::table('redi_admin_domain')
-            ->where('status', 1)
-            ->orderBy('id')
-            ->get(['id', 'original_url', 'force_https', 'updated_at']);
-
-        $revision = sha1(json_encode([
-            'challenges' => $challenges,
-            'certs' => $certs,
-            'rules' => $rules,
-        ]));
-
-        return response()->json(['revision' => $revision]);
+        return response()->json($revisions->build());
     }
 
     public function heartbeat(Request $request)

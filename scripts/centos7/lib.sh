@@ -94,8 +94,12 @@ redi_sync_node_ips_access() {
     done
     if [[ "$found" == 0 ]]; then
       echo "移除节点 IP ${old} 的 MySQL 与防火墙"
-      bash "${script_dir}/revoke-node-mysql.sh" "$old" || true
-      bash "${script_dir}/firewalld-revoke-mysql-from-node.sh" "$old" || true
+      if ! bash "${script_dir}/revoke-node-mysql.sh" "$old"; then
+        echo "警告: revoke-node-mysql.sh 失败 (${old})" >&2
+      fi
+      if ! bash "${script_dir}/firewalld-revoke-mysql-from-node.sh" "$old"; then
+        echo "警告: firewalld-revoke-mysql-from-node.sh 失败 (${old})" >&2
+      fi
     fi
   done
 
@@ -109,6 +113,7 @@ redi_sync_node_ips_access() {
   else
     : > "$state_file"
   fi
+  chmod 600 "$state_file" 2>/dev/null || true
 }
 
 redi_sync_master_env() {

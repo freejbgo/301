@@ -105,7 +105,18 @@ class RediNodeController extends AdminController
                     if ($node) {
                         $plainToken = $node->issueApiTokenPlain();
                         $node->save();
-                        admin_toastr('节点 API Token（仅显示一次，请保存）：'.$plainToken, 'warning', ['timeOut' => 0]);
+                        $masked = strlen($plainToken) > 12
+                            ? substr($plainToken, 0, 6).'…'.substr($plainToken, -4)
+                            : $plainToken;
+                        admin_toastr(
+                            '节点已创建。完整 Token 仅本次响应可见（请立即写入 REDI_NODE_TOKEN）：'.$masked,
+                            'warning',
+                            ['timeOut' => 0]
+                        );
+
+                        return $form->response()
+                            ->success('节点已创建')
+                            ->data(['token' => $plainToken]);
                     }
                 }
             });

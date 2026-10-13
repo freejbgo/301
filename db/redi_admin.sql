@@ -349,7 +349,7 @@ CREATE TABLE `migrations` (
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'2014_10_12_000000_create_users_table',1),(2,'2014_10_12_100000_create_password_resets_table',1),(3,'2016_01_04_173148_create_admin_tables',1),(4,'2019_08_19_000000_create_failed_jobs_table',1),(5,'2019_12_14_000001_create_personal_access_tokens_table',1),(6,'2020_09_07_090635_create_admin_settings_table',1),(7,'2020_09_22_015815_create_admin_extensions_table',1),(8,'2020_11_01_083237_update_admin_menu_table',1),(9,'2026_03_28_000001_add_platform_settings_menu',2),(10,'2026_03_28_100000_create_edge_pool_and_cert_tables',2),(11,'2026_03_28_100001_add_edge_pool_admin_menu',2),(12,'2026_03_28_100002_add_acme_challenges_and_jobs',2),(13,'2026_03_28_100003_add_node_challenge_sync',2),(14,'2026_03_28_100004_add_node_extra_ips',2),(15,'2026_10_13_000001_ensure_failed_jobs_table',3),(16,'2026_03_28_100005_global_unique_original_url',3);
+INSERT INTO `migrations` VALUES (1,'2014_10_12_000000_create_users_table',1),(2,'2014_10_12_100000_create_password_resets_table',1),(3,'2016_01_04_173148_create_admin_tables',1),(4,'2019_08_19_000000_create_failed_jobs_table',1),(5,'2019_12_14_000001_create_personal_access_tokens_table',1),(6,'2020_09_07_090635_create_admin_settings_table',1),(7,'2020_09_22_015815_create_admin_extensions_table',1),(8,'2020_11_01_083237_update_admin_menu_table',1),(9,'2026_03_28_000001_add_platform_settings_menu',2),(10,'2026_03_28_100000_create_edge_pool_and_cert_tables',2),(11,'2026_03_28_100001_add_edge_pool_admin_menu',2),(12,'2026_03_28_100002_add_acme_challenges_and_jobs',2),(13,'2026_03_28_100003_add_node_challenge_sync',2),(14,'2026_03_28_100004_add_node_extra_ips',2),(15,'2026_10_13_000001_ensure_failed_jobs_table',3),(16,'2026_03_28_100005_global_unique_original_url',3),(17,'2026_03_28_100006_redi_domain_certs_domain_fk',4);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -529,7 +529,8 @@ CREATE TABLE `redi_domain_certs` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `redi_domain_certs_domain_id_unique` (`domain_id`),
-  KEY `redi_domain_certs_admin_id_status_index` (`admin_id`,`status`)
+  KEY `redi_domain_certs_admin_id_status_index` (`admin_id`,`status`),
+  CONSTRAINT `redi_domain_certs_domain_id_foreign` FOREIGN KEY (`domain_id`) REFERENCES `redi_admin_domain` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 DROP TABLE IF EXISTS `redi_cert_deployments`;

@@ -2,7 +2,7 @@ package domain
 
 import (
 	"fmt"
-	"github.com/unknwon/com"
+	"strconv"
 	"strings"
 )
 
@@ -36,8 +36,15 @@ func (d *Encoded) Decode() string {
 	if len(encodeSliceStr) > maxEncodedParts {
 		return ""
 	}
-	for _, r := range encodeSliceStr {
-		ab := com.StrTo(r).MustInt()
+	for _, part := range encodeSliceStr {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		ab, err := strconv.Atoi(part)
+		if err != nil || ab < 0 || ab > 0x10ffff {
+			return ""
+		}
 		encodeSlice = append(encodeSlice, rune(ab))
 	}
 	domain := string(encodeSlice)

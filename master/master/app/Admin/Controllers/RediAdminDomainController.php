@@ -20,6 +20,9 @@ use App\Services\CnamePrecheckService;
 use App\Services\TenantEdgeService;
 use App\Admin\Actions\Grid\ApplyCertificate;
 use App\Admin\Actions\Grid\BatchApplyCertificate;
+use App\Jobs\IssueDomainCertificateJob;
+use App\Models\RediAcmeChallenge;
+use App\Models\RediAcmeChallengeNodeSync;
 use Illuminate\Validation\ValidationException;
 
 
@@ -165,6 +168,8 @@ JS
     protected function form()
     {
         return Form::make(new RediAdminDomain(), function (Form $form) {
+            $previousOriginalUrl = null;
+
             $groupList = [];
             $groupRet = DB::table("redi_admin_group")->where('admin_id', Admin::user()->id)->where('status', 1)->get(['id', 'name']);
             foreach($groupRet as $val){
@@ -192,7 +197,7 @@ JS
             $form->display('created_at');
             $form->display('updated_at');
 
-            $form->saving(function (Form $form) {
+            $form->saving(function (Form $form) use (&$previousOriginalUrl) {
                 $request = request()->all();
                 $adminId = (int) Admin::user()->id;
 
@@ -227,6 +232,7 @@ JS
                 if ($form->isEditing()) {
                     $existing = \App\Models\RediAdminDomain::query()->find($form->getKey());
                     if ($existing) {
+                        $previousOriginalUrl = $existing->original_url;
                         $form->input('admin_id', $existing->admin_id);
                         $form->input('admin_name', $existing->admin_name);
                     }
@@ -260,17 +266,38 @@ JS
                 TenantEdgeService::ensureForAdmin($adminId);
             });
 
-            $form->saved(function (Form $form) {
+            $form->saved(function (Form $form) use (&$previousOriginalUrl) {
                 $adminId = (int) Admin::user()->id;
                 TenantEdgeService::ensureForAdmin($adminId);
 
                 if ($form->isEditing()) {
                     $domain = \App\Models\RediAdminDomain::query()->find($form->getKey());
-                    if ($domain) {
+                    if (! $domain) {
+                        return;
+                    }
+
+                    $oldUrl = (string) ($previousOriginalUrl ?? '');
+                    $newUrl = $domain->original_url;
+                    if ($oldUrl !== '' && $oldUrl !== $newUrl) {
+                        if ($oldUrl !== '') {
+                            RediAcmeChallenge::query()->where('domain_name', $oldUrl)->delete();
+                            RediAcmeChallengeNodeSync::query()->where('domain_name', $oldUrl)->delete();
+                        }
+                        RediAcmeChallengeNodeSync::query()->where('domain_name', $newUrl)->delete();
                         RediDomainCert::query()
                             ->where('domain_id', $domain->id)
-                            ->update(['domain_name' => $domain->original_url]);
+                            ->update(['domain_name' => $newUrl]);
+                        if ((int) $domain->status === 1) {
+                            IssueDomainCertificateJob::dispatch((int) $domain->id)
+                                ->delay(now()->addSeconds(15));
+                        }
+
+                        return;
                     }
+
+                    RediDomainCert::query()
+                        ->where('domain_id', $domain->id)
+                        ->update(['domain_name' => $domain->original_url]);
                 }
             });
         });

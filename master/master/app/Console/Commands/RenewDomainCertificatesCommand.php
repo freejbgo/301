@@ -21,6 +21,9 @@ class RenewDomainCertificatesCommand extends Command
                 RediDomainCert::STATUS_DEPLOYING,
                 RediDomainCert::STATUS_VALIDATING,
             ])
+            ->whereHas('domain', function ($query) {
+                $query->where('status', 1);
+            })
             ->whereNotNull('expires_at')
             ->where('expires_at', '<=', now()->addDays(25))
             ->get();

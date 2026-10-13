@@ -12,6 +12,7 @@ use Dcat\Admin\Admin;
 use Dcat\Admin\Layout\Content;
 use App\Admin\Forms\UrlSetByGroup;
 use Dcat\Admin\Widgets\Modal;
+use Illuminate\Validation\ValidationException;
 
 class RediAdminGroupController extends AdminController
 {
@@ -88,6 +89,22 @@ class RediAdminGroupController extends AdminController
                 $form->hidden('admin_id')->value(Admin::user()->id);
                 $form->hidden('admin_name')->value(Admin::user()->username);
             }
+
+            $form->deleting(function (Form $form) {
+                $group = \App\Models\RediAdminGroup::query()->find($form->getKey());
+                if (! $group) {
+                    return;
+                }
+                $count = \App\Models\RediAdminDomain::query()
+                    ->where('group_id', $group->id)
+                    ->where('admin_id', $group->admin_id)
+                    ->count();
+                if ($count > 0) {
+                    throw ValidationException::withMessages([
+                        'name' => "该分组下还有 {$count} 条域名，请先迁移或删除域名后再删分组。",
+                    ]);
+                }
+            });
 
             $form->saving(function (Form $form) {
                 if ($form->isEditing()) {

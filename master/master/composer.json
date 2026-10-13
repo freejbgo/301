@@ -4,7 +4,7 @@
     "description": "301 redirect master control (Laravel + Dcat Admin)",
     "license": "proprietary",
     "require": {
-        "php": "^7.3|^8.0",
+        "php": "^8.0.2",
         "dcat/laravel-admin": "^2.0",
         "fruitcake/laravel-cors": "^2.0",
         "afosto/yaac": "^1.5",

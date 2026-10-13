@@ -4,6 +4,7 @@ namespace App\Services\Acme;
 
 use Afosto\Acme\Client;
 use App\Models\RediAcmeChallenge;
+use App\Models\RediAdminDomain;
 use App\Models\RediDomainCert;
 use App\Models\RediPlatformDns;
 use App\Services\CertificateDeployService;
@@ -19,6 +20,8 @@ class CertificateIssuer
 {
     public function issue(RediDomainCert $cert): void
     {
+        $this->assertDomainIssuable($cert);
+
         if (! class_exists(Client::class)) {
             throw new RuntimeException('请先在主控执行 composer require afosto/yaac');
         }
@@ -41,6 +44,7 @@ class CertificateIssuer
         ]);
 
         $domain = strtolower(trim($cert->domain_name));
+        $this->assertDomainIssuable($cert);
         $cert->status = RediDomainCert::STATUS_VALIDATING;
         $cert->last_error = null;
         $cert->save();
@@ -77,12 +81,28 @@ class CertificateIssuer
         $cert->setCertificatePem($certificate->getCertificate());
         $cert->setPrivateKeyPem($certificate->getPrivateKey());
         $cert->expires_at = $this->parseCertExpiry($certificate->getCertificate());
+        $this->assertDomainIssuable($cert);
         $cert->status = RediDomainCert::STATUS_ISSUED;
         $cert->save();
 
         RediAcmeChallenge::where('domain_name', $domain)->delete();
 
         app(CertificateDeployService::class)->queueDeploy($cert);
+    }
+
+    protected function assertDomainIssuable(RediDomainCert $cert): void
+    {
+        $domain = RediAdminDomain::query()->find($cert->domain_id);
+        if (! $domain) {
+            throw new RuntimeException('域名已删除，已中止证书签发');
+        }
+        if ((int) $domain->status !== 1) {
+            throw new RuntimeException('域名已停用，已中止证书签发');
+        }
+        if (strtolower(trim($domain->original_url)) !== strtolower(trim($cert->domain_name))) {
+            $cert->domain_name = $domain->original_url;
+            $cert->save();
+        }
     }
 
     protected function parseCertExpiry(string $pemBundle): ?Carbon
