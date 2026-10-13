@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CentOS 7.x 主控全自动部署。内核小版本不同不用重编：主控是 PHP，节点包是静态二进制。
+# CentOS 7.x（推荐 7.9）主控全自动部署。内核小版本不同不用重编：主控是 PHP，节点包是静态二进制。
 #
 # 在仓库里执行（不要把仓库克隆到 MASTER_INSTALL_ROOT，默认 /opt/301）：
 #   cp scripts/centos7/vars.example.env scripts/centos7/vars.env
@@ -87,7 +87,8 @@ step "CentOS $(uname -r)。不按内核编译，安装 PHP 8.0 和 MariaDB 10.6"
 redi_use_centos7_vault_repos
 yum install -y epel-release yum-utils
 redi_use_epel_archive_repo
-yum install -y "https://rpms.remirepo.net/enterprise/remi-release-7.rpm"
+redi_install_remi_release_7
+redi_use_epel_archive_repo
 yum-config-manager --enable remi-php80
 # Remi PHP 8.0 没有独立的 php-json / php-zip 包。json 在 php-common 里，zip 是 php-pecl-zip。
 yum install -y nginx firewalld tar policycoreutils-python \
