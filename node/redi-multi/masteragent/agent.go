@@ -33,8 +33,12 @@ func Run() {
 		logrus.Warn("[masteragent] REDI_MASTER_URL or REDI_NODE_TOKEN not set; agent disabled")
 		return
 	}
+	insecure := strings.TrimSpace(os.Getenv("REDI_MASTER_INSECURE")) == "1"
 	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(master)), "http://") {
-		logrus.Warn("[masteragent] REDI_MASTER_URL should use https:// to protect node token and certificate private keys")
+		if !insecure {
+			logrus.Fatal("[masteragent] REDI_MASTER_URL must use https:// (or set REDI_MASTER_INSECURE=1 for lab only)")
+		}
+		logrus.Warn("[masteragent] REDI_MASTER_URL uses http://; token and private keys are not protected")
 	}
 	cfg := config{MasterURL: stringsTrimRightSlash(master), Token: token}
 	go loop(cfg)

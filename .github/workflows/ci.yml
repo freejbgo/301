@@ -35,3 +35,11 @@ jobs:
       - name: PHPUnit
         working-directory: master/master
         run: ./vendor/bin/phpunit --testsuite Unit
+
+      - name: Build master release tarball (smoke)
+        working-directory: master/master
+        run: |
+          composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
+          cd ../..
+          ./scripts/build-master-tar.sh
+          test -s master/master.tar.gz

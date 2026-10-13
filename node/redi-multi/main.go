@@ -46,7 +46,7 @@ func main() {
 		}
 		logrus.Debug("Unset iptables...")
 		done <- true
+		os.Exit(0)
 	}()
 	<-done
-	color.Redf("[%v] App terminated...\n", time.Now().Format("2006-06-02 15:04:05"))
 }

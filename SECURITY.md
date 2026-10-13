@@ -6,7 +6,7 @@
 
 - 数据库 `redi_admin.sql`：单管理员 `admin`、默认密码见 DEPLOY.md；`original_url` **全平台唯一**（`uniq_original_url_global`）。
 - 主控：多租户隔离、**原始域名全平台唯一**（与边缘节点按 Host 查库一致）、跳转 URL 仅允许 `http/https`、`.env.example` 默认 `APP_DEBUG=false` / `SESSION_SECURE_COOKIE=true`。
-- 节点：`REDI_DB_*` 环境变量；MySQL 仅 **SELECT + UPDATE(skip_num)** 于 `redi_admin_domain`（见 `grant-node-mysql.sh`）；`status=1` 才跳转计数；`api.js` JSON 输出 + 按 IP 限速；Echo 默认 **127.0.0.1:8080**；**不再清空整表 iptables OUTPUT**。
+- 节点：`REDI_DB_*` 环境变量；MySQL 账号 **`redi_node`** 仅 **SELECT** 视图 `redi_node_domain_lookup`（`original_url/skip_url/status`）+ **UPDATE(skip_num)** 于 `redi_admin_domain`（见 `grant-node-mysql.sh`），不能 `SELECT` 整表；`status=1` 才跳转计数；`api.js` JSON 输出 + 按 IP 限速；Echo 默认 **127.0.0.1:8080**；**不再清空整表 iptables OUTPUT**。
 - `composer.json` 声明 Laravel 8 + Dcat Admin。CentOS 7 用发布包里的 `vendor`，不用在服务器上执行 `composer install`。
 
 ## 你必须在服务器上完成的

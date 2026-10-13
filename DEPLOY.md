@@ -18,7 +18,7 @@ CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)�
 
 | 机器 | 要装的 | 对公网开放 | 不对公网开放 |
 |------|--------|------------|----------------|
-| 主控 | Nginx、PHP 8.0、MySQL/MariaDB、队列 | 22、80、443 | 3306 |
+| 主控 | Nginx、PHP 8.0.2+、MySQL/MariaDB、队列 | 22、80、443 | 3306 |
 | 每台节点 | `node/redi-multi.tar.gz` 里的程序 | 22、80、443 | 3306、8080 |
 
 节点仍直连主控上的 MySQL，所以 3306 只允许主控本机和各节点的出口 IP。8080 是旧的脚本端口，跳转页已经改用客户域名上的 `/api.js`、`/c.js`，不必对访客开放 8080。
@@ -47,7 +47,7 @@ sudo MYSQL_ROOT_PASSWORD='root密码' bash scripts/centos7/grant-node-mysql.sh '
 
 ## 2. 主控
 
-要求 PHP `7.3` 或 `8.0`（`composer.json` 不接受 8.1 及以上）。CentOS 7 使用 Remi 的 PHP 8.0。
+要求 PHP **8.0.2 及以上**（与 `composer.json`、GitHub CI 的 PHP 8.4 构建一致）。CentOS 7 可使用 Remi 的 PHP 8.0/8.2；生产请与发布包 `vendor` 的 PHP 版本匹配。
 
 ```bash
 cd master/master
@@ -153,6 +153,13 @@ mysql -h 主控IP -u redi_admin -p -e 'SELECT 1' redi_admin
 3. 添加或改了 IP 之后，手动模式去厂商改 pool 的 A；API 模式再点一次同步。删除节点不会自动删 DNS 记录。
 4. 普通账号在「分组管理」建分组，在「域名管理」添加客户域名。把列表里的 CNAME 目标交给客户。
 5. 预检显示「已指向」后，点「申请证书」。队列跑起来之后，状态会从验证中到已生效。
+
+**证书 / ACME 检查清单**
+
+- 至少一台节点 **启用** 且 **15 分钟内有心跳**；长期故障的节点请先禁用，避免阻塞（主控只需任一台在线节点同步 HTTP-01 挑战即可）。
+- 多机跑 `queue:work` 时 `CACHE_DRIVER=redis`（共享 ACME 锁）。
+- 节点 `REDI_MASTER_URL` 必须为 **https://**；Agent **0.1.2+** 与主控分项 revision 匹配。
+- 升级主控后执行 `php artisan migrate`；节点库账号为 **`redi_node`** 时重跑 `grant-node-mysql.sh`。
 
 客户自己要做的事见 [docs/CUSTOMER-CNAME-HTTPS.md](docs/CUSTOMER-CNAME-HTTPS.md)。
 

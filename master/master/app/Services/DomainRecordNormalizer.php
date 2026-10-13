@@ -12,6 +12,16 @@ class DomainRecordNormalizer
         return strtolower(rtrim($url, '/'));
     }
 
+    public static function originalUrlHash(string $normalizedOriginalUrl): string
+    {
+        $normalizedOriginalUrl = self::normalizeOriginalUrl($normalizedOriginalUrl);
+        if ($normalizedOriginalUrl === '') {
+            return '';
+        }
+
+        return hash('sha256', $normalizedOriginalUrl);
+    }
+
     public static function normalizeSkipUrl(?string $url): string
     {
         $url = trim((string) $url);

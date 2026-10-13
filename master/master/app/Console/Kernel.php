@@ -15,7 +15,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('redi:renew-certificates')->dailyAt('03:10');
+        $schedule->command('redi:renew-certificates')
+            ->dailyAt('03:10')
+            ->withoutOverlapping(120);
     }
 
     /**

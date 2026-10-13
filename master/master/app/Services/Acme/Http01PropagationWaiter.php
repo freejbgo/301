@@ -21,7 +21,7 @@ class Http01PropagationWaiter
         $deadline = time() + $maxSeconds;
 
         while (time() < $deadline) {
-            if ($this->allNodesSynced($domain)) {
+            if ($this->anyOnlineNodeSyncedChallenge($domain)) {
                 try {
                     $response = Http::timeout(8)
                         ->withHeaders(['User-Agent' => 'redi-master-acme-probe/1.0'])
@@ -38,11 +38,12 @@ class Http01PropagationWaiter
         }
 
         throw new RuntimeException(
-            'HTTP-01 未在 '.$maxSeconds.' 秒内就绪：请确认 15 分钟内有心跳的在线节点已同步挑战、CNAME 已生效，且公网 80 可访问 '.$publicUrl
+            'HTTP-01 未在 '.$maxSeconds.' 秒内就绪：请确认至少一台在线节点已同步挑战、CNAME 已生效，且公网 80 可访问 '.$publicUrl
         );
     }
 
-    protected function allNodesSynced(string $domain): bool
+    /** HTTP-01 只需任一边缘呈现挑战即可，不要求全部在线节点同步。 */
+    protected function anyOnlineNodeSyncedChallenge(string $domain): bool
     {
         $ids = RediNode::enabled()
             ->where('last_heartbeat_at', '>=', now()->subMinutes(15))
@@ -51,13 +52,10 @@ class Http01PropagationWaiter
             return false;
         }
 
-        $synced = RediAcmeChallengeNodeSync::query()
+        return RediAcmeChallengeNodeSync::query()
             ->where('domain_name', $domain)
             ->whereIn('node_id', $ids)
             ->where('synced_at', '>=', now()->subMinutes(3))
-            ->pluck('node_id')
-            ->unique();
-
-        return $synced->count() >= $ids->count();
+            ->exists();
     }
 }

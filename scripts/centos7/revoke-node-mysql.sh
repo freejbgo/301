@@ -25,7 +25,11 @@ fi
 
 sqlfile=$(mktemp)
 trap 'rm -f "$sqlfile"' EXIT
-printf "DROP USER IF EXISTS 'redi_admin'@'%s';\nFLUSH PRIVILEGES;\n" "$NODE_IP" > "$sqlfile"
+{
+  printf "DROP USER IF EXISTS 'redi_node'@'%s';\n" "$NODE_IP"
+  printf "DROP USER IF EXISTS 'redi_admin'@'%s';\n" "$NODE_IP"
+  printf "FLUSH PRIVILEGES;\n"
+} > "$sqlfile"
 
 if [[ -f /root/.redi-mysql.cnf ]] \
   && mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SELECT 1" </dev/null >/dev/null 2>&1; then
@@ -40,4 +44,4 @@ else
   echo "请设置 MYSQL_ROOT_PASSWORD 或配置 /root/.redi-mysql.cnf" >&2
   exit 1
 fi
-echo "已撤销 redi_admin@'${NODE_IP}'"
+echo "已撤销 redi_node / redi_admin @'${NODE_IP}'"

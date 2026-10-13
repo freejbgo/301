@@ -13,7 +13,13 @@ class DomainOriginalUrlGuard
             return false;
         }
 
-        $query = RediAdminDomain::query()->where('original_url', $originalUrl);
+        $hash = DomainRecordNormalizer::originalUrlHash($originalUrl);
+        $query = RediAdminDomain::query();
+        if ($hash !== '') {
+            $query->where('original_url_hash', $hash);
+        } else {
+            $query->where('original_url', $originalUrl);
+        }
         if ($exceptDomainId) {
             $query->where('id', '!=', $exceptDomainId);
         }

@@ -57,6 +57,9 @@ class RouteServiceProvider extends ServiceProvider
     protected function configureRateLimiting()
     {
         RateLimiter::for('api', function (Request $request) {
+            if ($request->is('api/nodes/certificates')) {
+                return Limit::perMinute(30)->by($request->bearerToken() ?: $request->ip());
+            }
             if ($request->is('api/nodes/*')) {
                 return Limit::perMinute(300)->by($request->bearerToken() ?: $request->ip());
             }

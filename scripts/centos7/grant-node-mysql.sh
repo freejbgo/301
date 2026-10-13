@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 为单个节点公网 IP 创建/更新 redi_admin 库账号（配合 skip-name-resolve）。
+# 为单个节点公网 IP 创建/更新 redi_node 库账号（只读视图 + skip_num 计数，不能 SELECT 整表）。
 # 用法: sudo MYSQL_ROOT_PASSWORD='root密码' ./grant-node-mysql.sh <节点公网IP> <redi_admin密码>
 # CentOS 7 请先用 deploy-master.sh 安装 MariaDB 10.6。5.5 没有 CREATE USER IF NOT EXISTS，也吃不下这份 utf8mb4 库。
 set -euo pipefail
@@ -12,7 +12,7 @@ NODE_IP="${1:-}"
 DB_PASS="${2:-}"
 
 if [[ -z "$NODE_IP" || -z "$DB_PASS" ]]; then
-  echo "用法: MYSQL_ROOT_PASSWORD='...' $0 <节点公网IP> <redi_admin同一密码>" >&2
+  echo "用法: MYSQL_ROOT_PASSWORD='...' $0 <节点公网IP> <与主控相同的 DB 密码>" >&2
   exit 1
 fi
 
@@ -31,10 +31,11 @@ sql_pass=${DB_PASS//\'/\'\'}
 sqlfile=$(mktemp)
 trap 'rm -f "$sqlfile"' EXIT
 {
-  printf "CREATE USER IF NOT EXISTS 'redi_admin'@'%s' IDENTIFIED BY '%s';\n" "$NODE_IP" "$sql_pass"
-  printf "ALTER USER 'redi_admin'@'%s' IDENTIFIED BY '%s';\n" "$NODE_IP" "$sql_pass"
-  printf "GRANT SELECT ON \`redi_admin\`.\`redi_admin_domain\` TO 'redi_admin'@'%s';\n" "$NODE_IP"
-  printf "GRANT UPDATE (skip_num) ON \`redi_admin\`.\`redi_admin_domain\` TO 'redi_admin'@'%s';\n" "$NODE_IP"
+  printf "CREATE USER IF NOT EXISTS 'redi_node'@'%s' IDENTIFIED BY '%s';\n" "$NODE_IP" "$sql_pass"
+  printf "ALTER USER 'redi_node'@'%s' IDENTIFIED BY '%s';\n" "$NODE_IP" "$sql_pass"
+  printf "GRANT SELECT ON \`redi_admin\`.\`redi_node_domain_lookup\` TO 'redi_node'@'%s';\n" "$NODE_IP"
+  printf "GRANT UPDATE (skip_num) ON \`redi_admin\`.\`redi_admin_domain\` TO 'redi_node'@'%s';\n" "$NODE_IP"
+  printf "DROP USER IF EXISTS 'redi_admin'@'%s';\n" "$NODE_IP"
   printf "FLUSH PRIVILEGES;\n"
 } > "$sqlfile"
 
@@ -43,11 +44,13 @@ mysql_run() {
     && mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SELECT 1" </dev/null >/dev/null 2>&1; then
     mysql --defaults-extra-file=/root/.redi-mysql.cnf "$@"
   else
-    mysql -u root -p"${ROOT_PASS}" "$@"
+    cnf=$(mktemp)
+    chmod 600 "$cnf"
+    printf '[client]\nuser=root\npassword=%s\n' "$ROOT_PASS" > "$cnf"
+    mysql --defaults-extra-file="$cnf" "$@"
+    rm -f "$cnf"
   fi
 }
 
-# 收紧旧版「整库 DML」授权；全新用户尚无库级权限时 REVOKE 可能报错，忽略即可。
-mysql_run -e "REVOKE ALL PRIVILEGES, GRANT OPTION ON \`redi_admin\`.* FROM 'redi_admin'@'${NODE_IP}';" 2>/dev/null || true
 mysql_run < "$sqlfile"
-echo "已为节点 ${NODE_IP} 授权 redi_admin@'${NODE_IP}'"
+echo "已授权 redi_node@'${NODE_IP}'（视图只读 + skip_num 更新）"

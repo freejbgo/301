@@ -27,8 +27,16 @@ class NodeAgentController extends Controller
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
+        $version = $this->sanitizeAgentVersion($request->input('version'));
+        $min = trim((string) env('REDI_MIN_AGENT_VERSION', '0.1.0'));
+        if ($version !== null && $min !== '' && version_compare($version, $min, '<')) {
+            return response()->json([
+                'message' => '节点 Agent 版本过低，请升级 redi-multi 后重试',
+                'min_version' => $min,
+            ], 426);
+        }
         $node->last_heartbeat_at = now();
-        $node->agent_version = $this->sanitizeAgentVersion($request->input('version'));
+        $node->agent_version = $version;
         $node->save();
 
         return response()->json(['ok' => true, 'node_id' => $node->id]);
@@ -111,6 +119,9 @@ class NodeAgentController extends Controller
             $pem = $cert->getCertificatePem();
             $key = $cert->getPrivateKeyPem();
             if (! $pem || ! $key) {
+                if ($cert->certificate || $cert->private_key) {
+                    $cert->flagCredentialUnreadableIfNeeded();
+                }
                 continue;
             }
             $payload[] = [
@@ -161,11 +172,10 @@ class NodeAgentController extends Controller
     {
         $rows = DB::table('redi_admin_domain')
             ->where('status', 1)
-            ->get(['original_url', 'skip_url', 'force_https'])
+            ->get(['original_url', 'force_https'])
             ->map(function ($row) {
                 return [
                     'original_url' => $row->original_url,
-                    'skip_url' => (string) ($row->skip_url ?? ''),
                     'force_https' => (bool) $row->force_https,
                 ];
             })

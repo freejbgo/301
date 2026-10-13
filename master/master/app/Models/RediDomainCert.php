@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
 
 class RediDomainCert extends Model
 {
@@ -75,6 +76,21 @@ class RediDomainCert extends Model
         }
 
         return false;
+    }
+
+    /** 解密失败时写入 last_error 并记日志（供节点拉取证书路径调用）。 */
+    public function flagCredentialUnreadableIfNeeded(): void
+    {
+        if (! $this->storedCredentialsUnreadable()) {
+            return;
+        }
+        $msg = '证书或私钥无法解密（APP_KEY 变更或数据损坏），请重新申请证书';
+        if ($this->last_error === $msg) {
+            return;
+        }
+        $this->last_error = $msg;
+        $this->saveQuietly();
+        Log::warning('redi_domain_cert credential decrypt failed', ['cert_id' => $this->id]);
     }
 
     public function setPrivateKeyPem(string $pem): void

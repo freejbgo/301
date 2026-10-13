@@ -403,5 +403,5 @@ firewall-cmd --reload
 echo
 echo "主控已安装到 ${APP}"
 echo "后台: ${MASTER_URL}/admin"
-echo "初始账号 admin / Redi301@Install2026 ，登录后马上修改。"
+echo "初始后台账号见 DEPLOY.md（导入 SQL 后的默认 admin 密码），登录后请立即修改。"
 echo "建好节点并复制 Token 后，再到节点机器执行 deploy-node.sh。"
