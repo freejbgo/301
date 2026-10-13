@@ -65,26 +65,28 @@ func Init() error {
 	return nil
 }
 
-// DB 返回共享连接池；连接失效时会尝试重连一次。
+// DB 返回共享连接池（热路径不 Ping；失败时请调 Reconnect）。
 func DB() *sqlx.DB {
 	mu.Lock()
 	defer mu.Unlock()
+	return db
+}
+
+// Reconnect 在查询失败时尝试重建连接池。
+func Reconnect() error {
+	mu.Lock()
+	defer mu.Unlock()
 	if db != nil {
-		pingErr := db.Ping()
-		if pingErr == nil {
-			return db
-		}
-		logrus.Warnf("[mysql] ping failed, reconnecting: %v", pingErr)
 		_ = db.Close()
 		db = nil
 	}
 	conn, err := openPool()
 	if err != nil {
-		logrus.Errorf("[mysql] %v", err)
-		return nil
+		logrus.Errorf("[mysql] reconnect failed: %v", err)
+		return err
 	}
 	db = conn
-	return db
+	return nil
 }
 
 // ConnectMysql 兼容旧调用，等价于 DB()。

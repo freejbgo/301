@@ -9,7 +9,7 @@ class DomainRecordNormalizer
         $url = trim((string) $url);
         $url = preg_replace('#^https?://#i', '', $url);
 
-        return rtrim($url, '/');
+        return strtolower(rtrim($url, '/'));
     }
 
     public static function normalizeSkipUrl(?string $url): string

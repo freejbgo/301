@@ -9,7 +9,7 @@ class DomainRecordNormalizerTest extends TestCase
 {
     public function test_normalize_original_url_strips_scheme(): void
     {
-        $this->assertSame('foo.com', DomainRecordNormalizer::normalizeOriginalUrl('https://foo.com/'));
+        $this->assertSame('foo.com', DomainRecordNormalizer::normalizeOriginalUrl('https://Foo.com/'));
     }
 
     public function test_rejects_non_http_redirect(): void

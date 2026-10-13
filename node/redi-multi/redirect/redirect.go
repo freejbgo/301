@@ -3,6 +3,7 @@ package redirect
 import (
 	"fmt"
 	"net"
+	"time"
 	"redi-multi/acme"
 	"redi-multi/api"
 	"redi-multi/certs"
@@ -48,6 +49,7 @@ func Process(conn net.Conn, tls bool) {
 	}
 	defer releaseConnection()
 	defer conn.Close()
+	_ = conn.SetReadDeadline(time.Now().Add(15 * time.Second))
 	req, err := readRequest(conn)
 	if err != nil {
 		logrus.Debugf("[redirect] read request: %v", err)
@@ -57,9 +59,12 @@ func Process(conn net.Conn, tls bool) {
 	if host == "" {
 		return
 	}
-	path := sanitizeRequestPath(req.Path)
-	if idx := strings.Index(path, "?"); idx >= 0 {
-		path = path[:idx]
+	rawURI := req.Path
+	path := sanitizeRequestPath(rawURI)
+	query := ""
+	if idx := strings.Index(rawURI, "?"); idx >= 0 {
+		path = sanitizeRequestPath(rawURI[:idx])
+		query = sanitizeRawQuery(rawURI[idx:])
 	}
 
 	if body, ok := acme.ResponseForPath(host, path); ok {
@@ -76,7 +81,7 @@ func Process(conn net.Conn, tls bool) {
 		scheme = "https"
 	}
 	if !tls && (certs.ForceHTTPS(host) || rules.ForceHTTPS(host)) {
-		location := sanitizeLocationURL("https://" + host + path)
+		location := sanitizeLocationURL("https://" + host + path + query)
 		writeRedirect(conn, 301, location)
 		return
 	}

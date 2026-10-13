@@ -9,6 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if ($this->indexExists('redi_admin_domain', 'uniq_original_url_global')) {
+            return;
+        }
+
         $dupes = DB::table('redi_admin_domain')
             ->select('original_url', DB::raw('COUNT(*) as c'))
             ->groupBy('original_url')
@@ -23,16 +27,34 @@ return new class extends Migration
         }
 
         Schema::table('redi_admin_domain', function (Blueprint $table) {
-            $table->dropUnique('uniq_admin_original_url');
+            if ($this->indexExists('redi_admin_domain', 'uniq_admin_original_url')) {
+                $table->dropUnique('uniq_admin_original_url');
+            }
             $table->unique('original_url', 'uniq_original_url_global');
         });
     }
 
     public function down(): void
     {
+        if (! $this->indexExists('redi_admin_domain', 'uniq_original_url_global')) {
+            return;
+        }
+
         Schema::table('redi_admin_domain', function (Blueprint $table) {
             $table->dropUnique('uniq_original_url_global');
-            $table->unique(['admin_id', 'original_url'], 'uniq_admin_original_url');
+            if (! $this->indexExists('redi_admin_domain', 'uniq_admin_original_url')) {
+                $table->unique(['admin_id', 'original_url'], 'uniq_admin_original_url');
+            }
         });
+    }
+
+    protected function indexExists(string $table, string $indexName): bool
+    {
+        $rows = DB::select(
+            'SHOW INDEX FROM `'.$table.'` WHERE Key_name = ?',
+            [$indexName]
+        );
+
+        return count($rows) > 0;
     }
 };

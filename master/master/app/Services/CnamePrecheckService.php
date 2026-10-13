@@ -17,7 +17,7 @@ class CnamePrecheckService
     }
 
     /**
-     * 检查客户域名是否 CNAME 到租户 edge，或解析结果与 pool 节点 A 一致。
+     * 检查客户域名是否 CNAME（含链式）到租户 edge 或 pool 主机名。
      */
     public static function pointsToEdge(string $customerDomain, string $edgeFqdn): bool
     {
@@ -45,14 +45,6 @@ class CnamePrecheckService
                 if (self::cnameChainReaches($target, $allowedTargets, 4)) {
                     return true;
                 }
-            }
-        }
-
-        $poolIps = self::resolveA($poolFqdn);
-        if ($poolIps !== []) {
-            $customerIps = self::resolveA($customerDomain);
-            if ($customerIps !== [] && count(array_intersect($customerIps, $poolIps)) > 0) {
-                return true;
             }
         }
 

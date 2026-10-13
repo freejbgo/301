@@ -44,6 +44,8 @@ class DomainBatchCreator
             return $result;
         }
 
+        TenantEdgeService::ensureForAdmin($adminId);
+
         $dataLineCount = $this->countDataLines($lines);
         if ($dataLineCount === 0) {
             $result['errors'][] = '请至少填写一行域名';

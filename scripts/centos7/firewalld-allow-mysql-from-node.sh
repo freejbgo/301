@@ -3,11 +3,19 @@
 # 用法: sudo ./firewalld-allow-mysql-from-node.sh <节点公网IP>
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+source "${SCRIPT_DIR}/lib.sh"
+
 NODE_IP="${1:-}"
 if [[ -z "$NODE_IP" ]]; then
   echo "用法: $0 <节点公网IP>" >&2
   exit 1
 fi
+redi_is_ipv4 "$NODE_IP" || {
+  echo "节点 IP 必须是 IPv4: $NODE_IP" >&2
+  exit 1
+}
 
 if [[ "$(id -u)" -ne 0 ]]; then
   echo "请用 root 执行" >&2

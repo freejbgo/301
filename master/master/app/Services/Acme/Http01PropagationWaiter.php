@@ -10,7 +10,7 @@ use RuntimeException;
 class Http01PropagationWaiter
 {
     /**
-     * 等待全部启用节点上报已同步挑战，且公网域名可返回 HTTP-01 响应。
+     * 等待在线启用节点上报已同步挑战，且公网域名可返回 HTTP-01 响应。
      */
     public function wait(string $domain, string $token, string $expectedBody, int $maxSeconds = 120): void
     {
@@ -38,13 +38,15 @@ class Http01PropagationWaiter
         }
 
         throw new RuntimeException(
-            'HTTP-01 未在 '.$maxSeconds.' 秒内就绪：请确认节点 Agent 已连上主控、CNAME 已生效，且公网 80 端口可访问 '.$publicUrl
+            'HTTP-01 未在 '.$maxSeconds.' 秒内就绪：请确认 15 分钟内有心跳的在线节点已同步挑战、CNAME 已生效，且公网 80 可访问 '.$publicUrl
         );
     }
 
     protected function allNodesSynced(string $domain): bool
     {
-        $ids = RediNode::enabled()->pluck('id');
+        $ids = RediNode::enabled()
+            ->where('last_heartbeat_at', '>=', now()->subMinutes(15))
+            ->pluck('id');
         if ($ids->isEmpty()) {
             return false;
         }

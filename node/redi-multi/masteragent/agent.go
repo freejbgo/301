@@ -59,7 +59,7 @@ func tick(client *http.Client, cfg config, registered *bool, revision *string) e
 	if err := getJSON(client, cfg, "/api/nodes/revision", &rev, registered); err != nil {
 		return err
 	}
-	if rev.Revision == "" || rev.Revision != *revision {
+	if rev.Revision != "" && rev.Revision != *revision {
 		if err := pullChallenges(client, cfg, registered); err != nil {
 			return err
 		}
