@@ -6,7 +6,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 C7=redi-c7-smoke
-IMAGE=quay.io/centos/centos:7
+# 与生产常用的 CentOS 7.9 对齐（7.9.2009 为 7 系列最终小版本）
+IMAGE=quay.io/centos/centos:7.9.2009
 
 if ! command -v podman >/dev/null; then
   echo "需要 podman。Ubuntu: sudo apt-get install -y podman"
@@ -16,7 +17,7 @@ fi
 podman stop -t 2 "$C7" 2>/dev/null || true
 podman rm -f "$C7" 2>/dev/null || true
 
-echo "启动 CentOS 7 容器（host 网络，privileged 便于 MariaDB 冒烟）..."
+echo "启动 CentOS 7.9 容器（${IMAGE}，host 网络，privileged 便于 MariaDB 冒烟）..."
 podman run -d --name "$C7" --hostname "$C7" --network host --privileged \
   -v "$ROOT:/workspace:rw" \
   "$IMAGE" tail -f /dev/null

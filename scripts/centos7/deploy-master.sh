@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CentOS 7.x 主控全自动部署。内核小版本不同不用重编：主控是 PHP，节点包是静态二进制。
+# CentOS 7.x（推荐 7.9）主控全自动部署。内核小版本不同不用重编：主控是 PHP，节点包是静态二进制。
 #
 # 在仓库里执行（不要把仓库克隆到 MASTER_INSTALL_ROOT，默认 /opt/301）：
 #   cp scripts/centos7/vars.example.env scripts/centos7/vars.env

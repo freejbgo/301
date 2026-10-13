@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CentOS 7.x 节点全自动部署。程序是静态二进制，内核不需要重编，也不编译内核模块。
+# CentOS 7.x（推荐 7.9）节点全自动部署。程序是静态二进制，内核不需要重编，也不编译内核模块。
 #
 # 主控上的 deploy-master.sh 已经把这台机器的公网 IP 写入 NODE_IPS 之后再执行。
 #   cp scripts/centos7/vars.example.env scripts/centos7/vars.env
