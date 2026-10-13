@@ -20,6 +20,9 @@ use App\Services\CnamePrecheckService;
 use App\Services\TenantEdgeService;
 use App\Admin\Actions\Grid\ApplyCertificate;
 use App\Admin\Actions\Grid\BatchApplyCertificate;
+use App\Jobs\IssueDomainCertificateJob;
+use App\Models\RediAcmeChallenge;
+use App\Models\RediAcmeChallengeNodeSync;
 use Illuminate\Validation\ValidationException;
 
 
@@ -266,7 +269,26 @@ JS
 
                 if ($form->isEditing()) {
                     $domain = \App\Models\RediAdminDomain::query()->find($form->getKey());
-                    if ($domain) {
+                    if (! $domain) {
+                        return;
+                    }
+
+                    if ($domain->wasChanged('original_url')) {
+                        $oldUrl = (string) $domain->getOriginal('original_url');
+                        $newUrl = $domain->original_url;
+                        if ($oldUrl !== '') {
+                            RediAcmeChallenge::query()->where('domain_name', $oldUrl)->delete();
+                            RediAcmeChallengeNodeSync::query()->where('domain_name', $oldUrl)->delete();
+                        }
+                        RediAcmeChallengeNodeSync::query()->where('domain_name', $newUrl)->delete();
+                        RediDomainCert::query()
+                            ->where('domain_id', $domain->id)
+                            ->update(['domain_name' => $newUrl]);
+                        if ((int) $domain->status === 1) {
+                            IssueDomainCertificateJob::dispatch((int) $domain->id)
+                                ->delay(now()->addSeconds(15));
+                        }
+                    } else {
                         RediDomainCert::query()
                             ->where('domain_id', $domain->id)
                             ->update(['domain_name' => $domain->original_url]);

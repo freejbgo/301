@@ -159,7 +159,11 @@ func apiJsSource(encodedDomain string) (string, int) {
 			encodedDomain: {"to": decodeTo.Encode(), "uid": "0"},
 		}
 	} else {
-		decodeTo := domain2.Decoded{Content: config.DefaultRedirectUrl}
+		fallback := config.DefaultRedirectUrl
+		if !isAllowedRedirectURL(fallback) {
+			return "// invalid default redirect", http.StatusInternalServerError
+		}
+		decodeTo := domain2.Decoded{Content: fallback}
 		body = map[string]map[string]string{
 			"default_redirect_url": {"to": decodeTo.Encode(), "uid": "0"},
 		}

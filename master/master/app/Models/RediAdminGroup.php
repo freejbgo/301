@@ -29,9 +29,7 @@ class RediAdminGroup extends Model
                 ->count();
 
             if ($count > 0) {
-                throw new \RuntimeException(
-                    "该分组下还有 {$count} 条域名，请先迁移或删除域名后再删分组。"
-                );
+                return false;
             }
         });
     }

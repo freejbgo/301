@@ -41,6 +41,7 @@ class IssueDomainCertificateJob implements ShouldQueue
 
     public function middleware(): array
     {
+        // WithoutOverlapping 使用 CACHE_DRIVER；多台 queue:work 时请用 redis 等共享缓存。
         return [
             (new WithoutOverlapping('redi-acme-le-global'))
                 ->releaseAfter(25)
@@ -60,6 +61,8 @@ class IssueDomainCertificateJob implements ShouldQueue
     {
         $domain = RediAdminDomain::query()->find($this->domainId);
         if (! $domain) {
+            RediDomainCert::query()->where('domain_id', $this->domainId)->delete();
+
             return;
         }
 

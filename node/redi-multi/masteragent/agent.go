@@ -104,7 +104,9 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 		}
 		domains = append(domains, c.DomainName)
 	}
-	acme.ReplaceAll(items)
+	if len(items) > 0 {
+		acme.ReplaceAll(items)
+	}
 	if len(domains) > 0 {
 		if err := postJSON(client, cfg, "/api/nodes/challenges-synced", map[string]interface{}{
 			"domains": domains,
@@ -175,7 +177,11 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 	if len(list) == 0 {
 		return fmt.Errorf("all certificates failed PEM validation; keeping previous in-memory certs")
 	}
-	certs.ReplaceAll(list)
+	if failed {
+		certs.UpsertMany(list)
+	} else {
+		certs.ReplaceAll(list)
+	}
 	for _, entry := range list {
 		if ackErr := postJSON(client, cfg, "/api/nodes/ack", map[string]interface{}{
 			"cert_id": entry.CertID,

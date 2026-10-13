@@ -25,15 +25,26 @@ func ReplaceAll(list []Entry) {
 	mu.Lock()
 	entries = map[string]Entry{}
 	byID = map[int]Entry{}
+	upsertIntoMaps(entries, byID, list)
+	mu.Unlock()
+}
+
+// UpsertMany 合并成功安装的证书，不移除未出现在 list 中的既有条目（用于部分 PEM 校验失败时）。
+func UpsertMany(list []Entry) {
+	mu.Lock()
+	upsertIntoMaps(entries, byID, list)
+	mu.Unlock()
+}
+
+func upsertIntoMaps(hostMap map[string]Entry, idMap map[int]Entry, list []Entry) {
 	for _, e := range list {
 		d := strings.ToLower(strings.TrimSpace(e.Domain))
 		if d == "" {
 			continue
 		}
-		entries[d] = e
-		byID[e.CertID] = e
+		hostMap[d] = e
+		idMap[e.CertID] = e
 	}
-	mu.Unlock()
 }
 
 func ForceHTTPS(host string) bool {
