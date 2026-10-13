@@ -22,7 +22,14 @@ printf "DROP USER IF EXISTS 'redi_admin'@'%s';\nFLUSH PRIVILEGES;\n" "$NODE_IP" 
 if [[ -f /root/.redi-mysql.cnf ]] \
   && mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SELECT 1" </dev/null >/dev/null 2>&1; then
   mysql --defaults-extra-file=/root/.redi-mysql.cnf < "$sqlfile"
+elif [[ -n "${ROOT_PASS}" ]]; then
+  cnf=$(mktemp)
+  chmod 600 "$cnf"
+  printf '[client]\nuser=root\npassword=%s\n' "$ROOT_PASS" > "$cnf"
+  mysql --defaults-extra-file="$cnf" < "$sqlfile"
+  rm -f "$cnf"
 else
-  mysql -u root -p"${ROOT_PASS}" < "$sqlfile"
+  echo "请设置 MYSQL_ROOT_PASSWORD 或配置 /root/.redi-mysql.cnf" >&2
+  exit 1
 fi
 echo "已撤销 redi_admin@'${NODE_IP}'"
