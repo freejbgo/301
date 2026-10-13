@@ -11,9 +11,9 @@ class AuthenticateRediNodeTest extends TestCase
         $this->getJson('/api/nodes/revision')->assertStatus(401);
     }
 
-    public function test_node_api_returns_401_with_invalid_bearer_token(): void
+    public function test_node_api_returns_401_with_malformed_bearer_token(): void
     {
-        $this->withToken('0.invalid')
+        $this->withToken('not-a-node-token')
             ->getJson('/api/nodes/revision')
             ->assertStatus(401);
     }
