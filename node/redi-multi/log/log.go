@@ -9,7 +9,7 @@ func Init() {
 	if config.Debug {
 		logrus.SetLevel(logrus.DebugLevel)
 	} else {
-		logrus.SetLevel(logrus.FatalLevel)
+		logrus.SetLevel(logrus.WarnLevel)
 	}
 	logrus.SetFormatter(&logrus.TextFormatter{})
 }

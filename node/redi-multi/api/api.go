@@ -191,7 +191,15 @@ func GetSkipUrl(Db *sqlx.DB, Url string) string {
 	var domainData domainInfo
 	err := Db.Get(&domainData, "select skip_url from redi_admin_domain where original_url = ? and status = 1 limit 1", Url)
 	if err != nil {
-		return ""
+		if mysqlconnect.Reconnect() == nil {
+			if fresh := mysqlconnect.DB(); fresh != nil {
+				Db = fresh
+				err = Db.Get(&domainData, "select skip_url from redi_admin_domain where original_url = ? and status = 1 limit 1", Url)
+			}
+		}
+		if err != nil {
+			return ""
+		}
 	}
 	_, execErr := Db.Exec("update redi_admin_domain set skip_num=skip_num+1 where original_url = ? and status = 1 limit 1", Url)
 	if execErr != nil {

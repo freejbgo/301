@@ -45,3 +45,14 @@ func sanitizeLocationURL(location string) string {
 	}
 	return location
 }
+
+func sanitizeRawQuery(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" || !strings.HasPrefix(raw, "?") {
+		return ""
+	}
+	if strings.ContainsAny(raw, "\r\n\x00") {
+		return ""
+	}
+	return raw
+}

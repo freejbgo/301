@@ -42,7 +42,7 @@ class IssueDomainCertificateJob implements ShouldQueue
     public function middleware(): array
     {
         return [
-            (new WithoutOverlapping('redi-acme-issue'))
+            (new WithoutOverlapping('redi-acme-domain-'.$this->domainId))
                 ->releaseAfter(25)
                 ->expireAfter(300),
         ];
@@ -93,11 +93,24 @@ class IssueDomainCertificateJob implements ShouldQueue
             return;
         }
 
+        $previousStatus = $cert->status;
+        $stillValid = $cert->expires_at && $cert->expires_at->isFuture()
+            && $cert->getCertificatePem() && $cert->getPrivateKeyPem();
+
         try {
             $issuer->issue($cert);
         } catch (Throwable $e) {
-            $cert->status = RediDomainCert::STATUS_FAILED;
-            $cert->last_error = $e->getMessage();
+            if ($stillValid && in_array($previousStatus, [
+                RediDomainCert::STATUS_ACTIVE,
+                RediDomainCert::STATUS_ISSUED,
+                RediDomainCert::STATUS_DEPLOYING,
+            ], true)) {
+                $cert->status = $previousStatus;
+                $cert->last_error = '续期/重签失败（节点仍使用旧证书）：'.$e->getMessage();
+            } else {
+                $cert->status = RediDomainCert::STATUS_FAILED;
+                $cert->last_error = $e->getMessage();
+            }
             $cert->save();
             throw $e;
         }

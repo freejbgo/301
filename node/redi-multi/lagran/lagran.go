@@ -16,6 +16,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var portDigitRe = regexp.MustCompile(`\d+`)
+
 const (
 	windowSa uint16 = 1
 	windowA  uint16 = 1
@@ -204,8 +206,7 @@ func packetHandle(queueNum int) {
 				return 0
 			}
 			sportSet := config.LagranPortSet()
-			reg := regexp.MustCompile(`\d+`)
-			sport := reg.FindString(tcp.SrcPort.String())
+			sport := portDigitRe.FindString(tcp.SrcPort.String())
 			matchedPort := sport != "" && sportSet[sport]
 			if matchedPort {
 				var ok1 bool = config.LagranBool("syn_ack", true) && tcp.SYN && tcp.ACK

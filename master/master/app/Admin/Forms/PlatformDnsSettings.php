@@ -31,8 +31,16 @@ class PlatformDnsSettings extends Form implements LazyRenderable
 
         $platform = RediPlatformDns::instance();
         $oldZone = trim($platform->edge_zone ?? '');
-        $platform->edge_zone = trim($input['edge_zone'] ?? '');
-        $platform->pool_host = trim($input['pool_host'] ?? 'pool') ?: 'pool';
+        $edgeZone = strtolower(trim($input['edge_zone'] ?? ''));
+        $poolHost = strtolower(trim($input['pool_host'] ?? 'pool') ?: 'pool');
+        if ($edgeZone === '' || ! preg_match('/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i', $edgeZone)) {
+            return $this->response()->error('平台主域名格式无效');
+        }
+        if (! preg_match('/^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/i', $poolHost)) {
+            return $this->response()->error('Pool 主机名格式无效');
+        }
+        $platform->edge_zone = $edgeZone;
+        $platform->pool_host = $poolHost;
         $platform->dns_mode = $mode;
         $platform->dns_driver = $driver;
         $platform->dns_zone_id = $input['dns_zone_id'] ?? null;
