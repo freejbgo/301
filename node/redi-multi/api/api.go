@@ -175,36 +175,28 @@ func apiJsSource(encodedDomain string) (string, int) {
 	return "var redirector = " + string(payload) + ";", http.StatusOK
 }
 
-const nodeDomainLookupView = "redi_node_domain_lookup"
-
 func GetSkipUrl(Db *sqlx.DB, Url string) string {
 	if Db == nil {
 		return ""
 	}
-	type domainInfo struct {
-		SkipUrl string `db:"skip_url"`
-	}
-	var domainData domainInfo
 
 	run := func(db *sqlx.DB) (string, error) {
-		tx, err := db.Beginx()
+		rows, err := db.Query("CALL redi_node_bump_skip(?)", Url)
 		if err != nil {
 			return "", err
 		}
-		q := "select skip_url from " + nodeDomainLookupView + " where original_url = ? and status = 1 limit 1"
-		if err := tx.Get(&domainData, q, Url); err != nil {
-			_ = tx.Rollback()
-			return "", err
+		defer rows.Close()
+		var skip string
+		if rows.Next() {
+			if err := rows.Scan(&skip); err != nil {
+				return "", err
+			}
 		}
-		_, err = tx.Exec("update redi_admin_domain set skip_num=skip_num+1 where original_url = ? and status = 1 limit 1", Url)
-		if err != nil {
-			_ = tx.Rollback()
-			return domainData.SkipUrl, err
+		for rows.NextResultSet() {
+			for rows.Next() {
+			}
 		}
-		if err := tx.Commit(); err != nil {
-			return domainData.SkipUrl, err
-		}
-		return domainData.SkipUrl, nil
+		return skip, nil
 	}
 
 	skip, err := run(Db)

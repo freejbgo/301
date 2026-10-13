@@ -32,7 +32,12 @@ class AuthenticateRediNode
             return null;
         }
 
-        $candidate = RediNode::enabled()->find((int) $m[1]);
+        $nodeId = (int) $m[1];
+        if ($nodeId < 1) {
+            return null;
+        }
+
+        $candidate = RediNode::enabled()->find($nodeId);
         if ($candidate && $candidate->verifyApiToken($token)) {
             return $candidate;
         }

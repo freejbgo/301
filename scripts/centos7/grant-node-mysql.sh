@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 为单个节点公网 IP 创建/更新 redi_node 库账号（只读视图 + skip_num 计数，不能 SELECT 整表）。
+# 为单个节点公网 IP 创建/更新 redi_node 库账号（仅可执行 redi_node_bump_skip，不能 SELECT 全表/视图）。
 # 用法: sudo MYSQL_ROOT_PASSWORD='root密码' ./grant-node-mysql.sh <节点公网IP> <redi_admin密码>
 # CentOS 7 请先用 deploy-master.sh 安装 MariaDB 10.6。5.5 没有 CREATE USER IF NOT EXISTS，也吃不下这份 utf8mb4 库。
 set -euo pipefail
@@ -33,8 +33,8 @@ trap 'rm -f "$sqlfile"' EXIT
 {
   printf "CREATE USER IF NOT EXISTS 'redi_node'@'%s' IDENTIFIED BY '%s';\n" "$NODE_IP" "$sql_pass"
   printf "ALTER USER 'redi_node'@'%s' IDENTIFIED BY '%s';\n" "$NODE_IP" "$sql_pass"
-  printf "GRANT SELECT ON \`redi_admin\`.\`redi_node_domain_lookup\` TO 'redi_node'@'%s';\n" "$NODE_IP"
-  printf "GRANT UPDATE (skip_num) ON \`redi_admin\`.\`redi_admin_domain\` TO 'redi_node'@'%s';\n" "$NODE_IP"
+  printf "REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'redi_node'@'%s';\n" "$NODE_IP"
+  printf "GRANT EXECUTE ON PROCEDURE \`redi_admin\`.\`redi_node_bump_skip\` TO 'redi_node'@'%s';\n" "$NODE_IP"
   printf "DROP USER IF EXISTS 'redi_admin'@'%s';\n" "$NODE_IP"
   printf "FLUSH PRIVILEGES;\n"
 } > "$sqlfile"
@@ -53,4 +53,4 @@ mysql_run() {
 }
 
 mysql_run < "$sqlfile"
-echo "已授权 redi_node@'${NODE_IP}'（视图只读 + skip_num 更新）"
+echo "已授权 redi_node@'${NODE_IP}'（仅 EXECUTE redi_node_bump_skip）"
