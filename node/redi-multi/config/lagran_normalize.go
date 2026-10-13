@@ -14,7 +14,7 @@ func normalizeLagranMap() {
 	if v, ok := Lagran["port"]; ok && v != nil {
 		Lagran["port"] = scalarToPortString(v)
 	}
-	for _, key := range []string{"syn_ack", "ack", "psh_ack", "fin_ack"} {
+	for _, key := range []string{"enabled", "syn_ack", "ack", "psh_ack", "fin_ack"} {
 		if v, ok := Lagran[key]; ok && v != nil {
 			Lagran[key] = scalarToBool(v, true)
 		}

@@ -27,7 +27,10 @@ func main() {
 	if err := mysqlconnect.Init(); err != nil {
 		logrus.Warnf("[mysql] init failed (redirect /api.js may not work until DB is reachable): %v", err)
 	}
-	lagran.Run()
+	lagranWasEnabled := lagran.Enabled()
+	if lagranWasEnabled {
+		lagran.Run()
+	}
 	masteragent.Run()
 	go api.Start()
 	go http.Start()
@@ -38,7 +41,9 @@ func main() {
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-sigs
-		lagran.UnsetIptable(config.LagranSport())
+		if lagranWasEnabled {
+			lagran.UnsetIptable(config.LagranSport())
+		}
 		logrus.Debug("Unset iptables...")
 		done <- true
 	}()

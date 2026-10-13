@@ -16,4 +16,9 @@ class DomainRecordNormalizerTest extends TestCase
     {
         $this->assertFalse(DomainRecordNormalizer::isAllowedRedirectUrl('javascript:alert(1)'));
     }
+
+    public function test_rejects_userinfo_in_redirect_url(): void
+    {
+        $this->assertFalse(DomainRecordNormalizer::isAllowedRedirectUrl('https://evil@trusted.example/'));
+    }
 }

@@ -14,12 +14,20 @@ use Illuminate\Support\Facades\DB;
 
 class NodeAgentController extends Controller
 {
+    protected function sanitizeAgentVersion($value): ?string
+    {
+        $version = preg_replace('/[^\w.\-]/', '', (string) $value);
+        $version = substr($version, 0, 64);
+
+        return $version === '' ? null : $version;
+    }
+
     public function register(Request $request)
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
         $node->last_heartbeat_at = now();
-        $node->agent_version = $request->input('version');
+        $node->agent_version = $this->sanitizeAgentVersion($request->input('version'));
         $node->save();
 
         return response()->json(['ok' => true, 'node_id' => $node->id]);
@@ -87,7 +95,7 @@ class NodeAgentController extends Controller
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
         $node->last_heartbeat_at = now();
-        $node->agent_version = $request->input('version');
+        $node->agent_version = $this->sanitizeAgentVersion($request->input('version'));
         $node->save();
 
         return response()->json(['ok' => true]);
@@ -111,6 +119,9 @@ class NodeAgentController extends Controller
                 RediDomainCert::STATUS_DEPLOYING,
                 RediDomainCert::STATUS_ACTIVE,
             ])
+            ->whereHas('domain', function ($query) {
+                $query->where('status', 1);
+            })
             ->get();
 
         $payload = [];

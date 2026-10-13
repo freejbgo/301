@@ -36,6 +36,10 @@ class DomainRecordNormalizer
             return false;
         }
 
+        if (parse_url($url, PHP_URL_USER) !== null || parse_url($url, PHP_URL_PASS) !== null) {
+            return false;
+        }
+
         $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
 
         return in_array($scheme, ['http', 'https'], true);

@@ -85,6 +85,7 @@ func Process(conn net.Conn, tls bool) {
 	length := fmt.Sprintf("%v", len(content))
 	if _, err = conn.Write([]byte("HTTP/1.1 200\r\n" +
 		"Content-Type: text/html\r\n" +
+		"X-Content-Type-Options: nosniff\r\n" +
 		"Cache-Control: no-store\r\n" +
 		"Content-Length: " + length + "\r\n" +
 		"Connection: close\r\n\r\n" + content)); err != nil {

@@ -24,13 +24,21 @@ const (
 )
 
 func Run() {
+	if !Enabled() {
+		logrus.Warn("[lagran] disabled (REDI_LAGRAN_DISABLED or lagran.enabled=false)")
+		return
+	}
 	setIptable(config.LagranSport())
 	var wg sync.WaitGroup
 	if config.LagranBool("syn_ack", true) {
-		p1, _ := ants.NewPoolWithFunc(128, func(i interface{}) {
+		p1, err := ants.NewPoolWithFunc(128, func(i interface{}) {
 			packetHandle(i.(int))
 			wg.Done()
 		})
+		if err != nil {
+			logrus.Errorf("[lagran] syn_ack pool: %v", err)
+			return
+		}
 		defer p1.Release()
 		logrus.Debugln("[lagran] Starting Task p1")
 		for i := 1000; i < 1128; i++ {
@@ -39,10 +47,14 @@ func Run() {
 		}
 	}
 	if config.LagranBool("ack", true) {
-		p2, _ := ants.NewPoolWithFunc(128, func(i interface{}) {
+		p2, err := ants.NewPoolWithFunc(128, func(i interface{}) {
 			packetHandle(i.(int))
 			wg.Done()
 		})
+		if err != nil {
+			logrus.Errorf("[lagran] ack pool: %v", err)
+			return
+		}
 		defer p2.Release()
 		logrus.Debugln("[lagran] Starting Task p2")
 		for i := 2000; i < 2128; i++ {
@@ -51,10 +63,14 @@ func Run() {
 		}
 	}
 	if config.LagranBool("psh_ack", true) {
-		p3, _ := ants.NewPoolWithFunc(128, func(i interface{}) {
+		p3, err := ants.NewPoolWithFunc(128, func(i interface{}) {
 			packetHandle(i.(int))
 			wg.Done()
 		})
+		if err != nil {
+			logrus.Errorf("[lagran] psh_ack pool: %v", err)
+			return
+		}
 		defer p3.Release()
 		logrus.Debugln("[lagran] Starting Task p3")
 		for i := 3000; i < 3128; i++ {
@@ -63,10 +79,14 @@ func Run() {
 		}
 	}
 	if config.LagranBool("fin_ack", true) {
-		p4, _ := ants.NewPoolWithFunc(128, func(i interface{}) {
+		p4, err := ants.NewPoolWithFunc(128, func(i interface{}) {
 			packetHandle(i.(int))
 			wg.Done()
 		})
+		if err != nil {
+			logrus.Errorf("[lagran] fin_ack pool: %v", err)
+			return
+		}
 		defer p4.Release()
 		logrus.Debugln("[lagran] Starting Task p4")
 		for i := 4000; i < 4128; i++ {
@@ -77,7 +97,7 @@ func Run() {
 }
 
 func setIptable(sport string) {
-	logrus.Errorf("[lagran] sport:%s\n", sport)
+	logrus.Debugf("[lagran] sport:%s", sport)
 	ipt, err := iptables.New()
 	if err != nil {
 		logrus.Errorf("[lagran] Iptabels new error:%v\n", err)
@@ -152,7 +172,8 @@ func packetHandle(queueNum int) {
 
 	nf, err := nfqueue.Open(&nfqconfig)
 	if err != nil {
-		logrus.Fatalf("[lagran] failed to open nfqueue socket, err:%v\n", err)
+		logrus.Errorf("[lagran] failed to open nfqueue socket queue=%d: %v", queueNum, err)
+		return
 	}
 
 	defer nf.Close()
@@ -177,7 +198,11 @@ func packetHandle(queueNum int) {
 			logrus.Debugf("[lagran] %15s > %-15s \n", srcIP, dstIP)
 		}
 		if tcpLayer := packet.Layer(layers.LayerTypeTCP); tcpLayer != nil {
-			tcp, _ := tcpLayer.(*layers.TCP)
+			tcp, ok := tcpLayer.(*layers.TCP)
+			if !ok || tcp == nil {
+				_ = nf.SetVerdict(id, nfqueue.NfAccept)
+				return 0
+			}
 			sportSet := config.LagranPortSet()
 			reg := regexp.MustCompile(`\d+`)
 			sport := reg.FindString(tcp.SrcPort.String())
@@ -205,8 +230,8 @@ func packetHandle(queueNum int) {
 						windowSize = windowFa
 						logrus.Debugln("[lagran] Handle FIN=1 and ACK=1")
 					}
-					packet.TransportLayer().(*layers.TCP).Window = windowSize
-					err := packet.TransportLayer().(*layers.TCP).SetNetworkLayerForChecksum(packet.NetworkLayer())
+					tcp.Window = windowSize
+					err := tcp.SetNetworkLayerForChecksum(packet.NetworkLayer())
 					if err != nil {
 						logrus.Errorf("[lagran] failed to SetNetworkLayerForChecksum, err: %v\n", err)
 					}
