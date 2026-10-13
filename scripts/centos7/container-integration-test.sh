@@ -112,7 +112,11 @@ php artisan key:generate --force
 php artisan migrate --force
 php artisan config:clear
 php artisan storage:link
-php artisan route:list --path=api/nodes | grep -q nodes/register
+routes=$(php artisan route:list --path=api/nodes 2>/dev/null) || exit 1
+case "$routes" in
+  *nodes/register*) ;;
+  *) echo "缺少 api/nodes/register 路由"; exit 1 ;;
+esac
 
 echo "[6] 节点包解压"
 NODE_ROOT=/opt/redi-multi-smoke

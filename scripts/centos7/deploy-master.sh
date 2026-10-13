@@ -73,6 +73,7 @@ if [[ "$ADMIN_HTTPS" == "true" && "$MASTER_URL" != https://* ]]; then
   die "ADMIN_HTTPS=true 时 MASTER_URL 要用 https://"
 fi
 for ip in $NODE_IPS; do
+  [[ -z "$ip" ]] && continue
   is_ipv4 "$ip" || die "NODE_IPS 里有非法 IPv4: $ip"
 done
 [[ -f "$TAR" ]] || die "找不到主控发布包: $TAR"
@@ -203,6 +204,7 @@ fi
 if [[ -n "$NODE_IPS" ]]; then
   export MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASS"
   for ip in $NODE_IPS; do
+    [[ -z "$ip" ]] && continue
     bash "${SCRIPT_DIR}/grant-node-mysql.sh" "$ip" "$DB_PASS"
     bash "${SCRIPT_DIR}/firewalld-allow-mysql-from-node.sh" "$ip"
   done
@@ -301,7 +303,11 @@ http {
 }
 EOF
 fi
-cat > /etc/nginx/conf.d/301-master.conf <<EOF
+NGINX_SITE=/etc/nginx/conf.d/301-master.conf
+if [[ -f "$NGINX_SITE" ]] && ! grep -q '301-master-managed' "$NGINX_SITE"; then
+  echo "保留已有 ${NGINX_SITE}（无 301-master-managed 标记，视为含手工 HTTPS 等配置）"
+else
+  cat > "$NGINX_SITE" <<EOF
 # 301-master-managed — 由 deploy-master.sh 维护站点根路径；HTTPS 请另建 conf 或改 server_name
 server {
     listen 80 default_server;
@@ -331,6 +337,7 @@ server {
     }
 }
 EOF
+fi
 if [[ -f /etc/nginx/conf.d/default.conf ]]; then
   mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.disabled.redi
 fi
