@@ -21,4 +21,11 @@ class DomainRecordNormalizerTest extends TestCase
     {
         $this->assertFalse(DomainRecordNormalizer::isAllowedRedirectUrl('https://evil@trusted.example/'));
     }
+
+    public function test_original_url_hash_is_stable(): void
+    {
+        $hash = DomainRecordNormalizer::originalUrlHash('https://Example.com/');
+        $this->assertSame(64, strlen($hash));
+        $this->assertSame($hash, DomainRecordNormalizer::originalUrlHash('example.com'));
+    }
 }

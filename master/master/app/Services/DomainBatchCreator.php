@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\RediAdminDomain;
 use App\Models\RediAdminGroup;
+use Illuminate\Database\QueryException;
 
 class DomainBatchCreator
 {
@@ -95,16 +96,24 @@ class DomainBatchCreator
                 continue;
             }
 
-            RediAdminDomain::create([
-                'group_id' => $groupId,
-                'original_url' => $originalUrl,
-                'skip_url' => $skipUrl,
-                'status' => $status,
-                'admin_id' => $adminId,
-                'admin_name' => $adminName,
-                'skip_num' => 0,
-            ]);
-            $result['imported']++;
+            try {
+                RediAdminDomain::create([
+                    'group_id' => $groupId,
+                    'original_url' => $originalUrl,
+                    'skip_url' => $skipUrl,
+                    'status' => $status,
+                    'admin_id' => $adminId,
+                    'admin_name' => $adminName,
+                    'skip_num' => 0,
+                ]);
+                $result['imported']++;
+            } catch (QueryException $e) {
+                if ($this->isDuplicateOriginalUrl($e)) {
+                    $result['skipped']++;
+                } else {
+                    $result['errors'][] = "第 {$rowIndex} 行（{$originalUrl}）：写入失败";
+                }
+            }
         }
 
         return $result;
@@ -122,5 +131,12 @@ class DomainBatchCreator
         }
 
         return $count;
+    }
+
+    protected function isDuplicateOriginalUrl(QueryException $e): bool
+    {
+        $code = (int) ($e->errorInfo[1] ?? 0);
+
+        return $code === 1062;
     }
 }

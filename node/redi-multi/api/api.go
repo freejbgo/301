@@ -175,26 +175,49 @@ func apiJsSource(encodedDomain string) (string, int) {
 	return "var redirector = " + string(payload) + ";", http.StatusOK
 }
 
+const nodeDomainLookupView = "redi_node_domain_lookup"
+
 func GetSkipUrl(Db *sqlx.DB, Url string) string {
+	if Db == nil {
+		return ""
+	}
 	type domainInfo struct {
 		SkipUrl string `db:"skip_url"`
 	}
 	var domainData domainInfo
-	err := Db.Get(&domainData, "select skip_url from redi_admin_domain where original_url = ? and status = 1 limit 1", Url)
-	if err != nil {
-		if mysqlconnect.Reconnect() == nil {
-			if fresh := mysqlconnect.DB(); fresh != nil {
-				Db = fresh
-				err = Db.Get(&domainData, "select skip_url from redi_admin_domain where original_url = ? and status = 1 limit 1", Url)
+
+	run := func(db *sqlx.DB) (string, error) {
+		tx, err := db.Beginx()
+		if err != nil {
+			return "", err
+		}
+		q := "select skip_url from " + nodeDomainLookupView + " where original_url = ? and status = 1 limit 1"
+		if err := tx.Get(&domainData, q, Url); err != nil {
+			_ = tx.Rollback()
+			return "", err
+		}
+		_, err = tx.Exec("update redi_admin_domain set skip_num=skip_num+1 where original_url = ? and status = 1 limit 1", Url)
+		if err != nil {
+			_ = tx.Rollback()
+			return domainData.SkipUrl, err
+		}
+		if err := tx.Commit(); err != nil {
+			return domainData.SkipUrl, err
+		}
+		return domainData.SkipUrl, nil
+	}
+
+	skip, err := run(Db)
+	if err == nil {
+		return skip
+	}
+	if mysqlconnect.Reconnect() == nil {
+		if fresh := mysqlconnect.DB(); fresh != nil {
+			skip, err = run(fresh)
+			if err == nil {
+				return skip
 			}
 		}
-		if err != nil {
-			return ""
-		}
 	}
-	_, execErr := Db.Exec("update redi_admin_domain set skip_num=skip_num+1 where original_url = ? and status = 1 limit 1", Url)
-	if execErr != nil {
-		return domainData.SkipUrl
-	}
-	return domainData.SkipUrl
+	return ""
 }

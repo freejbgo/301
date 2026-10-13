@@ -20,6 +20,12 @@ trait BelongsToAdminTenant
                     $builder->getModel()->getTable().'.admin_id',
                     (int) $user->id
                 );
+
+                return;
+            }
+
+            if (request()->is('admin', 'admin/*')) {
+                $builder->whereRaw('1 = 0');
             }
         });
     }

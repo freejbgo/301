@@ -35,3 +35,8 @@ jobs:
       - name: PHPUnit
         working-directory: master/master
         run: ./vendor/bin/phpunit --testsuite Unit
+
+      - name: Verify master release tarball matches tree
+        run: |
+          ./scripts/build-master-tar.sh
+          git diff --exit-code master/master.tar.gz

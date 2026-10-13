@@ -349,7 +349,7 @@ CREATE TABLE `migrations` (
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'2014_10_12_000000_create_users_table',1),(2,'2014_10_12_100000_create_password_resets_table',1),(3,'2016_01_04_173148_create_admin_tables',1),(4,'2019_08_19_000000_create_failed_jobs_table',1),(5,'2019_12_14_000001_create_personal_access_tokens_table',1),(6,'2020_09_07_090635_create_admin_settings_table',1),(7,'2020_09_22_015815_create_admin_extensions_table',1),(8,'2020_11_01_083237_update_admin_menu_table',1),(9,'2026_03_28_000001_add_platform_settings_menu',2),(10,'2026_03_28_100000_create_edge_pool_and_cert_tables',2),(11,'2026_03_28_100001_add_edge_pool_admin_menu',2),(12,'2026_03_28_100002_add_acme_challenges_and_jobs',2),(13,'2026_03_28_100003_add_node_challenge_sync',2),(14,'2026_03_28_100004_add_node_extra_ips',2),(15,'2026_10_13_000001_ensure_failed_jobs_table',3),(16,'2026_03_28_100005_global_unique_original_url',3),(17,'2026_03_28_100006_redi_domain_certs_domain_fk',4);
+INSERT INTO `migrations` VALUES (1,'2014_10_12_000000_create_users_table',1),(2,'2014_10_12_100000_create_password_resets_table',1),(3,'2016_01_04_173148_create_admin_tables',1),(4,'2019_08_19_000000_create_failed_jobs_table',1),(5,'2019_12_14_000001_create_personal_access_tokens_table',1),(6,'2020_09_07_090635_create_admin_settings_table',1),(7,'2020_09_22_015815_create_admin_extensions_table',1),(8,'2020_11_01_083237_update_admin_menu_table',1),(9,'2026_03_28_000001_add_platform_settings_menu',2),(10,'2026_03_28_100000_create_edge_pool_and_cert_tables',2),(11,'2026_03_28_100001_add_edge_pool_admin_menu',2),(12,'2026_03_28_100002_add_acme_challenges_and_jobs',2),(13,'2026_03_28_100003_add_node_challenge_sync',2),(14,'2026_03_28_100004_add_node_extra_ips',2),(15,'2026_10_13_000001_ensure_failed_jobs_table',3),(16,'2026_03_28_100005_global_unique_original_url',3),(17,'2026_03_28_100006_redi_domain_certs_domain_fk',4),(18,'2026_03_28_100007_node_domain_view_and_url_hash',5),(19,'2026_03_28_100008_redi_cert_deployments_foreign_keys',5);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -544,7 +544,11 @@ CREATE TABLE `redi_cert_deployments` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `redi_cert_deployments_cert_id_node_id_unique` (`cert_id`,`node_id`)
+  UNIQUE KEY `redi_cert_deployments_cert_id_node_id_unique` (`cert_id`,`node_id`),
+  KEY `redi_cert_deployments_cert_id_foreign` (`cert_id`),
+  KEY `redi_cert_deployments_node_id_foreign` (`node_id`),
+  CONSTRAINT `redi_cert_deployments_cert_id_foreign` FOREIGN KEY (`cert_id`) REFERENCES `redi_domain_certs` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `redi_cert_deployments_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `redi_nodes` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 DROP TABLE IF EXISTS `redi_dns_sync_logs`;
@@ -569,6 +573,7 @@ CREATE TABLE `redi_admin_domain` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `group_id` int(10) NOT NULL DEFAULT '0' COMMENT '分组id',
   `original_url` varchar(255) NOT NULL DEFAULT '' COMMENT '原始域名',
+  `original_url_hash` char(64) DEFAULT NULL COMMENT 'sha256(normalized original_url)',
   `skip_url` varchar(255) NOT NULL DEFAULT '' COMMENT '跳转链接',
   `status` tinyint(4) unsigned NOT NULL DEFAULT '1' COMMENT '状态：1启用 2停用',
   `force_https` tinyint(1) NOT NULL DEFAULT '0',
@@ -581,7 +586,8 @@ CREATE TABLE `redi_admin_domain` (
   KEY `idx_group` (`group_id`),
   KEY `idx_original_url` (`original_url`(191)),
   KEY `idx_admin` (`admin_id`),
-  UNIQUE KEY `uniq_original_url_global` (`original_url`(191))
+  UNIQUE KEY `uniq_original_url_global` (`original_url`(191)),
+  UNIQUE KEY `uniq_original_url_hash` (`original_url_hash`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -593,6 +599,10 @@ LOCK TABLES `redi_admin_domain` WRITE;
 /*!40000 ALTER TABLE `redi_admin_domain` DISABLE KEYS */;
 /*!40000 ALTER TABLE `redi_admin_domain` ENABLE KEYS */;
 UNLOCK TABLES;
+
+DROP VIEW IF EXISTS `redi_node_domain_lookup`;
+CREATE VIEW `redi_node_domain_lookup` AS
+  SELECT `original_url`, `skip_url`, `status` FROM `redi_admin_domain`;
 
 --
 -- Table structure for table `redi_admin_group`

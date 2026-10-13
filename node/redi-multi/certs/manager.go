@@ -106,12 +106,3 @@ func InstallEntry(e Entry) error {
 	return nil
 }
 
-func PendingAcks() []int {
-	mu.RLock()
-	defer mu.RUnlock()
-	var ids []int
-	for id := range byID {
-		ids = append(ids, id)
-	}
-	return ids
-}

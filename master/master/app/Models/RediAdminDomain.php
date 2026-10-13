@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToAdminTenant;
+use App\Services\DomainRecordNormalizer;
 use Dcat\Admin\Traits\HasDateTimeFormatter;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,6 +14,14 @@ class RediAdminDomain extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (self $domain) {
+            $norm = DomainRecordNormalizer::normalizeOriginalUrl($domain->original_url);
+            if ($norm !== '') {
+                $domain->original_url = $norm;
+                $domain->original_url_hash = DomainRecordNormalizer::originalUrlHash($norm);
+            }
+        });
+
         static::deleting(function (self $domain) {
             $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
             if ($cert) {
@@ -33,6 +42,7 @@ class RediAdminDomain extends Model
     protected $fillable = [
         'group_id',
         'original_url',
+        'original_url_hash',
         'skip_url',
         'status',
         'force_https',
