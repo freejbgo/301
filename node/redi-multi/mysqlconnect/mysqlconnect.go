@@ -25,7 +25,7 @@ func envOr(key, fallback string) string {
 }
 
 func openPool() (*sqlx.DB, error) {
-	userName := envOr("REDI_DB_USER", "redi_admin")
+	userName := envOr("REDI_DB_USER", "redi_node")
 	password := envOr("REDI_DB_PASSWORD", "")
 	ipAddress := envOr("REDI_DB_HOST", "127.0.0.1")
 	port := envOr("REDI_DB_PORT", "3306")

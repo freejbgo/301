@@ -114,7 +114,7 @@ cd /opt/redi-multi/redi-multi
 cat > /opt/redi-multi/redi-multi/env.sh <<'EOF'
 REDI_DB_HOST=主控IP
 REDI_DB_PORT=3306
-REDI_DB_USER=redi_admin
+REDI_DB_USER=redi_node
 REDI_DB_PASSWORD=与主控相同的库密码
 REDI_DB_NAME=redi_admin
 REDI_MASTER_URL=https://主控域名
@@ -141,7 +141,7 @@ sudo systemctl enable --now redi-multi
 先在主控上为这台机器的出口 IP 做完数据库授权和防火墙放行，再启动节点。自测：
 
 ```bash
-mysql -h 主控IP -u redi_admin -p -e 'SELECT 1' redi_admin
+mysql -h 主控IP -u redi_node -p redi_admin -e "CALL redi_node_bump_skip('__smoke__')"
 ```
 
 节点程序改过之后，在开发机执行 `./scripts/build-node-tar.sh`，再把新的 `node/redi-multi.tar.gz` 提交。主控依赖变了就执行 `./scripts/build-master-tar.sh`。线上部署解压的是这两个包。`build-node-tar.sh` 会拒绝仍然动态链接 libc 的二进制。

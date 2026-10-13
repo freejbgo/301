@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"redi-multi/util/redirecturl"
 	"redi-multi/config"
 	"redi-multi/mysqlconnect"
@@ -177,6 +178,10 @@ func apiJsSource(encodedDomain string) (string, int) {
 
 func GetSkipUrl(Db *sqlx.DB, Url string) string {
 	if Db == nil {
+		return ""
+	}
+	Url = strings.ToLower(strings.TrimSpace(Url))
+	if Url == "" {
 		return ""
 	}
 

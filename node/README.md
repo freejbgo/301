@@ -22,7 +22,7 @@
 |------|------|
 | `REDI_DB_HOST` | 主控 MySQL 地址 |
 | `REDI_DB_PORT` | 端口，默认 `3306` |
-| `REDI_DB_USER` | 用户，默认 `redi_admin` |
+| `REDI_DB_USER` | 用户，生产应为 `redi_node`（仅 EXECUTE `redi_node_bump_skip`） |
 | `REDI_DB_PASSWORD` | 密码。只放在服务器上，不要写入仓库 |
 | `REDI_DB_NAME` | 库名，默认 `redi_admin` |
 | `REDI_MASTER_URL` | 主控地址，如 `https://主控域名` |

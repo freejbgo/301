@@ -14,7 +14,7 @@ class DomainOriginalUrlGuard
         }
 
         $hash = DomainRecordNormalizer::originalUrlHash($originalUrl);
-        $query = RediAdminDomain::query();
+        $query = RediAdminDomain::query()->withoutGlobalScope('admin_tenant');
         if ($hash !== '') {
             $query->where('original_url_hash', $hash);
         } else {
