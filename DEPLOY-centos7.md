@@ -14,7 +14,7 @@
 
 源码在仓库的 `master/master/`。那是给开发和重新打包用的。自动安装不要把仓库克隆到 `/opt/301`，否则会和发布包解压出来的 `/opt/301/master` 叠在一起。
 
-填好 IP 的示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。后台操作见 [docs/CONSOLE.md](docs/CONSOLE.md)。
+填好 IP 的示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。**真机 CentOS 7.9 逐步验收**见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)。后台操作见 [docs/CONSOLE.md](docs/CONSOLE.md)。
 
 ## 1. 准备变量
 
@@ -106,4 +106,4 @@ sudo apt-get install -y podman   # 如未安装
 sudo bash scripts/centos7/run-on-centos7-host.sh
 ```
 
-脚本使用 `--network host`，避免部分环境下 podman 桥接网无外网导致 `yum` 失败。日志在容器内 `/tmp/redi-c7-integration.log`。完整 `deploy-master.sh` / `deploy-node.sh` 仍建议在真实 CentOS 7 虚拟机或云主机上执行。
+脚本使用 `--network host`，避免部分环境下 podman 桥接网无外网导致 `yum` 失败。日志在容器内 `/tmp/redi-c7-integration.log`。完整 `deploy-master.sh` / `deploy-node.sh` 仍须在真实 CentOS 7.9 上按 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 验收。

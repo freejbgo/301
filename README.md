@@ -12,6 +12,7 @@ CentOS 7.9（及其他 7.x）用两个脚本自动安装：[scripts/centos7/depl
 |------|------|
 | [DEPLOY.md](DEPLOY.md) | 部署教程 |
 | [DEPLOY-centos7.md](DEPLOY-centos7.md) | CentOS 7 命令 |
+| [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) | CentOS 7.9 真机部署验收清单 |
 | [docs/CONSOLE.md](docs/CONSOLE.md) | 控制台操作手册 |
 | [docs/CUSTOMER-CNAME-HTTPS.md](docs/CUSTOMER-CNAME-HTTPS.md) | 交给客户的 CNAME 说明 |
 | [SECURITY.md](SECURITY.md) | 上线前要改的密码和端口 |

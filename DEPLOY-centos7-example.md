@@ -1,6 +1,6 @@
 # CentOS 7 填空示例
 
-主控 `1.2.3.4`，第一台节点 `5.6.7.8`。把 IP 和密码换成你的。说明见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。
+主控 `1.2.3.4`，第一台节点 `5.6.7.8`。把 IP 和密码换成你的。说明见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。装完后按 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 逐项验收。
 
 仓库放在 `/root/301`，不要克隆到 `/opt/301`。
 
