@@ -11,6 +11,20 @@ class RediAdminDomain extends Model
     use BelongsToAdminTenant;
     use HasDateTimeFormatter;
 
+    protected static function booted(): void
+    {
+        static::deleting(function (self $domain) {
+            $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
+            if ($cert) {
+                RediCertDeployment::where('cert_id', $cert->id)->delete();
+                $cert->delete();
+            }
+            RediAcmeChallenge::query()
+                ->where('domain_name', $domain->original_url)
+                ->delete();
+        });
+    }
+
     protected $table = 'redi_admin_domain';
 
     protected $fillable = [

@@ -34,7 +34,8 @@ class CertificateDeployService
         }
 
         if ($nodes->isEmpty()) {
-            $cert->status = RediDomainCert::STATUS_ACTIVE;
+            $cert->status = RediDomainCert::STATUS_DEPLOYING;
+            $cert->last_error = '无启用节点，证书已签发但尚未部署到边缘';
             $cert->save();
         }
     }

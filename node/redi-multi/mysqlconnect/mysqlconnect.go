@@ -3,6 +3,7 @@ package mysqlconnect
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -32,6 +33,10 @@ func openPool() (*sqlx.DB, error) {
 	charset := envOr("REDI_DB_CHARSET", "utf8mb4")
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true", userName, password, ipAddress, port, dbName, charset)
+	tlsMode := strings.TrimSpace(os.Getenv("REDI_DB_TLS"))
+	if tlsMode == "1" || strings.EqualFold(tlsMode, "true") {
+		dsn += "&tls=true"
+	}
 	conn, openErr := sqlx.Open("mysql", dsn)
 	if openErr != nil {
 		return nil, openErr

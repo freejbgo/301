@@ -47,7 +47,9 @@ class PlatformDnsSettings extends Form implements LazyRenderable
         $platform->acme_contact_email = trim($input['acme_contact_email'] ?? '') ?: null;
         $platform->acme_staging = ! empty($input['acme_staging']);
 
-        if (! empty($input['api_key'])) {
+        if (! empty($input['clear_dns_api_credentials'])) {
+            $platform->setApiCredentialsArray(null);
+        } elseif (! empty($input['api_key'])) {
             $platform->setApiCredentialsArray([
                 'api_key' => $input['api_key'],
                 'api_secret' => $input['api_secret'] ?? '',
@@ -82,6 +84,7 @@ class PlatformDnsSettings extends Form implements LazyRenderable
         $this->text('dns_zone_id', 'Zone ID')->help('Cloudflare 必填；其他厂商可留空');
         $this->text('api_key', 'API Key / Token')->help('Cloudflare=API Token；阿里云=AccessKey ID；DNSPod=API ID；dns.com=API Key。留空不修改');
         $this->password('api_secret', 'API Secret')->help('阿里云=AccessKey Secret；DNSPod=Token；dns.com=API Secret');
+        $this->switch('clear_dns_api_credentials', '清空已保存的 API 密钥')->help('勾选并保存将删除库内加密凭证');
         $this->email('acme_contact_email', 'ACME 联系邮箱')->help('Let\'s Encrypt 注册邮箱');
         $this->switch('acme_staging', 'ACME 测试环境')->help('勾选则使用 Let\'s Encrypt Staging');
     }

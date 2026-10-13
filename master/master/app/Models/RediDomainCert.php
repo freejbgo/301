@@ -65,6 +65,18 @@ class RediDomainCert extends Model
         }
     }
 
+    public function storedCredentialsUnreadable(): bool
+    {
+        if ($this->certificate && $this->getCertificatePem() === null) {
+            return true;
+        }
+        if ($this->private_key && $this->getPrivateKeyPem() === null) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function setPrivateKeyPem(string $pem): void
     {
         $this->private_key = Crypt::encryptString($pem);

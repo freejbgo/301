@@ -31,8 +31,13 @@ class RotateNodeToken extends RowAction
         $plain = $node->issueApiTokenPlain();
         $node->save();
 
+        $masked = strlen($plain) > 12
+            ? substr($plain, 0, 6).'…'.substr($plain, -4)
+            : $plain;
+
         return $this->response()
-            ->success('新 Token（仅此一次，请立即保存到节点 REDI_NODE_TOKEN）：'.$plain)
+            ->success('新 Token 已生成（完整串仅本次响应可见，请立即写入节点 REDI_NODE_TOKEN）：'.$masked)
+            ->data(['token' => $plain])
             ->refresh();
     }
 }
