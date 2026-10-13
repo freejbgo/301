@@ -23,17 +23,26 @@ class NodeAgentController extends Controller
         return $version === '' ? null : $version;
     }
 
-    public function register(Request $request)
+    protected function rejectIfAgentTooOld(?string $version)
     {
-        /** @var RediNode $node */
-        $node = $request->attributes->get('redi_node');
-        $version = $this->sanitizeAgentVersion($request->input('version'));
         $min = trim((string) env('REDI_MIN_AGENT_VERSION', '0.1.0'));
         if ($version !== null && $min !== '' && version_compare($version, $min, '<')) {
             return response()->json([
                 'message' => '节点 Agent 版本过低，请升级 redi-multi 后重试',
                 'min_version' => $min,
             ], 426);
+        }
+
+        return null;
+    }
+
+    public function register(Request $request)
+    {
+        /** @var RediNode $node */
+        $node = $request->attributes->get('redi_node');
+        $version = $this->sanitizeAgentVersion($request->input('version'));
+        if ($reject = $this->rejectIfAgentTooOld($version)) {
+            return $reject;
         }
         $node->last_heartbeat_at = now();
         $node->agent_version = $version;
@@ -78,8 +87,12 @@ class NodeAgentController extends Controller
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
+        $version = $this->sanitizeAgentVersion($request->input('version'));
+        if ($reject = $this->rejectIfAgentTooOld($version)) {
+            return $reject;
+        }
         $node->last_heartbeat_at = now();
-        $node->agent_version = $this->sanitizeAgentVersion($request->input('version'));
+        $node->agent_version = $version;
         $node->save();
 
         return response()->json(['ok' => true]);

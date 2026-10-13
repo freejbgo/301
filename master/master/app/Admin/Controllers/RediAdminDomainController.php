@@ -54,7 +54,10 @@ class RediAdminDomainController extends AdminController
                 $actions->append(new ApplyCertificate());
             });
             
-            $grid->model()->where('admin_id', '=', Admin::user()->id);
+            $adminUser = Admin::user();
+            if (! $adminUser || ! method_exists($adminUser, 'isAdministrator') || ! $adminUser->isAdministrator()) {
+                $grid->model()->where('admin_id', '=', $adminUser->id);
+            }
             $grid->model()->with(['group', 'certificate']);
 
             $grid->column('id')->sortable();
