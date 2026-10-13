@@ -152,8 +152,10 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 		return nil
 	}
 	list := make([]certs.Entry, 0, len(out.Certificates))
+	remoteIDs := make([]int, 0, len(out.Certificates))
 	failed := false
 	for _, row := range out.Certificates {
+		remoteIDs = append(remoteIDs, row.CertID)
 		entry := certs.Entry{
 			CertID:      row.CertID,
 			Domain:      row.Domain,
@@ -178,7 +180,7 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 		return fmt.Errorf("all certificates failed PEM validation; keeping previous in-memory certs")
 	}
 	if failed {
-		certs.UpsertMany(list)
+		certs.SyncFromMaster(list, remoteIDs)
 	} else {
 		certs.ReplaceAll(list)
 	}

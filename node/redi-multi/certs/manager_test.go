@@ -17,3 +17,23 @@ func TestUpsertManyPreservesOtherCerts(t *testing.T) {
 	}
 	mu.RUnlock()
 }
+
+func TestSyncFromMasterDropsRetiredIDs(t *testing.T) {
+	ReplaceAll([]Entry{
+		{CertID: 1, Domain: "a.test", Certificate: []byte("c"), PrivateKey: []byte("k")},
+		{CertID: 2, Domain: "b.test", Certificate: []byte("c"), PrivateKey: []byte("k")},
+	})
+	SyncFromMaster([]Entry{
+		{CertID: 3, Domain: "c.test", Certificate: []byte("c"), PrivateKey: []byte("k")},
+	}, []int{2, 3})
+	mu.RLock()
+	if len(entries) != 2 {
+		mu.RUnlock()
+		t.Fatalf("expected 2 entries, got %d", len(entries))
+	}
+	if _, ok := byID[1]; ok {
+		mu.RUnlock()
+		t.Fatal("cert 1 should be removed (not in remote set)")
+	}
+	mu.RUnlock()
+}

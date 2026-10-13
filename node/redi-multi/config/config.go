@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+
+	"redi-multi/util/redirecturl"
 )
 
 var (
@@ -34,6 +36,9 @@ func Init() {
 	ApiListen = jsonStringOptional(payload, "api_listen", "127.0.0.1:8080")
 	ServerIp = jsonStringRequired(payload, "server_ip")
 	DefaultRedirectUrl = jsonStringRequired(payload, "default_redirect_url")
+	if !redirecturl.IsAllowed(DefaultRedirectUrl) {
+		log.Fatalf("config.json: default_redirect_url must be a valid http(s) URL with host")
+	}
 	Redirector = jsonStringMapOptional(payload, "redirector")
 
 	if raw, ok := payload["lagran"].(map[string]interface{}); ok && raw != nil {

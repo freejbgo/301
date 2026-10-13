@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToAdminTenant;
 use Dcat\Admin\Traits\HasDateTimeFormatter;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 
 class RediAdminGroup extends Model
 {
@@ -29,7 +30,9 @@ class RediAdminGroup extends Model
                 ->count();
 
             if ($count > 0) {
-                return false;
+                throw ValidationException::withMessages([
+                    'name' => "该分组下还有 {$count} 条域名，请先迁移或删除域名后再删分组。",
+                ]);
             }
         });
     }

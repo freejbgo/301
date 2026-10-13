@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"os"
+	"redi-multi/util/redirecturl"
 	"redi-multi/config"
 	"redi-multi/mysqlconnect"
 	domain2 "redi-multi/util/domain"
@@ -148,7 +148,7 @@ func apiJsSource(encodedDomain string) (string, int) {
 	}
 	domain := domain2.Encoded{Content: encodedDomain}
 	skipUrl := GetSkipUrl(db, domain.Decode())
-	if skipUrl != "" && !isAllowedRedirectURL(skipUrl) {
+	if skipUrl != "" && !redirecturl.IsAllowed(skipUrl) {
 		skipUrl = ""
 	}
 
@@ -160,7 +160,7 @@ func apiJsSource(encodedDomain string) (string, int) {
 		}
 	} else {
 		fallback := config.DefaultRedirectUrl
-		if !isAllowedRedirectURL(fallback) {
+		if !redirecturl.IsAllowed(fallback) {
 			return "// invalid default redirect", http.StatusInternalServerError
 		}
 		decodeTo := domain2.Decoded{Content: fallback}
@@ -173,22 +173,6 @@ func apiJsSource(encodedDomain string) (string, int) {
 		return "// error", http.StatusInternalServerError
 	}
 	return "var redirector = " + string(payload) + ";", http.StatusOK
-}
-
-func isAllowedRedirectURL(raw string) bool {
-	u, err := url.Parse(raw)
-	if err != nil {
-		return false
-	}
-	if u.User != nil {
-		return false
-	}
-	switch u.Scheme {
-	case "http", "https":
-		return u.Host != ""
-	default:
-		return false
-	}
 }
 
 func GetSkipUrl(Db *sqlx.DB, Url string) string {

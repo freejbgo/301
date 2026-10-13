@@ -65,8 +65,13 @@ class CertificateDeployService
             ->whereIn('node_id', $liveNodeIds)
             ->exists();
 
+        $domainActive = $cert->domain && (int) $cert->domain->status === 1;
+
         if ($livePending) {
             $cert->status = RediDomainCert::STATUS_DEPLOYING;
+            if (! $domainActive && $cert->domain) {
+                $cert->last_error = '域名已停用：等待剩余在线节点响应，不会标记为「已生效」';
+            }
             $cert->save();
 
             return true;
@@ -78,8 +83,6 @@ class CertificateDeployService
         $okCount = RediCertDeployment::where('cert_id', $cert->id)
             ->where('status', 'ok')
             ->count();
-
-        $domainActive = $cert->domain && (int) $cert->domain->status === 1;
 
         if ($okCount === 0 && $failedCount > 0) {
             $cert->status = RediDomainCert::STATUS_FAILED;
