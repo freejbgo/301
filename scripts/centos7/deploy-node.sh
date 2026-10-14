@@ -141,6 +141,11 @@ sed -i -E "s/\"server_ip\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/\"server_ip\": \"$
 sed -i -E "s|\"default_redirect_url\"[[:space:]]*:[[:space:]]*\"[^\"]*\"|\"default_redirect_url\": \"${url_sed}\"|" "${APP}/config.json"
 grep -q "\"server_ip\": \"${NODE_PUBLIC_IP}\"" "${APP}/config.json" || die "未能写入 config.json 的 server_ip"
 
+# 被干扰域名场景：确保 lagran 开启（与 config.json.example 一致）
+if [[ -f "${APP}/config.json" ]] && command -v perl >/dev/null 2>&1; then
+  perl -i -0777 -pe 's/("lagran"\s*:\s*\{[^}]*?"enabled"\s*:\s*)false/${1}true/s' "${APP}/config.json" || true
+fi
+
 setcap cap_net_admin+ep "${APP}/bin/redi-multi"
 
 cat > /etc/systemd/system/redi-multi.service <<EOF

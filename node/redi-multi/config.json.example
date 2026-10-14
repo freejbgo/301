@@ -6,7 +6,7 @@
   "server_ip": "YOUR_NODE_PUBLIC_IP",
   "default_redirect_url": "https://www.example.com",
   "lagran": {
-    "enabled": false,
+    "enabled": true,
     "port": "80,443",
     "syn_ack": true,
     "ack": true,

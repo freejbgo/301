@@ -41,7 +41,7 @@
 |----|------|------|
 | 节点直连 MySQL | 仍为当前架构，便于部署 | DB 账号最小权限；IP 白名单；长期可改主控 API |
 | `/api.js` 无登录 | 跳转业务需要可被浏览器访问 | 防火墙 + 限速（已部分实现） |
-| `lagran` | 需 root/CAP_NET_ADMIN | 不需要时设 `REDI_LAGRAN_DISABLED=1` 或 `lagran.enabled=false` |
+| `lagran` | 面向被干扰域名，生产默认 **开启**；需 root/CAP_NET_ADMIN | 仅调试时设 `REDI_LAGRAN_DISABLED=1` 或 `lagran.enabled=false` |
 
 ## 依赖
 

@@ -17,7 +17,9 @@ if [[ ! -f config.json ]]; then
 fi
 cd "$ROOT/node"
 echo "[pack] redi-multi.tar.gz"
+# 不把本机 config.json 打进包：线上应从 config.json.example 复制（deploy-node.sh 会处理）
 tar czf redi-multi.tar.gz \
   --exclude='redi-multi/.git' \
+  --exclude='redi-multi/config.json' \
   redi-multi
 ls -lh redi-multi.tar.gz
