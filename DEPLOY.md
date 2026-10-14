@@ -107,6 +107,7 @@ php artisan queue:work --sleep=3 --timeout=320 --tries=100
 sudo mkdir -p /opt/redi-multi
 sudo tar xzf redi-multi.tar.gz -C /opt/redi-multi
 cd /opt/redi-multi/redi-multi
+cp -n config.json.example config.json
 ```
 
 `config.json` 里把 `server_ip` 改成这台机器的主公网 IPv4，`default_redirect_url` 改成未命中域名时的默认页。`addr` 保持 `0.0.0.0:80`，`tls_addr` 保持 `0.0.0.0:443`。
