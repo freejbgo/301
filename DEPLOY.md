@@ -1,5 +1,8 @@
 # 部署教程
 
+**适用场景：** 客户域名在部分网络下 **打不开、被重置、访问不稳**，需要 CNAME 到你们边缘，由节点做跳转，并用 **lagran** 调整出站 TCP 窗口，尽量让 80/443 上的跳转页还能被访问。  
+**不是**给「完全正常、无任何干扰」的普通 301 用的；那种场景可以关 lagran，但本仓库默认按「有问题域名」来配。
+
 按这个顺序做：先主控和数据库，再节点，最后到后台把 DNS、节点和域名配好。控制台里每一步点哪里，见 [docs/CONSOLE.md](docs/CONSOLE.md)。
 
 CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。填好的变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。真机装完后用 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 逐步验收。下面是通用步骤；CentOS 7 不要按克隆目录手工装，直接跑脚本。
@@ -125,7 +128,9 @@ chmod 600 /opt/redi-multi/redi-multi/env.sh
 
 `REDI_NODE_TOKEN` 来自后台「节点管理」新建节点后的提示。丢失就在该节点上轮换 Token，把新值写回 `env.sh` 并重启节点。
 
-lagran 需要 `CAP_NET_ADMIN`：
+**lagran（必开）：** 面向被干扰域名，示例 `config.json` 与 `deploy-node.sh` 默认 **`lagran.enabled: true`**。节点出站 80/443 会经 NFQUEUE 调整 TCP 窗口；日志里不应出现 `[lagran] disabled`。仅本地无特权调试时可设 `REDI_LAGRAN_DISABLED=1` 或把 `enabled` 改为 false。
+
+lagran 需要 root 或 `CAP_NET_ADMIN`（`deploy-node.sh` 会自动 `setcap`）：
 
 ```bash
 sudo setcap cap_net_admin+ep /opt/redi-multi/redi-multi/bin/redi-multi

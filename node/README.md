@@ -1,5 +1,7 @@
 # 节点程序
 
+本仓库的跳转节点面向 **被干扰、被重置、访问不稳的域名**（需要改 TCP 窗口的 **lagran** 配合 80/443 跳转），不是给「完全正常、无干扰」的纯 301 场景设计的。部署时请保持 **lagran 开启**，并给二进制 `CAP_NET_ADMIN`（见 [../DEPLOY.md](../DEPLOY.md)）。
+
 部署整套系统见 [../DEPLOY.md](../DEPLOY.md)。这里只说明节点包本身。
 
 发布包是 **`redi-multi.tar.gz`**。解压后目录为 `redi-multi/`，里面有源码、`config.json.example`、`env.example` 和编译好的 `bin/redi-multi`。首次部署从 example 复制 `config.json`（`deploy-node.sh` 会自动复制）。**`redirector` 字段不参与运行**，跳转来自 MySQL 与 `default_redirect_url`。线上运行这个二进制，不要 `go run main.go`。
@@ -42,7 +44,7 @@
 | `tls_addr` | HTTPS，默认 `0.0.0.0:443`。`""` 或 JSON `null` 关闭 HTTPS。可用 `REDI_TLS_LISTEN` 覆盖 |
 | `api_listen` | 默认 `127.0.0.1:8080`（仅本机调试 Echo）；生产跳转走 80/443 同源 `/api.js` |
 | `lagran.port` | 出站 TCP 源端口，给 iptables `--sport` 用。字符串 `"80,443"` 或数字 `80`。逗号分隔，不要空格 |
-| `lagran.enabled` | 仓库内 `config.json` / `config.json.example` 默认 **false**；需要出站 iptables 时再打开 |
+| `lagran.enabled` | 默认 **true**（被干扰域名场景）；仅本地调试可 `REDI_LAGRAN_DISABLED=1` 或设为 false |
 | `lagran` | 可整段省略。不要写成空对象后再指望程序猜开关 |
 
 启动时会把 `addr` 和 `tls_addr` 里的非空端口并进 `lagran.port`。关掉 HTTPS 时不会并入 443。
