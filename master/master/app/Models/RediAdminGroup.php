@@ -17,6 +17,9 @@ class RediAdminGroup extends Model
     protected $fillable = [
         'name',
         'status',
+    ];
+
+    protected $guarded = [
         'admin_id',
         'admin_name',
     ];

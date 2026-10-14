@@ -115,7 +115,16 @@ class RediAdminGroupController extends AdminController
                     if ($existing) {
                         $form->input('admin_id', $existing->admin_id);
                         $form->input('admin_name', $existing->admin_name);
+                        $form->model()->forceFill([
+                            'admin_id' => (int) $existing->admin_id,
+                            'admin_name' => (string) $existing->admin_name,
+                        ]);
                     }
+                } elseif ($form->isCreating()) {
+                    $form->model()->forceFill([
+                        'admin_id' => (int) Admin::user()->id,
+                        'admin_name' => (string) Admin::user()->username,
+                    ]);
                 }
             });
 

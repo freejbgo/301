@@ -10,6 +10,7 @@ use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use App\Services\CertificateDeployService;
 use App\Services\NodeAgentRevisionService;
+use App\Support\HostNameValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -77,7 +78,7 @@ class NodeAgentController extends Controller
         $now = now();
         foreach ($domains as $domain) {
             $domain = strtolower(trim((string) $domain, '.'));
-            if ($domain === '' || ! $allowed->has($domain)) {
+            if ($domain === '' || ! HostNameValidator::isValidHostLabel($domain) || ! $allowed->has($domain)) {
                 continue;
             }
             RediAcmeChallengeNodeSync::updateOrCreate(

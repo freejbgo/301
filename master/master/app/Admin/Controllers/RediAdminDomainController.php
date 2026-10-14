@@ -260,6 +260,18 @@ JS
                     $form->input('admin_name', Admin::user()->username);
                 }
 
+                $ownerAdminName = (string) ($groupRow->admin_name ?? '');
+                if (! AdminTenantContext::isPlatformAdministrator() && $form->isCreating()) {
+                    $ownerAdminName = (string) Admin::user()->username;
+                } elseif ($form->isEditing() && isset($existing)) {
+                    $ownerAdminName = (string) $existing->admin_name;
+                }
+
+                $form->model()->forceFill([
+                    'admin_id' => $ownerAdminId,
+                    'admin_name' => $ownerAdminName,
+                ]);
+
                 $form->input('original_url', $originalUrl);
                 $form->input('skip_url', $skipUrl);
 

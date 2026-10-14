@@ -97,7 +97,8 @@ class DomainBatchCreator
             }
 
             try {
-                RediAdminDomain::create([
+                $domain = new RediAdminDomain();
+                $domain->forceFill([
                     'group_id' => $groupId,
                     'original_url' => $originalUrl,
                     'skip_url' => $skipUrl,
@@ -106,6 +107,7 @@ class DomainBatchCreator
                     'admin_name' => $adminName,
                     'skip_num' => 0,
                 ]);
+                $domain->save();
                 $result['imported']++;
             } catch (QueryException $e) {
                 if ($this->isDuplicateOriginalUrl($e)) {
