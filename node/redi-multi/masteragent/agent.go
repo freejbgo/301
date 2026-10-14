@@ -131,14 +131,17 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 	if err := getJSON(client, cfg, "/api/nodes/acme-challenges", &out, registered); err != nil {
 		return err
 	}
-	items := make([]acme.Item, len(out.Challenges))
+	items := make([]acme.Item, 0, len(out.Challenges))
 	domains := make([]string, 0, len(out.Challenges))
-	for i, c := range out.Challenges {
-		items[i] = acme.Item{
+	for _, c := range out.Challenges {
+		if strings.TrimSpace(c.Token) == "" || strings.TrimSpace(c.ResponseBody) == "" {
+			continue
+		}
+		items = append(items, acme.Item{
 			DomainName:   c.DomainName,
 			Token:        c.Token,
 			ResponseBody: c.ResponseBody,
-		}
+		})
 		domains = append(domains, c.DomainName)
 	}
 	acme.ReplaceAll(items)

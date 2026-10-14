@@ -139,7 +139,7 @@ DNS 解析模式：
 
 1. `POST /api/nodes/register`（仅版本号；**不能**改节点公网 IP 或名称）  
 2. `GET /api/nodes/revision`；与上次相同则只心跳  
-3. 有变化时：`GET /api/nodes/acme-challenges`（有挑战则必须 `POST /api/nodes/challenges-synced` 成功，失败则下轮重试）、`GET /api/nodes/redirect-rules`、`GET /api/nodes/certificates`（安装成功才 `POST /api/nodes/ack`）  
+3. 有变化时：`GET /api/nodes/acme-challenges`（仅返回 **token/response_body 非空** 的挑战；节点应用后 `POST /api/nodes/challenges-synced`，响应含 `synced_count`）、`GET /api/nodes/redirect-rules`、`GET /api/nodes/certificates`（安装成功才 `POST /api/nodes/ack`）。设置 `REDI_MIN_AGENT_VERSION` 后 **全部** `/api/nodes/*` 受版本门约束。  
 4. `POST /api/nodes/heartbeat`  
 
 ### 5.3 请求处理顺序（80/443）

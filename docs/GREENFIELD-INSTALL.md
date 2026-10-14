@@ -23,6 +23,8 @@
 
 导入 SQL 后若 **不** 跑 migrate，节点无法 `CALL redi_node_bump_skip`，跳转页 `/api.js` 会连不上库逻辑。
 
+`redi_admin.sql` 内 `migrations` 表记录到 **`100008`** 为止，**故意不含** `100009`（存储过程）；与仓库 `database/migrations/` 中文件名一致时以 **migrate 结果** 为准。
+
 **验证（主控本机）：**
 
 ```bash

@@ -23,6 +23,8 @@ bash -n "${SCRIPT_DIR}/deploy-master.sh"
 bash -n "${SCRIPT_DIR}/deploy-node.sh"
 bash -n "${SCRIPT_DIR}/grant-node-mysql.sh"
 bash -n "${SCRIPT_DIR}/firewalld-allow-mysql-from-node.sh"
+bash -n "${SCRIPT_DIR}/revoke-node-mysql.sh"
+bash -n "${SCRIPT_DIR}/firewalld-revoke-mysql-from-node.sh"
 
 echo "[2] 发布包"
 test -s "${REPO_ROOT}/master/master.tar.gz"

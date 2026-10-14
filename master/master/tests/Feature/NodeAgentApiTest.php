@@ -97,9 +97,12 @@ class NodeAgentApiTest extends TestCase
             'expires_at' => now()->addHour(),
         ]);
 
-        $this->withToken($token)
+        $response = $this->withToken($token)
             ->postJson('/api/nodes/challenges-synced', ['domains' => ['empty.example']])
             ->assertOk();
+
+        $response->assertJsonPath('synced_count', 0);
+        $response->assertJsonPath('ignored_count', 1);
 
         $this->assertDatabaseMissing('redi_acme_challenge_node_sync', [
             'domain_name' => 'empty.example',
@@ -124,6 +127,41 @@ class NodeAgentApiTest extends TestCase
         $this->assertDatabaseHas('redi_acme_challenge_node_sync', [
             'domain_name' => 'valid.example',
         ]);
+    }
+
+    public function test_acme_challenges_omits_empty_token_rows(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'empty.example',
+            'token' => '',
+            'response_body' => '',
+            'expires_at' => now()->addHour(),
+        ]);
+        RediAcmeChallenge::create([
+            'domain_name' => 'good.example',
+            'token' => 't',
+            'response_body' => 'b',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $response = $this->withToken($token)->getJson('/api/nodes/acme-challenges');
+        $response->assertOk();
+        $names = array_column($response->json('challenges'), 'domain_name');
+        $this->assertContains('good.example', $names);
+        $this->assertNotContains('empty.example', $names);
+    }
+
+    public function test_challenges_synced_ignores_unknown_domain(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        $response = $this->withToken($token)
+            ->postJson('/api/nodes/challenges-synced', ['domains' => ['not-in-challenges.example']])
+            ->assertOk();
+
+        $response->assertJsonPath('synced_count', 0);
     }
 
     public function test_ack_forbidden_without_deployment_row(): void

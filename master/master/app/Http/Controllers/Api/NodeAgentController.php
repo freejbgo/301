@@ -3,59 +3,25 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\RediAcmeChallenge;
 use App\Models\RediAcmeChallengeNodeSync;
 use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
+use App\Services\AcmeChallengeQuery;
 use App\Services\CertificateDeployService;
 use App\Services\NodeAgentRevisionService;
 use App\Support\HostNameValidator;
+use App\Support\RediAgentVersionGate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class NodeAgentController extends Controller
 {
-    protected function sanitizeAgentVersion($value): ?string
-    {
-        $version = preg_replace('/[^\w.\-]/', '', (string) $value);
-        $version = substr($version, 0, 32);
-
-        return $version === '' ? null : $version;
-    }
-
-    protected function rejectIfAgentTooOld(?string $version)
-    {
-        $min = trim((string) config('redi.min_agent_version', ''));
-        if ($min === '') {
-            return null;
-        }
-
-        if ($version === null || $version === '') {
-            return response()->json([
-                'message' => '节点 Agent 必须上报 version 字段，请升级 redi-multi 后重试',
-                'min_version' => $min,
-            ], 426);
-        }
-
-        if (version_compare($version, $min, '<')) {
-            return response()->json([
-                'message' => '节点 Agent 版本过低，请升级 redi-multi 后重试',
-                'min_version' => $min,
-            ], 426);
-        }
-
-        return null;
-    }
-
     public function register(Request $request)
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
-        $version = $this->sanitizeAgentVersion($request->input('version'));
-        if ($reject = $this->rejectIfAgentTooOld($version)) {
-            return $reject;
-        }
+        $version = RediAgentVersionGate::sanitize($request->input('version'));
         $node->last_heartbeat_at = now();
         $node->agent_version = $version;
         $node->save();
@@ -68,20 +34,16 @@ class NodeAgentController extends Controller
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
         $domains = array_slice((array) $request->input('domains', []), 0, 200);
-        $allowed = RediAcmeChallenge::query()
-            ->where('expires_at', '>', now())
-            ->whereNotNull('token')
-            ->where('token', '!=', '')
-            ->whereNotNull('response_body')
-            ->where('response_body', '!=', '')
+        $allowed = AcmeChallengeQuery::ready()
             ->pluck('domain_name')
             ->map(function ($d) {
-                return strtolower(trim((string) $d, '.'));
+                return HostNameValidator::toCanonicalAscii((string) $d);
             })
             ->flip();
         $now = now();
+        $synced = [];
         foreach ($domains as $domain) {
-            $domain = strtolower(trim((string) $domain, '.'));
+            $domain = HostNameValidator::toCanonicalAscii((string) $domain);
             if ($domain === '' || ! HostNameValidator::isValidHostLabel($domain) || ! $allowed->has($domain)) {
                 continue;
             }
@@ -89,9 +51,15 @@ class NodeAgentController extends Controller
                 ['node_id' => $node->id, 'domain_name' => $domain],
                 ['synced_at' => $now]
             );
+            $synced[] = $domain;
         }
 
-        return response()->json(['ok' => true]);
+        return response()->json([
+            'ok' => true,
+            'synced' => $synced,
+            'synced_count' => count($synced),
+            'ignored_count' => max(0, count($domains) - count($synced)),
+        ]);
     }
 
     public function revision(NodeAgentRevisionService $revisions)
@@ -103,10 +71,7 @@ class NodeAgentController extends Controller
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
-        $version = $this->sanitizeAgentVersion($request->input('version'));
-        if ($reject = $this->rejectIfAgentTooOld($version)) {
-            return $reject;
-        }
+        $version = RediAgentVersionGate::sanitize($request->input('version'));
         $node->last_heartbeat_at = now();
         $node->agent_version = $version;
         $node->save();
@@ -116,8 +81,7 @@ class NodeAgentController extends Controller
 
     public function acmeChallenges()
     {
-        $rows = RediAcmeChallenge::query()
-            ->where('expires_at', '>', now())
+        $rows = AcmeChallengeQuery::ready()
             ->get(['domain_name', 'token', 'response_body']);
 
         return response()->json(['challenges' => $rows]);

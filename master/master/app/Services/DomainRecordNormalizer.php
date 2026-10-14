@@ -15,7 +15,7 @@ class DomainRecordNormalizer
             return '';
         }
 
-        return $url;
+        return HostNameValidator::toCanonicalAscii($url);
     }
 
     public static function isValidOriginalHost(?string $url): bool

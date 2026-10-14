@@ -35,4 +35,24 @@ class HostNameValidator
 
         return true;
     }
+
+    /**
+     * 入库用的 ASCII 主机名（IDN → punycode）。
+     */
+    public static function toCanonicalAscii(string $host): string
+    {
+        $host = strtolower(trim($host, '.'));
+        if ($host === '') {
+            return '';
+        }
+        if (function_exists('idn_to_ascii')) {
+            $variant = defined('INTL_IDNA_VARIANT_UTS46') ? INTL_IDNA_VARIANT_UTS46 : 0;
+            $ascii = idn_to_ascii($host, IDNA_DEFAULT, $variant);
+            if ($ascii !== false) {
+                return strtolower($ascii);
+            }
+        }
+
+        return $host;
+    }
 }

@@ -21,7 +21,9 @@
 
 | 项 | 说明 |
 |----|------|
-| 节点 API Token | 格式 `{节点ID}.{随机串}`，仅存 bcrypt 哈希；创建节点时**仅展示一次** |
+| 节点 API Token | 格式 `{节点ID}.{随机串}`，仅存 bcrypt 哈希；创建节点时**仅展示一次**。泄露或主机被控后须 **立即轮换 Token**（后台节点管理），并视情况吊销/重装证书；Token 等同 **全池私钥** 访问权 |
+| `redirect-rules` | 认证节点可拉取 **全平台启用域名** 列表（无 `skip_url`）；属元数据泄露面，依赖 Token 保密 |
+| `TRUSTED_PROXIES=*` | 生产默认 **拒绝启动**（含 `queue:work` / `schedule:run`）；仅 `REDI_ALLOW_TRUST_ALL_PROXIES=true` 且主控绝不直连公网时例外 |
 | `/api/nodes/*` | Bearer 鉴权，与 Dcat 会话分离；可拉取 **全平台** 证书私钥（设计为受信节点，须物理/网络隔离） |
 | 节点 `ack` | 仅当存在该节点对应的 `redi_cert_deployments` 行时才接受，避免伪造部署成功 |
 | 平台 DNS 表单 | 仅超级管理员可提交（与「DNS 与节点池」页面一致） |
@@ -41,7 +43,6 @@
 |----|------|------|
 | 节点直连 MySQL | 仍为当前架构，便于部署 | DB 账号最小权限；IP 白名单；长期可改主控 API |
 | `/api.js` 无登录 | 跳转业务需要可被浏览器访问 | 防火墙 + 双档限速（见上；超限返回 `429` / `// rate limit`） |
-| `TRUSTED_PROXIES=*` | 生产环境默认 **拒绝启动** | 填反代 IP/CIDR；仅当主控绝不直连公网时设 `REDI_ALLOW_TRUST_ALL_PROXIES=true` |
 | `lagran` | 面向被干扰域名，生产默认 **开启**；需 root/CAP_NET_ADMIN | 仅调试时设 `REDI_LAGRAN_DISABLED=1` 或 `lagran.enabled=false` |
 | 默认后台密码 | 种子账号仍为文档中的初始密码 | 登录后 middleware 会强制跳转改密（`REDI_BLOCK_DEFAULT_ADMIN_PASSWORD=false` 可关） |
 
