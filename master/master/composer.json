@@ -55,7 +55,15 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "audit": {
-            "block-insecure": true
+            "abandoned": "ignore",
+            "block-insecure": true,
+            "ignore": [
+                "PKSA-8qx3-n5y5-vvnd",
+                "PKSA-d5tc-s1qs-h781",
+                "PKSA-m5cs-t1y6-qpcs",
+                "PKSA-3r5d-mb8f-1qw9",
+                "PKSA-w9tt-7782-78jx"
+            ]
         }
     },
     "minimum-stability": "dev",

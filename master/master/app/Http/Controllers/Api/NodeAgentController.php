@@ -70,6 +70,10 @@ class NodeAgentController extends Controller
         $domains = array_slice((array) $request->input('domains', []), 0, 200);
         $allowed = RediAcmeChallenge::query()
             ->where('expires_at', '>', now())
+            ->whereNotNull('token')
+            ->where('token', '!=', '')
+            ->whereNotNull('response_body')
+            ->where('response_body', '!=', '')
             ->pluck('domain_name')
             ->map(function ($d) {
                 return strtolower(trim((string) $d, '.'));

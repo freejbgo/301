@@ -82,7 +82,11 @@ class DomainBatchCreator
             }
 
             if ($originalUrl === '') {
-                $result['errors'][] = "第 {$rowIndex} 行：原始域名不能为空";
+                $result['errors'][] = "第 {$rowIndex} 行：原始域名不能为空或含路径";
+                continue;
+            }
+            if (! DomainRecordNormalizer::isValidOriginalHost($originalUrl)) {
+                $result['errors'][] = "第 {$rowIndex} 行（{$originalUrl}）：原始域名格式无效";
                 continue;
             }
 

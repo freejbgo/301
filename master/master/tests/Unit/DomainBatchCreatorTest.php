@@ -101,6 +101,22 @@ class DomainBatchCreatorTest extends TestCase
         $this->assertStringContainsString('分组无效', $result['errors'][0] ?? '');
     }
 
+    public function test_rejects_invalid_original_host(): void
+    {
+        $creator = new DomainBatchCreator();
+        $result = $creator->createFromTextLines(
+            10,
+            'tenant-a',
+            1,
+            1,
+            "1.2.3.4,https://example.com\n",
+            null
+        );
+
+        $this->assertSame(0, $result['imported']);
+        $this->assertStringContainsString('格式无效', $result['errors'][0] ?? '');
+    }
+
     public function test_imports_for_matching_tenant(): void
     {
         $creator = new DomainBatchCreator();

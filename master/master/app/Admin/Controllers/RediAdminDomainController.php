@@ -230,6 +230,11 @@ JS
                         'original_url' => '原始域名与跳转链接不能为空',
                     ]);
                 }
+                if (! DomainRecordNormalizer::isValidOriginalHost($originalUrl)) {
+                    throw ValidationException::withMessages([
+                        'original_url' => '原始域名格式无效（请填写主域名主机名，如 foo.com，不要含路径、IP 或非法字符）',
+                    ]);
+                }
 
                 $groupRow = DB::table('redi_admin_group')->where('id', $groupId)->first();
                 if (! $groupRow) {
