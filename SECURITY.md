@@ -32,7 +32,7 @@
 | 证书队列 | 仅能为当前管理员名下域名入队；同一时刻只跑一个 ACME 任务 |
 | 队列 | 生产请 `QUEUE_CONNECTION=database`，并常驻 `queue:work --sleep=3 --timeout=320 --tries=100` |
 | ACME 并发 | 全局锁 `redi-acme-le-global` + 按域名锁；**多台** `queue:work` 时 `CACHE_DRIVER` 须为 **redis**（或共享缓存），否则文件锁不跨机 |
-| 节点 Agent | `REDI_MASTER_URL` 必须 **https://**；可选 `REDI_DB_TLS=1`；Agent **0.1.2+** 按 challenges/rules/certificates 分项 revision，仅拉取变更类型；`REDI_MIN_AGENT_VERSION` 在 **register** 与 **heartbeat** 均校验 |
+| 节点 Agent | `REDI_MASTER_URL` 必须 **https://**；可选 `REDI_DB_TLS=1`；Agent **0.1.2+** 按 challenges/rules/certificates 分项 revision，仅拉取变更类型；在 `.env` 设置 `REDI_MIN_AGENT_VERSION` 后，**register/heartbeat** 必须带 `version` 且不低于该值（见 `config/redi.php`，支持 `config:cache`） |
 | 证书表 | `redi_domain_certs.domain_id` 外键级联删除，避免孤儿证书记录 |
 
 ## 架构说明（已知限制）

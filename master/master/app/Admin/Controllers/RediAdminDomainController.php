@@ -54,10 +54,6 @@ class RediAdminDomainController extends AdminController
                 $actions->append(new ApplyCertificate());
             });
             
-            $adminUser = Admin::user();
-            if (! $adminUser || ! method_exists($adminUser, 'isAdministrator') || ! $adminUser->isAdministrator()) {
-                $grid->model()->where('admin_id', '=', $adminUser->id);
-            }
             $grid->model()->with(['group', 'certificate']);
 
             $grid->column('id')->sortable();
@@ -66,14 +62,14 @@ class RediAdminDomainController extends AdminController
             });
             $grid->column('original_url', '原始域名');
             $grid->column('cname_target', 'CNAME 目标')->display(function () {
-                $target = TenantEdgeService::cnameTargetForAdmin((int) Admin::user()->id);
+                $target = TenantEdgeService::cnameTargetForAdmin((int) $this->admin_id);
                 if ($target === '' || strncmp($target, '（', 3) === 0) {
                     return $target;
                 }
                 return e($target).' <a href="javascript:;" class="redi-copy-cname" data-copy="'.e($target).'">复制</a>';
             });
             $grid->column('cname_ok', '解析预检')->display(function () {
-                $edgeFqdn = TenantEdgeService::cnameTargetForAdmin((int) Admin::user()->id);
+                $edgeFqdn = TenantEdgeService::cnameTargetForAdmin((int) $this->admin_id);
                 if ($edgeFqdn === '' || strncmp($edgeFqdn, '（', 3) === 0) {
                     return '—';
                 }
@@ -202,7 +198,18 @@ JS
 
             $form->saving(function (Form $form) use (&$previousOriginalUrl) {
                 $request = request()->all();
-                $adminId = (int) Admin::user()->id;
+                $sessionAdminId = (int) Admin::user()->id;
+                $ownerAdminId = $sessionAdminId;
+
+                if ($form->isEditing()) {
+                    $existing = \App\Models\RediAdminDomain::query()->find($form->getKey());
+                    if ($existing) {
+                        $ownerAdminId = (int) $existing->admin_id;
+                        $previousOriginalUrl = $existing->original_url;
+                        $form->input('admin_id', $existing->admin_id);
+                        $form->input('admin_name', $existing->admin_name);
+                    }
+                }
 
                 $originalUrl = DomainRecordNormalizer::normalizeOriginalUrl($request['original_url'] ?? '');
                 $skipUrl = DomainRecordNormalizer::normalizeSkipUrl($request['skip_url'] ?? '');
@@ -215,13 +222,13 @@ JS
                 }
 
                 $groupOk = RediAdminGroup::query()
-                    ->where('admin_id', $adminId)
+                    ->where('admin_id', $ownerAdminId)
                     ->where('id', $groupId)
                     ->exists();
 
                 if (! $groupOk) {
                     throw ValidationException::withMessages([
-                        'group_id' => '分组无效或不属于当前账号',
+                        'group_id' => '分组无效或不属于域名所属账号',
                     ]);
                 }
 
@@ -232,17 +239,8 @@ JS
                     ]);
                 }
 
-                if ($form->isEditing()) {
-                    $existing = \App\Models\RediAdminDomain::query()->find($form->getKey());
-                    if ($existing) {
-                        $previousOriginalUrl = $existing->original_url;
-                        $form->input('admin_id', $existing->admin_id);
-                        $form->input('admin_name', $existing->admin_name);
-                    }
-                }
-
                 if ($form->isCreating()) {
-                    $form->input('admin_id', $adminId);
+                    $form->input('admin_id', $sessionAdminId);
                     $form->input('admin_name', Admin::user()->username);
                 }
 

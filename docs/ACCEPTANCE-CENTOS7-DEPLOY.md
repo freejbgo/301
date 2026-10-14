@@ -83,7 +83,7 @@ sudo firewall-cmd --list-all
 | `curl` 后台 | **302** 或 **200** |
 | 3306 | 监听；**不要**对 `0.0.0.0/0` 在安全组全网开放 |
 | firewalld | 含 `ssh` `http` `https`；对节点 IP 有 mysql 相关 rich rule（若已配置 `NODE_IPS`） |
-| 节点 DB 权限 | 远程账号仅 `redi_admin_domain` 的 SELECT/UPDATE（重跑 `deploy-master.sh` 会收紧旧授权） |
+| 节点 DB 权限 | 远程账号 `redi_node` 仅 EXECUTE `redi_node_bump_skip`（`grant-node-mysql.sh`；migrate 后执行） |
 
 Nginx 重复部署行为：
 
@@ -171,7 +171,7 @@ ss -lntp | egrep ':80|:443|:8080' || true
 sudo firewall-cmd --list-all
 /opt/redi-multi/redi-multi/bin/redi-multi -version 2>/dev/null || true
 grep server_ip /opt/redi-multi/redi-multi/config.json
-mysql -h 1.2.3.4 -u redi_admin -p'YourStrongDbPass_2026' -e "SELECT 1" redi_admin
+mysql -h 1.2.3.4 -u redi_node -p'YourStrongDbPass_2026' redi_admin -e "CALL redi_node_bump_skip('__smoke__')"
 curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 ```
 

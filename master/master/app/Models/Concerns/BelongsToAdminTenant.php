@@ -16,6 +16,10 @@ trait BelongsToAdminTenant
 
             $user = Admin::user();
             if ($user) {
+                if (method_exists($user, 'isAdministrator') && $user->isAdministrator()) {
+                    return;
+                }
+
                 $builder->where(
                     $builder->getModel()->getTable().'.admin_id',
                     (int) $user->id

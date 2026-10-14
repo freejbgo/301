@@ -181,14 +181,15 @@ chmod 600 "$db_cnf"
 cat > "$db_cnf" <<EOF
 [client]
 host=${MASTER_IP}
-user=redi_admin
+user=redi_node
 password=${DB_PASS}
+database=redi_admin
 EOF
-if mysql --defaults-extra-file="$db_cnf" -e "SELECT 1" redi_admin >/dev/null; then
-  echo "数据库连接正常"
+if mysql --defaults-extra-file="$db_cnf" -e "CALL redi_node_bump_skip('__redi_deploy_smoke__')" >/dev/null; then
+  echo "数据库连接正常（redi_node EXECUTE redi_node_bump_skip）"
 else
   rm -f "$db_cnf"
-  die "连不上 ${MASTER_IP} 的 redi_admin。请确认主控已对本机 IP 授权并放行 3306"
+  die "连不上 ${MASTER_IP} 或 redi_node 无 EXECUTE 权限。请先在主控 migrate 后执行 grant-node-mysql.sh，并放行 3306"
 fi
 rm -f "$db_cnf"
 

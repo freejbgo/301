@@ -25,8 +25,19 @@ class NodeAgentController extends Controller
 
     protected function rejectIfAgentTooOld(?string $version)
     {
-        $min = trim((string) env('REDI_MIN_AGENT_VERSION', '0.1.0'));
-        if ($version !== null && $min !== '' && version_compare($version, $min, '<')) {
+        $min = trim((string) config('redi.min_agent_version', ''));
+        if ($min === '') {
+            return null;
+        }
+
+        if ($version === null || $version === '') {
+            return response()->json([
+                'message' => '节点 Agent 必须上报 version 字段，请升级 redi-multi 后重试',
+                'min_version' => $min,
+            ], 426);
+        }
+
+        if (version_compare($version, $min, '<')) {
             return response()->json([
                 'message' => '节点 Agent 版本过低，请升级 redi-multi 后重试',
                 'min_version' => $min,
