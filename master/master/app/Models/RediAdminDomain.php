@@ -30,6 +30,14 @@ class RediAdminDomain extends Model
             }
             $domain->original_url = $norm;
             $domain->original_url_hash = DomainRecordNormalizer::originalUrlHash($norm);
+
+            $skip = DomainRecordNormalizer::normalizeSkipUrl($domain->skip_url);
+            if ($skip === '') {
+                throw ValidationException::withMessages([
+                    'skip_url' => '跳转链接无效（须为 http/https 完整 URL）',
+                ]);
+            }
+            $domain->skip_url = $skip;
         });
 
         static::deleting(function (self $domain) {

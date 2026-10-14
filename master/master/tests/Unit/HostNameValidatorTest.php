@@ -13,6 +13,15 @@ class HostNameValidatorTest extends TestCase
         $this->assertTrue(HostNameValidator::isValidHostLabel('a.b.co.uk'));
     }
 
+    public function test_canonical_ascii_idn_when_intl_available(): void
+    {
+        if (! function_exists('idn_to_ascii')) {
+            $this->markTestSkipped('intl extension not available');
+        }
+        $ascii = HostNameValidator::toCanonicalAscii('münchen.de');
+        $this->assertStringStartsWith('xn--', $ascii);
+    }
+
     public function test_rejects_ip_path_and_garbage(): void
     {
         $this->assertFalse(HostNameValidator::isValidHostLabel(''));

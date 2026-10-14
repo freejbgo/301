@@ -14,5 +14,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
+    if (config('app.env') === 'production') {
+        return redirect('/admin');
+    }
+
     return view('welcome');
 });

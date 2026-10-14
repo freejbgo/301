@@ -90,7 +90,7 @@ step "CentOS $(uname -r)。使用静态二进制，不编译内核模块"
 redi_use_centos7_vault_repos
 yum install -y epel-release
 redi_use_epel_archive_repo
-yum install -y firewalld tar iptables libcap mariadb
+yum install -y firewalld tar iptables libcap mariadb python3
 
 if modprobe nfnetlink_queue 2>/dev/null; then
   echo "已加载 nfnetlink_queue"
