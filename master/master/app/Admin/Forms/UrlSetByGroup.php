@@ -3,6 +3,7 @@
 namespace App\Admin\Forms;
 
 use App\Services\DomainRecordNormalizer;
+use App\Support\AdminTenantContext;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Contracts\LazyRenderable;
 use Dcat\Admin\Traits\LazyWidget;
@@ -36,18 +37,17 @@ class UrlSetByGroup extends Form implements LazyRenderable
             return $this->response()->error('跳转链接异常');
         }
 
-        $ownsGroup = DB::table('redi_admin_group')
-            ->where('id', $groupId)
-            ->where('admin_id', $adminId)
-            ->exists();
-
-        if (! $ownsGroup) {
+        $group = DB::table('redi_admin_group')->where('id', $groupId)->first();
+        if (! $group) {
+            return $this->response()->error('分组无效');
+        }
+        if (! AdminTenantContext::isPlatformAdministrator() && (int) $group->admin_id !== $adminId) {
             return $this->response()->error('分组无效或不属于当前账号');
         }
 
         DB::table('redi_admin_domain')
             ->where('group_id', $groupId)
-            ->where('admin_id', $adminId)
+            ->where('admin_id', (int) $group->admin_id)
             ->update(['skip_url' => $skipUrl]);
 
         return $this

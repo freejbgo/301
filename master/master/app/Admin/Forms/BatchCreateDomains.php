@@ -3,6 +3,7 @@
 namespace App\Admin\Forms;
 
 use App\Services\DomainBatchCreator;
+use App\Support\AdminTenantContext;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Widgets\Form;
 use Illuminate\Support\Facades\DB;
@@ -12,12 +13,21 @@ class BatchCreateDomains extends Form
     public function handle(array $input)
     {
         $user = Admin::user();
+        $groupId = (int) ($input['group_id'] ?? 0);
+        $group = DB::table('redi_admin_group')->where('id', $groupId)->first();
+        if (! $group) {
+            return $this->response()->error('分组无效');
+        }
+        if (! AdminTenantContext::isPlatformAdministrator() && (int) $group->admin_id !== (int) $user->id) {
+            return $this->response()->error('分组无效或不属于当前账号');
+        }
+
         $creator = new DomainBatchCreator();
 
         $result = $creator->createFromTextLines(
-            (int) $user->id,
-            (string) $user->username,
-            (int) ($input['group_id'] ?? 0),
+            (int) $group->admin_id,
+            (string) $group->admin_name,
+            $groupId,
             (int) ($input['status'] ?? 1),
             (string) ($input['lines'] ?? ''),
             $input['default_skip_url'] ?? null
@@ -41,15 +51,9 @@ class BatchCreateDomains extends Form
 
     public function form()
     {
-        $groupList = [];
-        $groups = DB::table('redi_admin_group')
-            ->where('admin_id', Admin::user()->id)
-            ->where('status', 1)
-            ->get(['id', 'name']);
-
-        foreach ($groups as $group) {
-            $groupList[$group->id] = $group->name;
-        }
+        $groupList = AdminTenantContext::groupSelectOptions(
+            AdminTenantContext::isPlatformAdministrator() ? null : AdminTenantContext::sessionAdminId()
+        );
 
         $max = DomainBatchCreator::MAX_LINES_PER_BATCH;
 
