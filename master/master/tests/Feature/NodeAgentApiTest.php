@@ -81,6 +81,7 @@ class NodeAgentApiTest extends TestCase
         $node->enabled = true;
         $node->save();
         $plain = $node->issueApiTokenPlain();
+        $node->save();
 
         return [$node, $plain];
     }

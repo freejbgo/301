@@ -109,7 +109,7 @@ class DomainBatchCreatorTest extends TestCase
             'tenant-a',
             1,
             1,
-            "foo.com/bar,https://example.com\n",
+            "1.2.3.4,https://example.com\n",
             null
         );
 

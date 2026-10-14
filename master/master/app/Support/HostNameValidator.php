@@ -14,7 +14,8 @@ class HostNameValidator
             return false;
         }
         if (function_exists('idn_to_ascii')) {
-            $ascii = idn_to_ascii($host, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+            $variant = defined('INTL_IDNA_VARIANT_UTS46') ? INTL_IDNA_VARIANT_UTS46 : 0;
+            $ascii = idn_to_ascii($host, IDNA_DEFAULT, $variant);
             if ($ascii === false) {
                 return false;
             }
