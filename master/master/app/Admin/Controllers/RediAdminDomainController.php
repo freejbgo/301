@@ -173,20 +173,27 @@ JS
 
             $form->display('id');
             $form->select('group_id', '分组')->options($groupList);
-            $cnameAdminId = AdminTenantContext::sessionAdminId();
-            if ($form->isEditing() && $form->model()->admin_id) {
-                $cnameAdminId = (int) $form->model()->admin_id;
+            if (AdminTenantContext::isPlatformAdministrator() && $form->isCreating()) {
+                $form->html(
+                    '<div class="alert alert-info">请先选择<strong>所属租户的分组</strong>并保存。保存后在列表「CNAME 目标」列查看该租户的边缘域名。</div>',
+                    '接入说明'
+                );
+            } else {
+                $cnameAdminId = AdminTenantContext::sessionAdminId();
+                if ($form->isEditing() && $form->model()->admin_id) {
+                    $cnameAdminId = (int) $form->model()->admin_id;
+                }
+                $cname = TenantEdgeService::cnameTargetForAdmin($cnameAdminId);
+                $cnameHint = AdminTenantContext::isPlatformAdministrator()
+                    ? '域名所属租户账号下所有域名共用此 CNAME 目标（改分组迁户后以保存结果为准）'
+                    : '本账号下所有域名共用';
+                $form->html(
+                    '<div class="alert alert-info">请将客户域名 CNAME 到：<code id="redi-cname-form">'.e($cname).'</code> '
+                    .'<a href="javascript:;" class="redi-copy-cname" data-copy="'.e($cname).'">复制</a>'
+                    .'（'.e($cnameHint).'）</div>',
+                    '接入说明'
+                );
             }
-            $cname = TenantEdgeService::cnameTargetForAdmin($cnameAdminId);
-            $cnameHint = AdminTenantContext::isPlatformAdministrator()
-                ? '域名所属租户账号下所有域名共用此 CNAME 目标（保存时以所选分组为准）'
-                : '本账号下所有域名共用';
-            $form->html(
-                '<div class="alert alert-info">请将客户域名 CNAME 到：<code id="redi-cname-form">'.e($cname).'</code> '
-                .'<a href="javascript:;" class="redi-copy-cname" data-copy="'.e($cname).'">复制</a>'
-                .'（'.e($cnameHint).'）</div>',
-                '接入说明'
-            );
             $form->text('original_url', '原始域名')->help('客户主域名，如 foo.com（全平台唯一，供边缘节点按 Host 查询）');
             $form->text('skip_url', '跳转链接');
             $form->radio('status', '状态')->options([1=>'启用', 2=>'停用'])->default(1);
@@ -283,6 +290,13 @@ JS
                 }
                 TenantEdgeService::ensureForAdmin((int) $domain->admin_id);
 
+                RediDomainCert::query()
+                    ->where('domain_id', $domain->id)
+                    ->update([
+                        'domain_name' => $domain->original_url,
+                        'admin_id' => $domain->admin_id,
+                    ]);
+
                 if (! $form->isEditing()) {
                     return;
                 }
@@ -295,20 +309,11 @@ JS
                         RediAcmeChallengeNodeSync::query()->where('domain_name', $oldUrl)->delete();
                     }
                     RediAcmeChallengeNodeSync::query()->where('domain_name', $newUrl)->delete();
-                    RediDomainCert::query()
-                        ->where('domain_id', $domain->id)
-                        ->update(['domain_name' => $newUrl]);
                     if ((int) $domain->status === 1) {
                         IssueDomainCertificateJob::dispatch((int) $domain->id)
                             ->delay(now()->addSeconds(15));
                     }
-
-                    return;
                 }
-
-                RediDomainCert::query()
-                    ->where('domain_id', $domain->id)
-                    ->update(['domain_name' => $domain->original_url]);
             });
         });
     }
