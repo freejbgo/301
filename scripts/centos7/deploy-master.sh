@@ -248,6 +248,10 @@ if ! grep -q '^APP_KEY=base64:' .env; then
   php artisan key:generate --force
 fi
 php artisan migrate --force
+proc_count="$(mysql_root -N -e "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='redi_admin' AND ROUTINE_NAME='redi_node_bump_skip' AND ROUTINE_TYPE='PROCEDURE'")"
+if [[ "${proc_count:-0}" == "0" ]]; then
+  die "数据库缺少存储过程 redi_node_bump_skip。请确认 migrate 成功（迁移 100009），且未跳过 php artisan migrate。"
+fi
 php artisan config:clear
 if [[ ! -L public/storage ]]; then
   php artisan storage:link
