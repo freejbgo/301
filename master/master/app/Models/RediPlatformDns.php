@@ -18,10 +18,13 @@ class RediPlatformDns extends Model
         'pool_host',
         'dns_mode',
         'dns_driver',
-        'api_credentials',
         'dns_zone_id',
         'acme_contact_email',
         'acme_staging',
+    ];
+
+    protected $guarded = [
+        'api_credentials',
     ];
 
     protected $casts = [

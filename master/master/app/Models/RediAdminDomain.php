@@ -46,8 +46,12 @@ class RediAdminDomain extends Model
         'skip_url',
         'status',
         'force_https',
+    ];
+
+    protected $guarded = [
         'admin_id',
         'admin_name',
+        'skip_num',
     ];
 
     protected $casts = [

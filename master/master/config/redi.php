@@ -14,4 +14,16 @@ return [
 
     'min_agent_version' => env('REDI_MIN_AGENT_VERSION', ''),
 
+    /*
+    |--------------------------------------------------------------------------
+    | 禁止继续使用种子/文档中的默认后台密码
+    |--------------------------------------------------------------------------
+    */
+
+    'block_default_admin_password' => env('REDI_BLOCK_DEFAULT_ADMIN_PASSWORD', true),
+
+    'known_default_admin_passwords' => [
+        'Redi301@Install2026',
+    ],
+
 ];
