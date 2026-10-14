@@ -29,7 +29,7 @@
 | 证书存储 | `redi_domain_certs` 中 PEM 经 Laravel `Crypt` 加密；备份库即备份密钥材料 |
 | ACME | 主控 `storage/app/acme` 存 LE 账户；签发前要求节点上报挑战已同步，并探测公网域名 HTTP-01 |
 | 节点注册 | Agent 不能通过 API 修改节点公网 IP；IP 只在后台「节点管理」维护 |
-| 证书队列 | 仅能为当前管理员名下域名入队；同一时刻只跑一个 ACME 任务 |
+| 证书队列 | 子账号仅能为本人名下域名入队；**超级管理员**可为任意租户域名入队；同一时刻只跑一个 ACME 任务 |
 | 队列 | 生产请 `QUEUE_CONNECTION=database`，并常驻 `queue:work --sleep=3 --timeout=320 --tries=100` |
 | ACME 并发 | 全局锁 `redi-acme-le-global` + 按域名锁；**多台** `queue:work` 时 `CACHE_DRIVER` 须为 **redis**（或共享缓存），否则文件锁不跨机 |
 | 节点 Agent | `REDI_MASTER_URL` 必须 **https://**；可选 `REDI_DB_TLS=1`；Agent **0.1.2+** 按 challenges/rules/certificates 分项 revision，仅拉取变更类型；在 `.env` 设置 `REDI_MIN_AGENT_VERSION` 后，**register/heartbeat** 必须带 `version` 且不低于该值（见 `config/redi.php`，支持 `config:cache`） |
