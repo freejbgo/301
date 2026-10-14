@@ -3,6 +3,7 @@
 namespace App\Admin\Controllers;
 
 use App\Admin\Repositories\RediAdminGroup;
+use App\Support\AdminTenantContext;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
@@ -31,6 +32,9 @@ class RediAdminGroupController extends AdminController
         return Grid::make(new RediAdminGroup(), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('name');
+            if (AdminTenantContext::isPlatformAdministrator()) {
+                $grid->column('admin_name', '所属账号');
+            }
             $grid->column('status', '状态')->using([1 => "启用", 2 => "停用"]);
             $grid->column('created_at');
             $grid->column('updated_at')->sortable();

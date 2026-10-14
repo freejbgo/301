@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\DB;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Layout\Content;
 use App\Admin\Actions\Modal\BatchDomainModal;
-use App\Models\RediAdminGroup;
 use App\Models\RediDomainCert;
 use App\Services\DomainOriginalUrlGuard;
 use App\Services\DomainRecordNormalizer;
@@ -165,10 +164,10 @@ JS
             $previousOriginalUrl = null;
 
             $groupOwnerId = null;
-            if ($form->isEditing() && $form->model()->admin_id) {
-                $groupOwnerId = (int) $form->model()->admin_id;
-            } elseif (! AdminTenantContext::isPlatformAdministrator()) {
-                $groupOwnerId = AdminTenantContext::sessionAdminId();
+            if (! AdminTenantContext::isPlatformAdministrator()) {
+                $groupOwnerId = $form->isEditing() && $form->model()->admin_id
+                    ? (int) $form->model()->admin_id
+                    : AdminTenantContext::sessionAdminId();
             }
             $groupList = AdminTenantContext::groupSelectOptions($groupOwnerId);
 
@@ -179,17 +178,20 @@ JS
                 $cnameAdminId = (int) $form->model()->admin_id;
             }
             $cname = TenantEdgeService::cnameTargetForAdmin($cnameAdminId);
+            $cnameHint = AdminTenantContext::isPlatformAdministrator()
+                ? '域名所属租户账号下所有域名共用此 CNAME 目标（保存时以所选分组为准）'
+                : '本账号下所有域名共用';
             $form->html(
                 '<div class="alert alert-info">请将客户域名 CNAME 到：<code id="redi-cname-form">'.e($cname).'</code> '
                 .'<a href="javascript:;" class="redi-copy-cname" data-copy="'.e($cname).'">复制</a>'
-                .'（本账号下所有域名共用）</div>',
+                .'（'.e($cnameHint).'）</div>',
                 '接入说明'
             );
             $form->text('original_url', '原始域名')->help('客户主域名，如 foo.com（全平台唯一，供边缘节点按 Host 查询）');
             $form->text('skip_url', '跳转链接');
             $form->radio('status', '状态')->options([1=>'启用', 2=>'停用'])->default(1);
             $form->switch('force_https', '强制 HTTPS')->help('证书状态为「已生效」后再打开。开启后节点对 HTTP 请求 301 到 HTTPS');
-            if ($form->isCreating()) {
+            if ($form->isCreating() && ! AdminTenantContext::isPlatformAdministrator()) {
                 $form->hidden('admin_id')->value(Admin::user()->id);
                 $form->hidden('admin_name')->value(Admin::user()->username);
             }
@@ -216,25 +218,24 @@ JS
                 $skipUrl = DomainRecordNormalizer::normalizeSkipUrl($request['skip_url'] ?? '');
                 $groupId = (int) ($request['group_id'] ?? 0);
 
-                if ($form->isCreating() && AdminTenantContext::isPlatformAdministrator()) {
-                    $groupRow = DB::table('redi_admin_group')->where('id', $groupId)->first();
-                    if ($groupRow) {
-                        $ownerAdminId = (int) $groupRow->admin_id;
-                    }
-                }
-
                 if ($originalUrl === '' || $skipUrl === '') {
                     throw ValidationException::withMessages([
                         'original_url' => '原始域名与跳转链接不能为空',
                     ]);
                 }
 
-                $groupOk = RediAdminGroup::query()
-                    ->where('admin_id', $ownerAdminId)
-                    ->where('id', $groupId)
-                    ->exists();
+                $groupRow = DB::table('redi_admin_group')->where('id', $groupId)->first();
+                if (! $groupRow) {
+                    throw ValidationException::withMessages([
+                        'group_id' => '分组无效',
+                    ]);
+                }
 
-                if (! $groupOk) {
+                if (AdminTenantContext::isPlatformAdministrator()) {
+                    $ownerAdminId = (int) $groupRow->admin_id;
+                    $form->input('admin_id', $groupRow->admin_id);
+                    $form->input('admin_name', $groupRow->admin_name);
+                } elseif ((int) $groupRow->admin_id !== $ownerAdminId) {
                     throw ValidationException::withMessages([
                         'group_id' => '分组无效或不属于域名所属账号',
                     ]);
@@ -247,17 +248,9 @@ JS
                     ]);
                 }
 
-                if ($form->isCreating()) {
-                    if (AdminTenantContext::isPlatformAdministrator()) {
-                        $groupRow = DB::table('redi_admin_group')->where('id', $groupId)->first();
-                        if ($groupRow) {
-                            $form->input('admin_id', $groupRow->admin_id);
-                            $form->input('admin_name', $groupRow->admin_name);
-                        }
-                    } else {
-                        $form->input('admin_id', $sessionAdminId);
-                        $form->input('admin_name', Admin::user()->username);
-                    }
+                if ($form->isCreating() && ! AdminTenantContext::isPlatformAdministrator()) {
+                    $form->input('admin_id', $sessionAdminId);
+                    $form->input('admin_name', Admin::user()->username);
                 }
 
                 $form->input('original_url', $originalUrl);
