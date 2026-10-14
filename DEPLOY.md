@@ -5,7 +5,9 @@
 
 按这个顺序做：先主控和数据库，再节点，最后到后台把 DNS、节点和域名配好。控制台里每一步点哪里，见 [docs/CONSOLE.md](docs/CONSOLE.md)。
 
-CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。填好的变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。真机装完后用 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 逐步验收。下面是通用步骤；CentOS 7 不要按克隆目录手工装，直接跑脚本。
+CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。填好的变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。真机装完后用 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 逐步验收。
+
+**绿场（无旧数据）** 时 SQL 与 `migrate` 的分工见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。下面是通用步骤；CentOS 7 不要按克隆目录手工装，直接跑脚本。
 
 ## 这套程序怎么接流量
 
@@ -24,7 +26,7 @@ CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)�
 | 主控 | Nginx、PHP 8.0.2+、MySQL/MariaDB、队列 | 22、80、443 | 3306 |
 | 每台节点 | `node/redi-multi.tar.gz` 里的程序 | 22、80、443 | 3306、8080 |
 
-节点仍直连主控上的 MySQL，所以 3306 只允许主控本机和各节点的出口 IP。8080 是旧的脚本端口，跳转页已经改用客户域名上的 `/api.js`、`/c.js`，不必对访客开放 8080。
+节点仍直连主控上的 MySQL，所以 3306 只允许主控本机和各节点的出口 IP。8080 是调试监听（默认 `127.0.0.1:8080`）；生产跳转走客户域名 **80/443** 上的 `/api.js`、`/c.js`，不必对访客开放 8080。`/api.js` 对公网开放是业务需要，节点侧有 **按 IP** 与 **按 IP+域名参数** 限速（见 [SECURITY.md](SECURITY.md)）。
 
 一台跳转机器只跑一个节点进程、一个 Token。这台机器的其他公网 IP 填在该节点的「其他公网 IP」里。
 
@@ -37,9 +39,16 @@ mysql -u root -p < db/mysql_setup.example.sql
 mysql -u root -p redi_admin < db/redi_admin.sql
 ```
 
-- **绿场（无旧数据）**：`redi_admin.sql` 只负责 Dcat 菜单与业务表；**节点用的存储过程**由 `php artisan migrate --force` 创建（`100009`），SQL 里不再重复写过程体。已删除仅用于旧库清理的迁移 `100010`，新装不必关心。
-- 导入 SQL 后**必须**再执行 `php artisan migrate --force`（CentOS 脚本会自动执行）。
-- 初始后台账号：用户名 `admin`，密码 `Redi301@Install2026`；仍为默认密码时后台会强制跳转改密。
+- **绿场**：`redi_admin.sql` = Dcat 菜单 + 业务表 + 默认 `admin`；**`redi_node_bump_skip` 存储过程** 只由 **`php artisan migrate --force`** 创建（迁移 `100009`）。详见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。
+- 导入 SQL 后**必须**再执行 `php artisan migrate --force`（CentOS `deploy-master.sh` 会自动执行并检查过程是否存在）。
+- 验证过程（可选）：
+
+```bash
+mysql -u redi_admin -p redi_admin -e \
+  "SHOW PROCEDURE STATUS WHERE Db='redi_admin' AND Name='redi_node_bump_skip'"
+```
+
+- 初始后台账号：用户名 `admin`，密码 `Redi301@Install2026`；仍为默认密码时除改密页外无法使用后台（`.env` 可设 `REDI_BLOCK_DEFAULT_ADMIN_PASSWORD=false` 关闭强制改密）。
 - 关闭 MySQL 反向 DNS。CentOS 7 执行 `sudo bash scripts/centos7/apply-mysql-skip-name-resolve.sh`。其他系统在 `[mysqld]` 下加入 `skip-name-resolve` 和 `skip-external-locking` 后重启数据库。
 - 每台节点的出口 IP 单独授权，不要把 3306 开放给 `0.0.0.0/0`：
 
@@ -67,6 +76,8 @@ cp .env.example .env
 | `DB_HOST` | 库在本机就保持 `127.0.0.1` |
 | `QUEUE_CONNECTION` | 保持 `database` |
 | `ADMIN_HTTPS` | 已有 HTTPS 证书时 `true`；暂时只用 IP 的 HTTP 时先改 `false` |
+| `REDI_BLOCK_DEFAULT_ADMIN_PASSWORD` | 默认 `true`：检测到种子默认密码则强制改密 |
+| `TRUSTED_PROXIES` | 反代后填代理 IP/CIDR；**生产勿用 `*`**（见 `config/trustedproxy.php`） |
 
 ```bash
 composer install --no-dev --optimize-autoloader
@@ -158,7 +169,7 @@ mysql -h 主控IP -u redi_node -p redi_admin -e "CALL redi_node_bump_skip('__smo
 1. 超级管理员打开「DNS 与节点池」，填写平台主域名。手动模式按页面参考表去 DNS 厂商添加 pool 的 A 和租户 CNAME。API 模式保存厂商凭证后点同步。
 2. 「节点管理」添加节点。主 IP 填这台机器的主公网 IPv4，其他 IP 按行填在「其他公网 IP」。保存时复制 Token 到该机器的 `env.sh`。
 3. 添加或改了 IP 之后，手动模式去厂商改 pool 的 A；API 模式再点一次同步。删除节点不会自动删 DNS 记录。
-4. 普通账号在「分组管理」建分组，在「域名管理」添加客户域名。把列表里的 CNAME 目标交给客户。
+4. **超级管理员** 为每个租户在「分组管理」建分组（须选择 **所属租户账号**）；租户在「域名管理」添加客户域名。把列表里的 CNAME 目标交给客户。
 5. 预检显示「已指向」后，点「申请证书」。队列跑起来之后，状态会从验证中到已生效。
 
 **证书 / ACME 检查清单**

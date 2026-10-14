@@ -4,7 +4,9 @@
 
 ## 环境前提
 
-- 主控：`composer install`、`migrate`、`QUEUE_CONNECTION=database`、`php artisan queue:work` 常驻
+绿场库分工见 [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md)（导入 `redi_admin.sql` 后 **必须** `php artisan migrate --force`，含 `redi_node_bump_skip`）。
+
+- 主控：`composer install`、**`php artisan migrate --force`**、`QUEUE_CONNECTION=database`、`php artisan queue:work` 常驻
 - 续期 crontab：`10 3 * * * cd .../master/master && php artisan redi:renew-certificates`
 - 节点：`REDI_MASTER_URL`、`REDI_NODE_TOKEN`、`REDI_DB_*`；防火墙对公网开放 80/443（CentOS 7 脚本不开放 8080；`/api.js` 由 80/443 路径或内网访问，见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md)）
 

@@ -31,7 +31,7 @@ REDI_NODE_TOKEN=""
 sudo bash scripts/centos7/deploy-master.sh
 ```
 
-浏览器打开 `http://1.2.3.4/admin`，用 `admin` / `Redi301@Install2026` 登录后马上改密码。
+浏览器打开 `http://1.2.3.4/admin`，用 `admin` / `Redi301@Install2026` 登录；仍为默认密码时会 **强制改密** 后才能进其它菜单。
 
 在「节点管理」新建节点，主公网 IP 填 `5.6.7.8`，复制 Token。
 
@@ -53,7 +53,7 @@ sudo bash scripts/centos7/deploy-node.sh
 
 1. 超级管理员打开「DNS 与节点池」，平台主域名填你控制解析的域名，例如 `123.com`。
 2. 手动模式：按页面参考表，在 DNS 厂商给 `pool.123.com` 添加 A 记录 `5.6.7.8`，并添加租户 `{token}.123.com` CNAME 到 `pool.123.com`。
-3. 「分组管理」新建分组，「域名管理」添加客户域名。把该行的 CNAME 目标交给客户。客户把自己的域名 CNAME 到这个目标，不要 A 到 `5.6.7.8`。
+3. **超级管理员** 在「分组管理」新建分组（须选 **所属租户账号**）；租户在「域名管理」添加客户域名。把该行的 CNAME 目标交给客户。客户把自己的域名 CNAME 到这个目标，不要 A 到 `5.6.7.8`。
 4. 解析预检为「已指向」后，点「申请证书」。
 
 第二台节点：把新 IP 加进主控 `NODE_IPS`，再跑一次 `deploy-master.sh`，然后在新机器上跑 `deploy-node.sh`。同一台机器的第二个 IP 填在原节点的「其他公网 IP」，不要新建第二条节点。

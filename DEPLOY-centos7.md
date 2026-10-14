@@ -45,15 +45,15 @@ sudo bash scripts/centos7/deploy-master.sh
 2. 安装 Remi 的 PHP 8.0、Nginx、firewalld。不安装 PHP 8.1 或更高版本。
 3. 安装 MariaDB 10.6。CentOS 7 自带的 5.5 导不进这份 `utf8mb4` 库。
 4. 设置 root 密码，关闭反向域名解析，数据库监听 IPv4。3306 不对全网开放，只放行 `NODE_IPS`。
-5. 库是空的才导入 `db/redi_admin.sql`。已经有 `admin_users` 时不会覆盖。
-6. 把 `master/master.tar.gz` 解压到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、`migrate`、`storage:link`。
+5. 库是空的才导入 `db/redi_admin.sql`（菜单 + 业务表 + 默认 `admin`；**不含**存储过程正文）。已经有 `admin_users` 时不会覆盖。
+6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（创建 `redi_node_bump_skip` 等）、`storage:link`，并 **检查存储过程是否存在**（不存在则脚本失败退出）。
 7. 配置 PHP-FPM（用户 `nginx`，sock `/var/run/php-fpm/www.sock`）和 Nginx。开启 SELinux 时会放行网站访问网络和数据库。
 8. 安装队列 `redi-queue`：`queue:work --sleep=3 --timeout=320 --tries=100`。每天 03:10 以用户 `nginx` 执行 `redi:renew-certificates`。
 9. 防火墙开放 22、80、443。
 
 重复执行不会重置已有 `.env`、`APP_KEY` 和业务数据。`/etc/nginx/conf.d/301-master.conf` 若**没有** `301-master-managed` 标记则不会覆盖（便于你在同一文件里手工加 HTTPS）；带该标记或由脚本生成的文件会在重复部署时刷新 `root` 路径。HTTPS 也可单独增加 `conf.d` 片段。
 
-打开 `http://主控IP/admin`。用户名 `admin`，密码 `Redi301@Install2026`，登录后马上修改。
+打开 `http://主控IP/admin`。用户名 `admin`，密码 `Redi301@Install2026`。若仍为默认密码，系统会 **强制进入改密页**（`Admin → 用户设置`），改完后才能使用其它菜单。绿场数据库说明见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。
 
 有域名之后：把 `vars.env` 的 `MASTER_URL` 改成 `https://主控域名`、`ADMIN_HTTPS` 改成 `true`，再改服务器上的 `/opt/301/master/.env`（已有 `.env` 时脚本不会重写它），给 Nginx 配上证书，然后 `systemctl restart php-fpm redi-queue`。这张证书只保护后台。
 
@@ -67,7 +67,7 @@ sudo bash scripts/centos7/deploy-master.sh
 sudo bash scripts/centos7/deploy-node.sh
 ```
 
-脚本会安装 firewalld、iptables、`setcap` 和 MySQL 客户端，尝试加载 `nfnetlink_queue`（编进内核时加载失败可以忽略），解压发布包，写 `env.sh`（没有 `export`），把 `config.json` 的 `server_ip` 和 `default_redirect_url` 改成变量里的值，执行 `setcap cap_net_admin+ep`，并用 systemd 启动。防火墙只开放 22、80、443，不开放 8080。
+脚本会安装 firewalld、iptables、`setcap` 和 MySQL 客户端，尝试加载 `nfnetlink_queue`（编进内核时加载失败可以忽略），解压发布包（**不含**打包进 tar 的本机 `config.json`，从 `config.json.example` 生成），写 `env.sh`（没有 `export`），更新 `config.json` 的 `server_ip` / `default_redirect_url`、确保 **lagran 开启**，执行 `setcap cap_net_admin+ep`，启动后在校验 **cap_net_admin** 与 lagran 日志。防火墙只开放 22、80、443，不开放 8080。
 
 Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证书同步也不会做。补上 Token 后再执行一次脚本。
 
@@ -79,7 +79,7 @@ Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证�
 
 1. 「DNS 与节点池」填写平台主域名。
 2. 节点状态正常后，手动模式去 DNS 厂商按参考表添加 pool 的 A 和租户 CNAME。API 模式点同步。
-3. 「分组管理」建分组，「域名管理」添加客户域名，把 CNAME 目标交给客户。客户 CNAME 到这个目标，不要把域名 A 到某一台节点。
+3. **超级管理员** 在「分组管理」建分组（须选 **所属租户账号**）；租户在「域名管理」添加客户域名，把 CNAME 目标交给客户。客户 CNAME 到这个目标，不要把域名 A 到某一台节点。
 4. 预检为「已指向」后点「申请证书」。
 
 ## 5. 以后加一台节点
