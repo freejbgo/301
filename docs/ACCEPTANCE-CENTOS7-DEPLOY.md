@@ -59,6 +59,12 @@ sudo bash scripts/centos7/deploy-master.sh
 
 - [ ] 脚本 **退出码为 0**，末尾提示后台地址与初始账号。
 - [ ] 无报错停在 `yum`、MariaDB、Laravel migrate 等步骤。
+- [ ] migrate 后存在存储过程 `redi_node_bump_skip`（脚本会自动检查；也可手验）：
+
+```bash
+mysql --defaults-extra-file=/root/.redi-mysql.cnf redi_admin -e \
+  "SHOW PROCEDURE STATUS WHERE Db='redi_admin' AND Name='redi_node_bump_skip'"
+```
 
 ---
 
@@ -106,7 +112,7 @@ sudo -u nginx php /opt/301/master/artisan about 2>/dev/null | head -5
 浏览器打开 `http://1.2.3.4/admin`（或你的 `MASTER_URL`）：
 
 - [ ] 使用 `admin` / `Redi301@Install2026` 登录成功。
-- [ ] **立即修改**管理员密码。
+- [ ] 仍为默认密码时被 **强制改密**；完成改密后可进入「节点管理」等菜单。
 
 在「节点管理」：
 
@@ -170,7 +176,9 @@ systemctl is-active firewalld redi-multi
 ss -lntp | egrep ':80|:443|:8080' || true
 sudo firewall-cmd --list-all
 /opt/redi-multi/redi-multi/bin/redi-multi -version 2>/dev/null || true
-grep server_ip /opt/redi-multi/redi-multi/config.json
+grep -E 'server_ip|"enabled"' /opt/redi-multi/redi-multi/config.json
+getcap /opt/redi-multi/redi-multi/bin/redi-multi
+journalctl -u redi-multi --no-pager -n 30 | grep -i lagran || true
 mysql -h 1.2.3.4 -u redi_node -p'YourStrongDbPass_2026' redi_admin -e "CALL redi_node_bump_skip('__smoke__')"
 curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 ```
@@ -181,6 +189,9 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 | 监听 | **80、443** 由进程占用；**8080** 仅本机/内网，**安全组不要对公网开放 8080** |
 | firewalld | 仅 `ssh` `http` `https` |
 | `config.json` `server_ip` | 等于 `5.6.7.8` |
+| `lagran.enabled` | **true**（被干扰域名场景默认） |
+| `getcap` | 含 `cap_net_admin` |
+| lagran 日志 | 无长期 `[lagran] disabled`（`deploy-node.sh` 也会校验） |
 | MySQL 从节点连主控 | 成功 |
 | 本机 HTTP | 有响应（可能 301/404，视配置而定） |
 

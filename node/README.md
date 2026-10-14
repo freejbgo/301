@@ -59,6 +59,8 @@ sudo setcap cap_net_admin+ep bin/redi-multi
 
 访客在 80/443 打开跳转页时请求同域名的 `/api.js?d=...`（HTTP、HTTPS 逻辑相同）。节点直连 MySQL：仅当该 **原始域名** 在后台为启用（`status=1`）时，`skip_num` 加 1 并返回跳转地址；否则只给默认跳转、**不加** 次数。开启「强制 HTTPS」时，HTTP 301 到 HTTPS 本身不计数，HTTPS 页加载 `api.js` 后计 1 次。
 
+`/c.js`、`/api.js` 对公网开放时有 IP 级限速；`/api.js` 另有按域名参数的限速，防止刷计数（数值见 `node/redi-multi/api/api.go`，[SECURITY.md](../SECURITY.md)）。
+
 ## 和主控的连接
 
 配置了 `REDI_MASTER_URL` 和 `REDI_NODE_TOKEN` 之后，进程会向主控注册、拉取跳转规则、同步 HTTP-01 挑战并安装证书。两个变量缺一，Agent 不启动，只剩本机跳转。
