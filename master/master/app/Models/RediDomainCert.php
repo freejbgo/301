@@ -27,11 +27,11 @@ class RediDomainCert extends Model
     protected $guarded = [
         'certificate',
         'private_key',
+        'admin_id',
     ];
 
     protected $fillable = [
         'domain_id',
-        'admin_id',
         'domain_name',
         'status',
         'method',

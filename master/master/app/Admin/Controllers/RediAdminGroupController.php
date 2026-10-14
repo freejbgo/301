@@ -4,6 +4,7 @@ namespace App\Admin\Controllers;
 
 use App\Admin\Repositories\RediAdminGroup;
 use App\Support\AdminTenantContext;
+use Illuminate\Support\Facades\DB;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
@@ -89,8 +90,19 @@ class RediAdminGroupController extends AdminController
             //$form->text('status');
 
             if ($form->isCreating()) {
-                $form->hidden('admin_id')->value(Admin::user()->id);
-                $form->hidden('admin_name')->value(Admin::user()->username);
+                if (AdminTenantContext::isPlatformAdministrator()) {
+                    $owners = AdminTenantContext::tenantOwnerSelectOptions();
+                    if ($owners === []) {
+                        $form->html('<p class="text-danger">请先创建租户管理员账号（非 administrator 角色），再建分组。</p>');
+                    }
+                    $form->select('owner_admin_id', '所属租户账号')
+                        ->options($owners)
+                        ->required()
+                        ->help('超级管理员建分组时必须指定租户，避免分组挂在超管账号下。');
+                } else {
+                    $form->hidden('admin_id')->value(Admin::user()->id);
+                    $form->hidden('admin_name')->value(Admin::user()->username);
+                }
             }
 
             $form->deleting(function (Form $form) {
@@ -121,10 +133,31 @@ class RediAdminGroupController extends AdminController
                         ]);
                     }
                 } elseif ($form->isCreating()) {
-                    $form->model()->forceFill([
-                        'admin_id' => (int) Admin::user()->id,
-                        'admin_name' => (string) Admin::user()->username,
-                    ]);
+                    if (AdminTenantContext::isPlatformAdministrator()) {
+                        $ownerId = (int) request()->input('owner_admin_id');
+                        $usersTable = (string) config('admin.database.users_table', 'admin_users');
+                        $owner = DB::table($usersTable)->where('id', $ownerId)->first();
+                        if (! $owner) {
+                            throw ValidationException::withMessages([
+                                'owner_admin_id' => '请选择有效的租户账号',
+                            ]);
+                        }
+                        $allowed = AdminTenantContext::tenantOwnerSelectOptions();
+                        if (! isset($allowed[$ownerId])) {
+                            throw ValidationException::withMessages([
+                                'owner_admin_id' => '不能将分组挂在超级管理员账号下',
+                            ]);
+                        }
+                        $form->model()->forceFill([
+                            'admin_id' => $ownerId,
+                            'admin_name' => (string) $owner->username,
+                        ]);
+                    } else {
+                        $form->model()->forceFill([
+                            'admin_id' => (int) Admin::user()->id,
+                            'admin_name' => (string) Admin::user()->username,
+                        ]);
+                    }
                 }
             });
 

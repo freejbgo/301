@@ -19,9 +19,11 @@ import (
 )
 
 var (
-	rateMu    sync.Mutex
-	rateHits  = map[string][]time.Time{}
-	rateLimit = 120 // 每 IP 每分钟最大请求数
+	rateMu          sync.Mutex
+	rateHits        = map[string][]time.Time{}
+	rateLimit       = 120 // 每 IP 每分钟最大请求数（/c.js、/api.js 共用）
+	domainRateHits  = map[string][]time.Time{}
+	domainRateLimit = 60 // 每 IP+域名参数 每分钟（仅 /api.js，减轻刷 skip_num）
 )
 
 func Start() {
@@ -101,9 +103,60 @@ func handleCjs(c echo.Context) error {
 }
 
 func handleApiJs(c echo.Context) error {
-	body, code := apiJsSource(c.QueryParam("d"))
+	encoded := c.QueryParam("d")
+	if !allowApiJsDomainRate(c.RealIP(), encoded) {
+		return c.String(http.StatusTooManyRequests, "// rate limit")
+	}
+	body, code := apiJsSource(encoded)
 	c.Response().Header().Set("Content-Type", "application/javascript; charset=utf-8")
 	return c.String(code, body)
+}
+
+func allowApiJsDomainRate(ip, encodedDomain string) bool {
+	if len(encodedDomain) > 4096 {
+		return false
+	}
+	key := ip + "|" + strings.TrimSpace(encodedDomain)
+	if key != ip+"|" {
+		now := time.Now()
+		cutoff := now.Add(-1 * time.Minute)
+		rateMu.Lock()
+		hits := domainRateHits[key]
+		var kept []time.Time
+		for _, t := range hits {
+			if t.After(cutoff) {
+				kept = append(kept, t)
+			}
+		}
+		if len(kept) >= domainRateLimit {
+			domainRateHits[key] = kept
+			rateMu.Unlock()
+			return false
+		}
+		kept = append(kept, now)
+		domainRateHits[key] = kept
+		if len(domainRateHits) > 8192 {
+			pruneDomainRateMap(cutoff)
+		}
+		rateMu.Unlock()
+	}
+	return allowRate(ip)
+}
+
+func pruneDomainRateMap(cutoff time.Time) {
+	for k, hits := range domainRateHits {
+		var kept []time.Time
+		for _, t := range hits {
+			if t.After(cutoff) {
+				kept = append(kept, t)
+			}
+		}
+		if len(kept) == 0 {
+			delete(domainRateHits, k)
+		} else {
+			domainRateHits[k] = kept
+		}
+	}
 }
 
 func cjsSource(clientIP, userAgent string) string {

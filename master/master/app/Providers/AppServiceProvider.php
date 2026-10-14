@@ -27,6 +27,20 @@ class AppServiceProvider extends ServiceProvider
             $this->app->booted(function () {
                 \App\Support\PlatformBranding::applyLoginPageName();
             });
+            $this->warnIfTrustingAllProxiesInProduction();
+        }
+    }
+
+    protected function warnIfTrustingAllProxiesInProduction(): void
+    {
+        if (config('app.env') !== 'production') {
+            return;
+        }
+        $raw = config('trustedproxy.proxies');
+        if ($raw === '*' || $raw === '**') {
+            \Illuminate\Support\Facades\Log::warning(
+                'TRUSTED_PROXIES=* in production allows forged X-Forwarded-For; set explicit proxy IPs unless the app is never directly exposed.'
+            );
         }
     }
 }

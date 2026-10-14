@@ -13,13 +13,14 @@ class DomainCertificateQueue
      *
      * @param  array<int, int|string>  $domainIds
      */
-    public static function dispatchOwned(array $domainIds, int $sessionAdminId): int
+    public static function dispatchOwned(array $domainIds, int $sessionAdminId, ?bool $isPlatformAdministrator = null): int
     {
         $query = RediAdminDomain::query()
             ->where('status', 1)
             ->whereIn('id', $domainIds);
 
-        if (! AdminTenantContext::isPlatformAdministrator()) {
+        $isPlatformAdministrator = $isPlatformAdministrator ?? AdminTenantContext::isPlatformAdministrator();
+        if (! $isPlatformAdministrator) {
             $query->where('admin_id', $sessionAdminId);
         }
 
