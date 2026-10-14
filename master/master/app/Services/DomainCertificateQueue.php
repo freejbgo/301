@@ -4,22 +4,26 @@ namespace App\Services;
 
 use App\Jobs\IssueDomainCertificateJob;
 use App\Models\RediAdminDomain;
+use App\Support\AdminTenantContext;
 
 class DomainCertificateQueue
 {
     /**
-     * 只为当前管理员名下的域名入队，并错开启动时间以降低 ACME 限流。
+     * 为当前管理员名下的域名入队；超级管理员可为任意租户域名入队。
      *
      * @param  array<int, int|string>  $domainIds
      */
-    public static function dispatchOwned(array $domainIds, int $adminId): int
+    public static function dispatchOwned(array $domainIds, int $sessionAdminId): int
     {
-        $ids = RediAdminDomain::query()
-            ->where('admin_id', $adminId)
+        $query = RediAdminDomain::query()
             ->where('status', 1)
-            ->whereIn('id', $domainIds)
-            ->orderBy('id')
-            ->pluck('id');
+            ->whereIn('id', $domainIds);
+
+        if (! AdminTenantContext::isPlatformAdministrator()) {
+            $query->where('admin_id', $sessionAdminId);
+        }
+
+        $ids = $query->orderBy('id')->pluck('id');
 
         $i = 0;
         foreach ($ids as $id) {

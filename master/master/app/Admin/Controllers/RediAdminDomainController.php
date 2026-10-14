@@ -18,6 +18,7 @@ use App\Services\DomainOriginalUrlGuard;
 use App\Services\DomainRecordNormalizer;
 use App\Services\CnamePrecheckService;
 use App\Services\TenantEdgeService;
+use App\Support\AdminTenantContext;
 use App\Admin\Actions\Grid\ApplyCertificate;
 use App\Admin\Actions\Grid\BatchApplyCertificate;
 use App\Jobs\IssueDomainCertificateJob;
@@ -121,13 +122,7 @@ JS
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->panel();
 
-                //获取分类列表
-                $groupList = [];
-                $groupRet = DB::table("redi_admin_group")->where('admin_id', Admin::user()->id)->get(['id', 'name']);
-                foreach($groupRet as $val){
-                    $groupList[$val->id] = $val->name;
-                }
-                $filter->equal('group_id', '分组')->select($groupList)->width(3);
+                $filter->equal('group_id', '分组')->select(AdminTenantContext::groupSelectOptions())->width(3);
 
                 $filter->like('original_url', '原始域名')->width(4);
                 $filter->like('skip_url', '跳转地址')->width(4);
@@ -169,15 +164,21 @@ JS
         return Form::make(new RediAdminDomain(), function (Form $form) {
             $previousOriginalUrl = null;
 
-            $groupList = [];
-            $groupRet = DB::table("redi_admin_group")->where('admin_id', Admin::user()->id)->where('status', 1)->get(['id', 'name']);
-            foreach($groupRet as $val){
-                $groupList[$val->id] = $val->name;
+            $groupOwnerId = null;
+            if ($form->isEditing() && $form->model()->admin_id) {
+                $groupOwnerId = (int) $form->model()->admin_id;
+            } elseif (! AdminTenantContext::isPlatformAdministrator()) {
+                $groupOwnerId = AdminTenantContext::sessionAdminId();
             }
+            $groupList = AdminTenantContext::groupSelectOptions($groupOwnerId);
 
             $form->display('id');
             $form->select('group_id', '分组')->options($groupList);
-            $cname = TenantEdgeService::cnameTargetForAdmin((int) Admin::user()->id);
+            $cnameAdminId = AdminTenantContext::sessionAdminId();
+            if ($form->isEditing() && $form->model()->admin_id) {
+                $cnameAdminId = (int) $form->model()->admin_id;
+            }
+            $cname = TenantEdgeService::cnameTargetForAdmin($cnameAdminId);
             $form->html(
                 '<div class="alert alert-info">请将客户域名 CNAME 到：<code id="redi-cname-form">'.e($cname).'</code> '
                 .'<a href="javascript:;" class="redi-copy-cname" data-copy="'.e($cname).'">复制</a>'
@@ -215,6 +216,13 @@ JS
                 $skipUrl = DomainRecordNormalizer::normalizeSkipUrl($request['skip_url'] ?? '');
                 $groupId = (int) ($request['group_id'] ?? 0);
 
+                if ($form->isCreating() && AdminTenantContext::isPlatformAdministrator()) {
+                    $groupRow = DB::table('redi_admin_group')->where('id', $groupId)->first();
+                    if ($groupRow) {
+                        $ownerAdminId = (int) $groupRow->admin_id;
+                    }
+                }
+
                 if ($originalUrl === '' || $skipUrl === '') {
                     throw ValidationException::withMessages([
                         'original_url' => '原始域名与跳转链接不能为空',
@@ -240,8 +248,16 @@ JS
                 }
 
                 if ($form->isCreating()) {
-                    $form->input('admin_id', $sessionAdminId);
-                    $form->input('admin_name', Admin::user()->username);
+                    if (AdminTenantContext::isPlatformAdministrator()) {
+                        $groupRow = DB::table('redi_admin_group')->where('id', $groupId)->first();
+                        if ($groupRow) {
+                            $form->input('admin_id', $groupRow->admin_id);
+                            $form->input('admin_name', $groupRow->admin_name);
+                        }
+                    } else {
+                        $form->input('admin_id', $sessionAdminId);
+                        $form->input('admin_name', Admin::user()->username);
+                    }
                 }
 
                 $form->input('original_url', $originalUrl);
@@ -264,42 +280,42 @@ JS
                     }
                 }
 
-                TenantEdgeService::ensureForAdmin($adminId);
+                TenantEdgeService::ensureForAdmin($ownerAdminId);
             });
 
             $form->saved(function (Form $form) use (&$previousOriginalUrl) {
-                $adminId = (int) Admin::user()->id;
-                TenantEdgeService::ensureForAdmin($adminId);
+                $domain = \App\Models\RediAdminDomain::query()->find($form->getKey());
+                if (! $domain) {
+                    return;
+                }
+                TenantEdgeService::ensureForAdmin((int) $domain->admin_id);
 
-                if ($form->isEditing()) {
-                    $domain = \App\Models\RediAdminDomain::query()->find($form->getKey());
-                    if (! $domain) {
-                        return;
+                if (! $form->isEditing()) {
+                    return;
+                }
+
+                $oldUrl = (string) ($previousOriginalUrl ?? '');
+                $newUrl = $domain->original_url;
+                if ($oldUrl !== '' && $oldUrl !== $newUrl) {
+                    if ($oldUrl !== '') {
+                        RediAcmeChallenge::query()->where('domain_name', $oldUrl)->delete();
+                        RediAcmeChallengeNodeSync::query()->where('domain_name', $oldUrl)->delete();
                     }
-
-                    $oldUrl = (string) ($previousOriginalUrl ?? '');
-                    $newUrl = $domain->original_url;
-                    if ($oldUrl !== '' && $oldUrl !== $newUrl) {
-                        if ($oldUrl !== '') {
-                            RediAcmeChallenge::query()->where('domain_name', $oldUrl)->delete();
-                            RediAcmeChallengeNodeSync::query()->where('domain_name', $oldUrl)->delete();
-                        }
-                        RediAcmeChallengeNodeSync::query()->where('domain_name', $newUrl)->delete();
-                        RediDomainCert::query()
-                            ->where('domain_id', $domain->id)
-                            ->update(['domain_name' => $newUrl]);
-                        if ((int) $domain->status === 1) {
-                            IssueDomainCertificateJob::dispatch((int) $domain->id)
-                                ->delay(now()->addSeconds(15));
-                        }
-
-                        return;
-                    }
-
+                    RediAcmeChallengeNodeSync::query()->where('domain_name', $newUrl)->delete();
                     RediDomainCert::query()
                         ->where('domain_id', $domain->id)
-                        ->update(['domain_name' => $domain->original_url]);
+                        ->update(['domain_name' => $newUrl]);
+                    if ((int) $domain->status === 1) {
+                        IssueDomainCertificateJob::dispatch((int) $domain->id)
+                            ->delay(now()->addSeconds(15));
+                    }
+
+                    return;
                 }
+
+                RediDomainCert::query()
+                    ->where('domain_id', $domain->id)
+                    ->update(['domain_name' => $domain->original_url]);
             });
         });
     }

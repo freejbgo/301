@@ -29,7 +29,6 @@ class RediAdminGroupController extends AdminController
     protected function grid()
     {
         return Grid::make(new RediAdminGroup(), function (Grid $grid) {
-            $grid->model()->where('admin_id', '=', Admin::user()->id);
             $grid->column('id')->sortable();
             $grid->column('name');
             $grid->column('status', '状态')->using([1 => "启用", 2 => "停用"]);

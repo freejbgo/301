@@ -159,6 +159,7 @@ mysql -h 主控IP -u redi_node -p redi_admin -e "CALL redi_node_bump_skip('__smo
 - 至少一台节点 **启用** 且 **15 分钟内有心跳**；长期故障的节点请先禁用，避免阻塞（主控只需任一台在线节点同步 HTTP-01 挑战即可）。
 - 多机跑 `queue:work` 时 `CACHE_DRIVER=redis`（共享 ACME 锁）。
 - 节点 `REDI_MASTER_URL` 必须为 **https://**；Agent **0.1.2+** 与主控分项 revision 匹配。
+- 生产建议在 `.env` 设置 `REDI_MIN_AGENT_VERSION=0.1.2`（与当前节点包一致），然后 `php artisan config:cache`。
 - 升级主控后执行 `php artisan migrate`（含 `redi_node_bump_skip` 存储过程）；节点库账号为 **`redi_node`** 时重跑 `grant-node-mysql.sh`（仅 `EXECUTE` 该过程）。
 
 客户自己要做的事见 [docs/CUSTOMER-CNAME-HTTPS.md](docs/CUSTOMER-CNAME-HTTPS.md)。
