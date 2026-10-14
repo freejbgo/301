@@ -42,7 +42,8 @@
 | `tls_addr` | HTTPS，默认 `0.0.0.0:443`。`""` 或 JSON `null` 关闭 HTTPS。可用 `REDI_TLS_LISTEN` 覆盖 |
 | `api_listen` | 默认 `127.0.0.1:8080`（仅本机调试 Echo）；生产跳转走 80/443 同源 `/api.js` |
 | `lagran.port` | 出站 TCP 源端口，给 iptables `--sport` 用。字符串 `"80,443"` 或数字 `80`。逗号分隔，不要空格 |
-| `lagran` | 可整段省略。不要写成空对象后再指望程序猜开关；省略时按示例里的默认开关 |
+| `lagran.enabled` | 仓库内 `config.json` / `config.json.example` 默认 **false**；需要出站 iptables 时再打开 |
+| `lagran` | 可整段省略。不要写成空对象后再指望程序猜开关 |
 
 启动时会把 `addr` 和 `tls_addr` 里的非空端口并进 `lagran.port`。关掉 HTTPS 时不会并入 443。
 
