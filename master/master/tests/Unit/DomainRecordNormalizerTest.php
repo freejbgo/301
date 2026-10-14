@@ -12,6 +12,14 @@ class DomainRecordNormalizerTest extends TestCase
         $this->assertSame('foo.com', DomainRecordNormalizer::normalizeOriginalUrl('https://Foo.com/'));
     }
 
+    public function test_normalize_original_url_rejects_path(): void
+    {
+        $this->assertSame('', DomainRecordNormalizer::normalizeOriginalUrl('foo.com/bar'));
+        $this->assertFalse(DomainRecordNormalizer::isValidOriginalHost('foo.com/bar'));
+        $this->assertFalse(DomainRecordNormalizer::isValidOriginalHost('1.2.3.4'));
+        $this->assertTrue(DomainRecordNormalizer::isValidOriginalHost('www.foo.com'));
+    }
+
     public function test_rejects_non_http_redirect(): void
     {
         $this->assertFalse(DomainRecordNormalizer::isAllowedRedirectUrl('javascript:alert(1)'));

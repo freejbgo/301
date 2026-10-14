@@ -18,7 +18,7 @@
 | 步骤 | 命令 / 动作 | 内容 |
 |------|-------------|------|
 | 1 建库 | `db/mysql_setup.example.sql` 或 `deploy-master.sh` | 创建 `redi_admin` 库与 `redi_admin` 应用账号 |
-| 2 导入 | `db/redi_admin.sql` | Dcat **菜单/权限**、**redi_admin_group / redi_admin_domain** 等表结构、默认超管 `admin` |
+| 2 导入 | `db/redi_admin.sql` | Dcat **菜单/权限**、**redi_admin_group / redi_admin_domain** 等表结构（**不含**示例分组数据）、默认超管 `admin` |
 | 3 迁移 | **`php artisan migrate --force`** | 登记在 SQL 之后的迁移；**必须执行**。其中 **`100009`** 创建节点存储过程 **`redi_node_bump_skip`**（SQL 文件里 **不再** 重复写过程体，避免与 migrate 双份维护） |
 
 导入 SQL 后若 **不** 跑 migrate，节点无法 `CALL redi_node_bump_skip`，跳转页 `/api.js` 会连不上库逻辑。

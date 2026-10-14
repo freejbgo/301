@@ -142,9 +142,7 @@ sed -i -E "s|\"default_redirect_url\"[[:space:]]*:[[:space:]]*\"[^\"]*\"|\"defau
 grep -q "\"server_ip\": \"${NODE_PUBLIC_IP}\"" "${APP}/config.json" || die "未能写入 config.json 的 server_ip"
 
 # 被干扰域名场景：确保 lagran 开启（与 config.json.example 一致）
-if [[ -f "${APP}/config.json" ]] && command -v perl >/dev/null 2>&1; then
-  perl -i -0777 -pe 's/("lagran"\s*:\s*\{[^}]*?"enabled"\s*:\s*)false/${1}true/s' "${APP}/config.json" || true
-fi
+redi_ensure_lagran_enabled "${APP}/config.json" || die "无法将 config.json 的 lagran.enabled 设为 true"
 
 setcap cap_net_admin+ep "${APP}/bin/redi-multi"
 

@@ -13,6 +13,13 @@ class HostNameValidator
         if ($host === '' || strlen($host) > 253) {
             return false;
         }
+        if (function_exists('idn_to_ascii')) {
+            $ascii = idn_to_ascii($host, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+            if ($ascii === false) {
+                return false;
+            }
+            $host = strtolower($ascii);
+        }
         if (filter_var($host, FILTER_VALIDATE_IP)) {
             return false;
         }

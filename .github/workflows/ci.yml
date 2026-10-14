@@ -32,12 +32,12 @@ jobs:
       - name: Install dependencies
         working-directory: master/master
         run: composer install --no-interaction --prefer-dist
-      - name: Composer audit (advisory)
+      - name: Composer audit
         working-directory: master/master
-        run: composer audit --no-interaction || echo "::warning::composer audit reported issues"
+        run: composer audit --no-interaction
       - name: PHPUnit
         working-directory: master/master
-        run: ./vendor/bin/phpunit --testsuite Unit
+        run: ./vendor/bin/phpunit --testsuite Unit,Feature
 
       - name: Build master release tarball (smoke)
         working-directory: master/master
@@ -46,3 +46,20 @@ jobs:
           cd ../..
           ./scripts/build-master-tar.sh
           test -s master/master.tar.gz
+
+  centos7-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: CentOS 7 script syntax
+        run: |
+          for f in scripts/centos7/*.sh; do bash -n "$f"; done
+
+  centos7-integration:
+    runs-on: ubuntu-latest
+    needs: [master-phpunit, node]
+    steps:
+      - uses: actions/checkout@v4
+      - name: CentOS 7 container smoke
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo centos:7 bash scripts/centos7/container-integration-test.sh

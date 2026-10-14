@@ -618,7 +618,7 @@ CREATE TABLE `redi_admin_group` (
   `admin_name` varchar(50) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_admin` (`admin_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -627,7 +627,6 @@ CREATE TABLE `redi_admin_group` (
 
 LOCK TABLES `redi_admin_group` WRITE;
 /*!40000 ALTER TABLE `redi_admin_group` DISABLE KEYS */;
-INSERT INTO `redi_admin_group` VALUES (13,'test',1,'2023-04-14 09:32:49','2023-04-14 09:32:49',1,'admin');
 /*!40000 ALTER TABLE `redi_admin_group` ENABLE KEYS */;
 UNLOCK TABLES;
 

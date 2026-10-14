@@ -404,6 +404,8 @@ add_svc http
 add_svc https
 firewall-cmd --reload
 
+redi_warn_master_https_mismatch "${ADMIN_HTTPS}" "${MASTER_URL}"
+
 echo
 echo "主控已安装到 ${APP}"
 echo "后台: ${MASTER_URL}/admin"

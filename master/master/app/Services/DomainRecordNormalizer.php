@@ -2,14 +2,27 @@
 
 namespace App\Services;
 
+use App\Support\HostNameValidator;
+
 class DomainRecordNormalizer
 {
     public static function normalizeOriginalUrl(?string $url): string
     {
         $url = trim((string) $url);
         $url = preg_replace('#^https?://#i', '', $url);
+        $url = strtolower(rtrim($url, '/'));
+        if (str_contains($url, '/') || str_contains($url, '?') || str_contains($url, '#')) {
+            return '';
+        }
 
-        return strtolower(rtrim($url, '/'));
+        return $url;
+    }
+
+    public static function isValidOriginalHost(?string $url): bool
+    {
+        $normalized = self::normalizeOriginalUrl($url);
+
+        return $normalized !== '' && HostNameValidator::isValidHostLabel($normalized);
     }
 
     public static function originalUrlHash(string $normalizedOriginalUrl): string

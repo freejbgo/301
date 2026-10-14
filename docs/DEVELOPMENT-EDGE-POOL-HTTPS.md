@@ -167,9 +167,9 @@ DNS 解析模式：
 | GET | `/acme-challenges` | 当前有效 HTTP-01 挑战 |
 | GET | `/certificates` | 全平台已签发证书 PEM（受信节点模型） |
 | POST | `/ack` | 证书安装结果 `cert_id`、`ok`、`error` |
-| GET | `/redirect-rules` | `original_url`、`skip_url`、`force_https`（`status=1`） |
+| GET | `/redirect-rules` | `original_url`、`force_https`（`status=1`）；跳转目标由节点 **MySQL 过程** `/api.js` 提供，不经此 API |
 
-主控在 HTTP-01 签发前会等待：**每个启用节点已上报** `challenges-synced`，并且公网 `http://客户域/.well-known/...` 返回挑战内容。
+主控在 HTTP-01 签发前会等待：**至少一台** 15 分钟内在线的启用节点在 3 分钟内上报过 `challenges-synced`（且该域在库中有未过期的挑战 token），并且公网 `http://客户域/.well-known/...` 返回挑战内容。
 
 ---
 

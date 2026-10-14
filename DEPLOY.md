@@ -77,7 +77,7 @@ cp .env.example .env
 | `QUEUE_CONNECTION` | 保持 `database` |
 | `ADMIN_HTTPS` | 已有 HTTPS 证书时 `true`；暂时只用 IP 的 HTTP 时先改 `false` |
 | `REDI_BLOCK_DEFAULT_ADMIN_PASSWORD` | 默认 `true`：检测到种子默认密码则强制改密 |
-| `TRUSTED_PROXIES` | 反代后填代理 IP/CIDR；**生产勿用 `*`**（见 `config/trustedproxy.php`） |
+| `TRUSTED_PROXIES` | 反代后填代理 IP/CIDR；**生产勿用 `*`**（`APP_ENV=production` 且 `*` 时进程会退出，除非 `REDI_ALLOW_TRUST_ALL_PROXIES=true`） |
 
 ```bash
 composer install --no-dev --optimize-autoloader

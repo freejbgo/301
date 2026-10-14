@@ -95,10 +95,12 @@ redi_sync_node_ips_access() {
     if [[ "$found" == 0 ]]; then
       echo "移除节点 IP ${old} 的 MySQL 与防火墙"
       if ! bash "${script_dir}/revoke-node-mysql.sh" "$old"; then
-        echo "警告: revoke-node-mysql.sh 失败 (${old})" >&2
+        echo "错误: revoke-node-mysql.sh 失败 (${old})" >&2
+        return 1
       fi
       if ! bash "${script_dir}/firewalld-revoke-mysql-from-node.sh" "$old"; then
-        echo "警告: firewalld-revoke-mysql-from-node.sh 失败 (${old})" >&2
+        echo "错误: firewalld-revoke-mysql-from-node.sh 失败 (${old})" >&2
+        return 1
       fi
     fi
   done
@@ -137,4 +139,39 @@ redi_sync_master_env() {
     }
     file_put_contents($p, $env);
   ' "$env_file"
+}
+
+# 被干扰域名场景：确保 config.json 中 lagran.enabled 为 true（不依赖 perl）。
+redi_ensure_lagran_enabled() {
+  local cfg="$1"
+  [[ -f "$cfg" ]] || return 0
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - "$cfg" <<'PY' || return 1
+import json, sys
+path = sys.argv[1]
+with open(path, encoding="utf-8") as f:
+    data = json.load(f)
+lag = data.setdefault("lagran", {})
+if lag.get("enabled") is False:
+    lag["enabled"] = True
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+    f.write("\n")
+PY
+    return 0
+  fi
+  if grep -qE '"enabled"[[:space:]]*:[[:space:]]*false' "$cfg" 2>/dev/null; then
+    sed -i -E 's/("enabled"[[:space:]]*:[[:space:]]*)false/\1true/' "$cfg" || return 1
+  fi
+}
+
+redi_warn_master_https_mismatch() {
+  local admin_https="${1:-false}"
+  local master_url="${2:-}"
+  [[ "$admin_https" == "true" ]] || return 0
+  [[ "$master_url" =~ ^https:// ]] || return 0
+  if ! grep -rq 'ssl_certificate' /etc/nginx/conf.d/ 2>/dev/null; then
+    echo "警告: ADMIN_HTTPS=true 且 MASTER_URL 为 https，但 /etc/nginx/conf.d/ 中未见 ssl_certificate。" >&2
+    echo "       请另建 HTTPS 的 conf.d 片段，或暂时使用 http:// 与 ADMIN_HTTPS=false。" >&2
+  fi
 }
