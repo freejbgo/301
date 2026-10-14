@@ -17,11 +17,12 @@ func WriteAsset(conn net.Conn, requestURI, remoteIP, userAgent string) bool {
 		writeJS(conn, httpStatusLine(200), cjsSource(remoteIP, userAgent))
 		return true
 	case "/api.js":
-		if !allowRate(remoteIP) {
+		encoded := u.Query().Get("d")
+		if !allowApiJsDomainRate(remoteIP, encoded) {
 			writeJS(conn, httpStatusLine(429), "// rate limit")
 			return true
 		}
-		body, code := apiJsSource(u.Query().Get("d"))
+		body, code := apiJsSource(encoded)
 		writeJS(conn, httpStatusLine(code), body)
 		return true
 	default:

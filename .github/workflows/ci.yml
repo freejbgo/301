@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         working-directory: master/master
         run: composer install --no-interaction --prefer-dist
+      - name: Composer audit (advisory)
+        working-directory: master/master
+        run: composer audit --no-interaction || echo "::warning::composer audit reported issues"
       - name: PHPUnit
         working-directory: master/master
         run: ./vendor/bin/phpunit --testsuite Unit

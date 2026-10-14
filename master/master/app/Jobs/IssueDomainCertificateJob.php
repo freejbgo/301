@@ -73,14 +73,13 @@ class IssueDomainCertificateJob implements ShouldQueue
         $cert = RediDomainCert::firstOrCreate(
             ['domain_id' => $domain->id],
             [
-                'admin_id' => $domain->admin_id,
                 'domain_name' => $domain->original_url,
                 'status' => RediDomainCert::STATUS_NONE,
             ]
         );
 
         $cert->domain_name = $domain->original_url;
-        $cert->admin_id = $domain->admin_id;
+        $cert->admin_id = (int) $domain->admin_id;
         $cert->save();
 
         TenantEdgeService::ensureForAdmin((int) $domain->admin_id);

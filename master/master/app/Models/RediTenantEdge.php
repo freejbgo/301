@@ -9,10 +9,13 @@ class RediTenantEdge extends Model
     protected $table = 'redi_tenant_edge';
 
     protected $fillable = [
-        'admin_id',
         'token',
         'edge_fqdn',
         'dns_synced_at',
+    ];
+
+    protected $guarded = [
+        'admin_id',
     ];
 
     protected $casts = [

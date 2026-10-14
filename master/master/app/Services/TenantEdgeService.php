@@ -26,11 +26,15 @@ class TenantEdgeService
             ? ''
             : strtolower($token.'.'.$zone);
 
-        return RediTenantEdge::create([
+        $edge = new RediTenantEdge();
+        $edge->forceFill([
             'admin_id' => $adminId,
             'token' => $token,
             'edge_fqdn' => $fqdn,
         ]);
+        $edge->save();
+
+        return $edge;
     }
 
     public static function cnameTargetForAdmin(int $adminId): string
