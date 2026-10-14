@@ -37,8 +37,9 @@ mysql -u root -p < db/mysql_setup.example.sql
 mysql -u root -p redi_admin < db/redi_admin.sql
 ```
 
-- 全量 SQL 已包含当前表结构。导入后再执行 `php artisan migrate --force` 也安全，已登记的迁移不会重建表。
-- 初始后台账号：用户名 `admin`，密码 `Redi301@Install2026`。登录后马上修改。
+- **绿场（无旧数据）**：`redi_admin.sql` 只负责 Dcat 菜单与业务表；**节点用的存储过程**由 `php artisan migrate --force` 创建（`100009`），SQL 里不再重复写过程体。已删除仅用于旧库清理的迁移 `100010`，新装不必关心。
+- 导入 SQL 后**必须**再执行 `php artisan migrate --force`（CentOS 脚本会自动执行）。
+- 初始后台账号：用户名 `admin`，密码 `Redi301@Install2026`；仍为默认密码时后台会强制跳转改密。
 - 关闭 MySQL 反向 DNS。CentOS 7 执行 `sudo bash scripts/centos7/apply-mysql-skip-name-resolve.sh`。其他系统在 `[mysqld]` 下加入 `skip-name-resolve` 和 `skip-external-locking` 后重启数据库。
 - 每台节点的出口 IP 单独授权，不要把 3306 开放给 `0.0.0.0/0`：
 
@@ -166,7 +167,7 @@ mysql -h 主控IP -u redi_node -p redi_admin -e "CALL redi_node_bump_skip('__smo
 - 多机跑 `queue:work` 时 `CACHE_DRIVER=redis`（共享 ACME 锁）。
 - 节点 `REDI_MASTER_URL` 必须为 **https://**；Agent **0.1.2+** 与主控分项 revision 匹配。
 - 生产建议在 `.env` 设置 `REDI_MIN_AGENT_VERSION=0.1.2`（与当前节点包一致），然后 `php artisan config:cache`。
-- 升级主控后执行 `php artisan migrate`（含 `redi_node_bump_skip` 存储过程）；节点库账号为 **`redi_node`** 时重跑 `grant-node-mysql.sh`（仅 `EXECUTE` 该过程）。
+- 更新主控代码后执行 `php artisan migrate --force`（含节点存储过程 `redi_node_bump_skip`）。节点库账号为 **`redi_node`** 时重跑 `grant-node-mysql.sh`（仅 `EXECUTE` 该过程）。
 
 客户自己要做的事见 [docs/CUSTOMER-CNAME-HTTPS.md](docs/CUSTOMER-CNAME-HTTPS.md)。
 

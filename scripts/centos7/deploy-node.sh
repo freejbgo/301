@@ -180,9 +180,19 @@ if [[ "$active" != 1 ]]; then
   die "redi-multi 没有保持运行。80 或 443 可能已被占用"
 fi
 
-if grep -qE '"enabled"[[:space:]]*:[[:space:]]*true' "${APP}/config.json" 2>/dev/null; then
+redi_lagran_expected_enabled() {
+  if [[ -f "${APP}/env.sh" ]] && grep -qiE '^REDI_LAGRAN_DISABLED=(1|true|yes)' "${APP}/env.sh" 2>/dev/null; then
+    return 1
+  fi
+  if [[ -f "${APP}/config.json" ]] && grep -qE '"enabled"[[:space:]]*:[[:space:]]*false' "${APP}/config.json" 2>/dev/null; then
+    return 1
+  fi
+  return 0
+}
+
+if redi_lagran_expected_enabled; then
   if ! getcap "${APP}/bin/redi-multi" 2>/dev/null | grep -q cap_net_admin; then
-    die "config.json 已开启 lagran，但二进制缺少 cap_net_admin。请检查 setcap 或重新运行本脚本。"
+    die "lagran 应为开启（默认或 config.json），但二进制缺少 cap_net_admin。请检查 setcap 或重新运行本脚本。"
   fi
   if journalctl -u redi-multi -n 40 --no-pager 2>/dev/null | grep -q '\[lagran\] disabled'; then
     echo "警告: 日志含 [lagran] disabled，请检查 REDI_LAGRAN_DISABLED 与 lagran.enabled"

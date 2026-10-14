@@ -76,9 +76,11 @@ class CreateEdgePoolAndCertTables extends Migration
             $table->timestamps();
         });
 
-        Schema::table('redi_admin_domain', function (Blueprint $table) {
-            $table->boolean('force_https')->default(false)->after('status');
-        });
+        if (Schema::hasTable('redi_admin_domain') && ! Schema::hasColumn('redi_admin_domain', 'force_https')) {
+            Schema::table('redi_admin_domain', function (Blueprint $table) {
+                $table->boolean('force_https')->default(false)->after('status');
+            });
+        }
 
         DB::table('redi_platform_dns')->insert([
             'id' => 1,
@@ -93,9 +95,11 @@ class CreateEdgePoolAndCertTables extends Migration
 
     public function down()
     {
-        Schema::table('redi_admin_domain', function (Blueprint $table) {
-            $table->dropColumn('force_https');
-        });
+        if (Schema::hasTable('redi_admin_domain') && Schema::hasColumn('redi_admin_domain', 'force_https')) {
+            Schema::table('redi_admin_domain', function (Blueprint $table) {
+                $table->dropColumn('force_https');
+            });
+        }
         Schema::dropIfExists('redi_dns_sync_logs');
         Schema::dropIfExists('redi_cert_deployments');
         Schema::dropIfExists('redi_domain_certs');
