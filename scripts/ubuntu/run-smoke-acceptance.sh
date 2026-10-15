@@ -2,6 +2,8 @@
 # 单机 Ubuntu 主控+节点脚本冒烟（不含 F1–F8）。用法: sudo bash scripts/ubuntu/run-smoke-acceptance.sh
 set -euo pipefail
 
+die() { echo "错误: $*" >&2; exit 1; }
+
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 [[ "$(id -u)" -eq 0 ]] || { echo "请 sudo 执行" >&2; exit 1; }
 
@@ -39,10 +41,8 @@ if ! command -v composer >/dev/null; then
 fi
 if [[ ! -f "${ROOT}/master/master.tar.gz" ]]; then
   echo "==> 构建发布包"
-  if ! command -v go >/dev/null; then
-    apt-get update -qq
-    apt-get install -y -qq golang-go
-  fi
+  apt-get update -qq
+  apt-get install -y -qq php-cli php-xml php-mbstring php-zip php-mysql unzip curl golang-go
   (cd "${ROOT}/master/master" && composer install --no-interaction --prefer-dist --no-dev -q)
   "${ROOT}/scripts/build-master-tar.sh"
   "${ROOT}/scripts/build-node-tar.sh"
@@ -55,8 +55,9 @@ echo "==> deploy-master"
 VARS_FILE="$VARS" bash "${ROOT}/scripts/ubuntu/deploy-master.sh"
 redi_wait_mysql_ready "$IP" || die "deploy-master 后 MySQL 未就绪（勿在容器里 restart mariadb）"
 if [[ -f /opt/301/master/artisan ]]; then
-  echo "==> artisan migrate（含 redi_node_bump_skip 排序规则修复）"
+  echo "==> artisan migrate + 刷新存储过程"
   (cd /opt/301/master && php artisan migrate --force)
+  bash "${ROOT}/scripts/apply-redi-node-bump-procedure.sh"
 fi
 
 echo "==> deploy-node"

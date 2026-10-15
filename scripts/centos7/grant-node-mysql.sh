@@ -34,6 +34,7 @@ trap 'rm -f "$sqlfile"' EXIT
   printf "CREATE USER IF NOT EXISTS 'redi_node'@'%s' IDENTIFIED BY '%s';\n" "$NODE_IP" "$sql_pass"
   printf "ALTER USER 'redi_node'@'%s' IDENTIFIED BY '%s';\n" "$NODE_IP" "$sql_pass"
   printf "REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'redi_node'@'%s';\n" "$NODE_IP"
+  printf "GRANT USAGE ON \`redi_admin\`.* TO 'redi_node'@'%s';\n" "$NODE_IP"
   printf "GRANT EXECUTE ON PROCEDURE \`redi_admin\`.\`redi_node_bump_skip\` TO 'redi_node'@'%s';\n" "$NODE_IP"
   printf "DROP USER IF EXISTS 'redi_admin'@'%s';\n" "$NODE_IP"
   printf "FLUSH PRIVILEGES;\n"

@@ -80,13 +80,11 @@ tar xzf "$TAR" -C "$NODE_INSTALL_ROOT"
 [[ -x "${APP}/bin/redi-multi" ]] || die "缺少 bin/redi-multi"
 [[ -f "${APP}/config.json" ]] || cp "${APP}/config.json.example" "${APP}/config.json"
 
+NODE_DB_HOST="$(redi_node_mysql_host "$MASTER_IP" "$NODE_PUBLIC_IP")"
+
 umask 077
 {
-  if [[ "${REDI_SMOKE_SINGLE_HOST:-}" == "1" ]]; then
-    echo "REDI_DB_HOST=127.0.0.1"
-  else
-    echo "REDI_DB_HOST=${MASTER_IP}"
-  fi
+  echo "REDI_DB_HOST=${NODE_DB_HOST}"
   echo "REDI_DB_PORT=3306"
   echo "REDI_DB_USER=redi_node"
   echo "REDI_DB_PASSWORD=${DB_PASS}"
@@ -112,10 +110,12 @@ setcap cap_net_admin+ep "${APP}/bin/redi-multi"
 
 redi_wait_mysql_ready "$MASTER_IP" || die "主控 MySQL 未就绪，请先完成 deploy-master"
 
-if [[ "${REDI_SMOKE_SINGLE_HOST:-}" == "1" && -n "${MYSQL_ROOT_PASS:-}" ]]; then
+if [[ "${NODE_DB_HOST}" == "127.0.0.1" && -n "${MYSQL_ROOT_PASS:-}" ]]; then
   export MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASS}"
-  bash "${SCRIPT_DIR}/grant-node-mysql.sh" "127.0.0.1" "$DB_PASS" || true
+  bash "${SCRIPT_DIR}/grant-node-mysql.sh" "127.0.0.1" "$DB_PASS"
 fi
+
+bash "${REPO_ROOT}/scripts/apply-redi-node-bump-procedure.sh"
 
 cat > /etc/systemd/system/redi-multi.service <<EOF
 [Unit]
@@ -157,7 +157,7 @@ db_cnf=$(mktemp)
 chmod 600 "$db_cnf"
 cat > "$db_cnf" <<EOF
 [client]
-host=${MASTER_IP}
+host=${NODE_DB_HOST}
 user=redi_node
 password=${DB_PASS}
 database=redi_admin

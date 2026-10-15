@@ -78,6 +78,16 @@ redi_multi_running() {
   pgrep -x redi-multi >/dev/null 2>&1 || pgrep -f '[./]bin/redi-multi' >/dev/null 2>&1
 }
 
+redi_node_mysql_host() {
+  local master_ip="${1:-}"
+  local node_ip="${2:-}"
+  if [[ "${REDI_SMOKE_SINGLE_HOST:-}" == "1" ]] || [[ "$master_ip" == "$node_ip" ]]; then
+    echo "127.0.0.1"
+  else
+    echo "$master_ip"
+  fi
+}
+
 redi_wait_mysql_ready() {
   local host="${1:-}"
   local i
