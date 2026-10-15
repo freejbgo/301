@@ -684,14 +684,16 @@ BEGIN
 
     SELECT `skip_url` INTO v_skip
     FROM `redi_admin_domain`
-    WHERE `original_url` = p_host AND `status` = 1
+    WHERE `original_url` COLLATE utf8mb4_unicode_ci = (CONVERT(p_host USING utf8mb4) COLLATE utf8mb4_unicode_ci)
+      AND `status` = 1
     LIMIT 1
     FOR UPDATE;
 
     IF v_skip IS NOT NULL THEN
         UPDATE `redi_admin_domain`
         SET `skip_num` = `skip_num` + 1
-        WHERE `original_url` = p_host AND `status` = 1
+        WHERE `original_url` COLLATE utf8mb4_unicode_ci = (CONVERT(p_host USING utf8mb4) COLLATE utf8mb4_unicode_ci)
+          AND `status` = 1
         LIMIT 1;
     END IF;
 
