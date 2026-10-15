@@ -58,9 +58,9 @@ redi_sync_node_ips_access() {
   fi
 
   local old new found
-  for old in "${old_ips[@]}"; do
+  for old in ${old_ips[@]+"${old_ips[@]}"}; do
     found=0
-    for new in "${new_ips[@]}"; do
+    for new in ${new_ips[@]+"${new_ips[@]}"}; do
       [[ "$old" == "$new" ]] && found=1 && break
     done
     if [[ "$found" == 0 ]]; then
@@ -76,7 +76,7 @@ redi_sync_node_ips_access() {
     fi
   done
 
-  for new in "${new_ips[@]}"; do
+  for new in ${new_ips[@]+"${new_ips[@]}"}; do
     bash "${script_dir}/grant-node-mysql.sh" "$new" "$db_pass"
     bash "${script_dir}/ufw-allow-mysql-from-node.sh" "$new"
   done

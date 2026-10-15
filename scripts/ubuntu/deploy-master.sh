@@ -71,7 +71,7 @@ apt-get install -y -qq nginx mariadb-server mariadb-client \
   "php${PHP_DOT}-xml" "php${PHP_DOT}-zip" "php${PHP_DOT}-gd" "php${PHP_DOT}-bcmath" \
   "php${PHP_DOT}-curl" ufw tar python3 mysql-client
 
-php -r 'if (PHP_VERSION_ID < 80200) { fwrite(STDERR, "需要 PHP >= 8.0.2，当前 ".PHP_VERSION."\n"); exit(1); }'
+php -r 'if (PHP_VERSION_ID < 80002) { fwrite(STDERR, "需要 PHP >= 8.0.2，当前 ".PHP_VERSION."\n"); exit(1); }'
 echo "PHP $(php -r 'echo PHP_VERSION;')"
 
 systemctl enable --now mariadb
@@ -153,13 +153,6 @@ else
   echo "已有 admin_users，跳过全量导入"
 fi
 
-if [[ -n "$NODE_IPS" ]]; then
-  redi_sync_node_ips_access "${SCRIPT_DIR}" "$NODE_IPS" "$DB_PASS" "$MYSQL_ROOT_PASS"
-else
-  echo "NODE_IPS 为空；加节点后写入 vars.env 并重跑本脚本"
-  redi_sync_node_ips_access "${SCRIPT_DIR}" "" "$DB_PASS" "$MYSQL_ROOT_PASS" || true
-fi
-
 step "解压主控到 ${APP}"
 if systemctl is-active --quiet redi-queue 2>/dev/null; then
   systemctl stop redi-queue || true
@@ -190,6 +183,14 @@ grep -q '^APP_KEY=base64:' .env || php artisan key:generate --force
 php artisan migrate --force
 proc_count="$(mysql_root -N -e "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='redi_admin' AND ROUTINE_NAME='redi_node_bump_skip'")"
 [[ "${proc_count:-0}" != "0" ]] || die "缺少存储过程 redi_node_bump_skip"
+mysql_root redi_admin -e "CALL redi_node_bump_skip('__deploy_smoke__')" >/dev/null \
+  || die "redi_node_bump_skip 调用失败（常见原因：表 collation 与库不一致，请更新 db/redi_admin.sql）"
+if [[ -n "$NODE_IPS" ]]; then
+  redi_sync_node_ips_access "${SCRIPT_DIR}" "$NODE_IPS" "$DB_PASS" "$MYSQL_ROOT_PASS"
+else
+  echo "NODE_IPS 为空；加节点后写入 vars.env 并重跑本脚本"
+  redi_sync_node_ips_access "${SCRIPT_DIR}" "" "$DB_PASS" "$MYSQL_ROOT_PASS" || true
+fi
 php artisan config:clear
 [[ -L public/storage ]] || php artisan storage:link
 chown -R "${WEB_USER}:${WEB_USER}" storage bootstrap/cache public/storage

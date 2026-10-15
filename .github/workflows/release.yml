@@ -122,6 +122,7 @@ jobs:
       - name: Verify built master tree (audit + PHPUnit)
         working-directory: master/master
         run: |
+          composer install --no-interaction --prefer-dist
           composer audit --no-interaction
           ./vendor/bin/phpunit --testsuite Unit,Feature
 

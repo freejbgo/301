@@ -12,8 +12,8 @@ redi_is_ipv4 "$NODE_IP" || exit 0
 [[ "$(id -u)" -ne 0 ]] && exit 0
 command -v ufw >/dev/null || exit 0
 
-while ufw status numbered | grep -q "${NODE_IP}.*3306"; do
-  num=$(ufw status numbered | grep "${NODE_IP}" | grep 3306 | head -1 | sed -E 's/^\[ *\([0-9]+\)\].*/\1/' | tr -d '[]')
+while ufw status numbered | grep -Eq "[[:space:]]${NODE_IP}[[:space:]].*3306"; do
+  num=$(ufw status numbered | grep -E "[[:space:]]${NODE_IP}[[:space:]].*3306" | head -1 | sed -E 's/^\[ *([0-9]+)\].*/\1/')
   [[ -n "$num" ]] || break
   yes | ufw delete "$num" >/dev/null 2>&1 || break
 done

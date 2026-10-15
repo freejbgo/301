@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -239,16 +240,16 @@ func GetSkipUrl(Db *sqlx.DB, Url string) string {
 		return ""
 	}
 
-	run := func(db *sqlx.DB) (string, error) {
+	run := func(db *sqlx.DB) (sql.NullString, error) {
 		rows, err := db.Query("CALL redi_node_bump_skip(?)", Url)
 		if err != nil {
-			return "", err
+			return sql.NullString{}, err
 		}
 		defer rows.Close()
-		var skip string
+		var skip sql.NullString
 		if rows.Next() {
 			if err := rows.Scan(&skip); err != nil {
-				return "", err
+				return sql.NullString{}, err
 			}
 		}
 		for rows.NextResultSet() {
@@ -260,13 +261,19 @@ func GetSkipUrl(Db *sqlx.DB, Url string) string {
 
 	skip, err := run(Db)
 	if err == nil {
-		return skip
+		if skip.Valid {
+			return skip.String
+		}
+		return ""
 	}
 	if mysqlconnect.Reconnect() == nil {
 		if fresh := mysqlconnect.DB(); fresh != nil {
 			skip, err = run(fresh)
 			if err == nil {
-				return skip
+				if skip.Valid {
+					return skip.String
+				}
+				return ""
 			}
 		}
 	}

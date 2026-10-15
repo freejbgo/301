@@ -1,5 +1,6 @@
 # 部署时本地密码，勿提交
 scripts/centos7/vars.env
+scripts/ubuntu/vars.env
 scripts/centos7/.container-vars.env
 
 # 发布包本地构建产物，勿提交（发版时打 tag 由 release workflow 上传 Release）
