@@ -4,7 +4,7 @@
 
 ## 环境前提
 
-绿场库分工见 [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md)（导入 `redi_admin.sql` 后 **必须** `php artisan migrate --force`，含 `redi_node_bump_skip`）。
+绿场库见 [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md)（**一次导入** `redi_admin.sql`，含 `redi_node_bump_skip`）。
 
 - 主控：`composer install`、**`php artisan migrate --force`**、`QUEUE_CONNECTION=database`、`php artisan queue:work` 常驻
 - 续期 crontab：`10 3 * * * cd .../master/master && php artisan redi:renew-certificates`

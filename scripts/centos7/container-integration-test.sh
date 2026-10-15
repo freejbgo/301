@@ -103,6 +103,12 @@ if [[ "$table_count" == "0" ]]; then
   mysql -u root redi_admin < "${REPO_ROOT}/db/redi_admin.sql"
 fi
 
+proc_after_sql=$(mysql -u root -N -e "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='redi_admin' AND ROUTINE_NAME='redi_node_bump_skip'")
+if [[ "$proc_after_sql" != "1" ]]; then
+  echo "导入 redi_admin.sql 后缺少 redi_node_bump_skip"
+  exit 1
+fi
+
 echo "[5] Laravel 发布包解压与 migrate"
 APP=/opt/301-smoke/master
 rm -rf /opt/301-smoke
@@ -121,7 +127,7 @@ php artisan key:generate --force
 php artisan migrate --force
 proc=$(mysql -u root -N -e "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='redi_admin' AND ROUTINE_NAME='redi_node_bump_skip'")
 if [[ "$proc" != "1" ]]; then
-  echo "migrate 后缺少 redi_node_bump_skip"
+  echo "缺少 redi_node_bump_skip（应在 redi_admin.sql 中）"
   exit 1
 fi
 php artisan config:clear

@@ -1,5 +1,7 @@
 <?php
 
+// 绿场：过程已写入 db/redi_admin.sql，导入 SQL 即具备；本迁移供仅跑 migrate 或旧库补过程时 idempotent 执行。改过程体请与 SQL 同步。
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 

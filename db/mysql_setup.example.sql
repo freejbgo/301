@@ -1,7 +1,7 @@
 -- 在 MySQL 上执行（请修改密码；勿对公网开放 3306）
 -- 应用账号仅创建 127.0.0.1；节点远程账号用 grant-node-mysql.sh，勿给整库权限
 -- 导入结构数据：mysql -u root -p redi_admin < db/redi_admin.sql
--- 主控上再执行：php artisan migrate --force（创建 redi_node_bump_skip 等；见 docs/GREENFIELD-INSTALL.md）
+-- 再导入：mysql -u root -p redi_admin < db/redi_admin.sql（含 redi_node_bump_skip；见 docs/GREENFIELD-INSTALL.md）
 --
 -- 主控 CentOS 7 请先执行（关闭 DNS 反查，无需手改 my.cnf）：
 --   sudo bash scripts/centos7/apply-mysql-skip-name-resolve.sh
