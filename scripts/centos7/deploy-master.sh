@@ -391,6 +391,7 @@ cat > /etc/cron.d/redi-renew <<EOF
 SHELL=/bin/bash
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 10 3 * * * nginx cd ${APP} && /usr/bin/php artisan redi:renew-certificates >> ${APP}/storage/logs/renew.log 2>&1
+10 4 * * * nginx cd ${APP} && /usr/bin/php artisan redi:prune-acme-challenges >> ${APP}/storage/logs/prune-acme.log 2>&1
 EOF
 chmod 644 /etc/cron.d/redi-renew
 

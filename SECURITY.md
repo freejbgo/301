@@ -34,7 +34,9 @@
 | 证书队列 | 子账号仅能为本人名下域名入队；**超级管理员**可为任意租户域名入队；同一时刻只跑一个 ACME 任务 |
 | 队列 | 生产请 `QUEUE_CONNECTION=database`，并常驻 `queue:work --sleep=3 --timeout=320 --tries=100` |
 | ACME 并发 | 全局锁 `redi-acme-le-global` + 按域名锁；**多台** `queue:work` 时 `CACHE_DRIVER` 须为 **redis**（或共享缓存），否则文件锁不跨机 |
-| 节点 Agent | `REDI_MASTER_URL` 必须 **https://**；可选 `REDI_DB_TLS=1`；Agent **0.1.2+** 按 challenges/rules/certificates 分项 revision，仅拉取变更类型；在 `.env` 设置 `REDI_MIN_AGENT_VERSION` 后，**register/heartbeat** 必须带 `version` 且不低于该值（见 `config/redi.php`，支持 `config:cache`） |
+| 节点 Agent | `REDI_MASTER_URL` 必须 **https://**；可选 `REDI_DB_TLS=1`；Agent **0.1.2+** 分项 revision；默认 `REDI_MIN_AGENT_VERSION=0.1.2`，**全部** `/api/nodes/*` 受版本门（请求 `version` 或库内 `agent_version`）；设 `REDI_MIN_AGENT_VERSION=` 可禁用 |
+| `TRUSTED_PROXIES` / `REDI_ALLOW_TRUST_ALL_PROXIES` | 生产拒绝 `*` 除非 `config('redi.allow_trust_all_proxies')` 为 true（**`php artisan config:cache` 后仍有效**）；Web 与 `queue:work` 启动时均检查 |
+| ACME 维护 | 计划任务 `redi:prune-acme-challenges`（CentOS `deploy-master` 每日 04:10）；`redi:normalize-domain-hosts` 可修正历史 IDN / `skip_url` |
 | 证书表 | `redi_domain_certs.domain_id` 外键级联删除，避免孤儿证书记录 |
 
 ## 架构说明（已知限制）

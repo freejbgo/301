@@ -112,6 +112,11 @@ redi_sync_master_env "${APP}/.env"
 cd "${APP}"
 php artisan key:generate --force
 php artisan migrate --force
+proc=$(mysql -u root -N -e "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='redi_admin' AND ROUTINE_NAME='redi_node_bump_skip'")
+if [[ "$proc" != "1" ]]; then
+  echo "migrate 后缺少 redi_node_bump_skip"
+  exit 1
+fi
 php artisan config:clear
 php artisan storage:link
 routes=$(php artisan route:list --path=api/nodes 2>/dev/null) || exit 1

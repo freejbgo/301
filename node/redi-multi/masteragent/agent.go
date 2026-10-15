@@ -252,6 +252,11 @@ func getJSON(client *http.Client, cfg config, path string, dest interface{}, reg
 			*registered = false
 		}
 	}
+	if res.StatusCode == http.StatusUpgradeRequired {
+		b, _ := io.ReadAll(io.LimitReader(res.Body, maxMasterJSONBytes))
+		logrus.Warnf("主控要求升级 redi-multi Agent (426): %s", string(b))
+		return fmt.Errorf("GET %s: agent upgrade required (426)", path)
+	}
 	if res.StatusCode >= 300 {
 		b, _ := io.ReadAll(io.LimitReader(res.Body, maxMasterJSONBytes))
 		return fmt.Errorf("GET %s: %s", path, string(b))
@@ -279,6 +284,11 @@ func postJSON(client *http.Client, cfg config, path string, body interface{}, de
 		if registered != nil {
 			*registered = false
 		}
+	}
+	if res.StatusCode == http.StatusUpgradeRequired {
+		b, _ := io.ReadAll(io.LimitReader(res.Body, maxMasterJSONBytes))
+		logrus.Warnf("主控要求升级 redi-multi Agent (426): %s", string(b))
+		return fmt.Errorf("POST %s: agent upgrade required (426)", path)
 	}
 	if res.StatusCode >= 300 {
 		b, _ := io.ReadAll(io.LimitReader(res.Body, maxMasterJSONBytes))

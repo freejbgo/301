@@ -59,3 +59,5 @@ php artisan migrate --force
 ```
 
 若节点 MySQL 账号为 **`redi_node`**，对新增节点 IP 重跑 `grant-node-mysql.sh`（仅 `EXECUTE` 存储过程）。
+
+主控 cron（`deploy-master.sh`）除证书续期外会执行 **`redi:prune-acme-challenges`** 清理过期 ACME 行。节点 `GetSkipUrl` 与主控一致对 Host 做 **punycode** 归一。

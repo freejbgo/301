@@ -39,7 +39,7 @@ class AppServiceProvider extends ServiceProvider
         }
         $raw = config('trustedproxy.proxies');
         if ($raw === '*' || $raw === '**') {
-            if (! filter_var(env('REDI_ALLOW_TRUST_ALL_PROXIES', false), FILTER_VALIDATE_BOOLEAN)) {
+            if (! filter_var(config('redi.allow_trust_all_proxies'), FILTER_VALIDATE_BOOLEAN)) {
                 throw new \RuntimeException(
                     'TRUSTED_PROXIES=* is not allowed in production. Set explicit proxy IPs/CIDRs, or set REDI_ALLOW_TRUST_ALL_PROXIES=true only when the app is never directly exposed.'
                 );

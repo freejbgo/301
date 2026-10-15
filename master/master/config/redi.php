@@ -7,12 +7,20 @@ return [
     | Minimum redi-multi agent version
     |--------------------------------------------------------------------------
     |
-    | Nodes must send a "version" on register and heartbeat that is >= this value.
-    | Leave empty in .env to disable enforcement.
+    | Nodes must meet this version on all /api/nodes/* (see RejectOldRediAgent).
+    | Set REDI_MIN_AGENT_VERSION= in .env to disable enforcement.
     |
     */
 
-    'min_agent_version' => env('REDI_MIN_AGENT_VERSION', ''),
+    'min_agent_version' => env('REDI_MIN_AGENT_VERSION', '0.1.2'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allow TRUSTED_PROXIES=* in production (config:cache safe)
+    |--------------------------------------------------------------------------
+    */
+
+    'allow_trust_all_proxies' => env('REDI_ALLOW_TRUST_ALL_PROXIES', false),
 
     /*
     |--------------------------------------------------------------------------
