@@ -16,6 +16,7 @@ class TrustedProxiesProductionTest extends TestCase
 
         $provider = new AppServiceProvider($this->app);
         $method = new \ReflectionMethod($provider, 'warnIfTrustingAllProxiesInProduction');
+        $method->setAccessible(true);
 
         $this->expectException(RuntimeException::class);
         $method->invoke($provider);
@@ -29,6 +30,7 @@ class TrustedProxiesProductionTest extends TestCase
 
         $provider = new AppServiceProvider($this->app);
         $method = new \ReflectionMethod($provider, 'warnIfTrustingAllProxiesInProduction');
+        $method->setAccessible(true);
         $method->invoke($provider);
 
         $this->addToAssertionCount(1);
