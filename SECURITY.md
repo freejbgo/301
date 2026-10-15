@@ -50,6 +50,6 @@
 
 ## 依赖
 
-发布包 `master/master.tar.gz` 已含 `composer install --no-dev` 的 `vendor`，不含 `.env`。构建/CI 使用 PHP **8.4**；生产建议 PHP 8.0.2+ 并与 lock 一致。`vendor` 目录本身不进 git。
+发布包 `master.tar.gz`（本地构建或 Release）含 `composer install --no-dev` 的 `vendor`，不含 `.env`。构建/CI 使用 PHP **8.4**；生产建议 PHP 8.0.2+ 并与 lock 一致。`vendor` 与 `*.tar.gz` 不进 git。
 
 CI 会执行 `composer audit`（忽略 abandoned 包）。当前 **Laravel 8** 锁文件在 advisory 库中仍关联若干 CVE/GHSA（见 `composer.json` → `config.audit.ignore`）；清除需 **大版本升级 Laravel/Dcat**，单期以 `APP_DEBUG=false`、后台 HTTPS、不暴露调试页等缓解。升级前勿移除 ignore 项。

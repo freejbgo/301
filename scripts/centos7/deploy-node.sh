@@ -118,7 +118,7 @@ if [[ ! -f "${APP}/config.json" ]]; then
   cp "${APP}/config.json.example" "${APP}/config.json"
 fi
 if ldd "${APP}/bin/redi-multi" 2>&1 | grep -q 'GLIBC\|libc.so'; then
-  die "这个二进制仍依赖动态 libc，不能在 CentOS 7 上运行。请换仓库里重新打包的 node/redi-multi.tar.gz"
+  die "这个二进制仍依赖动态 libc，不能在 CentOS 7 上运行。请在本机重新执行 scripts/build-node-tar.sh"
 fi
 
 prev_umask=$(umask)

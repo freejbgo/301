@@ -4,7 +4,7 @@
 
 客户域名 CNAME 到 `{token}.平台主域名`，再 CNAME 到 `pool.平台主域名`。pool 的 A 记录指向启用节点的公网 IP。
 
-主控源码在 `master/master/`。发布包在 [GitHub Releases](https://github.com/freejbgo/301/releases)：`master.tar.gz`（已含 `vendor`，不含 `.env`）和 `redi-multi.tar.gz`（CentOS 7 可直接运行的静态二进制）。仓库内 tar 由 CI/发版脚本构建校验；发版请以 **tag Release** 或本地执行 `scripts/build-*-tar.sh` 为准。
+主控源码在 `master/master/`。**仓库内不提交发布包**（开发中）；需要部署或发版时在本地执行 `scripts/build-master-tar.sh` / `scripts/build-node-tar.sh`，或打 **`v*` tag** 由 GitHub Actions 构建并上传到 [Releases](https://github.com/freejbgo/301/releases)。
 
 CentOS 7.9（及其他 7.x）用两个脚本自动安装：[scripts/centos7/deploy-master.sh](scripts/centos7/deploy-master.sh) 和 [scripts/centos7/deploy-node.sh](scripts/centos7/deploy-node.sh)。步骤见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。
 

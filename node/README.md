@@ -14,7 +14,7 @@
 ./scripts/build-node-tar.sh
 ```
 
-然后提交新的 `node/redi-multi.tar.gz`。部署解压的是这个包。
+需要部署时再执行 `./scripts/build-node-tar.sh`（产物 gitignore，勿提交）。部署解压的是这个包或 Release 下载的包。
 
 ## 配置
 
