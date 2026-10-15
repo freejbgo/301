@@ -189,6 +189,9 @@ cd "$APP"
 grep -q '^APP_KEY=base64:' .env || php artisan key:generate --force
 php artisan migrate --force
 bash "${REPO_ROOT}/scripts/apply-redi-node-bump-procedure.sh"
+if [[ -n "$NODE_IPS" ]]; then
+  redi_sync_node_ips_access "${SCRIPT_DIR}" "$NODE_IPS" "$DB_PASS" "$MYSQL_ROOT_PASS"
+fi
 proc_count="$(mysql_root -N -e "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='redi_admin' AND ROUTINE_NAME='redi_node_bump_skip'")"
 [[ "${proc_count:-0}" != "0" ]] || die "缺少存储过程 redi_node_bump_skip"
 php artisan config:clear

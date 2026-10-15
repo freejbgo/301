@@ -110,12 +110,16 @@ setcap cap_net_admin+ep "${APP}/bin/redi-multi"
 
 redi_wait_mysql_ready "$MASTER_IP" || die "主控 MySQL 未就绪，请先完成 deploy-master"
 
-if [[ "${NODE_DB_HOST}" == "127.0.0.1" && -n "${MYSQL_ROOT_PASS:-}" ]]; then
-  export MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASS}"
-  bash "${SCRIPT_DIR}/grant-node-mysql.sh" "127.0.0.1" "$DB_PASS"
-fi
-
 bash "${REPO_ROOT}/scripts/apply-redi-node-bump-procedure.sh"
+
+# DROP/CREATE 存储过程会冲掉 EXECUTE 授权，须在刷新过程后重新 grant
+if [[ -n "${MYSQL_ROOT_PASS:-}" ]]; then
+  export MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASS}"
+  bash "${SCRIPT_DIR}/grant-node-mysql.sh" "${NODE_DB_HOST}" "$DB_PASS"
+  if [[ "${NODE_PUBLIC_IP}" != "${NODE_DB_HOST}" ]]; then
+    bash "${SCRIPT_DIR}/grant-node-mysql.sh" "${NODE_PUBLIC_IP}" "$DB_PASS"
+  fi
+fi
 
 cat > /etc/systemd/system/redi-multi.service <<EOF
 [Unit]
