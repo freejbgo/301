@@ -27,7 +27,8 @@
 | `REDI_DB_USER` | 用户，生产应为 `redi_node`（仅 EXECUTE `redi_node_bump_skip`） |
 | `REDI_DB_PASSWORD` | 密码。只放在服务器上，不要写入仓库 |
 | `REDI_DB_NAME` | 库名，默认 `redi_admin` |
-| `REDI_MASTER_URL` | 主控地址，如 `https://主控域名` |
+| `REDI_DB_TLS` | 可选：`1`/`true` 启用 TLS 并校验证书；`skip-verify` 仅加密不校验（内网自签） |
+| `REDI_MASTER_URL` | 主控地址，须 `https://`（lab 可 `REDI_MASTER_INSECURE=1` 允许 `http://`） |
 | `REDI_NODE_TOKEN` | 后台「节点管理」创建节点时只显示一次的 Token |
 
 `config.json` 里把 `server_ip` 改成这台机器的主公网 IPv4，`default_redirect_url` 改成未命中域名时的默认页。示例见 `redi-multi/config.json.example`。
