@@ -97,8 +97,17 @@ chmod 600 "${APP}/env.sh"
 url_sed=${DEFAULT_REDIRECT_URL//&/\\&}
 sed -i -E "s/\"server_ip\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/\"server_ip\": \"${NODE_PUBLIC_IP}\"/" "${APP}/config.json"
 sed -i -E "s|\"default_redirect_url\"[[:space:]]*:[[:space:]]*\"[^\"]*\"|\"default_redirect_url\": \"${url_sed}\"|" "${APP}/config.json"
-redi_ensure_lagran_enabled "${APP}/config.json" || die "lagran.enabled"
+if [[ "${REDI_SMOKE_SINGLE_HOST:-}" == "1" ]]; then
+  echo "单机冒烟：HTTP 127.0.0.1:18080，关闭 TLS/lagran"
+  redi_smoke_single_host_node_config "${APP}/config.json"
+  echo "REDI_LAGRAN_DISABLED=1" >> "${APP}/env.sh"
+else
+  redi_ensure_lagran_enabled "${APP}/config.json" || die "lagran.enabled"
+fi
 setcap cap_net_admin+ep "${APP}/bin/redi-multi"
+
+redi_restart mariadb 2>/dev/null || true
+redi_wait_mysql_tcp "$MASTER_IP" 3306 || die "主控 MySQL 3306 未就绪，请先完成 deploy-master"
 
 cat > /etc/systemd/system/redi-multi.service <<EOF
 [Unit]
@@ -123,11 +132,17 @@ if redi_systemd_available; then
   systemctl is-active --quiet redi-multi || die "redi-multi 未运行"
 else
   pkill -f "${APP}/bin/redi-multi" 2>/dev/null || true
-  # shellcheck disable=SC1091
-  set -a && source "${APP}/env.sh" && set +a
-  nohup "${APP}/bin/redi-multi" >> "${APP}/redi-multi.log" 2>&1 &
-  sleep 2
-  pgrep -f "${APP}/bin/redi-multi" >/dev/null || die "redi-multi 未运行"
+  (
+    cd "${APP}"
+    # shellcheck disable=SC1091
+    set -a && source "./env.sh" && set +a
+    nohup ./bin/redi-multi >> ./redi-multi.log 2>&1 &
+  )
+  sleep 4
+  pgrep -f "${APP}/bin/redi-multi" >/dev/null || {
+    [[ -f "${APP}/redi-multi.log" ]] && tail -5 "${APP}/redi-multi.log" >&2
+    die "redi-multi 未运行（见 ${APP}/redi-multi.log）"
+  }
 fi
 
 db_cnf=$(mktemp)

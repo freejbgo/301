@@ -25,17 +25,24 @@ DEFAULT_REDIRECT_URL="https://www.example.com"
 REDI_MASTER_INSECURE="1"
 REDI_MASTER_URL="http://${IP}"
 REDI_NODE_TOKEN=""
+REDI_SMOKE_SINGLE_HOST="1"
 EOF
 chmod 600 "$VARS"
 
 export PATH="/usr/local/bin:/usr/bin:$PATH"
 if ! command -v composer >/dev/null; then
-  command -v php >/dev/null || apt-get install -y -qq php-cli php8.3-xml php8.3-mbstring php8.3-zip unzip curl
+  if ! command -v php >/dev/null; then
+    apt-get update -qq
+    apt-get install -y -qq php-cli php-xml php-mbstring php-zip unzip curl
+  fi
   [[ -x /usr/local/bin/composer ]] || { curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer; }
 fi
 if [[ ! -f "${ROOT}/master/master.tar.gz" ]]; then
   echo "==> 构建发布包"
-  command -v go >/dev/null || apt-get install -y -qq golang-go
+  if ! command -v go >/dev/null; then
+    apt-get update -qq
+    apt-get install -y -qq golang-go
+  fi
   (cd "${ROOT}/master/master" && composer install --no-interaction --prefer-dist --no-dev -q)
   "${ROOT}/scripts/build-master-tar.sh"
   "${ROOT}/scripts/build-node-tar.sh"
@@ -43,6 +50,19 @@ fi
 
 echo "==> deploy-master"
 VARS_FILE="$VARS" bash "${ROOT}/scripts/ubuntu/deploy-master.sh"
+redi_wait_mysql() {
+  local h="$1" i
+  for i in $(seq 1 90); do
+    (echo >/dev/tcp/"$h"/3306) >/dev/null 2>&1 && return 0
+    sleep 1
+  done
+  return 1
+}
+# shellcheck source=lib.sh
+source "${ROOT}/scripts/ubuntu/lib.sh"
+redi_restart mariadb 2>/dev/null || service mysql start 2>/dev/null || true
+redi_wait_mysql "$IP" || { echo "MariaDB 未监听 3306" >&2; exit 1; }
+
 echo "==> deploy-node"
 VARS_FILE="$VARS" bash "${ROOT}/scripts/ubuntu/deploy-node.sh"
 

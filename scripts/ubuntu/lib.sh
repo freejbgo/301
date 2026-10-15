@@ -59,6 +59,20 @@ redi_reload() {
   fi
 }
 
+redi_wait_mysql_tcp() {
+  local host="${1:-127.0.0.1}"
+  local port="${2:-3306}"
+  local i
+  for i in $(seq 1 60); do
+    if (echo >/dev/tcp/"$host"/"$port") >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "警告: ${host}:${port} 在 60s 内未就绪" >&2
+  return 1
+}
+
 redi_ufw_bootstrap() {
   command -v ufw >/dev/null || {
     echo "未安装 ufw，请用云安全组放行 22/80/443 与节点 3306"
@@ -159,6 +173,24 @@ redi_sync_master_env() {
     }
     file_put_contents($p, $env);
   ' "$env_file"
+}
+
+redi_smoke_single_host_node_config() {
+  local cfg="$1"
+  [[ -f "$cfg" ]] || return 0
+  python3 - "$cfg" <<'PY'
+import json, sys
+path = sys.argv[1]
+with open(path, encoding="utf-8") as f:
+    data = json.load(f)
+data["addr"] = "127.0.0.1:18080"
+data["tls_addr"] = ""
+lag = data.setdefault("lagran", {})
+lag["enabled"] = False
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+    f.write("\n")
+PY
 }
 
 redi_ensure_lagran_enabled() {
