@@ -668,6 +668,7 @@ UNLOCK TABLES;
 --
 -- Dumping routines for database 'redi_admin'
 --
+-- 绿场仅保留存储过程跳转；废弃 migration 100007 的 lookup 视图（节点已用 redi_node_bump_skip）
 DROP VIEW IF EXISTS `redi_node_domain_lookup`;
 DROP PROCEDURE IF EXISTS `redi_node_bump_skip`;
 DELIMITER ;;

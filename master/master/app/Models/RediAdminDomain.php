@@ -58,12 +58,7 @@ class RediAdminDomain extends Model
                 RediCertDeployment::where('cert_id', $cert->id)->delete();
                 $cert->delete();
             }
-            RediAcmeChallenge::query()
-                ->where('domain_name', $domain->original_url)
-                ->delete();
-            RediAcmeChallengeNodeSync::query()
-                ->where('domain_name', $domain->original_url)
-                ->delete();
+            AcmeChallengeCleanup::purgeForHosts([$domain->original_url]);
         });
     }
 
