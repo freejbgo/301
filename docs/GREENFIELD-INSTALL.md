@@ -31,7 +31,7 @@ mysql -u redi_admin -p redi_admin -e \
   "SELECT ROUTINE_NAME FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='redi_admin' AND ROUTINE_NAME='redi_node_bump_skip'"
 ```
 
-CentOS 的 `deploy-master.sh` 在 migrate 前后都会检查该过程是否存在。
+CentOS 的 `deploy-master.sh` 在 `migrate` 之后会检查该过程是否存在。
 
 ### 仅空库 migrate（不推荐绿场）
 
