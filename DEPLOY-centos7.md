@@ -98,6 +98,8 @@ Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证�
 ./scripts/build-node-tar.sh
 ```
 
+节点包内含静态 `bin/redi-multi`（含 80/443 上 `/c.js`、`/api.js` 限速等逻辑）。只更新主控 PHP 时重跑 `deploy-master.sh`；改过 `node/redi-multi` 后必须重新打包并在各节点 `deploy-node.sh` 或至少替换二进制并重启 `redi-multi`。
+
 在需要部署时本地打包（或打 tag 发 Release），勿把 tar 提交进 git。节点打包会拒绝仍然动态链接 libc 的二进制。
 
 ## 7. 开发机用 CentOS 7 容器做冒烟（可选）

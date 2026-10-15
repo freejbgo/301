@@ -9,6 +9,7 @@
 #
 # 发布包查找顺序：环境变量 REDI_NODE_TAR、仓库里的 node/redi-multi.tar.gz、/tmp/redi-multi.tar.gz。
 # 重复执行会按 vars.env 重写 env.sh，并更新 config.json 的 server_ip 和 default_redirect_url。
+# 更新节点程序：在开发机 build-node-tar.sh 后重跑本脚本（或替换 bin/redi-multi 并 systemctl restart redi-multi）。
 set -euo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 

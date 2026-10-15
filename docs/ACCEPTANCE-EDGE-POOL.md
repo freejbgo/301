@@ -7,8 +7,8 @@
 绿场库见 [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md)（**一次导入** `redi_admin.sql`，含 `redi_node_bump_skip`）。
 
 - 主控：`composer install`、**`php artisan migrate --force`**、`QUEUE_CONNECTION=database`、`php artisan queue:work` 常驻
-- 续期 crontab：`10 3 * * * cd .../master/master && php artisan redi:renew-certificates`
-- 节点：`REDI_MASTER_URL`、`REDI_NODE_TOKEN`、`REDI_DB_*`；防火墙对公网开放 80/443（CentOS 7 脚本不开放 8080；`/api.js` 由 80/443 路径或内网访问，见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md)）
+- 续期/清理：CentOS 用 `deploy-master` 写入的 `/etc/cron.d/redi-renew`（**03:10** 续期、**04:10** `redi:prune-acme-challenges`）；手工部署可写同等 cron，**勿**再跑 `schedule:run` 以免重复。多台 `queue:work` 时 `CACHE_DRIVER=redis`。
+- 节点：`REDI_MASTER_URL`、`REDI_NODE_TOKEN`、`REDI_DB_*`；防火墙对公网开放 80/443（CentOS 7 脚本不开放 8080）。`/c.js`、`/api.js` 由 **80/443** 同源提供（带 IP 限速），见 [SECURITY.md](../SECURITY.md)。
 
 ## F1 手动 DNS
 
@@ -22,6 +22,7 @@
 1. DNS 驱动选 Cloudflare（或已配置的阿里云/DNSPod/dns.com）。
 2. 填写凭证，解析模式选 **API 自动**，点击「同步 Pool / 租户 CNAME 到 DNS 厂商」。
 3. 在厂商面板确认 pool A 与 token CNAME 与节点列表一致。
+4. 若租户 `edge_fqdn` 与当前平台主域名不一致，同步应 **失败** 且 `dns_synced_at` 不前进（全部不一致时不应写入厂商；见 [CONSOLE.md](CONSOLE.md)）。
 
 ## F3 HTTP 跳转
 
