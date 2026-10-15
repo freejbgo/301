@@ -1,20 +1,23 @@
 package mysqlconnect
 
 import (
+	"crypto/tls"
 	"fmt"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
 )
 
 var (
-	mu sync.Mutex
-	db *sqlx.DB
+	mu              sync.Mutex
+	db              *sqlx.DB
+	tlsRegisterOnce sync.Once
 )
 
 func envOr(key, fallback string) string {
@@ -22,6 +25,24 @@ func envOr(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func appendTlsToDSN(dsn string, tlsMode string) (string, error) {
+	tlsMode = strings.TrimSpace(tlsMode)
+	if tlsMode == "" {
+		return dsn, nil
+	}
+	if tlsMode == "1" || strings.EqualFold(tlsMode, "true") {
+		return dsn + "&tls=true", nil
+	}
+	if strings.EqualFold(tlsMode, "skip-verify") {
+		tlsRegisterOnce.Do(func() {
+			_ = mysql.RegisterTLSConfig("redi-skip-verify", &tls.Config{InsecureSkipVerify: true})
+		})
+		return dsn + "&tls=redi-skip-verify", nil
+	}
+
+	return "", fmt.Errorf("unsupported REDI_DB_TLS value %q (use 1, true, or skip-verify)", tlsMode)
 }
 
 func openPool() (*sqlx.DB, error) {
@@ -33,9 +54,9 @@ func openPool() (*sqlx.DB, error) {
 	charset := envOr("REDI_DB_CHARSET", "utf8mb4")
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true", userName, password, ipAddress, port, dbName, charset)
-	tlsMode := strings.TrimSpace(os.Getenv("REDI_DB_TLS"))
-	if tlsMode == "1" || strings.EqualFold(tlsMode, "true") {
-		dsn += "&tls=true"
+	dsn, err := appendTlsToDSN(dsn, os.Getenv("REDI_DB_TLS"))
+	if err != nil {
+		return nil, err
 	}
 	conn, openErr := sqlx.Open("mysql", dsn)
 	if openErr != nil {

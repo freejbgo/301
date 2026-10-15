@@ -13,6 +13,7 @@ use Dcat\Admin\Widgets\Table;
 use App\Services\EdgeDnsManualReference;
 use App\Services\EdgeDnsSyncService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PlatformDnsController extends Controller
 {
@@ -98,7 +99,12 @@ HTML;
         try {
             $syncService->syncAll();
         } catch (\Throwable $e) {
-            return response()->json(['status' => false, 'message' => $e->getMessage()], 422);
+            Log::warning('EdgeDnsSync failed', ['exception' => $e]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'DNS 同步失败，请检查平台 DNS 配置与厂商凭证；详情见主控 storage/logs。',
+            ], 422);
         }
 
         return response()->json(['status' => true, 'message' => 'DNS 已同步到厂商']);

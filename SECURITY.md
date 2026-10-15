@@ -22,7 +22,7 @@
 | 项 | 说明 |
 |----|------|
 | 节点 API Token | 格式 `{节点ID}.{随机串}`，仅存 bcrypt 哈希；创建节点时**仅展示一次**。泄露或主机被控后须 **立即轮换 Token**（后台节点管理），并视情况吊销/重装证书；在启用节点上仍可能拿到 **已分配部署任务的全池证书** |
-| `redirect-rules` | 认证节点可拉取 **全平台启用域名** 列表（无 `skip_url`）；属元数据泄露面，依赖 Token 保密 |
+| `redirect-rules` | 认证节点可拉取 **全平台启用域名** 列表（无 `skip_url`），用于池内任意节点上 `force_https`；属元数据泄露面，依赖 Token 保密 |
 | `TRUSTED_PROXIES=*` | 生产默认 **拒绝启动**（含 `queue:work` / `schedule:run`）；仅 `REDI_ALLOW_TRUST_ALL_PROXIES=true` 且主控绝不直连公网时例外 |
 | `/api/nodes/certificates` | Bearer 鉴权；**仅返回本节点在 `redi_cert_deployments` 中有记录的证书**（与 `ack` 一致）。Token 泄露仍可拿到该节点被分配的全池证书，须轮换 Token 并隔离主机 |
 | 节点 `ack` | 仅当存在该节点对应的 `redi_cert_deployments` 行时才接受，避免伪造部署成功 |
@@ -54,3 +54,5 @@
 发布包 `master.tar.gz`（本地构建或 Release）含 `composer install --no-dev` 的 `vendor`，不含 `.env`。构建/CI 使用 PHP **8.4**；生产建议 PHP 8.0.2+ 并与 lock 一致。`vendor` 与 `*.tar.gz` 不进 git。
 
 CI 会执行 `composer audit`（忽略 abandoned 包）。当前 **Laravel 8** 锁文件在 advisory 库中仍关联若干 CVE/GHSA（见 `composer.json` → `config.audit.ignore`）；清除需 **大版本升级 Laravel/Dcat**，单期以 `APP_DEBUG=false`、后台 HTTPS、不暴露调试页等缓解。升级前勿移除 ignore 项。
+
+打 `v*` 标签发布 Release 时，`.github/workflows/release.yml` 会在上传包之前跑与 CI 相同的 Go/PHPUnit/audit、脚本校验与 CentOS 7 容器冒烟。

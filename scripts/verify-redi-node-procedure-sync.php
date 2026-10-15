@@ -51,4 +51,10 @@ if ($normalize($fromSqlBody) !== $normalize($fromMig)) {
     exit(1);
 }
 
+if (! preg_match('/CREATE TABLE `users`/m', $sqlDump)) {
+    fwrite(STDERR, "redi_admin.sql: missing CREATE TABLE users (Laravel default migration)\n");
+    exit(1);
+}
+
 fwrite(STDOUT, "redi_node_bump_skip: SQL dump and migration 100009 match\n");
+fwrite(STDOUT, "redi_admin.sql: users table present\n");

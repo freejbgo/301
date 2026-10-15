@@ -9,8 +9,74 @@ permissions:
   contents: write
 
 jobs:
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: node/redi-multi/go.mod
+      - name: Vet and test node
+        working-directory: node/redi-multi
+        run: |
+          go vet ./...
+          go test ./...
+
+  master-phpunit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+      - name: Install dependencies
+        working-directory: master/master
+        run: composer install --no-interaction --prefer-dist
+      - name: Composer audit
+        working-directory: master/master
+        run: composer audit --no-interaction
+      - name: PHPUnit
+        working-directory: master/master
+        run: ./vendor/bin/phpunit --testsuite Unit,Feature
+
+  centos7-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: CentOS 7 script syntax
+        run: |
+          for f in scripts/centos7/*.sh; do bash -n "$f"; done
+          php scripts/verify-redi-node-procedure-sync.php
+
+  centos7-integration:
+    runs-on: ubuntu-latest
+    needs: [node, master-phpunit]
+    if: always() && needs.node.result == 'success' && needs.master-phpunit.result == 'success'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: node/redi-multi/go.mod
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+      - name: Build ephemeral release tarballs for smoke only
+        run: |
+          ./scripts/build-node-tar.sh
+          cd master/master
+          composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
+          cd ../..
+          ./scripts/build-master-tar.sh
+          test -s master/master.tar.gz && test -s node/redi-multi.tar.gz
+      - name: CentOS 7 container smoke
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo centos:7 bash scripts/centos7/container-integration-test.sh
+
   publish:
     runs-on: ubuntu-latest
+    needs: [node, master-phpunit, centos7-scripts, centos7-integration]
     steps:
       - uses: actions/checkout@v4
 
@@ -44,4 +110,4 @@ jobs:
             "master/master.tar.gz#master.tar.gz" \
             "node/redi-multi.tar.gz#redi-multi.tar.gz" \
             --title "CentOS 7 主控与节点 ${GITHUB_REF_NAME}" \
-            --notes "主控包 master.tar.gz（含 vendor，不含 .env）。节点包 redi-multi.tar.gz（CentOS 7 静态二进制）。部署步骤见仓库 DEPLOY-centos7.md。"
+            --notes "主控包 master.tar.gz（含 vendor，不含 .env）。节点包 redi-multi.tar.gz（CentOS 7 静态二进制）。部署步骤见仓库 DEPLOY-centos7.md。本 Release 在发布前已通过与 CI 相同的测试、composer audit 与 CentOS 7 冒烟。"

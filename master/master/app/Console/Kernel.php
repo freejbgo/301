@@ -19,7 +19,7 @@ class Kernel extends ConsoleKernel
             ->dailyAt('03:10')
             ->withoutOverlapping(120);
         $schedule->command('redi:prune-acme-challenges')
-            ->dailyAt('04:00')
+            ->dailyAt('04:10')
             ->withoutOverlapping(30);
     }
 
