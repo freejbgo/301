@@ -6,7 +6,7 @@
 
 - 数据库：绿场 **一次导入 `redi_admin.sql`**（含节点存储过程 `redi_node_bump_skip`）；默认 `admin` 密码见 DEPLOY.md，登录后强制改密；`original_url` **全平台唯一**。
 - 主控：多租户隔离、**原始域名全平台唯一**（与边缘节点按 Host 查库一致）、跳转 URL 仅允许 `http/https`、`.env.example` 默认 `APP_DEBUG=false` / `SESSION_SECURE_COOKIE=true`。
-- 节点：`REDI_DB_*` 环境变量；MySQL 账号 **`redi_node`** 仅可 **EXECUTE** 存储过程 `redi_node_bump_skip`（按 Host 返回 `skip_url` 并递增 `skip_num`，`SQL SECURITY DEFINER`；见 `grant-node-mysql.sh`），不能 `SELECT` 域名映射全表；`status=1` 才跳转计数；`/c.js`、`/api.js` 对公网开放时 **按 IP 限速**（默认约 **120 次/分钟/IP**，两路径共用计数），`/api.js` 另有 **按 IP+域名参数** 限速（默认约 **60 次/分钟**，减轻刷 `skip_num`）；Echo 默认 **127.0.0.1:8080**；**不再清空整表 iptables OUTPUT**。
+- 节点：`REDI_DB_*` 环境变量；MySQL 账号 **`redi_node`** 仅可 **EXECUTE** 存储过程 `redi_node_bump_skip`（按 Host 返回 `skip_url` 并递增 `skip_num`，`SQL SECURITY DEFINER`；见 `grant-node-mysql.sh`），不能 `SELECT` 域名映射全表；`status=1` 才跳转计数；生产 **80/443** 与调试 **8080** 上 `/c.js`、`/api.js` 均 **按 IP 限速**（默认约 **120 次/分钟/IP**，两路径共用计数），`/api.js` 另有 **按 IP+域名参数** 限速（默认约 **60 次/分钟**，减轻刷 `skip_num`）；Echo 默认 **127.0.0.1:8080**；**不再清空整表 iptables OUTPUT**。
 - `composer.json` 声明 Laravel 8 + Dcat Admin。CentOS 7 用发布包里的 `vendor`，不用在服务器上执行 `composer install`。
 
 ## 你必须在服务器上完成的

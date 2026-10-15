@@ -14,6 +14,10 @@ func WriteAsset(conn net.Conn, requestURI, remoteIP, userAgent string) bool {
 	}
 	switch u.Path {
 	case "/c.js":
+		if !allowRate(remoteIP) {
+			writeJS(conn, httpStatusLine(429), "// rate limit")
+			return true
+		}
 		writeJS(conn, httpStatusLine(200), cjsSource(remoteIP, userAgent))
 		return true
 	case "/api.js":

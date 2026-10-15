@@ -108,7 +108,7 @@ enabled = 1
 EOF
 yum install -y MariaDB-server MariaDB-client MariaDB-common MariaDB-compat
 
-php -r 'if (PHP_VERSION_ID < 70300 || PHP_VERSION_ID >= 80100) { fwrite(STDERR, "需要 PHP 7.3 或 8.0，当前 ".PHP_VERSION."\n"); exit(1); }'
+php -r 'if (PHP_VERSION_ID < 80000 || PHP_VERSION_ID >= 80100) { fwrite(STDERR, "需要 PHP 8.0.x（Remi），当前 ".PHP_VERSION."\n"); exit(1); }'
 echo "PHP $(php -r 'echo PHP_VERSION;')"
 
 step "先开防火墙，再启动 MariaDB"
@@ -391,6 +391,7 @@ systemctl daemon-reload
 systemctl enable --now redi-queue
 systemctl restart redi-queue
 
+# 证书续期/ACME 清理走独立 cron（勿再配 schedule:run，避免与 app/Console/Kernel 重复执行）。
 cat > /etc/cron.d/redi-renew <<EOF
 SHELL=/bin/bash
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
