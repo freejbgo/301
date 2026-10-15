@@ -20,6 +20,23 @@ class RediAdminDomainModelTest extends TestCase
             'prefix' => '',
         ]]);
 
+        Schema::create('redi_acme_challenges', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('domain_name')->unique();
+            $table->string('token');
+            $table->text('response_body');
+            $table->timestamp('expires_at');
+            $table->timestamps();
+        });
+
+        Schema::create('redi_acme_challenge_node_sync', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->unsignedInteger('node_id');
+            $table->string('domain_name');
+            $table->timestamp('synced_at')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('redi_admin_domain', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('group_id')->default(1);
@@ -58,5 +75,38 @@ class RediAdminDomainModelTest extends TestCase
         $domain->save();
 
         $this->assertSame('https://dest.example/path', $domain->fresh()->skip_url);
+    }
+
+    public function test_disabling_domain_clears_acme_challenges(): void
+    {
+        $domain = RediAdminDomain::create([
+            'group_id' => 1,
+            'admin_id' => 1,
+            'original_url' => 'off.example',
+            'skip_url' => 'https://dest.example/',
+            'status' => 1,
+        ]);
+
+        \DB::table('redi_acme_challenges')->insert([
+            'domain_name' => 'off.example',
+            'token' => 't',
+            'response_body' => 'b',
+            'expires_at' => now()->addHour(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_acme_challenge_node_sync')->insert([
+            'node_id' => 1,
+            'domain_name' => 'off.example',
+            'synced_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $domain->status = 2;
+        $domain->save();
+
+        $this->assertSame(0, \DB::table('redi_acme_challenges')->count());
+        $this->assertSame(0, \DB::table('redi_acme_challenge_node_sync')->count());
     }
 }

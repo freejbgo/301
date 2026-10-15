@@ -56,5 +56,24 @@ if (! preg_match('/CREATE TABLE `users`/m', $sqlDump)) {
     exit(1);
 }
 
+$migrationFiles = glob($root.'/master/master/database/migrations/*.php') ?: [];
+$migrationCount = count($migrationFiles);
+if (! preg_match('/INSERT INTO `migrations` VALUES /', $sqlDump)) {
+    fwrite(STDERR, "redi_admin.sql: missing migrations seed\n");
+    exit(1);
+}
+preg_match_all("/'[0-9]{4}_[0-9]{2}_[0-9]{2}_[0-9]{6}_[^']+'/", $sqlDump, $seedNames);
+$sqlMigrationCount = count(array_unique($seedNames[0] ?? []));
+if ($sqlMigrationCount !== $migrationCount) {
+    fwrite(STDERR, "redi_admin.sql: migrations seed count {$sqlMigrationCount} != filesystem {$migrationCount}\n");
+    exit(1);
+}
+
+if (! preg_match('/DROP VIEW IF EXISTS `redi_node_domain_lookup`/m', $sqlDump)) {
+    fwrite(STDERR, "redi_admin.sql: expected DROP VIEW redi_node_domain_lookup (greenfield uses procedure only)\n");
+    exit(1);
+}
+
 fwrite(STDOUT, "redi_node_bump_skip: SQL dump and migration 100009 match\n");
 fwrite(STDOUT, "redi_admin.sql: users table present\n");
+fwrite(STDOUT, "redi_admin.sql: {$migrationCount} migrations in seed\n");

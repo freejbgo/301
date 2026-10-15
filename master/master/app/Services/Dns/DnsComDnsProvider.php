@@ -4,12 +4,14 @@ namespace App\Services\Dns;
 
 use App\Models\RediPlatformDns;
 use App\Services\Dns\Concerns\ParsesZoneNames;
+use App\Services\Dns\Concerns\ReconcilesDnsRecords;
 use GuzzleHttp\Client;
 use RuntimeException;
 
 class DnsComDnsProvider implements DnsProviderInterface
 {
     use ParsesZoneNames;
+    use ReconcilesDnsRecords;
 
     protected RediPlatformDns $platform;
 
@@ -42,20 +44,28 @@ class DnsComDnsProvider implements DnsProviderInterface
     public function upsertARecords(string $fqdn, array $ipv4): void
     {
         $ipv4 = array_values(array_unique(array_filter($ipv4)));
-        if ($ipv4 === []) {
-            throw new RuntimeException('没有可同步的节点 IP');
-        }
         $parts = $this->splitFqdn($fqdn, $this->zoneName());
-        $this->deleteRecords($parts['domain'], $parts['rr'], 'A');
-        foreach ($ipv4 as $ip) {
-            $this->signedPost('api/record/create/', [
-                'domain' => $parts['domain'],
-                'record' => $parts['rr'],
-                'type' => 'A',
-                'value' => $ip,
-                'ttl' => 120,
-            ]);
-        }
+        $rows = $this->listRecordRows($parts['domain'], $parts['rr'], 'A');
+
+        $this->reconcileARecordValues(
+            $rows,
+            $ipv4,
+            function (string $ip) use ($parts) {
+                $this->signedPost('api/record/create/', [
+                    'domain' => $parts['domain'],
+                    'record' => $parts['rr'],
+                    'type' => 'A',
+                    'value' => $ip,
+                    'ttl' => 120,
+                ]);
+            },
+            function (string $id) use ($parts) {
+                $this->signedPost('api/record/delete/', [
+                    'domain' => $parts['domain'],
+                    'record_id' => $id,
+                ]);
+            }
+        );
     }
 
     public function upsertCname(string $name, string $zone, string $targetFqdn): void
@@ -64,18 +74,45 @@ class DnsComDnsProvider implements DnsProviderInterface
         $name = strtolower(rtrim($name, '.'));
         $targetFqdn = strtolower(rtrim($targetFqdn, '.'));
         $record = $name === $zone ? '@' : $name;
-        $this->deleteRecords($zone, $record, 'CNAME');
-        $this->signedPost('api/record/create/', [
-            'domain' => $zone,
-            'record' => $record,
-            'type' => 'CNAME',
-            'value' => $targetFqdn,
-            'ttl' => 120,
-        ]);
+        $rows = $this->listRecordRows($zone, $record, 'CNAME');
+
+        $this->reconcileCnameTarget(
+            $rows,
+            $targetFqdn,
+            function (string $target) use ($zone, $record) {
+                $this->signedPost('api/record/create/', [
+                    'domain' => $zone,
+                    'record' => $record,
+                    'type' => 'CNAME',
+                    'value' => $target,
+                    'ttl' => 120,
+                ]);
+            },
+            function (string $id, string $target) use ($zone, $record) {
+                $this->signedPost('api/record/update/', [
+                    'domain' => $zone,
+                    'record_id' => $id,
+                    'record' => $record,
+                    'type' => 'CNAME',
+                    'value' => $target,
+                    'ttl' => 120,
+                ]);
+            },
+            function (string $id) use ($zone) {
+                $this->signedPost('api/record/delete/', [
+                    'domain' => $zone,
+                    'record_id' => $id,
+                ]);
+            }
+        );
     }
 
-    protected function deleteRecords(string $domain, string $record, string $type): void
+    /**
+     * @return array<int, array{id: string, value: string}>
+     */
+    protected function listRecordRows(string $domain, string $record, string $type): array
     {
+        $rows = [];
         $page = 1;
         do {
             $res = $this->signedPost('api/record/list/', [
@@ -100,14 +137,16 @@ class DnsComDnsProvider implements DnsProviderInterface
                 }
                 $id = $row['record_id'] ?? $row['id'] ?? null;
                 if ($id) {
-                    $this->signedPost('api/record/delete/', [
-                        'domain' => $domain,
-                        'record_id' => $id,
-                    ]);
+                    $rows[] = [
+                        'id' => (string) $id,
+                        'value' => (string) ($row['value'] ?? ''),
+                    ];
                 }
             }
             $page++;
         } while (count($list) === 100);
+
+        return $rows;
     }
 
     protected function signedPost(string $path, array $params): array

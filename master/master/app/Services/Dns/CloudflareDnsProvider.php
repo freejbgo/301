@@ -3,12 +3,15 @@
 namespace App\Services\Dns;
 
 use App\Models\RediPlatformDns;
+use App\Services\Dns\Concerns\ReconcilesDnsRecords;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
 use RuntimeException;
 
 class CloudflareDnsProvider implements DnsProviderInterface
 {
+    use ReconcilesDnsRecords;
+
     protected RediPlatformDns $platform;
 
     protected Client $http;
@@ -49,29 +52,32 @@ class CloudflareDnsProvider implements DnsProviderInterface
     {
         $fqdn = strtolower(rtrim($fqdn, '.'));
         $ipv4 = array_values(array_unique(array_filter($ipv4)));
-        if ($ipv4 === []) {
-            throw new RuntimeException('没有可同步的节点 IP');
-        }
-
         $zoneId = $this->zoneId();
         $name = $this->recordNameForFqdn($fqdn);
         $existing = $this->listRecords($zoneId, 'A', $fqdn);
+        $rows = array_map(fn ($row) => [
+            'id' => (string) ($row['id'] ?? ''),
+            'value' => (string) ($row['content'] ?? ''),
+        ], $existing);
 
-        foreach ($existing as $row) {
-            $this->http->delete("zones/{$zoneId}/dns_records/{$row['id']}");
-        }
-
-        foreach ($ipv4 as $ip) {
-            $this->decode($this->http->post("zones/{$zoneId}/dns_records", [
-                'json' => [
-                    'type' => 'A',
-                    'name' => $name,
-                    'content' => $ip,
-                    'ttl' => 120,
-                    'proxied' => false,
-                ],
-            ]));
-        }
+        $this->reconcileARecordValues(
+            $rows,
+            $ipv4,
+            function (string $ip) use ($zoneId, $name) {
+                $this->decode($this->http->post("zones/{$zoneId}/dns_records", [
+                    'json' => [
+                        'type' => 'A',
+                        'name' => $name,
+                        'content' => $ip,
+                        'ttl' => 120,
+                        'proxied' => false,
+                    ],
+                ]));
+            },
+            function (string $id) use ($zoneId) {
+                $this->http->delete("zones/{$zoneId}/dns_records/{$id}");
+            }
+        );
     }
 
     public function upsertCname(string $name, string $zone, string $targetFqdn): void
@@ -86,19 +92,41 @@ class CloudflareDnsProvider implements DnsProviderInterface
         $zoneId = $this->zoneId();
         $cnameFqdn = $name === '@' ? $zone : $name.'.'.$zone;
         $existing = $this->listRecords($zoneId, 'CNAME', $cnameFqdn);
-        foreach ($existing as $row) {
-            $this->http->delete("zones/{$zoneId}/dns_records/{$row['id']}");
-        }
+        $rows = array_map(fn ($row) => [
+            'id' => (string) ($row['id'] ?? ''),
+            'value' => (string) ($row['content'] ?? ''),
+        ], $existing);
 
-        $this->decode($this->http->post("zones/{$zoneId}/dns_records", [
-            'json' => [
-                'type' => 'CNAME',
-                'name' => $name,
-                'content' => $targetFqdn,
-                'ttl' => 120,
-                'proxied' => false,
-            ],
-        ]));
+        $recordName = $name;
+        $this->reconcileCnameTarget(
+            $rows,
+            $targetFqdn,
+            function (string $target) use ($zoneId, $recordName) {
+                $this->decode($this->http->post("zones/{$zoneId}/dns_records", [
+                    'json' => [
+                        'type' => 'CNAME',
+                        'name' => $recordName,
+                        'content' => $target,
+                        'ttl' => 120,
+                        'proxied' => false,
+                    ],
+                ]));
+            },
+            function (string $id, string $target) use ($zoneId, $recordName) {
+                $this->decode($this->http->patch("zones/{$zoneId}/dns_records/{$id}", [
+                    'json' => [
+                        'type' => 'CNAME',
+                        'name' => $recordName,
+                        'content' => $target,
+                        'ttl' => 120,
+                        'proxied' => false,
+                    ],
+                ]));
+            },
+            function (string $id) use ($zoneId) {
+                $this->http->delete("zones/{$zoneId}/dns_records/{$id}");
+            }
+        );
     }
 
     protected function zoneId(): string

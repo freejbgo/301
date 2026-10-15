@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\RediAcmeChallenge;
 use App\Models\RediNode;
+use App\Services\CertificateDeployService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
@@ -226,6 +227,33 @@ class NodeAgentApiTest extends TestCase
         $ids = array_column($response->json('certificates'), 'cert_id');
         $this->assertContains($assignedId, $ids);
         $this->assertNotContains($otherId, $ids);
+    }
+
+    public function test_ack_returns_409_when_mark_not_applied(): void
+    {
+        [$node, $token] = $this->createNodeWithToken();
+
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_name' => 'valid.example',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->mock(CertificateDeployService::class, function ($mock) {
+            $mock->shouldReceive('markNodeAck')->once()->andReturn(false);
+        });
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/ack', ['cert_id' => $certId, 'ok' => true])
+            ->assertStatus(409);
     }
 
     public function test_ack_forbidden_without_deployment_row(): void
