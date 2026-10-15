@@ -73,6 +73,27 @@ redi_wait_mysql_tcp() {
   return 1
 }
 
+# deploy-master 之后：优先 socket ping，再试 127.0.0.1 / 指定 IP（勿轻易 restart，容器里易停死后起不来）
+redi_wait_mysql_ready() {
+  local host="${1:-}"
+  local i
+  for i in $(seq 1 90); do
+    if command -v mysqladmin >/dev/null 2>&1 && mysqladmin ping --silent >/dev/null 2>&1; then
+      return 0
+    fi
+    if (echo >/dev/tcp/127.0.0.1/3306) >/dev/null 2>&1; then
+      return 0
+    fi
+    if [[ -n "$host" ]] && [[ "$host" != "127.0.0.1" ]] \
+      && (echo >/dev/tcp/"$host"/3306) >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "MariaDB 在 90s 内未就绪（已试 socket、127.0.0.1${host:+, $host})" >&2
+  return 1
+}
+
 redi_ufw_bootstrap() {
   command -v ufw >/dev/null || {
     echo "未安装 ufw，请用云安全组放行 22/80/443 与节点 3306"

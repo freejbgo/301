@@ -82,7 +82,11 @@ tar xzf "$TAR" -C "$NODE_INSTALL_ROOT"
 
 umask 077
 {
-  echo "REDI_DB_HOST=${MASTER_IP}"
+  if [[ "${REDI_SMOKE_SINGLE_HOST:-}" == "1" ]]; then
+    echo "REDI_DB_HOST=127.0.0.1"
+  else
+    echo "REDI_DB_HOST=${MASTER_IP}"
+  fi
   echo "REDI_DB_PORT=3306"
   echo "REDI_DB_USER=redi_node"
   echo "REDI_DB_PASSWORD=${DB_PASS}"
@@ -106,8 +110,7 @@ else
 fi
 setcap cap_net_admin+ep "${APP}/bin/redi-multi"
 
-redi_restart mariadb 2>/dev/null || true
-redi_wait_mysql_tcp "$MASTER_IP" 3306 || die "主控 MySQL 3306 未就绪，请先完成 deploy-master"
+redi_wait_mysql_ready "$MASTER_IP" || die "主控 MySQL 未就绪，请先完成 deploy-master"
 
 cat > /etc/systemd/system/redi-multi.service <<EOF
 [Unit]

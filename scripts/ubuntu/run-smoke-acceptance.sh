@@ -48,20 +48,12 @@ if [[ ! -f "${ROOT}/master/master.tar.gz" ]]; then
   "${ROOT}/scripts/build-node-tar.sh"
 fi
 
-echo "==> deploy-master"
-VARS_FILE="$VARS" bash "${ROOT}/scripts/ubuntu/deploy-master.sh"
-redi_wait_mysql() {
-  local h="$1" i
-  for i in $(seq 1 90); do
-    (echo >/dev/tcp/"$h"/3306) >/dev/null 2>&1 && return 0
-    sleep 1
-  done
-  return 1
-}
 # shellcheck source=lib.sh
 source "${ROOT}/scripts/ubuntu/lib.sh"
-redi_restart mariadb 2>/dev/null || service mysql start 2>/dev/null || true
-redi_wait_mysql "$IP" || { echo "MariaDB 未监听 3306" >&2; exit 1; }
+
+echo "==> deploy-master"
+VARS_FILE="$VARS" bash "${ROOT}/scripts/ubuntu/deploy-master.sh"
+redi_wait_mysql_ready "$IP" || die "deploy-master 后 MySQL 未就绪（勿在容器里 restart mariadb）"
 
 echo "==> deploy-node"
 VARS_FILE="$VARS" bash "${ROOT}/scripts/ubuntu/deploy-node.sh"
@@ -77,7 +69,7 @@ check procedure mysql --defaults-extra-file=/root/.redi-mysql.cnf -N -e \
 code=$(curl -sI -o /dev/null -w '%{http_code}' "http://127.0.0.1/admin" || echo 0)
 check admin_http test "$code" = "302" -o "$code" = "200"
 check redi-multi pgrep -f "${NODE}/bin/redi-multi" >/dev/null
-check node_mysql mysql -h "$IP" -u redi_node -p'SmokeDbPass_2026_x' redi_admin -e "CALL redi_node_bump_skip('__accept__')" >/dev/null
+check node_mysql mysql -h 127.0.0.1 -u redi_node -p'SmokeDbPass_2026_x' redi_admin -e "CALL redi_node_bump_skip('__accept__')" >/dev/null
 
 [[ "$fail" -eq 0 ]] && echo "Ubuntu 脚本化冒烟通过（${IP}）。F1–F8 须公网另验。" && exit 0
 exit 1
