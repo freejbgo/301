@@ -64,6 +64,9 @@
                 "PKSA-3r5d-mb8f-1qw9",
                 "PKSA-w9tt-7782-78jx"
             ]
+        },
+        "platform": {
+            "php": "8.0.30"
         }
     },
     "minimum-stability": "dev",
