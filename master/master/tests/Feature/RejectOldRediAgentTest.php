@@ -49,19 +49,18 @@ class RejectOldRediAgentTest extends TestCase
             ->assertStatus(426);
     }
 
-    public function test_revision_ok_when_agent_version_stored(): void
+    public function test_heartbeat_ok_when_version_in_body(): void
     {
         $node = new RediNode();
         $node->name = 'n1';
         $node->public_ip = '1.2.3.4';
         $node->enabled = true;
-        $node->agent_version = '0.1.2';
         $node->save();
         $plain = $node->issueApiTokenPlain();
         $node->save();
 
         $this->withToken($plain)
-            ->getJson('/api/nodes/revision')
+            ->postJson('/api/nodes/heartbeat', ['version' => '0.1.2'])
             ->assertOk();
     }
 }

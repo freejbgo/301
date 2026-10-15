@@ -28,6 +28,23 @@ class NodeAgentRevisionServiceTest extends TestCase
             $table->timestamp('expires_at');
             $table->timestamps();
         });
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url')->nullable();
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        Schema::create('redi_domain_certs', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('domain_id')->nullable();
+            $table->string('domain_name');
+            $table->string('status')->default('active');
+            $table->text('certificate')->nullable();
+            $table->timestamps();
+        });
     }
 
     public function test_challenges_revision_ignores_empty_token_rows(): void
