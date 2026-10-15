@@ -69,10 +69,20 @@ class RediPlatformDns extends Model
 
         try {
             $json = Crypt::decryptString($this->api_credentials);
+            $data = json_decode($json, true);
 
-            return json_decode($json, true) ?: [];
+            return is_array($data) ? $data : [];
         } catch (\Throwable $e) {
-            return [];
+            \Illuminate\Support\Facades\Log::warning('RediPlatformDns: api_credentials decrypt failed', [
+                'id' => $this->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw new \RuntimeException(
+                '平台 DNS API 凭证无法解密（请确认 APP_KEY 未变更，或在后台重新保存 API 密钥）',
+                0,
+                $e
+            );
         }
     }
 }
