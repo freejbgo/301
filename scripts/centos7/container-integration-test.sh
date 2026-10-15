@@ -90,9 +90,12 @@ mysqladmin ping --silent || { tail -20 /tmp/mysqld-smoke.log; exit 1; }
 DB_PASS="SmokeDbPass2026"
 mysql -u root -e "CREATE DATABASE IF NOT EXISTS redi_admin DEFAULT CHARACTER SET utf8mb4;
 CREATE USER IF NOT EXISTS 'redi_admin'@'127.0.0.1' IDENTIFIED BY '${DB_PASS}';
-GRANT SELECT, INSERT, UPDATE, DELETE ON redi_admin.* TO 'redi_admin'@'127.0.0.1';
+CREATE USER IF NOT EXISTS 'redi_admin'@'localhost' IDENTIFIED BY '${DB_PASS}';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON redi_admin.* TO 'redi_admin'@'127.0.0.1';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON redi_admin.* TO 'redi_admin'@'localhost';
 FLUSH PRIVILEGES;" 2>/dev/null || mysql -u root -e "CREATE DATABASE IF NOT EXISTS redi_admin;
-GRANT ALL ON redi_admin.* TO 'redi_admin'@'127.0.0.1' IDENTIFIED BY '${DB_PASS}';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON redi_admin.* TO 'redi_admin'@'127.0.0.1' IDENTIFIED BY '${DB_PASS}';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON redi_admin.* TO 'redi_admin'@'localhost' IDENTIFIED BY '${DB_PASS}';
 FLUSH PRIVILEGES;"
 
 table_count=$(mysql -u root -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='redi_admin' AND table_name='admin_users'")

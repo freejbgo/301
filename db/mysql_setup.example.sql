@@ -11,8 +11,11 @@
 CREATE DATABASE IF NOT EXISTS `redi_admin` DEFAULT CHARACTER SET utf8mb4;
 
 CREATE USER IF NOT EXISTS 'redi_admin'@'127.0.0.1' IDENTIFIED BY 'change_this_db_password';
+CREATE USER IF NOT EXISTS 'redi_admin'@'localhost' IDENTIFIED BY 'change_this_db_password';
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON `redi_admin`.* TO 'redi_admin'@'127.0.0.1';
+-- 含 migrate 所需 DDL/存储过程（日常 DML + 100009 等迁移）
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON `redi_admin`.* TO 'redi_admin'@'127.0.0.1';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON `redi_admin`.* TO 'redi_admin'@'localhost';
 -- 节点请用 grant-node-mysql.sh（仅 EXECUTE redi_node_bump_skip），勿给整库或 SELECT 域名表权限
 -- GRANT ... TO 'redi_admin'@'<节点公网IP>';
 
