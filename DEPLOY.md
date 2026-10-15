@@ -24,7 +24,7 @@ CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)�
 | 机器 | 要装的 | 对公网开放 | 不对公网开放 |
 |------|--------|------------|----------------|
 | 主控 | Nginx、PHP 8.0.2+、MySQL/MariaDB、队列 | 22、80、443 | 3306 |
-| 每台节点 | `node/redi-multi.tar.gz` 里的程序 | 22、80、443 | 3306、8080 |
+| 每台节点 | 节点发布包（本地 `build-node-tar.sh` 或 Release 的 `redi-multi.tar.gz`） | 22、80、443 | 3306、8080 |
 
 节点仍直连主控上的 MySQL，所以 3306 只允许主控本机和各节点的出口 IP。8080 是调试监听（默认 `127.0.0.1:8080`）；生产跳转走客户域名 **80/443** 上的 `/api.js`、`/c.js`，不必对访客开放 8080。`/api.js` 对公网开放是业务需要，节点侧有 **按 IP** 与 **按 IP+域名参数** 限速（见 [SECURITY.md](SECURITY.md)）。
 
@@ -113,7 +113,7 @@ php artisan queue:work --sleep=3 --timeout=320 --tries=100
 
 ## 3. 节点
 
-不要在节点上 `go run`，也不要改 `mysqlconnect.go` 里的地址。数据库地址、主控地址和 Token 都放在环境文件里。发布物是仓库里的 `node/redi-multi.tar.gz`。
+不要在节点上 `go run`，也不要改 `mysqlconnect.go` 里的地址。数据库地址、主控地址和 Token 都放在环境文件里。发布物用本地打包或 GitHub Release 的节点包（见 `scripts/build-node-tar.sh`）。
 
 ```bash
 sudo mkdir -p /opt/redi-multi
@@ -162,7 +162,7 @@ sudo systemctl enable --now redi-multi
 mysql -h 主控IP -u redi_node -p redi_admin -e "CALL redi_node_bump_skip('__smoke__')"
 ```
 
-节点程序改过之后，在开发机执行 `./scripts/build-node-tar.sh`，再把新的 `node/redi-multi.tar.gz` 提交。主控依赖变了就执行 `./scripts/build-master-tar.sh`。线上部署解压的是这两个包。`build-node-tar.sh` 会拒绝仍然动态链接 libc 的二进制。
+节点或主控代码就绪、需要上线时，在开发机执行 `./scripts/build-node-tar.sh` / `./scripts/build-master-tar.sh`（产物默认在 `node/`、`master/` 下，已 gitignore，**勿提交**）。或通过 **`v*` tag** 触发 Release 工作流上传包。`build-node-tar.sh` 会拒绝仍然动态链接 libc 的二进制。
 
 ## 4. 上线顺序
 

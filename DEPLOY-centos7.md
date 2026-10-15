@@ -9,8 +9,9 @@
 
 发布包在 [GitHub Releases](https://github.com/freejbgo/301/releases) 下载（当前推荐 **[v2026.10.14](https://github.com/freejbgo/301/releases/tag/v2026.10.14)** 或更高）。克隆仓库时，同一份文件也在下面这两个路径；也可在 `vars.env` 里设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` 指向下载的绝对路径：
 
-- `master/master.tar.gz`：PHP 程序，已经包含 `vendor`，没有 `.env`。服务器不用装 Composer。Release 上的文件名是 `master.tar.gz`。
-- `node/redi-multi.tar.gz`：静态二进制 `bin/redi-multi`，不依赖 glibc 2.32/2.34，CentOS 7 的 glibc 2.17 可以直接跑。Release 上的文件名是 `redi-multi.tar.gz`。
+- 主控包：本地 `scripts/build-master-tar.sh` → `master/master.tar.gz`（含 `vendor`，无 `.env`），或 GitHub Release 的 `master.tar.gz`。
+- 节点包：本地 `scripts/build-node-tar.sh` → `node/redi-multi.tar.gz`（CentOS 7 静态 `bin/redi-multi`），或 Release 的 `redi-multi.tar.gz`。
+- 仓库 **不跟踪** 上述 tar；`deploy-*.sh` 默认找同路径下的文件，也可用 `vars.env` 的 `REDI_MASTER_TAR` / `REDI_NODE_TAR` 指向 `/tmp` 等。
 
 源码在仓库的 `master/master/`。那是给开发和重新打包用的。自动安装不要把仓库克隆到 `/opt/301`，否则会和发布包解压出来的 `/opt/301/master` 叠在一起。
 
@@ -97,7 +98,7 @@ Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证�
 ./scripts/build-node-tar.sh
 ```
 
-把新的 `master/master.tar.gz` 和 `node/redi-multi.tar.gz` 提交。节点打包会拒绝仍然动态链接 libc 的二进制。
+在需要部署时本地打包（或打 tag 发 Release），勿把 tar 提交进 git。节点打包会拒绝仍然动态链接 libc 的二进制。
 
 ## 7. 开发机用 CentOS 7 容器做冒烟（可选）
 

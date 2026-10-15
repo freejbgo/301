@@ -114,7 +114,7 @@ APP=/opt/301-smoke/master
 rm -rf /opt/301-smoke
 mkdir -p /opt/301-smoke
 tar xzf "${REPO_ROOT}/master/master.tar.gz" -C /opt/301-smoke
-# 仓库内 migrations 为权威来源（提交里的 master.tar.gz 可能落后于当前分支）
+# 仓库内 migrations 为权威来源（CI 临时构建的 master.tar.gz 可能落后于当前分支源码）
 if [[ -d "${REPO_ROOT}/master/master/database/migrations" ]]; then
   cp -a "${REPO_ROOT}/master/master/database/migrations/." "${APP}/database/migrations/"
 fi
