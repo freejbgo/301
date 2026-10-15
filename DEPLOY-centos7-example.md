@@ -23,6 +23,8 @@ MASTER_URL="http://1.2.3.4"
 ADMIN_HTTPS="false"
 NODE_PUBLIC_IP="5.6.7.8"
 DEFAULT_REDIRECT_URL="https://www.example.com"
+# 主控尚无 HTTPS 时：Agent 须配合下面一行（仅 lab；生产请用 https://）
+REDI_MASTER_INSECURE="1"
 REDI_MASTER_URL="http://1.2.3.4"
 REDI_NODE_TOKEN=""
 ```
@@ -47,7 +49,7 @@ REDI_NODE_TOKEN="换成后台创建节点时的Token"
 sudo bash scripts/centos7/deploy-node.sh
 ```
 
-主控有 HTTPS 域名之后，把主控 `.env` 的 `APP_URL` 改成 `https://主控域名`、`ADMIN_HTTPS=true`，节点 `vars.env` 的 `REDI_MASTER_URL` 也改成这个 https 地址，再执行一次 `deploy-node.sh`。
+主控有 HTTPS 域名之后：删掉或注释 `REDI_MASTER_INSECURE`，把主控 `.env` 的 `APP_URL` 改成 `https://主控域名`、`ADMIN_HTTPS=true`，节点 `vars.env` 的 `REDI_MASTER_URL` 改成同一 **https://** 地址，再执行一次 `deploy-node.sh`。
 
 ## 后台里接着做
 

@@ -6,7 +6,7 @@
 #   chmod 600 scripts/centos7/vars.env && vi scripts/centos7/vars.env
 #   sudo bash scripts/centos7/deploy-master.sh
 #
-# 重复执行是安全的：已有库不会被 SQL 覆盖，已有 .env 和 APP_KEY 会保留。
+# 重复执行是安全的：已有库不会被 SQL 覆盖（绿场空库一次导入 redi_admin.sql，含 redi_node_bump_skip），已有 .env 和 APP_KEY 会保留。
 set -euo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 

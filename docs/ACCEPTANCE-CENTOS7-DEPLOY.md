@@ -154,9 +154,12 @@ MASTER_URL="http://1.2.3.4"
 ADMIN_HTTPS="false"
 NODE_PUBLIC_IP="5.6.7.8"
 DEFAULT_REDIRECT_URL="https://www.example.com"
+REDI_MASTER_INSECURE="1"
 REDI_MASTER_URL="http://1.2.3.4"
 REDI_NODE_TOKEN="后台复制的Token"
 ```
+
+（`deploy-node.sh` 默认要求 `https://`；主控仍用 HTTP/IP 访问后台时，须设 `REDI_MASTER_INSECURE=1` 与 `http://` 成对使用。上主控 HTTPS 后改为 `https://` 并去掉 `REDI_MASTER_INSECURE`。）
 
 ```bash
 sudo bash scripts/centos7/deploy-node.sh

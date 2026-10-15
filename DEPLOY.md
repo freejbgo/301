@@ -7,7 +7,7 @@
 
 CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。填好的变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。真机装完后用 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 逐步验收。
 
-开发阶段 [GitHub Releases](https://github.com/freejbgo/301/releases) 可能暂无包；需部署时在仓库根目录执行 `scripts/build-*-tar.sh`，或发 **`v*` tag** 由 CI 上传 Release。
+开发阶段 [GitHub Releases](https://github.com/freejbgo/301/releases) 可能暂无包；需部署时在仓库根目录执行 `scripts/build-*-tar.sh`，或发 **`v*` tag** 由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 在通过 Go/PHPUnit（8.4 与 8.0）、`composer audit`、CentOS 7 脚本与容器冒烟后上传 Release（发布前对解压后的主控树再跑 audit + PHPUnit）。
 
 **绿场（无旧数据）** 时数据库以 **一次导入 `redi_admin.sql`** 为准（含节点存储过程），见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。下面是通用步骤；CentOS 7 不要按克隆目录手工装，直接跑脚本。
 
@@ -135,7 +135,9 @@ REDI_DB_PORT=3306
 REDI_DB_USER=redi_node
 REDI_DB_PASSWORD=与主控相同的库密码
 REDI_DB_NAME=redi_admin
+# 可选：REDI_DB_TLS=1 或 skip-verify（节点连库 TLS）
 REDI_MASTER_URL=https://主控域名
+# 仅 lab：主控尚无 HTTPS 时可 REDI_MASTER_INSECURE=1 且 http://（生产勿用）
 REDI_NODE_TOKEN=后台创建节点时只显示一次的 Token
 EOF
 chmod 600 /opt/redi-multi/redi-multi/env.sh
@@ -178,7 +180,7 @@ mysql -h 主控IP -u redi_node -p redi_admin -e "CALL redi_node_bump_skip('__smo
 
 - 至少一台节点 **启用** 且 **15 分钟内有心跳**；长期故障的节点请先禁用，避免阻塞（主控只需任一台在线节点同步 HTTP-01 挑战即可）。
 - 多机跑 `queue:work` 时 `CACHE_DRIVER=redis`（共享 ACME 锁）。
-- 节点 `REDI_MASTER_URL` 必须为 **https://**；Agent **0.1.2+** 与主控分项 revision 匹配。
+- 节点 `REDI_MASTER_URL` 生产必须为 **https://**（lab 可 `REDI_MASTER_INSECURE=1` + `http://`）；Agent **0.1.2+** 与主控分项 revision 匹配。证书 `ack` 在无对应部署行时返回 **409**。
 - 默认已启用 `REDI_MIN_AGENT_VERSION=0.1.2`（全部节点 API）；旧节点须升级 `redi-multi` 或临时设 `REDI_MIN_AGENT_VERSION=` 禁用。
 - `php artisan config:cache` 前请确认 `.env` 中 `REDI_ALLOW_TRUST_ALL_PROXIES`、`REDI_MIN_AGENT_VERSION` 等已写入（它们进入 `config/redi.php`，缓存后仍生效）。
 - 每日 `redi:prune-acme-challenges`（CentOS 脚本 cron **04:10**；若自行跑 `schedule:run` 则同为 04:10）；若有历史 Unicode 域名可执行 `php artisan redi:normalize-domain-hosts --dry-run` 再正式跑。
