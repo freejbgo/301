@@ -46,7 +46,7 @@ sudo bash scripts/centos7/deploy-master.sh
 3. 安装 MariaDB 10.6。CentOS 7 自带的 5.5 导不进这份 `utf8mb4` 库。
 4. 设置 root 密码，关闭反向域名解析，数据库监听 IPv4。3306 不对全网开放，只放行 `NODE_IPS`。
 5. 库是空的才导入 `db/redi_admin.sql`（菜单 + 业务表 + 默认 `admin`；**不含**存储过程正文）。已经有 `admin_users` 时不会覆盖。
-6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（创建 `redi_node_bump_skip` 等）、`storage:link`，并 **检查存储过程是否存在**（不存在则脚本失败退出）。
+6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（绿场常无新迁移；发版后有新迁移时改库）、`storage:link`，并 **检查存储过程是否存在**（应由 `redi_admin.sql` 导入；不存在则脚本失败退出）。
 7. 配置 PHP-FPM（用户 `nginx`，sock `/var/run/php-fpm/www.sock`）和 Nginx。开启 SELinux 时会放行网站访问网络和数据库。
 8. 安装队列 `redi-queue`：`queue:work --sleep=3 --timeout=320 --tries=100`。每天 03:10 以用户 `nginx` 执行 `redi:renew-certificates`。
 9. 防火墙开放 22、80、443。

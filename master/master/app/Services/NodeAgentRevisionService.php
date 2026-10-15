@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\RediAcmeChallenge;
 use App\Models\RediDomainCert;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -14,8 +13,7 @@ class NodeAgentRevisionService
      */
     public function build(): array
     {
-        $challenges = RediAcmeChallenge::query()
-            ->where('expires_at', '>', now())
+        $challenges = AcmeChallengeQuery::ready()
             ->orderBy('id')
             ->get(['domain_name', 'token', 'updated_at']);
 

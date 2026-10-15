@@ -11,7 +11,7 @@ CentOS 7.9（及其他 7.x）用两个脚本自动安装：[scripts/centos7/depl
 | 文档 | 内容 |
 |------|------|
 | [DEPLOY.md](DEPLOY.md) | 部署教程 |
-| [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md) | 绿场安装（无旧数据、migrate 与 SQL 分工） |
+| [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md) | 绿场安装（无旧数据、一次导入 `redi_admin.sql`） |
 | [DEPLOY-centos7.md](DEPLOY-centos7.md) | CentOS 7 命令 |
 | [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) | CentOS 7.9 真机部署验收清单 |
 | [docs/CONSOLE.md](docs/CONSOLE.md) | 控制台操作手册 |

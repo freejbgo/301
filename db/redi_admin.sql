@@ -2,9 +2,10 @@
 --
 -- Host: localhost    Database: redi_admin
 --
--- 绿场/bootstrap 用：导入 Dcat 菜单 + 业务表结构 + 默认 admin（密码见 DEPLOY.md，登录后会被强制改密）。
--- 存储过程 redi_node_bump_skip 不在此文件中，请在本库执行 php artisan migrate --force（迁移 100009）创建。
+-- 绿场/bootstrap 用：一次导入即可（Dcat 菜单 + 业务表 + 默认 admin + 节点存储过程 redi_node_bump_skip）。
+-- 过程体与 database/migrations/2026_03_28_100009_redi_node_skip_procedure.php 保持一致；发版改过程时两处同步。
 -- 无历史数据环境：勿再执行已删除的「升级/清理」迁移（如原 100010）。
+-- 主控发版后若有新迁移（100010+），再在服务器执行 php artisan migrate --force。
 -- ------------------------------------------------------
 -- Server version	5.6.50-log
 
@@ -341,7 +342,7 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -350,7 +351,7 @@ CREATE TABLE `migrations` (
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'2014_10_12_000000_create_users_table',1),(2,'2014_10_12_100000_create_password_resets_table',1),(3,'2016_01_04_173148_create_admin_tables',1),(4,'2019_08_19_000000_create_failed_jobs_table',1),(5,'2019_12_14_000001_create_personal_access_tokens_table',1),(6,'2020_09_07_090635_create_admin_settings_table',1),(7,'2020_09_22_015815_create_admin_extensions_table',1),(8,'2020_11_01_083237_update_admin_menu_table',1),(9,'2026_03_28_000001_add_platform_settings_menu',2),(10,'2026_03_28_099998_create_redi_admin_core_tables',2),(11,'2026_03_28_100000_create_edge_pool_and_cert_tables',2),(12,'2026_03_28_100001_add_edge_pool_admin_menu',2),(13,'2026_03_28_100002_add_acme_challenges_and_jobs',2),(14,'2026_03_28_100003_add_node_challenge_sync',2),(15,'2026_03_28_100004_add_node_extra_ips',2),(16,'2026_10_13_000001_ensure_failed_jobs_table',3),(17,'2026_03_28_100005_global_unique_original_url',3),(18,'2026_03_28_100006_redi_domain_certs_domain_fk',4),(19,'2026_03_28_100007_node_domain_view_and_url_hash',5),(20,'2026_03_28_100008_redi_cert_deployments_foreign_keys',5);
+INSERT INTO `migrations` VALUES (1,'2014_10_12_000000_create_users_table',1),(2,'2014_10_12_100000_create_password_resets_table',1),(3,'2016_01_04_173148_create_admin_tables',1),(4,'2019_08_19_000000_create_failed_jobs_table',1),(5,'2019_12_14_000001_create_personal_access_tokens_table',1),(6,'2020_09_07_090635_create_admin_settings_table',1),(7,'2020_09_22_015815_create_admin_extensions_table',1),(8,'2020_11_01_083237_update_admin_menu_table',1),(9,'2026_03_28_000001_add_platform_settings_menu',2),(10,'2026_03_28_099998_create_redi_admin_core_tables',2),(11,'2026_03_28_100000_create_edge_pool_and_cert_tables',2),(12,'2026_03_28_100001_add_edge_pool_admin_menu',2),(13,'2026_03_28_100002_add_acme_challenges_and_jobs',2),(14,'2026_03_28_100003_add_node_challenge_sync',2),(15,'2026_03_28_100004_add_node_extra_ips',2),(16,'2026_10_13_000001_ensure_failed_jobs_table',3),(17,'2026_03_28_100005_global_unique_original_url',3),(18,'2026_03_28_100006_redi_domain_certs_domain_fk',4),(19,'2026_03_28_100007_node_domain_view_and_url_hash',5),(20,'2026_03_28_100008_redi_cert_deployments_foreign_keys',5),(21,'2026_03_28_100009_redi_node_skip_procedure',6);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -637,6 +638,37 @@ UNLOCK TABLES;
 --
 -- Dumping routines for database 'redi_admin'
 --
+DROP VIEW IF EXISTS `redi_node_domain_lookup`;
+DROP PROCEDURE IF EXISTS `redi_node_bump_skip`;
+DELIMITER ;;
+CREATE PROCEDURE `redi_node_bump_skip`(IN p_host VARCHAR(255))
+    READS SQL DATA
+    MODIFIES SQL DATA
+    SQL SECURITY DEFINER
+    COMMENT 'Edge node: return skip_url for one host and increment skip_num'
+BEGIN
+    DECLARE v_skip VARCHAR(255) DEFAULT NULL;
+
+    START TRANSACTION;
+
+    SELECT `skip_url` INTO v_skip
+    FROM `redi_admin_domain`
+    WHERE `original_url` = p_host AND `status` = 1
+    LIMIT 1
+    FOR UPDATE;
+
+    IF v_skip IS NOT NULL THEN
+        UPDATE `redi_admin_domain`
+        SET `skip_num` = `skip_num` + 1
+        WHERE `original_url` = p_host AND `status` = 1
+        LIMIT 1;
+    END IF;
+
+    COMMIT;
+
+    SELECT v_skip AS `skip_url`;
+END ;;
+DELIMITER ;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

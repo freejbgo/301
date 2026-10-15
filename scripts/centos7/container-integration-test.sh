@@ -90,9 +90,12 @@ mysqladmin ping --silent || { tail -20 /tmp/mysqld-smoke.log; exit 1; }
 DB_PASS="SmokeDbPass2026"
 mysql -u root -e "CREATE DATABASE IF NOT EXISTS redi_admin DEFAULT CHARACTER SET utf8mb4;
 CREATE USER IF NOT EXISTS 'redi_admin'@'127.0.0.1' IDENTIFIED BY '${DB_PASS}';
-GRANT SELECT, INSERT, UPDATE, DELETE ON redi_admin.* TO 'redi_admin'@'127.0.0.1';
+CREATE USER IF NOT EXISTS 'redi_admin'@'localhost' IDENTIFIED BY '${DB_PASS}';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON redi_admin.* TO 'redi_admin'@'127.0.0.1';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON redi_admin.* TO 'redi_admin'@'localhost';
 FLUSH PRIVILEGES;" 2>/dev/null || mysql -u root -e "CREATE DATABASE IF NOT EXISTS redi_admin;
-GRANT ALL ON redi_admin.* TO 'redi_admin'@'127.0.0.1' IDENTIFIED BY '${DB_PASS}';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON redi_admin.* TO 'redi_admin'@'127.0.0.1' IDENTIFIED BY '${DB_PASS}';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON redi_admin.* TO 'redi_admin'@'localhost' IDENTIFIED BY '${DB_PASS}';
 FLUSH PRIVILEGES;"
 
 table_count=$(mysql -u root -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='redi_admin' AND table_name='admin_users'")
@@ -100,11 +103,21 @@ if [[ "$table_count" == "0" ]]; then
   mysql -u root redi_admin < "${REPO_ROOT}/db/redi_admin.sql"
 fi
 
+proc_after_sql=$(mysql -u root -N -e "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='redi_admin' AND ROUTINE_NAME='redi_node_bump_skip'")
+if [[ "$proc_after_sql" != "1" ]]; then
+  echo "导入 redi_admin.sql 后缺少 redi_node_bump_skip"
+  exit 1
+fi
+
 echo "[5] Laravel 发布包解压与 migrate"
 APP=/opt/301-smoke/master
 rm -rf /opt/301-smoke
 mkdir -p /opt/301-smoke
 tar xzf "${REPO_ROOT}/master/master.tar.gz" -C /opt/301-smoke
+# 仓库内 migrations 为权威来源（提交里的 master.tar.gz 可能落后于当前分支）
+if [[ -d "${REPO_ROOT}/master/master/database/migrations" ]]; then
+  cp -a "${REPO_ROOT}/master/master/database/migrations/." "${APP}/database/migrations/"
+fi
 cp "${APP}/.env.example" "${APP}/.env"
 export MASTER_URL="http://127.0.0.1" DB_PASS ADMIN_HTTPS=false
 # shellcheck source=lib.sh
@@ -112,6 +125,11 @@ redi_sync_master_env "${APP}/.env"
 cd "${APP}"
 php artisan key:generate --force
 php artisan migrate --force
+proc=$(mysql -u root -N -e "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='redi_admin' AND ROUTINE_NAME='redi_node_bump_skip'")
+if [[ "$proc" != "1" ]]; then
+  echo "缺少 redi_node_bump_skip（应在 redi_admin.sql 中）"
+  exit 1
+fi
 php artisan config:clear
 php artisan storage:link
 routes=$(php artisan route:list --path=api/nodes 2>/dev/null) || exit 1

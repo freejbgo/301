@@ -7,7 +7,7 @@
 
 CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。填好的变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。真机装完后用 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 逐步验收。
 
-**绿场（无旧数据）** 时 SQL 与 `migrate` 的分工见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。下面是通用步骤；CentOS 7 不要按克隆目录手工装，直接跑脚本。
+**绿场（无旧数据）** 时数据库以 **一次导入 `redi_admin.sql`** 为准（含节点存储过程），见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。下面是通用步骤；CentOS 7 不要按克隆目录手工装，直接跑脚本。
 
 ## 这套程序怎么接流量
 
@@ -39,8 +39,8 @@ mysql -u root -p < db/mysql_setup.example.sql
 mysql -u root -p redi_admin < db/redi_admin.sql
 ```
 
-- **绿场**：`redi_admin.sql` = Dcat 菜单 + 业务表 + 默认 `admin`；**`redi_node_bump_skip` 存储过程** 只由 **`php artisan migrate --force`** 创建（迁移 `100009`）。详见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。
-- 导入 SQL 后**必须**再执行 `php artisan migrate --force`（CentOS `deploy-master.sh` 会自动执行并检查过程是否存在）。
+- **绿场**：`redi_admin.sql` = Dcat 菜单 + 业务表 + 默认 `admin` + **`redi_node_bump_skip` 存储过程**（无需为建库再单独 migrate）。详见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。
+- 导入 SQL 后可用下面命令确认过程已存在；主控装好后仍会执行 `php artisan migrate --force`（绿场通常无新迁移，发版后有 `100010+` 时再改库）。
 - 验证过程（可选）：
 
 ```bash
@@ -177,8 +177,10 @@ mysql -h 主控IP -u redi_node -p redi_admin -e "CALL redi_node_bump_skip('__smo
 - 至少一台节点 **启用** 且 **15 分钟内有心跳**；长期故障的节点请先禁用，避免阻塞（主控只需任一台在线节点同步 HTTP-01 挑战即可）。
 - 多机跑 `queue:work` 时 `CACHE_DRIVER=redis`（共享 ACME 锁）。
 - 节点 `REDI_MASTER_URL` 必须为 **https://**；Agent **0.1.2+** 与主控分项 revision 匹配。
-- 生产建议在 `.env` 设置 `REDI_MIN_AGENT_VERSION=0.1.2`（与当前节点包一致），然后 `php artisan config:cache`。
-- 更新主控代码后执行 `php artisan migrate --force`（含节点存储过程 `redi_node_bump_skip`）。节点库账号为 **`redi_node`** 时重跑 `grant-node-mysql.sh`（仅 `EXECUTE` 该过程）。
+- 默认已启用 `REDI_MIN_AGENT_VERSION=0.1.2`（全部节点 API）；旧节点须升级 `redi-multi` 或临时设 `REDI_MIN_AGENT_VERSION=` 禁用。
+- `php artisan config:cache` 前请确认 `.env` 中 `REDI_ALLOW_TRUST_ALL_PROXIES`、`REDI_MIN_AGENT_VERSION` 等已写入（它们进入 `config/redi.php`，缓存后仍生效）。
+- 每日 `redi:prune-acme-challenges`（CentOS 脚本 cron 04:10）；若有历史 Unicode 域名可执行 `php artisan redi:normalize-domain-hosts --dry-run` 再正式跑。
+- 更新主控代码后执行 `php artisan migrate --force`（仅当仓库有新迁移）。节点库账号为 **`redi_node`** 时重跑 `grant-node-mysql.sh`（仅 `EXECUTE` 该过程）。
 
 客户自己要做的事见 [docs/CUSTOMER-CNAME-HTTPS.md](docs/CUSTOMER-CNAME-HTTPS.md)。
 

@@ -4,7 +4,7 @@
 
 ## 已在代码/库里做好的事
 
-- 数据库：绿场导入 `redi_admin.sql` 后 **`php artisan migrate`** 创建节点存储过程；默认 `admin` 密码见 DEPLOY.md，登录后强制改密；`original_url` **全平台唯一**。
+- 数据库：绿场 **一次导入 `redi_admin.sql`**（含节点存储过程 `redi_node_bump_skip`）；默认 `admin` 密码见 DEPLOY.md，登录后强制改密；`original_url` **全平台唯一**。
 - 主控：多租户隔离、**原始域名全平台唯一**（与边缘节点按 Host 查库一致）、跳转 URL 仅允许 `http/https`、`.env.example` 默认 `APP_DEBUG=false` / `SESSION_SECURE_COOKIE=true`。
 - 节点：`REDI_DB_*` 环境变量；MySQL 账号 **`redi_node`** 仅可 **EXECUTE** 存储过程 `redi_node_bump_skip`（按 Host 返回 `skip_url` 并递增 `skip_num`，`SQL SECURITY DEFINER`；见 `grant-node-mysql.sh`），不能 `SELECT` 域名映射全表；`status=1` 才跳转计数；`/c.js`、`/api.js` 对公网开放时 **按 IP 限速**（默认约 **120 次/分钟/IP**，两路径共用计数），`/api.js` 另有 **按 IP+域名参数** 限速（默认约 **60 次/分钟**，减轻刷 `skip_num`）；Echo 默认 **127.0.0.1:8080**；**不再清空整表 iptables OUTPUT**。
 - `composer.json` 声明 Laravel 8 + Dcat Admin。CentOS 7 用发布包里的 `vendor`，不用在服务器上执行 `composer install`。
@@ -34,7 +34,9 @@
 | 证书队列 | 子账号仅能为本人名下域名入队；**超级管理员**可为任意租户域名入队；同一时刻只跑一个 ACME 任务 |
 | 队列 | 生产请 `QUEUE_CONNECTION=database`，并常驻 `queue:work --sleep=3 --timeout=320 --tries=100` |
 | ACME 并发 | 全局锁 `redi-acme-le-global` + 按域名锁；**多台** `queue:work` 时 `CACHE_DRIVER` 须为 **redis**（或共享缓存），否则文件锁不跨机 |
-| 节点 Agent | `REDI_MASTER_URL` 必须 **https://**；可选 `REDI_DB_TLS=1`；Agent **0.1.2+** 按 challenges/rules/certificates 分项 revision，仅拉取变更类型；在 `.env` 设置 `REDI_MIN_AGENT_VERSION` 后，**register/heartbeat** 必须带 `version` 且不低于该值（见 `config/redi.php`，支持 `config:cache`） |
+| 节点 Agent | `REDI_MASTER_URL` 必须 **https://**；可选 `REDI_DB_TLS=1`；Agent **0.1.2+** 分项 revision；默认 `REDI_MIN_AGENT_VERSION=0.1.2`，**全部** `/api/nodes/*` 受版本门（请求 `version` 或库内 `agent_version`）；设 `REDI_MIN_AGENT_VERSION=` 可禁用 |
+| `TRUSTED_PROXIES` / `REDI_ALLOW_TRUST_ALL_PROXIES` | 生产拒绝 `*` 除非 `config('redi.allow_trust_all_proxies')` 为 true（**`php artisan config:cache` 后仍有效**）；Web 与 `queue:work` 启动时均检查 |
+| ACME 维护 | 计划任务 `redi:prune-acme-challenges`（CentOS `deploy-master` 每日 04:10）；`redi:normalize-domain-hosts` 可修正历史 IDN / `skip_url` |
 | 证书表 | `redi_domain_certs.domain_id` 外键级联删除，避免孤儿证书记录 |
 
 ## 架构说明（已知限制）

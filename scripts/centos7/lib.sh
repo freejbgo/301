@@ -121,6 +121,8 @@ redi_sync_node_ips_access() {
 redi_sync_master_env() {
   local env_file="$1"
   export MASTER_URL DB_PASS ADMIN_HTTPS
+  export REDI_MIN_AGENT_VERSION="${REDI_MIN_AGENT_VERSION:-0.1.2}"
+  export REDI_ALLOW_TRUST_ALL_PROXIES="${REDI_ALLOW_TRUST_ALL_PROXIES:-false}"
   php -r '
     $p = $argv[1];
     $env = file_get_contents($p);
@@ -130,6 +132,8 @@ redi_sync_master_env() {
       "DB_PASSWORD" => getenv("DB_PASS"),
       "ADMIN_HTTPS" => getenv("ADMIN_HTTPS"),
       "SESSION_SECURE_COOKIE" => $secure,
+      "REDI_MIN_AGENT_VERSION" => getenv("REDI_MIN_AGENT_VERSION"),
+      "REDI_ALLOW_TRUST_ALL_PROXIES" => getenv("REDI_ALLOW_TRUST_ALL_PROXIES"),
     ];
     foreach ($map as $k => $v) {
       $env = preg_replace("/^".preg_quote($k, "/")."=.*/m", $k."=".$v, $env, 1, $n);

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"redi-multi/util/host"
 	"redi-multi/util/redirecturl"
 	"redi-multi/config"
 	"redi-multi/mysqlconnect"
@@ -233,7 +234,7 @@ func GetSkipUrl(Db *sqlx.DB, Url string) string {
 	if Db == nil {
 		return ""
 	}
-	Url = strings.ToLower(strings.TrimSpace(Url))
+	Url = host.CanonicalLookupHost(Url)
 	if Url == "" {
 		return ""
 	}

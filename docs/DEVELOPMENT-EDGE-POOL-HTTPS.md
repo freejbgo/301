@@ -21,7 +21,7 @@
 | 10 | 域名很多 | **批量申请证书** + **队列续期**；**一期不开发**「客户逐个加 TXT」流程 |
 | 11 | lagran | **80 + 443** |
 | 12 | 节点连库 | 仍直连 MySQL（`REDI_DB_*`） |
-| 13 | 数据库 | 绿场：**`db/redi_admin.sql` 全量导入** + **`php artisan migrate --force`**（`redi_node_bump_skip` 等由迁移维护，见 [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md)） |
+| 13 | 数据库 | 绿场：**`db/redi_admin.sql` 全量导入**（含 `redi_node_bump_skip`；见 [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md)） |
 
 代码侧范围已按上表落地。F1–F8 仍要在真实 DNS 和 Let's Encrypt 环境里按 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) 验收。§八里的勾选是开发过程记录。
 

@@ -18,6 +18,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('redi:renew-certificates')
             ->dailyAt('03:10')
             ->withoutOverlapping(120);
+        $schedule->command('redi:prune-acme-challenges')
+            ->dailyAt('04:00')
+            ->withoutOverlapping(30);
     }
 
     /**

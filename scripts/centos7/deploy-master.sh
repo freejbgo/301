@@ -186,10 +186,10 @@ trap 'rm -f "$sqlfile"' EXIT
   printf "CREATE DATABASE IF NOT EXISTS \`redi_admin\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\n"
   printf "CREATE USER IF NOT EXISTS 'redi_admin'@'127.0.0.1' IDENTIFIED BY '%s';\n" "$db_sql"
   printf "ALTER USER 'redi_admin'@'127.0.0.1' IDENTIFIED BY '%s';\n" "$db_sql"
-  printf "GRANT SELECT, INSERT, UPDATE, DELETE ON \`redi_admin\`.* TO 'redi_admin'@'127.0.0.1';\n"
+  printf "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON \`redi_admin\`.* TO 'redi_admin'@'127.0.0.1';\n"
   printf "CREATE USER IF NOT EXISTS 'redi_admin'@'localhost' IDENTIFIED BY '%s';\n" "$db_sql"
   printf "ALTER USER 'redi_admin'@'localhost' IDENTIFIED BY '%s';\n" "$db_sql"
-  printf "GRANT SELECT, INSERT, UPDATE, DELETE ON \`redi_admin\`.* TO 'redi_admin'@'localhost';\n"
+  printf "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON \`redi_admin\`.* TO 'redi_admin'@'localhost';\n"
   printf "FLUSH PRIVILEGES;\n"
 } > "$sqlfile"
 mysql_root < "$sqlfile"
@@ -250,7 +250,7 @@ fi
 php artisan migrate --force
 proc_count="$(mysql_root -N -e "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='redi_admin' AND ROUTINE_NAME='redi_node_bump_skip' AND ROUTINE_TYPE='PROCEDURE'")"
 if [[ "${proc_count:-0}" == "0" ]]; then
-  die "数据库缺少存储过程 redi_node_bump_skip。请确认 migrate 成功（迁移 100009），且未跳过 php artisan migrate。"
+  die "数据库缺少存储过程 redi_node_bump_skip。请确认已导入 db/redi_admin.sql，或 migrate 成功（100009）。"
 fi
 php artisan config:clear
 if [[ ! -L public/storage ]]; then
@@ -391,6 +391,7 @@ cat > /etc/cron.d/redi-renew <<EOF
 SHELL=/bin/bash
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 10 3 * * * nginx cd ${APP} && /usr/bin/php artisan redi:renew-certificates >> ${APP}/storage/logs/renew.log 2>&1
+10 4 * * * nginx cd ${APP} && /usr/bin/php artisan redi:prune-acme-challenges >> ${APP}/storage/logs/prune-acme.log 2>&1
 EOF
 chmod 644 /etc/cron.d/redi-renew
 

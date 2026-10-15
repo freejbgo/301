@@ -59,7 +59,7 @@ sudo bash scripts/centos7/deploy-master.sh
 
 - [ ] 脚本 **退出码为 0**，末尾提示后台地址与初始账号。
 - [ ] 无报错停在 `yum`、MariaDB、Laravel migrate 等步骤。
-- [ ] migrate 后存在存储过程 `redi_node_bump_skip`（脚本会自动检查；也可手验）：
+- [ ] 存在存储过程 `redi_node_bump_skip`（`redi_admin.sql` 已含；脚本会检查；也可手验）：
 
 ```bash
 mysql --defaults-extra-file=/root/.redi-mysql.cnf redi_admin -e \
@@ -89,7 +89,7 @@ sudo firewall-cmd --list-all
 | `curl` 后台 | **302** 或 **200** |
 | 3306 | 监听；**不要**对 `0.0.0.0/0` 在安全组全网开放 |
 | firewalld | 含 `ssh` `http` `https`；对节点 IP 有 mysql 相关 rich rule（若已配置 `NODE_IPS`） |
-| 节点 DB 权限 | 远程账号 `redi_node` 仅 EXECUTE `redi_node_bump_skip`（`grant-node-mysql.sh`；migrate 后执行） |
+| 节点 DB 权限 | 远程账号 `redi_node` 仅 EXECUTE `redi_node_bump_skip`（`grant-node-mysql.sh`；导入 SQL 后执行） |
 
 Nginx 重复部署行为：
 
