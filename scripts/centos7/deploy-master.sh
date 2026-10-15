@@ -200,6 +200,10 @@ if [[ "$table_count" == "0" ]]; then
   mysql_root redi_admin < "${REPO_ROOT}/db/redi_admin.sql"
 else
   echo "已有 admin_users，跳过全量导入"
+  proc_pre="$(mysql_root -N -e "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='redi_admin' AND ROUTINE_NAME='redi_node_bump_skip' AND ROUTINE_TYPE='PROCEDURE'")"
+  if [[ "${proc_pre:-0}" == "0" ]]; then
+    echo "警告: 未全量导入且缺少 redi_node_bump_skip；解压主控后 migrate 将尝试补建（需 migrations 未登记 100009）"
+  fi
 fi
 
 if [[ -n "$NODE_IPS" ]]; then

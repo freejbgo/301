@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\RediAcmeChallenge;
 use App\Models\RediNode;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -55,8 +56,8 @@ class NodeAgentApiTest extends TestCase
             $table->increments('id');
             $table->unsignedInteger('domain_id')->nullable();
             $table->string('domain_name');
-            $table->text('certificate_encrypted')->nullable();
-            $table->text('private_key_encrypted')->nullable();
+            $table->text('certificate')->nullable();
+            $table->text('private_key')->nullable();
             $table->string('status')->default('active');
             $table->timestamps();
         });
@@ -162,6 +163,69 @@ class NodeAgentApiTest extends TestCase
             ->assertOk();
 
         $response->assertJsonPath('synced_count', 0);
+    }
+
+    public function test_challenges_synced_rejects_invalid_host_with_422(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/challenges-synced', ['domains' => ['not a valid host!!!']])
+            ->assertStatus(422);
+    }
+
+    public function test_certificates_only_returns_certs_assigned_to_node(): void
+    {
+        [$node, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'cert.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $assignedId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'cert.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $otherId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'other.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest2\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest2\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $assignedId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->withToken($token)->getJson('/api/nodes/certificates');
+        $response->assertOk();
+        $ids = array_column($response->json('certificates'), 'cert_id');
+        $this->assertContains($assignedId, $ids);
+        $this->assertNotContains($otherId, $ids);
     }
 
     public function test_ack_forbidden_without_deployment_row(): void
