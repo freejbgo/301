@@ -11,6 +11,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "${SCRIPT_DIR}/lib.sh"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=../../ensure-release-tarballs.sh
+source "${REPO_ROOT}/scripts/ensure-release-tarballs.sh"
 VARS_FILE="${VARS_FILE:-${SCRIPT_DIR}/vars.env}"
 
 die() { echo "错误: $*" >&2; exit 1; }
@@ -61,11 +63,13 @@ fi
 
 [[ -z "$TAR" && -f "${REPO_ROOT}/node/redi-multi.tar.gz" ]] && TAR="${REPO_ROOT}/node/redi-multi.tar.gz"
 [[ -z "$TAR" && -f /tmp/redi-multi.tar.gz ]] && TAR="/tmp/redi-multi.tar.gz"
-[[ -n "$TAR" && -f "$TAR" ]] || die "找不到 redi-multi.tar.gz"
+[[ -n "$TAR" ]] || TAR="${REPO_ROOT}/node/redi-multi.tar.gz"
+redi_ensure_node_tar "$REPO_ROOT" "$TAR" die
 
 step "安装依赖"
-apt-get update -qq
-apt-get install -y -qq ufw tar libcap2-bin mariadb-client python3 iptables
+APT_OPTS=(-o DPkg::Lock::Timeout=300)
+apt-get "${APT_OPTS[@]}" update -qq
+apt-get "${APT_OPTS[@]}" install -y -qq ufw tar libcap2-bin mariadb-client python3 iptables
 
 modprobe nfnetlink_queue 2>/dev/null || echo "警告: nfnetlink_queue 未单独加载（可能已编进内核）"
 
@@ -82,6 +86,7 @@ tar xzf "$TAR" -C "$NODE_INSTALL_ROOT"
 [[ -x "${APP}/bin/redi-multi" ]] || die "缺少 bin/redi-multi"
 [[ -f "${APP}/config.json" ]] || cp "${APP}/config.json.example" "${APP}/config.json"
 
+prev_umask=$(umask)
 umask 077
 {
   echo "REDI_DB_HOST=${MASTER_IP}"
@@ -95,6 +100,7 @@ umask 077
   echo "REDI_NODE_TOKEN=${REDI_NODE_TOKEN}"
 } > "${APP}/env.sh"
 chmod 600 "${APP}/env.sh"
+umask "$prev_umask"
 
 url_sed=${DEFAULT_REDIRECT_URL//&/\\&}
 sed -i -E "s/\"server_ip\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/\"server_ip\": \"${NODE_PUBLIC_IP}\"/" "${APP}/config.json"
@@ -121,8 +127,16 @@ EOF
 systemctl daemon-reload
 systemctl enable --now redi-multi
 systemctl restart redi-multi
-sleep 2
-systemctl is-active --quiet redi-multi || die "redi-multi 未运行"
+active=0
+for _ in 1 2 3 4 5 6 7 8; do
+  if systemctl is-active --quiet redi-multi; then
+    active=1
+    break
+  fi
+  sleep 1
+done
+[[ "$active" == 1 ]] || { systemctl status redi-multi --no-pager || true; die "redi-multi 未运行"; }
+getcap "${APP}/bin/redi-multi" 2>/dev/null | grep -q cap_net_admin || die "redi-multi 缺少 cap_net_admin"
 
 db_cnf=$(mktemp)
 chmod 600 "$db_cnf"

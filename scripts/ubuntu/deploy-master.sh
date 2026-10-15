@@ -14,6 +14,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "${SCRIPT_DIR}/lib.sh"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=../../ensure-release-tarballs.sh
+source "${REPO_ROOT}/scripts/ensure-release-tarballs.sh"
 VARS_FILE="${VARS_FILE:-${SCRIPT_DIR}/vars.env}"
 
 die() { echo "错误: $*" >&2; exit 1; }
@@ -58,18 +60,22 @@ reject_text "MASTER_INSTALL_ROOT" "$MASTER_INSTALL_ROOT"
 is_ipv4 "$MASTER_IP" || die "MASTER_IP 必须是 IPv4"
 [[ "$MASTER_URL" == http://* || "$MASTER_URL" == https://* ]] || die "MASTER_URL 要以 http:// 或 https:// 开头"
 [[ "$ADMIN_HTTPS" == "true" || "$ADMIN_HTTPS" == "false" ]] || die "ADMIN_HTTPS 只能是 true 或 false"
-[[ -f "$TAR" ]] || die "找不到主控发布包: $TAR"
+if [[ "$ADMIN_HTTPS" == "true" && "$MASTER_URL" != https://* ]]; then
+  die "ADMIN_HTTPS=true 时 MASTER_URL 要用 https://"
+fi
+redi_ensure_master_tar "$REPO_ROOT" "$TAR" die
 [[ -f "${REPO_ROOT}/db/redi_admin.sql" ]] || die "找不到 db/redi_admin.sql"
 
 APP="${MASTER_INSTALL_ROOT}/master"
 [[ -d "${APP}/master" && -f "${APP}/master/artisan" ]] && die "请勿把仓库克隆到 ${APP}"
 
 step "Ubuntu ${VERSION_ID}：安装 Nginx、MariaDB、PHP ${PHP_DOT}"
-apt-get update -qq
-apt-get install -y -qq nginx mariadb-server mariadb-client \
+APT_OPTS=(-o DPkg::Lock::Timeout=300)
+apt-get "${APT_OPTS[@]}" update -qq
+apt-get "${APT_OPTS[@]}" install -y -qq nginx mariadb-server mariadb-client \
   "php${PHP_DOT}-fpm" "php${PHP_DOT}-cli" "php${PHP_DOT}-mysql" "php${PHP_DOT}-mbstring" \
   "php${PHP_DOT}-xml" "php${PHP_DOT}-zip" "php${PHP_DOT}-gd" "php${PHP_DOT}-bcmath" \
-  "php${PHP_DOT}-curl" ufw tar python3 mysql-client
+  "php${PHP_DOT}-curl" ufw tar python3
 
 php -r 'if (PHP_VERSION_ID < 80002) { fwrite(STDERR, "需要 PHP >= 8.0.2，当前 ".PHP_VERSION."\n"); exit(1); }'
 echo "PHP $(php -r 'echo PHP_VERSION;')"
@@ -87,6 +93,8 @@ done
 [[ "$ok" == 1 ]] || die "MariaDB 60 秒内未就绪"
 
 write_root_cnf() {
+  local prev
+  prev=$(umask)
   umask 077
   cat > /root/.redi-mysql.cnf <<EOF
 [client]
@@ -94,6 +102,7 @@ user=root
 password=${MYSQL_ROOT_PASS}
 EOF
   chmod 600 /root/.redi-mysql.cnf
+  umask "$prev"
 }
 
 sql_escape() { printf '%s' "$1" | sed "s/'/''/g"; }
@@ -127,7 +136,15 @@ cat > /etc/mysql/mariadb.conf.d/99-redi-bind.cnf <<'EOF'
 [mysqld]
 bind-address = 0.0.0.0
 EOF
+chmod 644 /etc/mysql/mariadb.conf.d/99-redi-bind.cnf
 bash "${SCRIPT_DIR}/apply-mysql-skip-name-resolve.sh"
+systemctl restart mariadb
+ok=0
+for _ in $(seq 1 30); do
+  mysql_root -e "SELECT 1" >/dev/null 2>&1 && ok=1 && break
+  sleep 1
+done
+[[ "$ok" == 1 ]] || die "MariaDB 在 bind-address 变更后未就绪"
 
 step "创建库与本机账号"
 db_sql=$(sql_escape "$DB_PASS")
@@ -173,8 +190,9 @@ else
 fi
 redi_sync_master_env "${APP}/.env"
 
-mkdir -p "${APP}/storage/framework/cache/data" "${APP}/storage/framework/sessions" \
-  "${APP}/storage/framework/views" "${APP}/storage/logs" "${APP}/bootstrap/cache"
+mkdir -p "${APP}/storage/app/public" "${APP}/storage/framework/cache/data" \
+  "${APP}/storage/framework/sessions" "${APP}/storage/framework/views" \
+  "${APP}/storage/logs" "${APP}/bootstrap/cache"
 chown -R "${WEB_USER}:${WEB_USER}" "${APP}/storage" "${APP}/bootstrap/cache"
 
 step "Laravel"
@@ -264,6 +282,7 @@ WantedBy=multi-user.target
 EOF
 systemctl daemon-reload
 systemctl enable --now redi-queue
+systemctl restart redi-queue
 
 cat > /etc/cron.d/redi-renew <<EOF
 SHELL=/bin/bash

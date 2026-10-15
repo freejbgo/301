@@ -14,6 +14,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "${SCRIPT_DIR}/lib.sh"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=../../ensure-release-tarballs.sh
+source "${REPO_ROOT}/scripts/ensure-release-tarballs.sh"
 VARS_FILE="${VARS_FILE:-${SCRIPT_DIR}/vars.env}"
 
 die() { echo "错误: $*" >&2; exit 1; }
@@ -77,7 +79,7 @@ for ip in $NODE_IPS; do
   [[ -z "$ip" ]] && continue
   is_ipv4 "$ip" || die "NODE_IPS 里有非法 IPv4: $ip"
 done
-[[ -f "$TAR" ]] || die "找不到主控发布包: $TAR"
+redi_ensure_master_tar "$REPO_ROOT" "$TAR" die
 [[ -f "${REPO_ROOT}/db/redi_admin.sql" ]] || die "找不到 db/redi_admin.sql"
 
 APP="${MASTER_INSTALL_ROOT}/master"

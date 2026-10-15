@@ -53,7 +53,7 @@ func openPool() (*sqlx.DB, error) {
 	dbName := envOr("REDI_DB_NAME", "redi_admin")
 	charset := envOr("REDI_DB_CHARSET", "utf8mb4")
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true", userName, password, ipAddress, port, dbName, charset)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true&timeout=5s&readTimeout=5s&writeTimeout=5s", userName, password, ipAddress, port, dbName, charset)
 	dsn, err := appendTlsToDSN(dsn, os.Getenv("REDI_DB_TLS"))
 	if err != nil {
 		return nil, err
