@@ -48,6 +48,11 @@ class RediDomainCert extends Model
         return $this->belongsTo(RediAdminDomain::class, 'domain_id');
     }
 
+    public function deployments()
+    {
+        return $this->hasMany(RediCertDeployment::class, 'cert_id');
+    }
+
     public function setCertificatePem(string $pem): void
     {
         $this->certificate = Crypt::encryptString($pem);

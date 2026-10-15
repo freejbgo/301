@@ -16,7 +16,7 @@ return new class extends Migration
         DB::unprepared(
             'CREATE PROCEDURE `redi_node_bump_skip`(IN p_host VARCHAR(255)) '
             .'READS SQL DATA MODIFIES SQL DATA SQL SECURITY DEFINER '
-            ."COMMENT 'Edge node: return skip_url for one host and increment skip_num' "
+            .'COMMENT \'Edge node: return skip_url for one host and increment skip_num\' '
             .'BEGIN '
             .'DECLARE v_skip VARCHAR(255) DEFAULT NULL; '
             .'START TRANSACTION; '

@@ -42,9 +42,15 @@ class NodeAgentController extends Controller
             ->flip();
         $now = now();
         $synced = [];
-        foreach ($domains as $domain) {
-            $domain = HostNameValidator::toCanonicalAscii((string) $domain);
-            if ($domain === '' || ! HostNameValidator::isValidHostLabel($domain) || ! $allowed->has($domain)) {
+        foreach ($domains as $raw) {
+            $domain = HostNameValidator::toCanonicalAscii((string) $raw);
+            if ($domain === '') {
+                continue;
+            }
+            if (! HostNameValidator::isValidHostLabel($domain)) {
+                return response()->json(['message' => 'invalid domain', 'domain' => (string) $raw], 422);
+            }
+            if (! $allowed->has($domain)) {
                 continue;
             }
             RediAcmeChallengeNodeSync::updateOrCreate(
@@ -87,10 +93,16 @@ class NodeAgentController extends Controller
         return response()->json(['challenges' => $rows]);
     }
 
-    public function certificates()
+    public function certificates(Request $request)
     {
+        /** @var RediNode $node */
+        $node = $request->attributes->get('redi_node');
+
         $certs = RediDomainCert::query()
             ->with('domain')
+            ->whereHas('deployments', function ($query) use ($node) {
+                $query->where('node_id', $node->id);
+            })
             ->where(function ($query) {
                 $query->whereIn('status', [
                     RediDomainCert::STATUS_ISSUED,

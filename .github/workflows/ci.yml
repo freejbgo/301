@@ -44,6 +44,7 @@ jobs:
       - name: CentOS 7 script syntax
         run: |
           for f in scripts/centos7/*.sh; do bash -n "$f"; done
+          php scripts/verify-redi-node-procedure-sync.php
 
   centos7-integration:
     runs-on: ubuntu-latest
