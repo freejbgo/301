@@ -4,12 +4,14 @@ namespace App\Services\Dns;
 
 use App\Models\RediPlatformDns;
 use App\Services\Dns\Concerns\ParsesZoneNames;
+use App\Services\Dns\Concerns\ReconcilesDnsRecords;
 use GuzzleHttp\Client;
 use RuntimeException;
 
 class DnspodDnsProvider implements DnsProviderInterface
 {
     use ParsesZoneNames;
+    use ReconcilesDnsRecords;
 
     protected RediPlatformDns $platform;
 
@@ -44,21 +46,30 @@ class DnspodDnsProvider implements DnsProviderInterface
     public function upsertARecords(string $fqdn, array $ipv4): void
     {
         $ipv4 = array_values(array_unique(array_filter($ipv4)));
-        if ($ipv4 === []) {
-            throw new RuntimeException('没有可同步的节点 IP');
-        }
         $parts = $this->splitFqdn($fqdn, $this->zoneName());
-        $this->deleteRecords($parts['domain'], $parts['rr'], 'A');
-        foreach ($ipv4 as $ip) {
-            $this->request('Record.Create', [
-                'domain' => $parts['domain'],
-                'sub_domain' => $parts['rr'] === '@' ? '@' : $parts['rr'],
-                'record_type' => 'A',
-                'record_line' => $this->recordLine,
-                'value' => $ip,
-                'ttl' => 120,
-            ]);
-        }
+        $sub = $parts['rr'] === '@' ? '@' : $parts['rr'];
+        $rows = $this->listRecordRows($parts['domain'], $sub, 'A');
+
+        $this->reconcileARecordValues(
+            $rows,
+            $ipv4,
+            function (string $ip) use ($parts, $sub) {
+                $this->request('Record.Create', [
+                    'domain' => $parts['domain'],
+                    'sub_domain' => $sub,
+                    'record_type' => 'A',
+                    'record_line' => $this->recordLine,
+                    'value' => $ip,
+                    'ttl' => 120,
+                ]);
+            },
+            function (string $id) use ($parts) {
+                $this->request('Record.Remove', [
+                    'domain' => $parts['domain'],
+                    'record_id' => $id,
+                ]);
+            }
+        );
     }
 
     public function upsertCname(string $name, string $zone, string $targetFqdn): void
@@ -67,20 +78,47 @@ class DnspodDnsProvider implements DnsProviderInterface
         $name = strtolower(rtrim($name, '.'));
         $targetFqdn = strtolower(rtrim($targetFqdn, '.'));
         $sub = $name === $zone ? '@' : $name;
-        $this->deleteRecords($zone, $sub, 'CNAME');
-        $this->request('Record.Create', [
-            'domain' => $zone,
-            'sub_domain' => $sub,
-            'record_type' => 'CNAME',
-            'record_line' => $this->recordLine,
-            'value' => $targetFqdn,
-            'ttl' => 120,
-        ]);
+        $rows = $this->listRecordRows($zone, $sub, 'CNAME');
+
+        $this->reconcileCnameTarget(
+            $rows,
+            $targetFqdn,
+            function (string $target) use ($zone, $sub) {
+                $this->request('Record.Create', [
+                    'domain' => $zone,
+                    'sub_domain' => $sub,
+                    'record_type' => 'CNAME',
+                    'record_line' => $this->recordLine,
+                    'value' => $target,
+                    'ttl' => 120,
+                ]);
+            },
+            function (string $id, string $target) use ($zone, $sub) {
+                $this->request('Record.Modify', [
+                    'domain' => $zone,
+                    'record_id' => $id,
+                    'sub_domain' => $sub,
+                    'record_type' => 'CNAME',
+                    'record_line' => $this->recordLine,
+                    'value' => $target,
+                    'ttl' => 120,
+                ]);
+            },
+            function (string $id) use ($zone) {
+                $this->request('Record.Remove', [
+                    'domain' => $zone,
+                    'record_id' => $id,
+                ]);
+            }
+        );
     }
 
-    protected function deleteRecords(string $domain, string $sub, string $type): void
+    /**
+     * @return array<int, array{id: string, value: string}>
+     */
+    protected function listRecordRows(string $domain, string $sub, string $type): array
     {
-        $ids = [];
+        $rows = [];
         $offset = 0;
         do {
             $res = $this->request('Record.List', [
@@ -98,18 +136,16 @@ class DnspodDnsProvider implements DnsProviderInterface
                     continue;
                 }
                 if (! empty($row['id'])) {
-                    $ids[] = $row['id'];
+                    $rows[] = [
+                        'id' => (string) $row['id'],
+                        'value' => (string) ($row['value'] ?? ''),
+                    ];
                 }
             }
             $offset += count($records);
         } while (count($records) === 100);
 
-        foreach ($ids as $id) {
-            $this->request('Record.Remove', [
-                'domain' => $domain,
-                'record_id' => $id,
-            ]);
-        }
+        return $rows;
     }
 
     protected function request(string $action, array $params = []): array

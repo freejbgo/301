@@ -28,6 +28,8 @@
 | 节点 `ack` | 仅当存在该节点对应的 `redi_cert_deployments` 行时才接受，避免伪造部署成功 |
 | `challenges-synced` | 非法 Host 返回 **422**；未在 ACME 就绪表中的域名返回 200 且计入 `ignored_count`（节点可区分同步失败与格式错误） |
 | 平台 DNS 表单 | 仅超级管理员可提交（与「DNS 与节点池」页面一致） |
+| DNS API 同步 | 厂商记录采用 **先增/改、后删** 的 reconcile，降低同步中途失败时删光记录的风险 |
+| 域名停用 | `status=2` 时清除该域 ACME 挑战与节点 sync 行，减少节点继续暴露 HTTP-01 |
 | Session Cookie | HTTPS 后台请设 `SESSION_SECURE_COOKIE=true`（见 `.env.example`） |
 | 证书存储 | `redi_domain_certs` 中 PEM 经 Laravel `Crypt` 加密；备份库即备份密钥材料 |
 | ACME | 主控 `storage/app/acme` 存 LE 账户；签发前要求节点上报挑战已同步，并探测公网域名 HTTP-01 |

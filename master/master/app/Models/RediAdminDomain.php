@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToAdminTenant;
+use App\Services\AcmeChallengeCleanup;
 use App\Services\DomainRecordNormalizer;
 use App\Support\HostNameValidator;
 use Illuminate\Validation\ValidationException;
@@ -40,18 +41,24 @@ class RediAdminDomain extends Model
             $domain->skip_url = $skip;
         });
 
+        static::saved(function (self $domain) {
+            if (! $domain->wasChanged('status') || (int) $domain->status !== 2) {
+                return;
+            }
+            $hosts = array_filter([
+                $domain->original_url,
+                $domain->getOriginal('original_url'),
+            ]);
+            AcmeChallengeCleanup::purgeForHosts($hosts);
+        });
+
         static::deleting(function (self $domain) {
             $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
             if ($cert) {
                 RediCertDeployment::where('cert_id', $cert->id)->delete();
                 $cert->delete();
             }
-            RediAcmeChallenge::query()
-                ->where('domain_name', $domain->original_url)
-                ->delete();
-            RediAcmeChallengeNodeSync::query()
-                ->where('domain_name', $domain->original_url)
-                ->delete();
+            AcmeChallengeCleanup::purgeForHosts([$domain->original_url]);
         });
     }
 

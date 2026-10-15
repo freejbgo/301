@@ -40,6 +40,21 @@ jobs:
         working-directory: master/master
         run: ./vendor/bin/phpunit --testsuite Unit,Feature
 
+  master-phpunit-php80:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.0"
+          tools: composer:v2
+      - name: Install dependencies
+        working-directory: master/master
+        run: composer install --no-interaction --prefer-dist
+      - name: PHPUnit (PHP 8.0 lock)
+        working-directory: master/master
+        run: ./vendor/bin/phpunit --testsuite Unit,Feature
+
   centos7-scripts:
     runs-on: ubuntu-latest
     steps:
@@ -51,8 +66,8 @@ jobs:
 
   centos7-integration:
     runs-on: ubuntu-latest
-    needs: [node, master-phpunit]
-    if: always() && needs.node.result == 'success' && needs.master-phpunit.result == 'success'
+    needs: [node, master-phpunit, master-phpunit-php80, centos7-scripts]
+    if: always() && needs.node.result == 'success' && needs.master-phpunit.result == 'success' && needs.master-phpunit-php80.result == 'success' && needs.centos7-scripts.result == 'success'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -76,7 +91,7 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    needs: [node, master-phpunit, centos7-scripts, centos7-integration]
+    needs: [node, master-phpunit, master-phpunit-php80, centos7-scripts, centos7-integration]
     steps:
       - uses: actions/checkout@v4
 
@@ -101,6 +116,8 @@ jobs:
         run: |
           test -s master/master.tar.gz
           test -s node/redi-multi.tar.gz
+          tar tzf master/master.tar.gz | grep -q '^master/vendor/autoload.php$'
+          tar tzf node/redi-multi.tar.gz | grep -q '^redi-multi/bin/redi-multi$'
 
       - name: Create GitHub Release
         env:
