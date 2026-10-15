@@ -1,6 +1,6 @@
 module redi-multi
 
-go 1.26.0
+go 1.19
 
 require (
 	github.com/coreos/go-iptables v0.6.0
