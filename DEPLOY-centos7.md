@@ -7,7 +7,7 @@
 | 主控 | `scripts/centos7/deploy-master.sh` | 程序在 `/opt/301/master`，网站根目录 `/opt/301/master/public` |
 | 每台节点 | `scripts/centos7/deploy-node.sh` | 程序在 `/opt/redi-multi/redi-multi` |
 
-发布包在 [GitHub Releases](https://github.com/freejbgo/301/releases) 下载（当前推荐 **[v2026.10.14](https://github.com/freejbgo/301/releases/tag/v2026.10.14)** 或更高）。克隆仓库时，同一份文件也在下面这两个路径；也可在 `vars.env` 里设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` 指向下载的绝对路径：
+开发阶段 [GitHub Releases](https://github.com/freejbgo/301/releases) 可能为空；需要部署时在仓库根目录执行 `scripts/build-master-tar.sh` / `scripts/build-node-tar.sh`，或等你发 **`v*` tag** 后从 Releases 下载。也可在 `vars.env` 里设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` 指向打包结果的绝对路径：
 
 - 主控包：本地 `scripts/build-master-tar.sh` → `master/master.tar.gz`（含 `vendor`，无 `.env`），或 GitHub Release 的 `master.tar.gz`。
 - 节点包：本地 `scripts/build-node-tar.sh` → `node/redi-multi.tar.gz`（CentOS 7 静态 `bin/redi-multi`），或 Release 的 `redi-multi.tar.gz`。

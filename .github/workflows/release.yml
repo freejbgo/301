@@ -26,6 +26,9 @@ jobs:
       - name: Build release packages
         run: |
           ./scripts/build-node-tar.sh
+          cd master/master
+          composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
+          cd ../..
           ./scripts/build-master-tar.sh
 
       - name: Check packages
