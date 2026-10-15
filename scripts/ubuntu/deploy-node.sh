@@ -160,9 +160,8 @@ cat > "$db_cnf" <<EOF
 host=${NODE_DB_HOST}
 user=redi_node
 password=${DB_PASS}
-database=redi_admin
 EOF
-if ! mysql --defaults-extra-file="$db_cnf" -e "CALL redi_node_bump_skip('__smoke__')" >/dev/null 2>"${db_cnf}.err"; then
+if ! mysql --defaults-extra-file="$db_cnf" -e "CALL redi_admin.redi_node_bump_skip('__smoke__')" >/dev/null 2>"${db_cnf}.err"; then
   cat "${db_cnf}.err" >&2
   rm -f "${db_cnf}.err"
   die "节点连主控 MySQL 或 CALL redi_node_bump_skip 失败（见上方 MySQL 错误）"

@@ -53,4 +53,4 @@ mysql_run() {
 }
 
 mysql_run < "$sqlfile"
-echo "已授权 redi_node@'${NODE_IP}'（仅 EXECUTE redi_node_bump_skip）"
+echo "已授权 redi_node@'${NODE_IP}'（USAGE on redi_admin + EXECUTE redi_node_bump_skip）"
