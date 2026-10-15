@@ -17,6 +17,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "${SCRIPT_DIR}/lib.sh"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# shellcheck source=../../ensure-release-tarballs.sh
+source "${REPO_ROOT}/scripts/ensure-release-tarballs.sh"
 VARS_FILE="${VARS_FILE:-${SCRIPT_DIR}/vars.env}"
 
 die() { echo "错误: $*" >&2; exit 1; }
@@ -93,7 +95,8 @@ fi
 if [[ -z "$TAR" && -f /tmp/redi-multi.tar.gz ]]; then
   TAR="/tmp/redi-multi.tar.gz"
 fi
-[[ -n "$TAR" && -f "$TAR" ]] || die "找不到节点发布包。设置 REDI_NODE_TAR，或把 redi-multi.tar.gz 放到 /tmp"
+[[ -n "$TAR" ]] || TAR="${REPO_ROOT}/node/redi-multi.tar.gz"
+redi_ensure_node_tar "$REPO_ROOT" "$TAR" die
 
 step "CentOS $(uname -r)。使用静态二进制，不编译内核模块"
 redi_use_centos7_vault_repos

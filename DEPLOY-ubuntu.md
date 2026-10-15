@@ -9,7 +9,7 @@
 
 与 CentOS 版的差异：**防火墙用 ufw**（不用 firewalld）、**PHP-FPM 用户为 www-data**、**MariaDB 配置在 `/etc/mysql/mariadb.conf.d/`**。业务逻辑、数据库绿场导入、节点静态二进制与 [DEPLOY-centos7.md](DEPLOY-centos7.md) 一致。
 
-发布包：本地 `scripts/build-master-tar.sh` / `scripts/build-node-tar.sh`，或 `v*` tag Release。勿把 tar 提交 git。填空示例见 [DEPLOY-ubuntu-example.md](DEPLOY-ubuntu-example.md)。验收见 [docs/ACCEPTANCE-UBUNTU-DEPLOY.md](docs/ACCEPTANCE-UBUNTU-DEPLOY.md)。
+发布包：本地 `scripts/build-master-tar.sh` / `scripts/build-node-tar.sh`，或 `v*` tag Release。勿把 tar 提交 git。**真机只 clone 仓库时通常没有 tar**：请先在开发机打包并 `scp` 到服务器，或在服务器安装 **composer / Go** 后由 `deploy-*.sh` 自动尝试构建（见 `scripts/ensure-release-tarballs.sh`）。也可用 `vars.env` 的 `REDI_MASTER_TAR` / `REDI_NODE_TAR`。填空示例见 [DEPLOY-ubuntu-example.md](DEPLOY-ubuntu-example.md)。验收见 [docs/ACCEPTANCE-UBUNTU-DEPLOY.md](docs/ACCEPTANCE-UBUNTU-DEPLOY.md)。
 
 ## 1. 准备 vars.env
 

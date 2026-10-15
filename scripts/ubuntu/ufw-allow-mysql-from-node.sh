@@ -16,7 +16,8 @@ if ! command -v ufw >/dev/null; then
   exit 1
 fi
 
-if ! ufw status numbered | grep -Fq "redi-node-${NODE_IP}"; then
-  ufw allow from "${NODE_IP}" to any port 3306 proto tcp comment "redi-node-${NODE_IP}" >/dev/null
+UFW_COMMENT="redi-node-${NODE_IP}"
+if ! ufw status numbered | grep -Fq "$UFW_COMMENT"; then
+  ufw allow from "${NODE_IP}" to any port 3306 proto tcp comment "$UFW_COMMENT" >/dev/null
 fi
 echo "已允许 ${NODE_IP} -> 本机 3306（ufw）"

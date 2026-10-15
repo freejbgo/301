@@ -108,25 +108,25 @@ func setIptable(sport string) {
 
 	// 仅追加本程序所需 NFQUEUE 规则，不再清空整个 OUTPUT 链，避免影响服务器其它出站策略
 	if config.LagranBool("syn_ack", true) {
-		err = ipt.AppendUnique("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "SYN,ACK", "-j", "NFQUEUE", "--queue-balance", "1000:1127")
+		err = ipt.AppendUnique("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "SYN,ACK", "-j", "NFQUEUE", "--queue-balance", "1000:1127", "--queue-bypass")
 		if err != nil {
 			logrus.Errorf("[lagran] failed to set iptables OUTPUT chain, err: %v\n", err)
 		}
 	}
 	if config.LagranBool("ack", true) {
-		err = ipt.AppendUnique("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "ACK", "-j", "NFQUEUE", "--queue-balance", "2000:2127")
+		err = ipt.AppendUnique("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "ACK", "-j", "NFQUEUE", "--queue-balance", "2000:2127", "--queue-bypass")
 		if err != nil {
 			logrus.Errorf("[lagran] failed to set iptables OUTPUT chain, err: %v\n", err)
 		}
 	}
 	if config.LagranBool("psh_ack", true) {
-		err = ipt.AppendUnique("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "PSH,ACK", "-j", "NFQUEUE", "--queue-balance", "3000:3127")
+		err = ipt.AppendUnique("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "PSH,ACK", "-j", "NFQUEUE", "--queue-balance", "3000:3127", "--queue-bypass")
 		if err != nil {
 			logrus.Errorf("[lagran] failed to set iptables OUTPUT chain, err: %v\n", err)
 		}
 	}
 	if config.LagranBool("fin_ack", true) {
-		err = ipt.AppendUnique("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "FIN,ACK", "-j", "NFQUEUE", "--queue-balance", "4000:4127")
+		err = ipt.AppendUnique("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "FIN,ACK", "-j", "NFQUEUE", "--queue-balance", "4000:4127", "--queue-bypass")
 		if err != nil {
 			logrus.Errorf("[lagran] failed to set iptables OUTPUT chain, err: %v\n", err)
 		}
@@ -139,25 +139,25 @@ func UnsetIptable(sport string) {
 		return
 	}
 	if config.LagranBool("syn_ack", true) {
-		err = ipt.Delete("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "SYN,ACK", "-j", "NFQUEUE", "--queue-balance", "1000:1127")
+		err = ipt.Delete("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "SYN,ACK", "-j", "NFQUEUE", "--queue-balance", "1000:1127", "--queue-bypass")
 		if err != nil {
 			logrus.Errorf("[lagran] failed to delete iptables OUTPUT chain, err: %v\n", err)
 		}
 	}
 	if config.LagranBool("ack", true) {
-		err = ipt.Delete("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "ACK", "-j", "NFQUEUE", "--queue-balance", "2000:2127")
+		err = ipt.Delete("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "ACK", "-j", "NFQUEUE", "--queue-balance", "2000:2127", "--queue-bypass")
 		if err != nil {
 			logrus.Errorf("[lagran] failed to delete iptables OUTPUT chain, err: %v\n", err)
 		}
 	}
 	if config.LagranBool("psh_ack", true) {
-		err = ipt.Delete("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "PSH,ACK", "-j", "NFQUEUE", "--queue-balance", "3000:3127")
+		err = ipt.Delete("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "PSH,ACK", "-j", "NFQUEUE", "--queue-balance", "3000:3127", "--queue-bypass")
 		if err != nil {
 			logrus.Errorf("[lagran] failed to delete iptables OUTPUT chain, err: %v\n", err)
 		}
 	}
 	if config.LagranBool("fin_ack", true) {
-		err = ipt.Delete("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "FIN,ACK", "-j", "NFQUEUE", "--queue-balance", "4000:4127")
+		err = ipt.Delete("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "FIN,ACK", "-j", "NFQUEUE", "--queue-balance", "4000:4127", "--queue-bypass")
 		if err != nil {
 			logrus.Errorf("[lagran] failed to delete iptables OUTPUT chain, err: %v\n", err)
 		}
