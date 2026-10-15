@@ -47,9 +47,7 @@ trait ReconcilesDnsRecords
             }
         }
 
-        foreach ($toDelete as $id) {
-            $deleteById($id);
-        }
+        $this->deleteDnsRecordIds($toDelete, $deleteById);
     }
 
     /**
@@ -97,11 +95,31 @@ trait ReconcilesDnsRecords
             }
         }
 
+        $ids = [];
         foreach (array_unique($toDelete) as $id) {
             if ($keeperId !== null && $id === $keeperId) {
                 continue;
             }
-            $deleteById($id);
+            $ids[] = $id;
+        }
+        $this->deleteDnsRecordIds($ids, $deleteById);
+    }
+
+    /**
+     * @param  string[]  $ids
+     */
+    protected function deleteDnsRecordIds(array $ids, callable $deleteById): void
+    {
+        $failed = [];
+        foreach ($ids as $id) {
+            try {
+                $deleteById($id);
+            } catch (\Throwable $e) {
+                $failed[] = $id.': '.$e->getMessage();
+            }
+        }
+        if ($failed !== []) {
+            throw new \RuntimeException('DNS 删除陈旧记录失败: '.implode('; ', $failed));
         }
     }
 }

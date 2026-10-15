@@ -133,7 +133,10 @@ class AliyunDnsProvider implements DnsProviderInterface
                 }
             }
             $page++;
-        } while (count($records) === 100 && $page <= 20);
+            if ($page > 100) {
+                throw new RuntimeException('阿里云 DNS 记录分页超过上限，请手工清理重复记录后重试');
+            }
+        } while (count($records) === 100);
 
         return $rows;
     }

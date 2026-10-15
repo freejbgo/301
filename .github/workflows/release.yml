@@ -119,6 +119,12 @@ jobs:
           tar tzf master/master.tar.gz | grep -q '^master/vendor/autoload.php$'
           tar tzf node/redi-multi.tar.gz | grep -q '^redi-multi/bin/redi-multi$'
 
+      - name: Verify built master tree (audit + PHPUnit)
+        working-directory: master/master
+        run: |
+          composer audit --no-interaction
+          ./vendor/bin/phpunit --testsuite Unit,Feature
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
