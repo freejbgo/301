@@ -62,8 +62,9 @@ jobs:
         run: |
           ./scripts/build-node-tar.sh
           cd master/master
+          rm -rf vendor
           composer config platform.php 8.0.30
-          composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
+          composer update --no-interaction --prefer-dist --no-dev --optimize-autoloader
           cd ../..
           ./scripts/build-master-tar.sh
           test -s master/master.tar.gz && test -s node/redi-multi.tar.gz
