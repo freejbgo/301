@@ -54,6 +54,10 @@ source "${ROOT}/scripts/ubuntu/lib.sh"
 echo "==> deploy-master"
 VARS_FILE="$VARS" bash "${ROOT}/scripts/ubuntu/deploy-master.sh"
 redi_wait_mysql_ready "$IP" || die "deploy-master 后 MySQL 未就绪（勿在容器里 restart mariadb）"
+if [[ -f /opt/301/master/artisan ]]; then
+  echo "==> artisan migrate（含 redi_node_bump_skip 排序规则修复）"
+  (cd /opt/301/master && php artisan migrate --force)
+fi
 
 echo "==> deploy-node"
 VARS_FILE="$VARS" bash "${ROOT}/scripts/ubuntu/deploy-node.sh"
