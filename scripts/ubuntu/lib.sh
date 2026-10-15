@@ -74,6 +74,10 @@ redi_wait_mysql_tcp() {
 }
 
 # deploy-master 之后：优先 socket ping，再试 127.0.0.1 / 指定 IP（勿轻易 restart，容器里易停死后起不来）
+redi_multi_running() {
+  pgrep -x redi-multi >/dev/null 2>&1 || pgrep -f '[./]bin/redi-multi' >/dev/null 2>&1
+}
+
 redi_wait_mysql_ready() {
   local host="${1:-}"
   local i

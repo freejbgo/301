@@ -68,8 +68,10 @@ check procedure mysql --defaults-extra-file=/root/.redi-mysql.cnf -N -e \
   "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='redi_admin' AND ROUTINE_NAME='redi_node_bump_skip'" | grep -q '^1$'
 code=$(curl -sI -o /dev/null -w '%{http_code}' "http://127.0.0.1/admin" || echo 0)
 check admin_http test "$code" = "302" -o "$code" = "200"
-check redi-multi pgrep -f "${NODE}/bin/redi-multi" >/dev/null
-check node_mysql mysql -h 127.0.0.1 -u redi_node -p'SmokeDbPass_2026_x' redi_admin -e "CALL redi_node_bump_skip('__accept__')" >/dev/null
+# shellcheck source=lib.sh
+source "${ROOT}/scripts/ubuntu/lib.sh"
+check redi-multi redi_multi_running
+check node_mysql mysql -h "$IP" -u redi_node -p'SmokeDbPass_2026_x' redi_admin -e "CALL redi_node_bump_skip('__accept__')" >/dev/null
 
 [[ "$fail" -eq 0 ]] && echo "Ubuntu 脚本化冒烟通过（${IP}）。F1–F8 须公网另验。" && exit 0
 exit 1

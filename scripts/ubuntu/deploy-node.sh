@@ -82,11 +82,7 @@ tar xzf "$TAR" -C "$NODE_INSTALL_ROOT"
 
 umask 077
 {
-  if [[ "${REDI_SMOKE_SINGLE_HOST:-}" == "1" ]]; then
-    echo "REDI_DB_HOST=127.0.0.1"
-  else
-    echo "REDI_DB_HOST=${MASTER_IP}"
-  fi
+  echo "REDI_DB_HOST=${MASTER_IP}"
   echo "REDI_DB_PORT=3306"
   echo "REDI_DB_USER=redi_node"
   echo "REDI_DB_PASSWORD=${DB_PASS}"
@@ -111,6 +107,11 @@ fi
 setcap cap_net_admin+ep "${APP}/bin/redi-multi"
 
 redi_wait_mysql_ready "$MASTER_IP" || die "主控 MySQL 未就绪，请先完成 deploy-master"
+
+if [[ "${REDI_SMOKE_SINGLE_HOST:-}" == "1" && -n "${MYSQL_ROOT_PASS:-}" ]]; then
+  export MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASS}"
+  bash "${SCRIPT_DIR}/grant-node-mysql.sh" "127.0.0.1" "$DB_PASS" || true
+fi
 
 cat > /etc/systemd/system/redi-multi.service <<EOF
 [Unit]
@@ -141,9 +142,9 @@ else
     set -a && source "./env.sh" && set +a
     nohup ./bin/redi-multi >> ./redi-multi.log 2>&1 &
   )
-  sleep 4
-  pgrep -f "${APP}/bin/redi-multi" >/dev/null || {
-    [[ -f "${APP}/redi-multi.log" ]] && tail -5 "${APP}/redi-multi.log" >&2
+  sleep 3
+  redi_multi_running || {
+    [[ -f "${APP}/redi-multi.log" ]] && tail -8 "${APP}/redi-multi.log" >&2
     die "redi-multi 未运行（见 ${APP}/redi-multi.log）"
   }
 fi
