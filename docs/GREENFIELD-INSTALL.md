@@ -8,6 +8,7 @@
 |------|------|
 | [DEPLOY.md](../DEPLOY.md) | 通用部署（手工 / 非 CentOS 脚本） |
 | [DEPLOY-centos7.md](../DEPLOY-centos7.md) | CentOS 7 一键 `deploy-master.sh` / `deploy-node.sh` |
+| [DEPLOY-ubuntu.md](../DEPLOY-ubuntu.md) | Ubuntu 22.04/24.04 一键 `scripts/ubuntu/deploy-*.sh` |
 | [DEPLOY-centos7-example.md](../DEPLOY-centos7-example.md) | `vars.env` 填 IP 示例 |
 | [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) | 真机逐步验收 |
 | [docs/CONSOLE.md](CONSOLE.md) | 后台操作 |
