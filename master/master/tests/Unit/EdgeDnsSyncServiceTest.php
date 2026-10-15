@@ -112,4 +112,97 @@ class EdgeDnsSyncServiceTest extends TestCase
         $this->assertNull(\DB::table('redi_tenant_edge')->where('id', 1)->value('dns_synced_at'));
         $this->assertNull(\DB::table('redi_tenant_edge')->where('id', 2)->value('dns_synced_at'));
     }
+
+    public function test_aborts_before_pool_when_all_tenant_edges_outside_zone(): void
+    {
+        \DB::table('redi_platform_dns')->insert([
+            'edge_zone' => 'example.com',
+            'pool_host' => 'pool',
+            'dns_mode' => 'api',
+            'dns_driver' => 'cloudflare',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_tenant_edge')->insert([
+            'edge_fqdn' => 'token.wrong-zone.com',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $provider = new class implements DnsProviderInterface
+        {
+            public int $poolCalls = 0;
+
+            public function testConnection(): void
+            {
+            }
+
+            public function upsertARecords(string $fqdn, array $ipv4): void
+            {
+                $this->poolCalls++;
+            }
+
+            public function upsertCname(string $name, string $zone, string $targetFqdn): void
+            {
+            }
+        };
+
+        try {
+            app(EdgeDnsSyncService::class)->syncAll($provider);
+            $this->fail('expected exception');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('均不在当前平台主域名', $e->getMessage());
+        }
+
+        $this->assertSame(0, $provider->poolCalls);
+    }
+
+    public function test_aborts_when_some_tenant_edges_outside_zone(): void
+    {
+        \DB::table('redi_platform_dns')->insert([
+            'edge_zone' => 'example.com',
+            'pool_host' => 'pool',
+            'dns_mode' => 'api',
+            'dns_driver' => 'cloudflare',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_nodes')->insert([
+            'public_ip' => '1.2.3.4',
+            'enabled' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_tenant_edge')->insert([
+            ['edge_fqdn' => 'ok.edge.example.com', 'created_at' => now(), 'updated_at' => now()],
+            ['edge_fqdn' => 'bad.other.com', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $provider = new class implements DnsProviderInterface
+        {
+            public function testConnection(): void
+            {
+            }
+
+            public function upsertARecords(string $fqdn, array $ipv4): void
+            {
+            }
+
+            public function upsertCname(string $name, string $zone, string $targetFqdn): void
+            {
+            }
+        };
+
+        try {
+            app(EdgeDnsSyncService::class)->syncAll($provider);
+            $this->fail('expected exception');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('不在平台域名', $e->getMessage());
+        }
+
+        $this->assertNull(\DB::table('redi_tenant_edge')->where('id', 1)->value('dns_synced_at'));
+    }
 }
