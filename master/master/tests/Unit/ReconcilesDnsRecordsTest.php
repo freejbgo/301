@@ -109,4 +109,29 @@ class ReconcilesDnsRecordsTest extends TestCase
         $this->assertSame([['10', 'new.pool.example']], $updated);
         $this->assertSame([], $deleted);
     }
+
+    public function test_delete_phase_failure_throws_aggregate(): void
+    {
+        $helper = new class
+        {
+            use ReconcilesDnsRecords;
+
+            public function run(): void
+            {
+                $this->reconcileARecordValues(
+                    [['id' => '1', 'value' => '9.9.9.9']],
+                    ['1.2.3.4'],
+                    function (string $ip) {
+                    },
+                    function (string $id) {
+                        throw new \RuntimeException('boom');
+                    }
+                );
+            }
+        };
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('DNS 删除陈旧记录失败');
+        $helper->run();
+    }
 }
