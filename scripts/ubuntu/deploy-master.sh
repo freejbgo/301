@@ -69,12 +69,12 @@ apt-get update -qq
 apt-get install -y -qq nginx mariadb-server mariadb-client \
   "php${PHP_DOT}-fpm" "php${PHP_DOT}-cli" "php${PHP_DOT}-mysql" "php${PHP_DOT}-mbstring" \
   "php${PHP_DOT}-xml" "php${PHP_DOT}-zip" "php${PHP_DOT}-gd" "php${PHP_DOT}-bcmath" \
-  "php${PHP_DOT}-curl" ufw tar python3 mysql-client
+  "php${PHP_DOT}-curl" ufw tar python3
 
 php -r 'if (PHP_VERSION_ID < 80200) { fwrite(STDERR, "需要 PHP >= 8.0.2，当前 ".PHP_VERSION."\n"); exit(1); }'
 echo "PHP $(php -r 'echo PHP_VERSION;')"
 
-systemctl enable --now mariadb
+redi_enable_now mariadb
 ok=0
 for _ in $(seq 1 60); do
   if mysqladmin ping --silent >/dev/null 2>&1 \
@@ -161,7 +161,7 @@ else
 fi
 
 step "解压主控到 ${APP}"
-if systemctl is-active --quiet redi-queue 2>/dev/null; then
+if redi_systemd_available && systemctl is-active --quiet redi-queue 2>/dev/null; then
   systemctl stop redi-queue || true
 fi
 umask 022
@@ -201,8 +201,8 @@ pool="/etc/php/${PHP_DOT}/fpm/pool.d/www.conf"
 [[ -f "$pool" ]] || die "找不到 $pool"
 sed -i -E 's/^;?listen\.owner =.*/listen.owner = www-data/' "$pool"
 sed -i -E 's/^;?listen\.group =.*/listen.group = www-data/' "$pool"
-systemctl enable --now "php${PHP_DOT}-fpm"
-systemctl restart "php${PHP_DOT}-fpm"
+redi_enable_now "php${PHP_DOT}-fpm"
+redi_restart "php${PHP_DOT}-fpm"
 
 NGINX_SITE="/etc/nginx/sites-available/301-master.conf"
 if [[ -f "$NGINX_SITE" ]] && ! grep -q '301-master-managed' "$NGINX_SITE"; then
@@ -240,8 +240,8 @@ EOF
   rm -f /etc/nginx/sites-enabled/default
 fi
 nginx -t
-systemctl enable --now nginx
-systemctl reload nginx
+redi_enable_now nginx
+redi_reload nginx
 
 step "队列与 cron"
 cat > /etc/systemd/system/redi-queue.service <<EOF
@@ -261,8 +261,12 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl daemon-reload
-systemctl enable --now redi-queue
+if redi_systemd_available; then
+  systemctl daemon-reload
+  systemctl enable --now redi-queue
+else
+  echo "注意: 无 systemd，未启用 redi-queue 单元；请手动 queue:work"
+fi
 
 cat > /etc/cron.d/redi-renew <<EOF
 SHELL=/bin/bash
@@ -273,10 +277,7 @@ EOF
 chmod 644 /etc/cron.d/redi-renew
 
 step "ufw：22、80、443；3306 仅 NODE_IPS"
-ufw allow OpenSSH >/dev/null 2>&1 || ufw allow 22/tcp
-ufw allow 80/tcp
-ufw allow 443/tcp
-ufw --force enable
+redi_ufw_bootstrap
 
 redi_warn_master_https_mismatch "${ADMIN_HTTPS}" "${MASTER_URL}"
 

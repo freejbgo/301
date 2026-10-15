@@ -2,6 +2,8 @@
 
 与 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) 同级，针对 `scripts/ubuntu/deploy-*.sh`。业务 F1–F8 仍用 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)。
 
+无 systemd 的 Cloud Agent 可用 `run-smoke-acceptance.sh` 做脚本级检查；`systemctl` / `ufw status` 相关项须在真实 LTS VPS 再验。
+
 ## 主控
 
 - [ ] `lsb_release -ds` 为 **22.04** 或 **24.04**

@@ -38,7 +38,9 @@ REDI_NODE_TOKEN="${REDI_NODE_TOKEN:-}"
 reject_text() {
   local name="$1" value="$2"
   [[ -z "$value" ]] && return 0
-  [[ "$value" == *$'\n'* || "$value" =~ [[:space:]\'\"\`\#\$\\] ]] && die "${name} 含非法字符"
+  if [[ "$value" == *$'\n'* || "$value" =~ [[:space:]\'\"\`\#\$\\] ]]; then
+    die "${name} 含非法字符"
+  fi
 }
 reject_text "DB_PASS" "$DB_PASS"
 reject_text "DEFAULT_REDIRECT_URL" "$DEFAULT_REDIRECT_URL"
@@ -69,10 +71,7 @@ apt-get install -y -qq ufw tar libcap2-bin mariadb-client python3 iptables
 modprobe nfnetlink_queue 2>/dev/null || echo "警告: nfnetlink_queue 未单独加载（可能已编进内核）"
 
 step "ufw：22、80、443"
-ufw allow OpenSSH >/dev/null 2>&1 || ufw allow 22/tcp
-ufw allow 80/tcp
-ufw allow 443/tcp
-ufw --force enable
+redi_ufw_bootstrap
 
 APP="${NODE_INSTALL_ROOT}/redi-multi"
 step "解压到 ${APP}"
@@ -117,10 +116,19 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl daemon-reload
-systemctl enable --now redi-multi
-sleep 2
-systemctl is-active --quiet redi-multi || die "redi-multi 未运行"
+if redi_systemd_available; then
+  systemctl daemon-reload
+  systemctl enable --now redi-multi
+  sleep 2
+  systemctl is-active --quiet redi-multi || die "redi-multi 未运行"
+else
+  pkill -f "${APP}/bin/redi-multi" 2>/dev/null || true
+  # shellcheck disable=SC1091
+  set -a && source "${APP}/env.sh" && set +a
+  nohup "${APP}/bin/redi-multi" >> "${APP}/redi-multi.log" 2>&1 &
+  sleep 2
+  pgrep -f "${APP}/bin/redi-multi" >/dev/null || die "redi-multi 未运行"
+fi
 
 db_cnf=$(mktemp)
 chmod 600 "$db_cnf"

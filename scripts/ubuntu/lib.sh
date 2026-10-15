@@ -28,6 +28,51 @@ redi_ubuntu_web_user() {
   echo "www-data"
 }
 
+redi_systemd_available() {
+  [[ -d /run/systemd/system ]] && systemctl is-system-running --quiet 2>/dev/null
+}
+
+redi_enable_now() {
+  local unit="$1"
+  if redi_systemd_available; then
+    systemctl enable --now "$unit"
+  else
+    service "$unit" start 2>/dev/null || true
+  fi
+}
+
+redi_restart() {
+  local unit="$1"
+  if redi_systemd_available; then
+    systemctl restart "$unit"
+  else
+    service "$unit" restart 2>/dev/null || service "$unit" start 2>/dev/null || true
+  fi
+}
+
+redi_reload() {
+  local unit="$1"
+  if redi_systemd_available; then
+    systemctl reload "$unit" 2>/dev/null || systemctl restart "$unit"
+  else
+    service "$unit" reload 2>/dev/null || service "$unit" restart 2>/dev/null || true
+  fi
+}
+
+redi_ufw_bootstrap() {
+  command -v ufw >/dev/null || {
+    echo "未安装 ufw，请用云安全组放行 22/80/443 与节点 3306"
+    return 0
+  }
+  ufw allow OpenSSH >/dev/null 2>&1 || ufw allow 22/tcp || true
+  ufw allow 80/tcp || true
+  ufw allow 443/tcp || true
+  if ufw --force enable 2>/dev/null; then
+    return 0
+  fi
+  echo "警告: ufw enable 失败（容器或无 iptables 模块时常见）。请用外层防火墙限制 3306。" >&2
+}
+
 redi_sync_node_ips_access() {
   local script_dir="$1"
   local node_ips="${2:-}"

@@ -72,7 +72,15 @@ sudo MYSQL_ROOT_PASSWORD='root密码' bash scripts/ubuntu/grant-node-mysql.sh '�
 sudo bash scripts/ubuntu/apply-mysql-skip-name-resolve.sh
 ```
 
-## 6. 与通用文档的关系
+## 6. 脚本化冒烟（单机 lab / Cloud Agent）
+
+```bash
+sudo bash scripts/ubuntu/run-smoke-acceptance.sh
+```
+
+容器常无 systemd、`ufw enable` 可能失败仅告警；不能替代真实 VPS 上的 systemd/防火墙验收。
+
+## 7. 与通用文档的关系
 
 - 未自动化部分（手工 Nginx HTTPS、非 LTS 版本）仍可参考 [DEPLOY.md](DEPLOY.md) 通用章节。
 - **生产若以 CentOS 7 脚本为标杆验收**，Ubuntu 环境请自行完成 [docs/ACCEPTANCE-UBUNTU-DEPLOY.md](docs/ACCEPTANCE-UBUNTU-DEPLOY.md) 与 [docs/ACCEPTANCE-EDGE-POOL.md](docs/ACCEPTANCE-EDGE-POOL.md) F1–F8。
