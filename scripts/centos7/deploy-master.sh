@@ -206,13 +206,6 @@ else
   fi
 fi
 
-if [[ -n "$NODE_IPS" ]]; then
-  redi_sync_node_ips_access "${SCRIPT_DIR}" "$NODE_IPS" "$DB_PASS" "$MYSQL_ROOT_PASS"
-else
-  echo "NODE_IPS 为空，尚未授权节点。加节点前写上 IP 并重新执行本脚本。"
-  redi_sync_node_ips_access "${SCRIPT_DIR}" "" "$DB_PASS" "$MYSQL_ROOT_PASS" || true
-fi
-
 step "解压主控发布包到 ${APP}"
 if systemctl is-active --quiet redi-queue 2>/dev/null; then
   systemctl stop redi-queue || true
@@ -255,6 +248,14 @@ php artisan migrate --force
 proc_count="$(mysql_root -N -e "SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA='redi_admin' AND ROUTINE_NAME='redi_node_bump_skip' AND ROUTINE_TYPE='PROCEDURE'")"
 if [[ "${proc_count:-0}" == "0" ]]; then
   die "数据库缺少存储过程 redi_node_bump_skip。请确认已导入 db/redi_admin.sql，或 migrate 成功（100009）。"
+fi
+mysql_root redi_admin -e "CALL redi_node_bump_skip('__deploy_smoke__')" >/dev/null \
+  || die "redi_node_bump_skip 调用失败（常见原因：表 collation 与库不一致，请更新 db/redi_admin.sql）"
+if [[ -n "$NODE_IPS" ]]; then
+  redi_sync_node_ips_access "${SCRIPT_DIR}" "$NODE_IPS" "$DB_PASS" "$MYSQL_ROOT_PASS"
+else
+  echo "NODE_IPS 为空，尚未授权节点。加节点前写上 IP 并重新执行本脚本。"
+  redi_sync_node_ips_access "${SCRIPT_DIR}" "" "$DB_PASS" "$MYSQL_ROOT_PASS" || true
 fi
 php artisan config:clear
 if [[ ! -L public/storage ]]; then

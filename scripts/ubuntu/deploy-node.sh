@@ -57,6 +57,7 @@ else
   die "REDI_MASTER_URL 须 https://；lab 可 REDI_MASTER_INSECURE=1 + http://"
 fi
 [[ "$DEFAULT_REDIRECT_URL" == http://* || "$DEFAULT_REDIRECT_URL" == https://* ]] || die "DEFAULT_REDIRECT_URL 须 http(s)://"
+[[ "$DEFAULT_REDIRECT_URL" != *"|"* ]] || die "DEFAULT_REDIRECT_URL 不能包含 |（会破坏 sed 替换）"
 
 [[ -z "$TAR" && -f "${REPO_ROOT}/node/redi-multi.tar.gz" ]] && TAR="${REPO_ROOT}/node/redi-multi.tar.gz"
 [[ -z "$TAR" && -f /tmp/redi-multi.tar.gz ]] && TAR="/tmp/redi-multi.tar.gz"
@@ -119,6 +120,7 @@ WantedBy=multi-user.target
 EOF
 systemctl daemon-reload
 systemctl enable --now redi-multi
+systemctl restart redi-multi
 sleep 2
 systemctl is-active --quiet redi-multi || die "redi-multi 未运行"
 
@@ -136,4 +138,9 @@ mysql --defaults-extra-file="$db_cnf" -e "CALL redi_node_bump_skip('__smoke__')"
 rm -f "$db_cnf"
 
 echo "节点已安装到 ${APP}"
-[[ -z "$REDI_NODE_TOKEN" ]] && echo "请填写 REDI_NODE_TOKEN 后重跑本脚本"
+if [[ -z "$REDI_NODE_TOKEN" ]]; then
+  echo "请填写 REDI_NODE_TOKEN 后重跑本脚本（重跑后会 restart 服务）。"
+else
+  echo "REDI_NODE_TOKEN 已配置；masteragent 将向主控注册。"
+fi
+exit 0

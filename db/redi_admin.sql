@@ -459,7 +459,7 @@ CREATE TABLE `redi_platform_dns` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `redi_platform_dns` VALUES (1,'','pool','manual','manual',NULL,NULL,NULL,0,NOW(),NOW());
 
@@ -475,7 +475,7 @@ CREATE TABLE `redi_acme_challenges` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `redi_acme_challenges_domain_name_unique` (`domain_name`),
   KEY `redi_acme_challenges_expires_at_index` (`expires_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `redi_acme_challenge_node_sync`;
 CREATE TABLE `redi_acme_challenge_node_sync` (
@@ -487,7 +487,7 @@ CREATE TABLE `redi_acme_challenge_node_sync` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `redi_acme_challenge_node_sync_node_id_domain_name_unique` (`node_id`,`domain_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `failed_jobs`;
 CREATE TABLE `failed_jobs` (
@@ -513,7 +513,7 @@ CREATE TABLE `jobs` (
   `created_at` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   KEY `jobs_queue_index` (`queue`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `redi_nodes`;
 CREATE TABLE `redi_nodes` (
@@ -530,7 +530,7 @@ CREATE TABLE `redi_nodes` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `redi_nodes_public_ip_unique` (`public_ip`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `redi_tenant_edge`;
 CREATE TABLE `redi_tenant_edge` (
@@ -543,7 +543,7 @@ CREATE TABLE `redi_tenant_edge` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `redi_tenant_edge_admin_id_unique` (`admin_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `redi_domain_certs`;
 CREATE TABLE `redi_domain_certs` (
@@ -563,7 +563,7 @@ CREATE TABLE `redi_domain_certs` (
   UNIQUE KEY `redi_domain_certs_domain_id_unique` (`domain_id`),
   KEY `redi_domain_certs_admin_id_status_index` (`admin_id`,`status`),
   CONSTRAINT `redi_domain_certs_domain_id_foreign` FOREIGN KEY (`domain_id`) REFERENCES `redi_admin_domain` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `redi_cert_deployments`;
 CREATE TABLE `redi_cert_deployments` (
@@ -581,7 +581,7 @@ CREATE TABLE `redi_cert_deployments` (
   KEY `redi_cert_deployments_node_id_foreign` (`node_id`),
   CONSTRAINT `redi_cert_deployments_cert_id_foreign` FOREIGN KEY (`cert_id`) REFERENCES `redi_domain_certs` (`id`) ON DELETE CASCADE,
   CONSTRAINT `redi_cert_deployments_node_id_foreign` FOREIGN KEY (`node_id`) REFERENCES `redi_nodes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `redi_dns_sync_logs`;
 CREATE TABLE `redi_dns_sync_logs` (
@@ -592,7 +592,7 @@ CREATE TABLE `redi_dns_sync_logs` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Table structure for table `redi_admin_domain`
@@ -620,7 +620,7 @@ CREATE TABLE `redi_admin_domain` (
   KEY `idx_admin` (`admin_id`),
   UNIQUE KEY `uniq_original_url_global` (`original_url`(191)),
   UNIQUE KEY `uniq_original_url_hash` (`original_url_hash`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -649,7 +649,7 @@ CREATE TABLE `redi_admin_group` (
   `admin_name` varchar(50) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_admin` (`admin_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

@@ -53,7 +53,7 @@ sudo bash scripts/ubuntu/deploy-master.sh
 sudo bash scripts/ubuntu/deploy-node.sh
 ```
 
-节点包为 **linux/amd64** 静态二进制；`setcap cap_net_admin`、lagran 默认开启。更新 Go 代码后须重新 `build-node-tar.sh` 并部署。
+节点包为 **linux/amd64** 静态二进制；`setcap cap_net_admin`、lagran 默认开启。更新 Go 代码后须重新 `build-node-tar.sh` 并部署。**重复执行** `deploy-node.sh` 会 `systemctl restart redi-multi`（应用新 token / 二进制），与 CentOS 节点脚本一致。
 
 ## 4. 后台与 DNS
 

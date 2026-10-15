@@ -88,12 +88,12 @@ fi
 mysqladmin ping --silent || { tail -20 /tmp/mysqld-smoke.log; exit 1; }
 
 DB_PASS="SmokeDbPass2026"
-mysql -u root -e "CREATE DATABASE IF NOT EXISTS redi_admin DEFAULT CHARACTER SET utf8mb4;
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS redi_admin DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS 'redi_admin'@'127.0.0.1' IDENTIFIED BY '${DB_PASS}';
 CREATE USER IF NOT EXISTS 'redi_admin'@'localhost' IDENTIFIED BY '${DB_PASS}';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON redi_admin.* TO 'redi_admin'@'127.0.0.1';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON redi_admin.* TO 'redi_admin'@'localhost';
-FLUSH PRIVILEGES;" 2>/dev/null || mysql -u root -e "CREATE DATABASE IF NOT EXISTS redi_admin;
+FLUSH PRIVILEGES;" 2>/dev/null || mysql -u root -e "CREATE DATABASE IF NOT EXISTS redi_admin DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON redi_admin.* TO 'redi_admin'@'127.0.0.1' IDENTIFIED BY '${DB_PASS}';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON redi_admin.* TO 'redi_admin'@'localhost' IDENTIFIED BY '${DB_PASS}';
 FLUSH PRIVILEGES;"
@@ -108,6 +108,8 @@ if [[ "$proc_after_sql" != "1" ]]; then
   echo "导入 redi_admin.sql 后缺少 redi_node_bump_skip"
   exit 1
 fi
+mysql -u root redi_admin -e "CALL redi_node_bump_skip('__smoke__')" >/dev/null \
+  || { echo "CALL redi_node_bump_skip 失败（检查 redi_* 表 collation 与库一致）"; exit 1; }
 
 echo "[5] Laravel 发布包解压与 migrate"
 APP=/opt/301-smoke/master
