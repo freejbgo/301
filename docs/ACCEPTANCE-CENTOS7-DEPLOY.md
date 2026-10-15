@@ -84,7 +84,8 @@ sudo firewall-cmd --list-all
 | 检查项 | 期望 |
 |--------|------|
 | `firewalld` / `mariadb` / `php-fpm` / `nginx` / `redi-queue` | 均为 `active` |
-| PHP 版本 | **8.0.x** |
+| `/etc/cron.d/redi-renew` | 含 **03:10** `redi:renew-certificates`、**04:10** `redi:prune-acme-challenges`（勿另配 `schedule:run`） |
+| PHP 版本 | **8.0.x**（`deploy-master` 仅接受 8.0.x） |
 | `admin_users` | ≥ 1 |
 | `curl` 后台 | **302** 或 **200** |
 | 3306 | 监听；**不要**对 `0.0.0.0/0` 在安全组全网开放 |

@@ -166,7 +166,7 @@ sudo systemctl enable --now redi-multi
 mysql -h 主控IP -u redi_node -p redi_admin -e "CALL redi_node_bump_skip('__smoke__')"
 ```
 
-节点或主控代码就绪、需要上线时，在开发机执行 `./scripts/build-node-tar.sh` / `./scripts/build-master-tar.sh`（产物默认在 `node/`、`master/` 下，已 gitignore，**勿提交**）。或通过 **`v*` tag** 触发 Release 工作流上传包。`build-node-tar.sh` 会拒绝仍然动态链接 libc 的二进制。
+节点或主控代码就绪、需要上线时，在开发机执行 `./scripts/build-node-tar.sh` / `./scripts/build-master-tar.sh`（产物默认在 `node/`、`master/` 下，已 gitignore，**勿提交**）。或通过 **`v*` tag** 触发 Release 工作流上传包。`build-node-tar.sh` 会拒绝仍然动态链接 libc 的二进制。节点行为（跳转、限速、Agent）均在 **二进制** 内，改 Go 源码后必须重新打包并部署到每台节点。
 
 ## 4. 上线顺序
 
