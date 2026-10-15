@@ -56,9 +56,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: CentOS 7 script syntax
+      - name: Deploy script syntax (CentOS 7 + Ubuntu)
         run: |
-          for f in scripts/centos7/*.sh; do bash -n "$f"; done
+          for f in scripts/centos7/*.sh scripts/ubuntu/*.sh; do bash -n "$f"; done
           php scripts/verify-redi-node-procedure-sync.php
 
   centos7-integration:

@@ -5,7 +5,7 @@
 
 按这个顺序做：先主控和数据库，再节点，最后到后台把 DNS、节点和域名配好。控制台里每一步点哪里，见 [docs/CONSOLE.md](docs/CONSOLE.md)。
 
-CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。填好的变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。真机装完后用 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 逐步验收。
+CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。**Ubuntu 22.04 / 24.04** 见 [DEPLOY-ubuntu.md](DEPLOY-ubuntu.md) 与 `scripts/ubuntu/deploy-*.sh`。填好的变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md) / [DEPLOY-ubuntu-example.md](DEPLOY-ubuntu-example.md)。真机验收见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 或 [docs/ACCEPTANCE-UBUNTU-DEPLOY.md](docs/ACCEPTANCE-UBUNTU-DEPLOY.md)。
 
 开发阶段 [GitHub Releases](https://github.com/freejbgo/301/releases) 可能暂无包；需部署时在仓库根目录执行 `scripts/build-*-tar.sh`，或发 **`v*` tag** 由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 在通过 Go/PHPUnit（8.4 与 8.0）、`composer audit`、CentOS 7 脚本与容器冒烟后上传 Release（发布前对解压后的主控树再跑 audit + PHPUnit）。
 
