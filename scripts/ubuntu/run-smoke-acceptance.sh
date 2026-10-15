@@ -71,7 +71,7 @@ check admin_http test "$code" = "302" -o "$code" = "200"
 # shellcheck source=lib.sh
 source "${ROOT}/scripts/ubuntu/lib.sh"
 check redi-multi redi_multi_running
-check node_mysql mysql -h "$IP" -u redi_node -p'SmokeDbPass_2026_x' redi_admin -e "CALL redi_node_bump_skip('__accept__')" >/dev/null
+check node_mysql mysql -h 127.0.0.1 -u redi_node -p'SmokeDbPass_2026_x' redi_admin -e "CALL redi_node_bump_skip('__accept__')" >/dev/null
 
 [[ "$fail" -eq 0 ]] && echo "Ubuntu 脚本化冒烟通过（${IP}）。F1–F8 须公网另验。" && exit 0
 exit 1
