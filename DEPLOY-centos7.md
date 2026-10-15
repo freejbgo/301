@@ -7,7 +7,7 @@
 | 主控 | `scripts/centos7/deploy-master.sh` | 程序在 `/opt/301/master`，网站根目录 `/opt/301/master/public` |
 | 每台节点 | `scripts/centos7/deploy-node.sh` | 程序在 `/opt/redi-multi/redi-multi` |
 
-开发阶段 [GitHub Releases](https://github.com/freejbgo/301/releases) 可能为空；需要部署时在仓库根目录执行 `scripts/build-master-tar.sh` / `scripts/build-node-tar.sh`，或等你发 **`v*` tag** 后从 Releases 下载。也可在 `vars.env` 里设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` 指向打包结果的绝对路径：
+开发阶段 [GitHub Releases](https://github.com/freejbgo/301/releases) 可能为空；需要部署时在仓库根目录执行 `scripts/build-master-tar.sh` / `scripts/build-node-tar.sh`，或等你发 **`v*` tag** 后从 Releases 下载（打 tag 会触发 `.github/workflows/release.yml`：Go 测试、PHPUnit **8.4 + 8.0**、`composer audit`、CentOS 7 脚本校验与容器冒烟通过后，才构建 tar 并上传；发布树上还会再跑 audit + PHPUnit）。也可在 `vars.env` 里设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` 指向打包结果的绝对路径：
 
 - 主控包：本地 `scripts/build-master-tar.sh` → `master/master.tar.gz`（含 `vendor`，无 `.env`），或 GitHub Release 的 `master.tar.gz`。
 - 节点包：本地 `scripts/build-node-tar.sh` → `node/redi-multi.tar.gz`（CentOS 7 静态 `bin/redi-multi`），或 Release 的 `redi-multi.tar.gz`。
@@ -32,7 +32,7 @@ vi scripts/centos7/vars.env
 
 主控至少要填 `MASTER_IP`、`DB_PASS`、`MYSQL_ROOT_PASS`、`MASTER_URL`、`ADMIN_HTTPS`。还没有证书、只用 IP 访问时：`MASTER_URL="http://主控IP"`，`ADMIN_HTTPS="false"`。已知节点 IP 就写进 `NODE_IPS`，空格分隔。
 
-节点还要填本机的 `NODE_PUBLIC_IP`、`DEFAULT_REDIRECT_URL`、`REDI_MASTER_URL`。Token 等主控后台创建节点后再填 `REDI_NODE_TOKEN`。
+节点还要填本机的 `NODE_PUBLIC_IP`、`DEFAULT_REDIRECT_URL`、`REDI_MASTER_URL`（生产须 **`https://`**；主控尚未配证书、仅用 IP 的 HTTP 联调时，可设 `REDI_MASTER_INSECURE=1` 并把 `REDI_MASTER_URL` 写成 `http://主控IP`，见 `vars.example.env`）。可选 `REDI_DB_TLS`（`1`/`true` 或 `skip-verify`）写入节点 `env.sh`。Token 等主控后台创建节点后再填 `REDI_NODE_TOKEN`。
 
 ## 2. 部署主控
 
@@ -46,8 +46,8 @@ sudo bash scripts/centos7/deploy-master.sh
 2. 安装 Remi 的 PHP 8.0、Nginx、firewalld。不安装 PHP 8.1 或更高版本。
 3. 安装 MariaDB 10.6。CentOS 7 自带的 5.5 导不进这份 `utf8mb4` 库。
 4. 设置 root 密码，关闭反向域名解析，数据库监听 IPv4。3306 不对全网开放，只放行 `NODE_IPS`。
-5. 库是空的才导入 `db/redi_admin.sql`（菜单 + 业务表 + 默认 `admin`；**不含**存储过程正文）。已经有 `admin_users` 时不会覆盖。
-6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（绿场常无新迁移；发版后有新迁移时改库）、`storage:link`，并 **检查存储过程是否存在**（应由 `redi_admin.sql` 导入；不存在则脚本失败退出）。
+5. 库是空的才导入 `db/redi_admin.sql`（菜单 + 业务表 + 默认 `admin` + 节点存储过程 **`redi_node_bump_skip`**；`migrations` 登记至 `100009`）。已经有 `admin_users` 时不会覆盖。
+6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（绿场常无新迁移；发版后有新迁移时改库）、`storage:link`，并 **检查存储过程是否存在**（应由上一步 SQL 导入；不存在则脚本失败退出）。
 7. 配置 PHP-FPM（用户 `nginx`，sock `/var/run/php-fpm/www.sock`）和 Nginx。开启 SELinux 时会放行网站访问网络和数据库。
 8. 安装队列 `redi-queue`：`queue:work --sleep=3 --timeout=320 --tries=100`。每天 03:10 以用户 `nginx` 执行 `redi:renew-certificates`。
 9. 防火墙开放 22、80、443。
@@ -79,7 +79,7 @@ Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证�
 ## 4. 后台里接着做
 
 1. 「DNS 与节点池」填写平台主域名。
-2. 节点状态正常后，手动模式去 DNS 厂商按参考表添加 pool 的 A 和租户 CNAME。API 模式点同步。
+2. 节点状态正常后，手动模式去 DNS 厂商按参考表添加 pool 的 A 和租户 CNAME。API 模式点同步（厂商记录 **先增/改、后删**；任一步失败则 **不更新** `dns_synced_at`，可修正后重试；详见 [SECURITY.md](SECURITY.md)）。
 3. **超级管理员** 在「分组管理」建分组（须选 **所属租户账号**）；租户在「域名管理」添加客户域名，把 CNAME 目标交给客户。客户 CNAME 到这个目标，不要把域名 A 到某一台节点。
 4. 预检为「已指向」后点「申请证书」。
 

@@ -74,7 +74,15 @@ reject_text "REDI_NODE_TOKEN" "$REDI_NODE_TOKEN"
 reject_text "NODE_INSTALL_ROOT" "$NODE_INSTALL_ROOT"
 is_ipv4 "$MASTER_IP" || die "MASTER_IP 必须是 IPv4"
 is_ipv4 "$NODE_PUBLIC_IP" || die "NODE_PUBLIC_IP 必须是 IPv4"
-[[ "$REDI_MASTER_URL" == https://* ]] || die "REDI_MASTER_URL 必须使用 https://（节点 Agent 传输证书私钥）"
+REDI_MASTER_INSECURE="${REDI_MASTER_INSECURE:-}"
+REDI_DB_TLS="${REDI_DB_TLS:-}"
+if [[ "$REDI_MASTER_URL" == https://* ]]; then
+  :
+elif [[ "$REDI_MASTER_URL" == http://* && "$REDI_MASTER_INSECURE" == "1" ]]; then
+  echo "警告: REDI_MASTER_INSECURE=1，Agent 使用 HTTP 访问主控（仅 lab，生产请改 https://）"
+else
+  die "REDI_MASTER_URL 必须使用 https://（节点 Agent 传输证书私钥）；lab 可设 REDI_MASTER_INSECURE=1 且 http://"
+fi
 [[ "$DEFAULT_REDIRECT_URL" == http://* || "$DEFAULT_REDIRECT_URL" == https://* ]] || die "DEFAULT_REDIRECT_URL 要以 http:// 或 https:// 开头"
 [[ "$DEFAULT_REDIRECT_URL" != *'|'* ]] || die "DEFAULT_REDIRECT_URL 不要包含 |"
 
@@ -123,15 +131,21 @@ fi
 
 prev_umask=$(umask)
 umask 077
-cat > "${APP}/env.sh" <<EOF
-REDI_DB_HOST=${MASTER_IP}
-REDI_DB_PORT=3306
-REDI_DB_USER=redi_node
-REDI_DB_PASSWORD=${DB_PASS}
-REDI_DB_NAME=redi_admin
-REDI_MASTER_URL=${REDI_MASTER_URL}
-REDI_NODE_TOKEN=${REDI_NODE_TOKEN}
-EOF
+{
+  echo "REDI_DB_HOST=${MASTER_IP}"
+  echo "REDI_DB_PORT=3306"
+  echo "REDI_DB_USER=redi_node"
+  echo "REDI_DB_PASSWORD=${DB_PASS}"
+  echo "REDI_DB_NAME=redi_admin"
+  if [[ -n "$REDI_DB_TLS" ]]; then
+    echo "REDI_DB_TLS=${REDI_DB_TLS}"
+  fi
+  echo "REDI_MASTER_URL=${REDI_MASTER_URL}"
+  if [[ "$REDI_MASTER_INSECURE" == "1" ]]; then
+    echo "REDI_MASTER_INSECURE=1"
+  fi
+  echo "REDI_NODE_TOKEN=${REDI_NODE_TOKEN}"
+} > "${APP}/env.sh"
 chmod 600 "${APP}/env.sh"
 umask "$prev_umask"
 
