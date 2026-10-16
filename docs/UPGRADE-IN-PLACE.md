@@ -50,7 +50,7 @@ REDI_DNS_PRECHECK_ALLOW_A_TO_POOL=true
 
 ## 4. Cron：续期 / 清理 / 健康检查 + 失败 Webhook
 
-新装 `deploy-master` 已写入 `bash -c 'cd /opt/301/master && ... || php artisan redi:ops-webhook ...'`。**已有机房**若 Cron 里仍是错误的 `master/master` 路径，可执行仓库脚本（需 root）：
+新装 `deploy-master` 已写入 `bash -c 'cd /opt/301/master && ... || php artisan redi:ops-webhook ...'`。**已有机房**若 Cron 里仍是错误的 `master/master` 路径，或 root/旧 crontab 里仍有 `php artisan schedule:run`，请删掉 `schedule:run`（续期/清理/health 仅认 `/etc/cron.d/redi-renew`），再执行仓库脚本（需 root）：
 
 ```bash
 sudo bash scripts/patch-master-cron-ops-webhook.sh
