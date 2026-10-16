@@ -13,6 +13,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // \App\Models\User::factory(10)->create();
+        // 绿场数据来自 db/redi_admin.sql 一次导入，见 docs/GREENFIELD-INSTALL.md。
     }
 }

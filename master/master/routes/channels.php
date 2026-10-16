@@ -1,18 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Broadcast;
-
 /*
 |--------------------------------------------------------------------------
 | Broadcast Channels
 |--------------------------------------------------------------------------
 |
-| Here you may register all of the event broadcasting channels that your
-| application supports. The given channel authorization callbacks are
-| used to check if an authenticated user can listen to the channel.
+| App\Providers\BroadcastServiceProvider 未启用（config/app.php）。
+| 启用 Laravel 广播时在此使用 Broadcast::channel(...) 注册频道。
 |
 */
-
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
-});
