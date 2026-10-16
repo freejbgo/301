@@ -2,6 +2,8 @@
 
 namespace App\Services\Dns\Concerns;
 
+use App\Models\RediNode;
+
 /**
  * 先增/改、后删，避免「先删后建」在 API 失败时把记录删光。
  *
@@ -16,11 +18,8 @@ trait ReconcilesDnsRecords
     protected function reconcileARecordValues(array $existing, array $desiredIps, callable $create, callable $deleteById): void
     {
         $desired = [];
-        foreach ($desiredIps as $ip) {
-            $ip = trim((string) $ip);
-            if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-                $desired[strtolower($ip)] = $ip;
-            }
+        foreach (RediNode::filterValidIpv4List($desiredIps) as $ip) {
+            $desired[strtolower($ip)] = $ip;
         }
         if ($desired === []) {
             throw new \RuntimeException('没有可同步的节点 IP');

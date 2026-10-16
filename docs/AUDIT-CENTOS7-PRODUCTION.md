@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#120）：** 节点 API `redirect-rules` / `acme-challenges` / `certificates` 过滤非法主机名；`collectIssues` `--days` 上限 365；DNS reconcile 复用 `filterValidIpv4List`；节点 ACME store 忽略空响应体；PHPUnit **135**。
+
 **2026-10-16 复核（#119）：** DNS 厂商 pool A 统一 `filterValidIpv4List`；`redi:health`/renew `--days` 上限 365；后台 DNS 同步返回具体错误；PHPUnit **134**。
 
 **2026-10-16 复核（#118）：** Cloudflare DNS 列表分页拉全；`CertificateIssuer` token 走 `AcmeHttp01Token`；PHPUnit **133**。
@@ -295,4 +297,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **134** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **135** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。

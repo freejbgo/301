@@ -20,6 +20,19 @@ func TestResponseForPathRequiresHostAndToken(t *testing.T) {
 	}
 }
 
+func TestReplaceAllSkipsEmptyResponseBody(t *testing.T) {
+	ReplaceAll([]Item{{
+		DomainName:   "example.com",
+		Token:        "tok123",
+		ResponseBody: "   ",
+	}})
+
+	_, ok := ResponseForPath("example.com", "/.well-known/acme-challenge/tok123")
+	if ok {
+		t.Fatal("empty response body must not be stored")
+	}
+}
+
 func TestResponseForPathRejectsMalformedToken(t *testing.T) {
 	ReplaceAll([]Item{{
 		DomainName:   "example.com",

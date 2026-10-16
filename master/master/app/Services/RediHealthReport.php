@@ -17,7 +17,7 @@ class RediHealthReport
      */
     public static function collectIssues(int $warnDays = 7): array
     {
-        $warnDays = max(1, $warnDays);
+        $warnDays = min(365, max(1, $warnDays));
         $issues = [];
 
         foreach (self::productionConfigIssues() as $issue) {

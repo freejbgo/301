@@ -357,4 +357,43 @@ class NodeAgentApiTest extends TestCase
         $this->assertArrayHasKey('force_https', $rules[0]);
         $this->assertArrayNotHasKey('skip_url', $rules[0]);
     }
+
+    public function test_redirect_rules_omit_invalid_hosts(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('group_id')->default(1);
+            $table->unsignedInteger('admin_id')->default(1);
+            $table->string('original_url');
+            $table->string('skip_url')->default('http://example.com');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        \DB::table('redi_admin_domain')->insert([
+            [
+                'original_url' => 'good.example',
+                'status' => 1,
+                'force_https' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'original_url' => '1.2.3.4',
+                'status' => 1,
+                'force_https' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        $response = $this->withToken($token)->getJson('/api/nodes/redirect-rules');
+        $response->assertOk();
+        $rules = $response->json('rules');
+        $this->assertCount(1, $rules);
+        $this->assertSame('good.example', $rules[0]['original_url']);
+    }
 }

@@ -106,7 +106,9 @@ class NodeAgentController extends Controller
                 ];
             })
             ->filter(function ($row) {
-                return $row['domain_name'] !== '' && trim((string) $row['token']) !== '';
+                return $row['domain_name'] !== ''
+                    && HostNameValidator::isValidHostLabel($row['domain_name'])
+                    && trim((string) $row['token']) !== '';
             })
             ->values();
 
@@ -150,7 +152,7 @@ class NodeAgentController extends Controller
                 continue;
             }
             $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
-            if ($host === '') {
+            if ($host === '' || ! HostNameValidator::isValidHostLabel($host)) {
                 continue;
             }
             $payload[] = [
@@ -214,7 +216,8 @@ class NodeAgentController extends Controller
                 ];
             })
             ->filter(function ($row) {
-                return $row['original_url'] !== '';
+                return $row['original_url'] !== ''
+                    && HostNameValidator::isValidHostLabel($row['original_url']);
             })
             ->values();
 
