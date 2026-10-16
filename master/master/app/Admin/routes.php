@@ -18,7 +18,10 @@ Route::group([
 
     $router->get('/', 'HomeController@index');
 
+    $router->post('ops/requeue-failed-deployments', 'OpsController@requeueFailedDeployments');
+
     $router->resource('group', 'RediAdminGroupController');
+    $router->get('domain/export', 'RediAdminDomainController@exportCsv');
     $router->resource('domain', 'RediAdminDomainController');
     $router->get('platform-settings', 'PlatformSettingsController@index');
     $router->get('platform-dns', 'PlatformDnsController@index');

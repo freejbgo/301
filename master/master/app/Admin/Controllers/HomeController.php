@@ -40,7 +40,16 @@ class HomeController extends Controller
             });
 
             $content->row(function (Row $row) use ($issueHtml) {
-                $row->column(12, Card::make('运营自检（最近 7 天证书预警）', $issueHtml));
+                $requeueUrl = admin_url('ops/requeue-failed-deployments');
+                $token = csrf_token();
+                $opsHtml = $issueHtml
+                    .'<form method="post" action="'.e($requeueUrl).'" class="mt-3" onsubmit="return confirm(\'将全部 failed 证书部署改回 pending？\');">'
+                    .'<input type="hidden" name="_token" value="'.e($token).'">'
+                    .'<input type="hidden" name="_redirect" value="'.e(admin_url('/')).'">'
+                    .'<button type="submit" class="btn btn-warning btn-sm">重试全部失败部署</button>'
+                    .'<span class="text-muted ml-2">等同 <code>php artisan redi:requeue-failed-deployments</code></span>'
+                    .'</form>';
+                $row->column(12, Card::make('运营自检（最近 7 天证书预警）', $opsHtml));
             });
         } elseif ($user) {
             $stats = TenantOpsSummary::forAdmin(AdminTenantContext::sessionAdminId());

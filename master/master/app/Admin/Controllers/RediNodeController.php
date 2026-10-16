@@ -83,6 +83,17 @@ class RediNodeController extends AdminController
             });
             $grid->column('updated_at', '更新时间');
 
+            $grid->tools(function (Grid\Tools $tools) {
+                $requeueUrl = admin_url('ops/requeue-failed-deployments');
+                $token = csrf_token();
+                $tools->append(
+                    '<form method="post" action="'.e($requeueUrl).'" style="display:inline-block;margin-right:6px" onsubmit="return confirm(\'将全部 failed 证书部署改回 pending？\');">'
+                    .'<input type="hidden" name="_token" value="'.e($token).'">'
+                    .'<input type="hidden" name="_redirect" value="'.e(admin_url('nodes')).'">'
+                    .'<button type="submit" class="btn btn-warning btn-sm">重试全部失败部署</button></form>'
+                );
+            });
+
             $grid->disableViewButton();
             $grid->actions(function ($actions) {
                 $actions->append(new RequeueNodeFailedCerts());

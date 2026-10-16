@@ -24,6 +24,8 @@ use App\Admin\Actions\Grid\BatchApplyCertificate;
 use App\Admin\Actions\Grid\BatchRedeployCertificate;
 use App\Admin\Actions\Grid\RedeployCertificate;
 use App\Jobs\IssueDomainCertificateJob;
+use App\Services\DomainListCsvExporter;
+use Illuminate\Http\Request;
 use App\Models\RediAcmeChallenge;
 use App\Models\RediAcmeChallengeNodeSync;
 use Illuminate\Validation\ValidationException;
@@ -34,6 +36,11 @@ class RediAdminDomainController extends AdminController
     public function title()
     {
         return '域名管理';
+    }
+
+    public function exportCsv(Request $request)
+    {
+        return DomainListCsvExporter::streamedResponse($request);
     }
 
     /**
@@ -47,6 +54,16 @@ class RediAdminDomainController extends AdminController
             
             $grid->tools(function (Grid\Tools $tools) {
                 $tools->append(new BatchDomainModal());
+                $exportQuery = http_build_query(array_filter(
+                    request()->only(['group_id', 'original_url', 'skip_url', 'status', 'cert_filter']),
+                    function ($v) {
+                        return $v !== null && $v !== '';
+                    }
+                ));
+                $exportUrl = admin_url('domain/export'.($exportQuery !== '' ? '?'.$exportQuery : ''));
+                $tools->append(
+                    '<a href="'.e($exportUrl).'" class="btn btn-default btn-sm" style="margin-left:6px"><i class="feather icon-download"></i> 导出 CSV</a>'
+                );
             });
 
             $grid->batchActions(function ($batch) {
