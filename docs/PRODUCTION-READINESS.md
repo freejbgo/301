@@ -3,7 +3,7 @@
 本文档汇总 **阻塞上线** 与 **验收必做** 项，与 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 及 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) 配合使用。**生产环境仅维护 CentOS 7.9（7.x）部署路径。**
 
 - **已上线升级（不重装）**：[UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（含 `scripts/patch-master-cron-ops-webhook.sh`）
-- **P0/P1/P2 全表**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)（不仅 P0；PR #75 已含大量 P1 运营能力）
+- **P0/P1/P2 全表**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)（P0/P1 能力已合入 `main`）
 
 ## 阻塞上线（P0，本仓库已加固）
 
@@ -14,7 +14,7 @@
 | 证书下发 | 节点 register / 重新启用时 `syncDeploymentsForNode` 补齐 `redi_cert_deployments`；主控空证书列表时节点清空内存证书 |
 | 节点 Agent | 心跳优先于拉取；拉取失败不阻断后续心跳；ack 403/409 不触发重新 register；Agent ≥ `0.1.3`（`REDI_MIN_AGENT_VERSION`） |
 | API 限流 | 节点 API 在认证后按 `node_id` 限流（`throttle:redi-node`） |
-| ACME 生产 | `redi:health` 在 `APP_ENV=production` 且开启 Staging 时告警 `acme_staging_enabled` |
+| ACME / 生产配置 | `redi:health` 在生产下检查：`app_debug_enabled`、`acme_email_missing`、`acme_staging_enabled`、`edge_zone_missing` |
 
 ## 部署前
 

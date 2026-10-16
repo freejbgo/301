@@ -19,7 +19,7 @@ class RediHealthReport
         $warnDays = max(1, $warnDays);
         $issues = [];
 
-        foreach (self::platformConfigIssues() as $issue) {
+        foreach (self::productionConfigIssues() as $issue) {
             $issues[] = $issue;
         }
 
@@ -140,33 +140,58 @@ class RediHealthReport
     }
 
     /**
-     * 不影响退出码的配置建议（redi:health --json 的 hints 字段）。
-     *
-     * @return array<int, array{code: string, message: string}>
-     */
-    /**
      * @return array<int, array{level: string, code: string, message: string}>
      */
-    protected static function platformConfigIssues(): array
+    protected static function productionConfigIssues(): array
     {
-        if (! Schema::hasTable('redi_platform_dns')) {
-            return [];
-        }
-
         if (config('app.env') !== 'production') {
             return [];
         }
 
-        $platform = RediPlatformDns::instance();
-        if (! $platform->acme_staging) {
-            return [];
+        $issues = [];
+
+        if (config('app.debug')) {
+            $issues[] = [
+                'level' => 'critical',
+                'code' => 'app_debug_enabled',
+                'message' => 'APP_DEBUG=true：生产环境请关闭调试并执行 php artisan config:cache',
+            ];
         }
 
-        return [[
-            'level' => 'warning',
-            'code' => 'acme_staging_enabled',
-            'message' => '生产环境仍开启 ACME Staging（后台 DNS 与节点池）；正式证书请关闭「ACME 测试环境」',
-        ]];
+        if (! Schema::hasTable('redi_platform_dns')) {
+            return $issues;
+        }
+
+        $platform = RediPlatformDns::query()->find(1);
+        if (! $platform) {
+            $platform = RediPlatformDns::instance();
+        }
+
+        if (trim((string) $platform->acme_contact_email) === '') {
+            $issues[] = [
+                'level' => 'warning',
+                'code' => 'acme_email_missing',
+                'message' => '未配置 ACME 联系邮箱（后台 DNS 与节点池），无法签发证书',
+            ];
+        }
+
+        if ($platform->acme_staging) {
+            $issues[] = [
+                'level' => 'warning',
+                'code' => 'acme_staging_enabled',
+                'message' => '生产环境仍开启 ACME Staging；正式证书请关闭「ACME 测试环境」',
+            ];
+        }
+
+        if (trim((string) $platform->edge_zone) === '') {
+            $issues[] = [
+                'level' => 'warning',
+                'code' => 'edge_zone_missing',
+                'message' => '未配置平台 edge 主域名（edge_zone），租户 CNAME 与证书流程不完整',
+            ];
+        }
+
+        return $issues;
     }
 
     public static function collectHints(): array
@@ -186,6 +211,13 @@ class RediHealthReport
             $hints[] = [
                 'code' => 'queue_database_single_host',
                 'message' => '当前队列为 database：请确保 systemd redi-queue 持续运行；扩容 worker 前先将缓存改为 redis',
+            ];
+        }
+
+        if (config('app.env') === 'production' && trim((string) config('redi.min_agent_version')) === '') {
+            $hints[] = [
+                'code' => 'agent_version_gate_off',
+                'message' => 'REDI_MIN_AGENT_VERSION 为空：节点 Agent 版本门控已关闭，升级节点后请改回 0.1.3',
             ];
         }
 

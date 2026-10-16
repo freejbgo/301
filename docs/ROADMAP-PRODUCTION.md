@@ -16,7 +16,7 @@
 
 | 项 | 状态 |
 |----|------|
-| `redi:health` / JSON / Webhook | ✅ |
+| `redi:health` / JSON / Webhook；生产下 APP_DEBUG、ACME 邮箱/staging、edge_zone | ✅ |
 | 续期 `renew` + dry-run；failed 纳入续期 | ✅ |
 | 超管/租户首页看板 | ✅ |
 | 节点证书部署列、重试失败（单节点/全局） | ✅ |
