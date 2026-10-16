@@ -34,8 +34,25 @@ class RediOpsWebhook
             return false;
         }
 
+        if (isset($payload['message'])) {
+            $payload['message'] = OpsDisplaySanitizer::stripControlChars((string) $payload['message']);
+        }
+        if (isset($payload['text'])) {
+            $payload['text'] = OpsDisplaySanitizer::stripControlChars((string) $payload['text']);
+        }
         if (! isset($payload['text']) && isset($payload['message'])) {
             $payload['text'] = (string) $payload['message'];
+        }
+        if (isset($payload['issues']) && is_array($payload['issues'])) {
+            foreach ($payload['issues'] as $i => $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+                if (isset($row['message'])) {
+                    $row['message'] = OpsDisplaySanitizer::stripControlChars((string) $row['message']);
+                }
+                $payload['issues'][$i] = $row;
+            }
         }
 
         $logLabel = ($url === self::healthWebhookUrl()) ? 'redi health webhook' : 'redi ops webhook';
@@ -48,7 +65,7 @@ class RediOpsWebhook
             if (! $response->successful()) {
                 Log::warning($logLabel.' failed', [
                     'status' => $response->status(),
-                    'body' => $response->body(),
+                    'body' => OpsDisplaySanitizer::logSnippet($response->body()),
                 ]);
 
                 return false;
@@ -56,7 +73,7 @@ class RediOpsWebhook
 
             return true;
         } catch (\Throwable $e) {
-            Log::warning($logLabel.' error: '.$e->getMessage());
+            Log::warning($logLabel.' error: '.OpsDisplaySanitizer::logSnippet($e->getMessage(), 300));
 
             return false;
         }

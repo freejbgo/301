@@ -103,7 +103,7 @@ class RediHealthReport
                 'code' => 'cert_expired',
                 'message' => sprintf(
                     '证书已过期：%s（%s，状态 %s）',
-                    $cert->domain_name,
+                    OpsDisplaySanitizer::field($cert->domain_name, (string) $cert->domain_name, 253),
                     $cert->expires_at->format('Y-m-d'),
                     $cert->status
                 ),
@@ -134,7 +134,7 @@ class RediHealthReport
                 'message' => sprintf(
                     '证书将在 %d 天内到期：%s（%s，状态 %s）',
                     $warnDays,
-                    $cert->domain_name,
+                    OpsDisplaySanitizer::field($cert->domain_name, (string) $cert->domain_name, 253),
                     $cert->expires_at->format('Y-m-d'),
                     $cert->status
                 ),
@@ -323,7 +323,10 @@ class RediHealthReport
             ->pluck('domain_name')
             ->all();
 
-        $names = implode(', ', $sample);
+        $names = implode(', ', array_map(
+            fn ($name) => OpsDisplaySanitizer::field((string) $name, (string) $name, 253),
+            $sample
+        ));
         if ($total > count($sample)) {
             $names .= sprintf(' …等共 %d 个', $total);
         }

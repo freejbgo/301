@@ -54,4 +54,23 @@ class RediOpsWebhookTest extends TestCase
             return ($data['message'] ?? '') === 'failline';
         });
     }
+
+    public function test_post_sanitizes_issue_messages_in_payload(): void
+    {
+        config(['redi.health_webhook_url' => 'https://hooks.example/health']);
+        Http::fake(['https://hooks.example/*' => Http::response([], 200)]);
+
+        RediOpsWebhook::post([
+            'issues' => [
+                ['level' => 'warning', 'code' => 'x', 'message' => "m\r\nsg"],
+            ],
+        ], 'https://hooks.example/health');
+
+        Http::assertSent(function ($request) {
+            $issues = $request->data()['issues'] ?? [];
+
+            return ($issues[0]['message'] ?? '') === 'msg';
+        });
+    }
+
 }
