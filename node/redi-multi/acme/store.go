@@ -3,6 +3,8 @@ package acme
 import (
 	"strings"
 	"sync"
+
+	"redi-multi/util/host"
 )
 
 type challenge struct {
@@ -39,10 +41,10 @@ func ReplaceAll(items []Item) {
 	mu.Lock()
 	byDomain = map[string]challenge{}
 	for _, it := range items {
-		d := strings.ToLower(strings.TrimSpace(it.DomainName))
+		d := host.CanonicalLookupHost(it.DomainName)
 		t := strings.TrimSpace(it.Token)
 		resp := strings.TrimSpace(it.ResponseBody)
-		if d == "" || !validChallengeToken(t) || resp == "" {
+		if d == "" || !validChallengeToken(t) || resp == "" || strings.ContainsAny(resp, "\r\n\x00\t") {
 			continue
 		}
 		byDomain[d] = challenge{token: t, response: resp}
@@ -50,8 +52,11 @@ func ReplaceAll(items []Item) {
 	mu.Unlock()
 }
 
-func ResponseForPath(host, path string) (body string, ok bool) {
-	host = strings.ToLower(strings.TrimSpace(host))
+func ResponseForPath(hostName, path string) (body string, ok bool) {
+	hostName = host.CanonicalLookupHost(hostName)
+	if hostName == "" {
+		return "", false
+	}
 	path = strings.TrimSpace(path)
 	const prefix = "/.well-known/acme-challenge/"
 	if !strings.HasPrefix(path, prefix) {
@@ -63,7 +68,7 @@ func ResponseForPath(host, path string) (body string, ok bool) {
 		return "", false
 	}
 	mu.RLock()
-	if ch, found := byDomain[host]; found && ch.token == token {
+	if ch, found := byDomain[hostName]; found && ch.token == token {
 		mu.RUnlock()
 		return ch.response, true
 	}
