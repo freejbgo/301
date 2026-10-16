@@ -26,6 +26,11 @@ class DomainRecordNormalizerTest extends TestCase
         $this->assertTrue(DomainRecordNormalizer::isValidOriginalHost('www.foo.com'));
     }
 
+    public function test_normalize_skip_url_rejects_crlf(): void
+    {
+        $this->assertSame('', DomainRecordNormalizer::normalizeSkipUrl("http://evil.com\r\n"));
+    }
+
     public function test_rejects_non_http_redirect(): void
     {
         $this->assertFalse(DomainRecordNormalizer::isAllowedRedirectUrl('javascript:alert(1)'));

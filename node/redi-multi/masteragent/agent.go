@@ -144,8 +144,8 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 	items := make([]acme.Item, 0, len(out.Challenges))
 	domains := make([]string, 0, len(out.Challenges))
 	for _, c := range out.Challenges {
-		domain := strings.ToLower(strings.TrimSpace(c.DomainName))
-		if domain == "" || strings.ContainsAny(domain, "\r\n\x00") {
+		domain := host.CanonicalLookupHost(c.DomainName)
+		if domain == "" {
 			continue
 		}
 		if strings.TrimSpace(c.Token) == "" || strings.TrimSpace(c.ResponseBody) == "" {
@@ -181,8 +181,8 @@ func pullRedirectRules(client *http.Client, cfg config, registered *bool) error 
 	}
 	m := map[string]bool{}
 	for _, r := range out.Rules {
-		host := strings.ToLower(strings.TrimSpace(r.OriginalURL))
-		if host == "" || strings.ContainsAny(host, "\r\n\x00") {
+		host := host.CanonicalLookupHost(r.OriginalURL)
+		if host == "" {
 			continue
 		}
 		m[host] = bool(r.ForceHTTPS)

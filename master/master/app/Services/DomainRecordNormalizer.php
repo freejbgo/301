@@ -41,7 +41,11 @@ class DomainRecordNormalizer
 
     public static function normalizeSkipUrl(?string $url): string
     {
-        $url = trim((string) $url);
+        $raw = (string) $url;
+        if ($raw === '' || str_contains($raw, "\r") || str_contains($raw, "\n") || str_contains($raw, "\0")) {
+            return '';
+        }
+        $url = trim($raw);
         if ($url === '') {
             return '';
         }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\HostNameValidator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 
@@ -58,7 +59,12 @@ class RediPlatformDns extends Model
             return '';
         }
 
-        return strtolower($host.'.'.$zone);
+        $fqdn = HostNameValidator::toCanonicalAscii(strtolower($host.'.'.$zone));
+        if ($fqdn === '' || ! HostNameValidator::isValidHostLabel($fqdn)) {
+            return '';
+        }
+
+        return $fqdn;
     }
 
     public function setApiCredentialsArray(?array $data): void
