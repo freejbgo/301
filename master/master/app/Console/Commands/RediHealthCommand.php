@@ -13,14 +13,15 @@ class RediHealthCommand extends Command
                             {--json : 以 JSON 输出（供监控采集）}
                             {--notify : 有问题时 POST 到 REDI_HEALTH_WEBHOOK_URL}';
 
-    protected $description = '检查节点心跳与证书到期等运营风险（非 0 退出码表示存在待处理项）';
+    protected $description = '检查节点心跳与证书到期等运营风险（无 --notify 时，非 0 表示存在待处理项）';
 
     public function handle(): int
     {
         $warnDays = max(1, (int) $this->option('days'));
         $issues = RediHealthReport::collectIssues($warnDays);
+        $hasIssues = $issues !== [];
 
-        if ($this->option('notify') && $issues !== []) {
+        if ($this->option('notify') && $hasIssues) {
             if (RediHealthNotifier::notifyWebhook($issues)) {
                 $this->info('已发送 health webhook 通知。');
             } else {
@@ -30,29 +31,32 @@ class RediHealthCommand extends Command
 
         if ($this->option('json')) {
             $this->line(json_encode([
-                'ok' => $issues === [],
+                'ok' => ! $hasIssues,
                 'checked_at' => now()->toIso8601String(),
                 'summary' => RediHealthReport::summary(),
                 'hints' => RediHealthReport::collectHints(),
                 'issues' => $issues,
             ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-
-            return $issues === [] ? self::SUCCESS : self::FAILURE;
-        }
-
-        if ($issues === []) {
-            $this->info('redi:health 未发现待处理项。');
-        } else {
+        } elseif ($hasIssues) {
             $this->warn('发现 '.count($issues).' 项待关注：');
             foreach ($issues as $row) {
                 $prefix = $row['level'] === 'critical' ? '[严重]' : '[注意]';
                 $this->line($prefix.' '.$row['message']);
             }
+        } else {
+            $this->info('redi:health 未发现待处理项。');
         }
 
-        self::printHints($this);
+        if (! $this->option('json')) {
+            self::printHints($this);
+        }
 
-        return $issues === [] ? self::SUCCESS : self::FAILURE;
+        // Cron 使用 --notify：issues 已由 webhook 上报，退出 0，避免 || redi:ops-webhook 重复告警。
+        if ($this->option('notify')) {
+            return self::SUCCESS;
+        }
+
+        return $hasIssues ? self::FAILURE : self::SUCCESS;
     }
 
     protected static function printHints(Command $command): void

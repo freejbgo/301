@@ -103,6 +103,20 @@ class RediHealthCommandTest extends TestCase
             ->assertExitCode(1);
     }
 
+    public function test_health_notify_exits_zero_even_with_issues(): void
+    {
+        \DB::table('redi_nodes')->insert([
+            'name' => 'stale',
+            'public_ip' => '1.2.3.4',
+            'enabled' => true,
+            'last_heartbeat_at' => now()->subHour(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->artisan('redi:health', ['--notify' => true])->assertExitCode(0);
+    }
+
     public function test_health_text_mode_prints_hints_without_failing(): void
     {
         \DB::table('redi_nodes')->insert([

@@ -39,9 +39,10 @@ php artisan redi:health --json
 # issues/hints 各 code 含义见 AUDIT-CENTOS7-PRODUCTION.md §3
 
 # 有问题时通知 Webhook（.env 配置 REDI_HEALTH_WEBHOOK_URL，POST JSON，含 text 摘要）
+# --notify 在命令正常结束时退出码为 0（issues 走 webhook）；手工巡检请用无 --notify 的 redi:health / --json
 php artisan redi:health --notify
 
-# Cron 任务异常退出时（deploy 已配置 || redi:ops-webhook）；可单独测：
+# Cron 续期/清理行在 artisan 异常退出时走 || redi:ops-webhook；08:30 health 行同理（非 issues 触发）
 # php artisan redi:ops-webhook --task=redi:renew-certificates --message="测试告警"
 
 # 续期预演（cron 实际跑的是 redi:renew-certificates，无 --dry-run）
