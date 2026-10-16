@@ -112,3 +112,15 @@ sudo bash scripts/centos7/run-on-centos7-host.sh
 ```
 
 脚本使用 `--network host`，避免部分环境下 podman 桥接网无外网导致 `yum` 失败。日志在容器内 `/tmp/redi-c7-integration.log`。完整 `deploy-master.sh` / `deploy-node.sh` 仍须在真实 CentOS 7.9 上按 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 验收。
+
+## 8. 节点 lagran 运维（可选）
+
+被干扰域名场景默认开启 lagran（需 `cap_net_admin` 与 `nfnetlink_queue`）。节点上：
+
+```bash
+bash scripts/centos7/lagran-diagnose.sh /opt/redi-multi/redi-multi
+# 进程异常退出后若 OUTPUT 链残留 NFQUEUE 规则：
+sudo systemctl stop redi-multi
+sudo bash scripts/centos7/lagran-cleanup-iptables.sh /opt/redi-multi/redi-multi
+sudo systemctl start redi-multi
+```
