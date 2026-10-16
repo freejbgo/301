@@ -4,9 +4,10 @@
 
 ## 1. 发布包与代码
 
-在开发机或 CI 产物准备（发版前建议先跑 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §9）：
+在开发机或 CI 产物准备：
 
 ```bash
+bash scripts/dev-preflight.sh   # 或见 AUDIT-CENTOS7-PRODUCTION.md §9 分步
 ./scripts/build-master-tar.sh
 ./scripts/build-node-tar.sh
 ```

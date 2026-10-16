@@ -127,7 +127,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**（已含 #75–#80；#81 草稿含扩展生产配置 health 检查）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**（已含 #75–#80）。待发合并 **[#81](https://github.com/freejbgo/301/pull/81)**：扩展生产 `redi:health`、`dev-preflight.sh`、文档与 `.gitignore` 小项。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 

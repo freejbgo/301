@@ -20,8 +20,15 @@ echo "==> PHPUnit (master/master, PHP $(php -r 'echo PHP_VERSION;'))"
   ./vendor/bin/phpunit --testsuite Unit,Feature
 )
 
-echo "==> CentOS 7 部署脚本语法 + lagran_ports"
-for f in scripts/centos7/*.sh scripts/patch-master-cron-ops-webhook.sh; do
+echo "==> 仓库脚本语法 + CentOS 7 部署脚本"
+for f in \
+  scripts/dev-preflight.sh \
+  scripts/ensure-release-tarballs.sh \
+  scripts/verify-redi-db-deploy-path.sh \
+  scripts/build-master-tar.sh \
+  scripts/build-node-tar.sh \
+  scripts/patch-master-cron-ops-webhook.sh \
+  scripts/centos7/*.sh; do
   bash -n "$f"
 done
 python3 scripts/centos7/lagran_ports.py node/redi-multi/config.json.example | grep -q '80'
