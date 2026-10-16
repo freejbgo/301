@@ -22,10 +22,6 @@ class UrlSetByGroup extends Form implements LazyRenderable
      */
     public function handle(array $input)
     {
-        // dump($input);
-
-        // return $this->response()->error('Your error message.');
-
         $groupId = (int) ($input['id'] ?? 0);
         $adminId = (int) Admin::user()->id;
         $skipUrl = DomainRecordNormalizer::normalizeSkipUrl($input['skip_url'] ?? '');

@@ -4,6 +4,7 @@
 # 建议先: systemctl stop redi-multi
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP="${1:-/opt/redi-multi/redi-multi}"
 CFG="${APP}/config.json"
 
@@ -13,26 +14,12 @@ if [[ "$(id -u)" -ne 0 ]]; then
 fi
 
 command -v iptables >/dev/null 2>&1 || { echo "需要 iptables" >&2; exit 1; }
-command -v python3 >/dev/null 2>&1 || { echo "需要 python3 读取 config.json" >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "需要 python3" >&2; exit 1; }
 [[ -f "$CFG" ]] || { echo "找不到 ${CFG}" >&2; exit 1; }
 
-read -r SPORT SYN_ACK ACK PSH_ACK FIN_ACK < <(python3 - "$CFG" <<'PY'
-import json, sys
-path = sys.argv[1]
-with open(path, encoding="utf-8") as f:
-    data = json.load(f)
-lag = data.get("lagran") or {}
-port = lag.get("port", "80")
-if isinstance(port, int):
-    port = str(port)
-def b(key, default=True):
-    v = lag.get(key, default)
-    return "1" if v not in (False, 0, "0", "false") else "0"
-print(port, b("syn_ack"), b("ack"), b("psh_ack"), b("fin_ack"))
-PY
-)
+read -r SPORT SYN_ACK ACK PSH_ACK FIN_ACK < <(python3 "${SCRIPT_DIR}/lagran_ports.py" "$CFG")
 
-echo "lagran.port=${SPORT}"
+echo "lagran.port=${SPORT}（与 addr/tls_addr 合并后）"
 
 delete_rule() {
   local flags="$1" queue="$2"

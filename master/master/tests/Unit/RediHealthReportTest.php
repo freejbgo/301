@@ -130,4 +130,29 @@ class RediHealthReportTest extends TestCase
         $codes = array_column(RediHealthReport::collectIssues(7), 'code');
         $this->assertContains('cert_validating_stuck', $codes);
     }
+
+    public function test_cert_validating_stuck_reports_total_count_in_message(): void
+    {
+        config(['redi.health_validating_stuck_hours' => 1]);
+        for ($i = 0; $i < 3; $i++) {
+            $domainId = \DB::table('redi_admin_domain')->insertGetId([
+                'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            \DB::table('redi_domain_certs')->insert([
+                'domain_id' => $domainId,
+                'domain_name' => "stuck{$i}.example",
+                'status' => 'validating',
+                'expires_at' => now()->addMonth(),
+                'created_at' => now()->subHours(3),
+                'updated_at' => now()->subHours(3),
+            ]);
+        }
+
+        $issues = RediHealthReport::collectIssues(7);
+        $row = collect($issues)->firstWhere('code', 'cert_validating_stuck');
+        $this->assertNotNull($row);
+        $this->assertStringContainsString('3 张证书', $row['message']);
+    }
 }

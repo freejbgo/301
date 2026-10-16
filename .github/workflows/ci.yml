@@ -59,6 +59,7 @@ jobs:
       - name: Deploy script syntax (CentOS 7)
         run: |
           for f in scripts/centos7/*.sh scripts/patch-master-cron-ops-webhook.sh; do bash -n "$f" || exit 1; done
+          python3 scripts/centos7/lagran_ports.py node/redi-multi/config.json.example | grep -q '80'
           php scripts/verify-redi-node-procedure-sync.php
           bash scripts/verify-redi-db-deploy-path.sh
 
