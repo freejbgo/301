@@ -11,7 +11,7 @@ class RediHealthCommand extends Command
     protected $signature = 'redi:health
                             {--days=7 : 证书到期预警天数}
                             {--json : 以 JSON 输出（供监控采集）}
-                            {--notify : 有问题时 POST 到 REDI_HEALTH_WEBHOOK_URL}';
+                            {--notify : 有 issues 时 POST webhook；成功或无 issues 时退出 0（Cron 用）}';
 
     protected $description = '检查节点心跳与证书到期等运营风险（无 --notify 时，非 0 表示存在待处理项）';
 

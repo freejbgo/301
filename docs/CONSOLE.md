@@ -183,6 +183,7 @@ php artisan redi:health --notify  # 有 issues 时 POST webhook（Cron 08:30；�
 php artisan redi:renew-certificates --dry-run --days=25
 php artisan redi:prune-acme-challenges   # Cron 04:10；勿依赖 schedule:run
 php artisan redi:requeue-failed-deployments
+php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修正（见 DEPLOY.md）
 # php artisan redi:ops-webhook --task=redi:renew-certificates --message="测试"
 ```
 
