@@ -164,6 +164,19 @@ class NodeAgentApiTest extends TestCase
             ->assertOk();
 
         $response->assertJsonPath('synced_count', 0);
+        $response->assertJsonPath('ignored_count', 1);
+    }
+
+    public function test_challenges_synced_blank_entries_do_not_inflate_ignored_count(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        $response = $this->withToken($token)
+            ->postJson('/api/nodes/challenges-synced', ['domains' => ['', 'not-in-challenges.example']])
+            ->assertOk();
+
+        $response->assertJsonPath('synced_count', 0);
+        $response->assertJsonPath('ignored_count', 1);
     }
 
     public function test_challenges_synced_rejects_invalid_host_with_422(): void

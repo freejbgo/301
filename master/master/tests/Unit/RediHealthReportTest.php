@@ -88,12 +88,14 @@ class RediHealthReportTest extends TestCase
         config([
             'redi.health_queue_pending_threshold' => 90,
             'redi.health_queue_stale_hours' => 3,
+            'redi.health_validating_stuck_hours' => 4,
         ]);
 
         $summary = RediHealthReport::summary();
 
         $this->assertSame(90, $summary['health_queue_pending_threshold']);
         $this->assertSame(3, $summary['health_queue_stale_hours']);
+        $this->assertSame(4, $summary['health_validating_stuck_hours']);
     }
 
     public function test_collect_issues_includes_queue_stale_when_database_queue(): void

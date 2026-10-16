@@ -54,22 +54,12 @@ reject_text() {
     die "${name} 不要包含空格、引号、反引号、\$、# 或反斜杠"
   fi
 }
-is_ipv4() {
-  local ip="$1" o
-  [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
-  IFS=. read -r a b c d <<< "$ip"
-  for o in "$a" "$b" "$c" "$d"; do
-    [[ "$o" =~ ^[0-9]+$ ]] || return 1
-    ((10#$o <= 255)) || return 1
-  done
-}
-
 export MASTER_IP DB_PASS MYSQL_ROOT_PASS MASTER_URL ADMIN_HTTPS
 reject_text "DB_PASS" "$DB_PASS"
 reject_text "MYSQL_ROOT_PASS" "$MYSQL_ROOT_PASS"
 reject_text "MASTER_URL" "$MASTER_URL"
 reject_text "MASTER_INSTALL_ROOT" "$MASTER_INSTALL_ROOT"
-is_ipv4 "$MASTER_IP" || die "MASTER_IP 必须是 IPv4: $MASTER_IP"
+redi_is_ipv4 "$MASTER_IP" || die "MASTER_IP 必须是 IPv4: $MASTER_IP"
 [[ "$MASTER_URL" == http://* || "$MASTER_URL" == https://* ]] || die "MASTER_URL 要以 http:// 或 https:// 开头"
 [[ "$ADMIN_HTTPS" == "true" || "$ADMIN_HTTPS" == "false" ]] || die "ADMIN_HTTPS 只能是 true 或 false"
 if [[ "$ADMIN_HTTPS" == "true" && "$MASTER_URL" != https://* ]]; then
@@ -77,7 +67,7 @@ if [[ "$ADMIN_HTTPS" == "true" && "$MASTER_URL" != https://* ]]; then
 fi
 for ip in $NODE_IPS; do
   [[ -z "$ip" ]] && continue
-  is_ipv4 "$ip" || die "NODE_IPS 里有非法 IPv4: $ip"
+  redi_is_ipv4 "$ip" || die "NODE_IPS 里有非法 IPv4: $ip"
 done
 redi_ensure_master_tar "$REPO_ROOT" "$TAR" die
 [[ -f "${REPO_ROOT}/db/redi_admin.sql" ]] || die "找不到 db/redi_admin.sql"

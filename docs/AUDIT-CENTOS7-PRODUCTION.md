@@ -77,7 +77,7 @@
 | `queue_database_single_host` | 队列用 database 且与 DB 同机（多 worker 建议 Redis） |
 | `agent_version_gate_off` | 生产下 `REDI_MIN_AGENT_VERSION` 为空 |
 
-采集示例：`php artisan redi:health --json | jq '.summary.health_queue_pending_threshold,.summary.health_queue_stale_hours,.issues,.hints'`
+采集示例：`php artisan redi:health --json | jq '.summary.health_queue_pending_threshold,.summary.health_queue_stale_hours,.summary.health_validating_stuck_hours,.issues,.hints'`
 
 **上线后建议：** 配置 `REDI_HEALTH_WEBHOOK_URL`（或 ops Webhook），监控采集 `redi:health --json`；真机按 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) 打勾。
 
@@ -144,6 +144,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#102）：** `challenges-synced` 的 `ignored_count` 仅计未就绪域名（空串不计）；health JSON `summary` 含 `health_validating_stuck_hours`；`requeue-failed-deployments` 命令单测；deploy 脚本统一 `redi_is_ipv4`；`scripts/README` 索引 `lagran_ports.py`；PHPUnit **95**。
+
 **2026-10-16 复核（#101）：** §6 复核范围说明（#88–#100）；`redi_sync_node_ips_access` 批量 grant/firewalld 失败时退出并避免误写 `authorized_node_ips`；`deploy-master` 空 `NODE_IPS` 同步不再 `|| true` 掩盖撤销失败；CONSOLE 补 `requeue` 可选参数。
 
 **2026-10-16 复核（#100）：** `redi:health --json` 单测断言 summary 阈值；AUDIT/DEPLOY-centos7 jq 采集示例；PHPUnit **92**。
@@ -173,7 +175,7 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **92**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **95**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
@@ -186,7 +188,7 @@
 | **运维 / 脚本** | `scripts/centos7/*`、`patch-master-cron`、NODE_IPS 授权与 firewalld、`grant-nodes-from-vars`、queue systemd、`lagran_*` 诊断脚本；用法提示与验收 `grep` |
 | **运营命令** | `redi:health`（含 `--json`/`--notify`、阈值 env）、`renew`/`prune`/`ops-webhook`、Cron 与 `storage/logs/*.log` |
 | **文档** | DEPLOY / DEPLOY-centos7 / UPGRADE / ACCEPTANCE / CONSOLE / SECURITY / OPS-MULTI-WORKER 与脚本行为对齐 |
-| **门禁** | `dev-preflight`（Go + PHPUnit **92** + bash -n + 存储过程）；与 `ci.yml` / `release.yml` 核心步骤一致 |
+| **门禁** | `dev-preflight`（Go + PHPUnit **95** + bash -n + 存储过程）；与 `ci.yml` / `release.yml` 核心步骤一致 |
 | **PHP（以单测为扫仓锚点）** | 节点 API、证书部署状态机、DNS 启用/预检、Agent 版本门、health/renew/prune/webhook、部分 DNS 厂商与租户相关 Service（见 `master/master/tests/`） |
 | **Go `node/redi-multi`** | CI 全包 `go test ./...`；host/redirect/certs/api/masteragent 等目录有单测；lagran 以配置与运维脚本为主 |
 | **未专项改代码** | `CertificateIssuer` / ACME 全链路重构、Dcat 后台 UI 全量、Laravel/composer 大版本与 CVE 批量修复、`public/vendor/dcat-admin` 删减 |
@@ -252,4 +254,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **92** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **95** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。

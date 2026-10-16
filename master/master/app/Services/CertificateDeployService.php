@@ -67,15 +67,17 @@ class CertificateDeployService
             'deployed_at' => null,
         ]);
 
+        if ($count === 0) {
+            return 0;
+        }
+
         foreach ($certIds as $cid) {
             $cert = RediDomainCert::find($cid);
             if (! $cert) {
                 continue;
             }
             $cert->status = RediDomainCert::STATUS_DEPLOYING;
-            $cert->last_error = $count > 0
-                ? '已重新排队失败节点的证书部署，等待节点拉取'
-                : $cert->last_error;
+            $cert->last_error = '已重新排队失败节点的证书部署，等待节点拉取';
             $cert->save();
         }
 

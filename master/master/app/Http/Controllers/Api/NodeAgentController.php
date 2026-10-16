@@ -44,6 +44,7 @@ class NodeAgentController extends Controller
             ->flip();
         $now = now();
         $synced = [];
+        $ignored = 0;
         foreach ($domains as $raw) {
             $domain = HostNameValidator::toCanonicalAscii((string) $raw);
             if ($domain === '') {
@@ -53,6 +54,7 @@ class NodeAgentController extends Controller
                 return response()->json(['message' => 'invalid domain', 'domain' => (string) $raw], 422);
             }
             if (! $allowed->has($domain)) {
+                $ignored++;
                 continue;
             }
             RediAcmeChallengeNodeSync::updateOrCreate(
@@ -66,7 +68,7 @@ class NodeAgentController extends Controller
             'ok' => true,
             'synced' => $synced,
             'synced_count' => count($synced),
-            'ignored_count' => max(0, count($domains) - count($synced)),
+            'ignored_count' => $ignored,
         ]);
     }
 
