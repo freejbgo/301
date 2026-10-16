@@ -394,7 +394,7 @@ redi_svc_daemon_reload
 redi_svc_enable_now redi-queue
 redi_svc_restart redi-queue
 
-# 证书续期/ACME 清理走独立 cron（勿再配 schedule:run，避免与 app/Console/Kernel 重复执行）。
+# 证书续期/ACME 清理/health 仅由此 cron 直调 artisan（勿再配 schedule:run；Kernel 无 schedule 任务）。
 cat > /etc/cron.d/redi-renew <<EOF
 SHELL=/bin/bash
 PATH=/usr/sbin:/usr/bin:/sbin:/bin

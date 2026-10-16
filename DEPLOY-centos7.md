@@ -53,7 +53,7 @@ sudo bash scripts/centos7/deploy-master.sh
 5. 库是空的才导入 `db/redi_admin.sql`（菜单 + 业务表 + 默认 `admin` + 节点存储过程 **`redi_node_bump_skip`**；`migrations` 登记至 `100009`）。已经有 `admin_users` 时不会覆盖。
 6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（绿场常无新迁移；发版后有新迁移时改库）、`storage:link`，并 **检查存储过程是否存在**（应由上一步 SQL 导入；不存在则脚本失败退出）。
 7. 配置 PHP-FPM（用户 `nginx`，sock `/var/run/php-fpm/www.sock`）和 Nginx。开启 SELinux 时会放行网站访问网络和数据库。
-8. 安装队列 `redi-queue`：`queue:work --sleep=3 --timeout=320 --tries=100`。`/etc/cron.d/redi-renew` 每天 **03:10** 续期证书、**04:10** 清理 ACME、**08:30** `redi:health --notify`（失败走 `redi:ops-webhook`）；直接 `php artisan …`，**不要**再配 `schedule:run`，以免与 `app/Console/Kernel.php` 重复。多台机器跑 `queue:work` 时主控 `.env` 须 `CACHE_DRIVER=redis`（ACME 全局锁）。
+8. 安装队列 `redi-queue`：`queue:work --sleep=3 --timeout=320 --tries=100`。`/etc/cron.d/redi-renew` 每天 **03:10** 续期证书、**04:10** 清理 ACME、**08:30** `redi:health --notify`（失败走 `redi:ops-webhook`）；直接 `php artisan …`，**不要**再配 `php artisan schedule:run`（续期/清理/health 仅由本文件触发；`Kernel` 内已无 schedule 任务）。多台机器跑 `queue:work` 时主控 `.env` 须 `CACHE_DRIVER=redis`（ACME 全局锁）。
 9. 防火墙开放 22、80、443。
 
 重复执行不会重置已有 `.env`、`APP_KEY` 和业务数据。`/etc/nginx/conf.d/301-master.conf` 若**没有** `301-master-managed` 标记则不会覆盖（便于你在同一文件里手工加 HTTPS）；带该标记或由脚本生成的文件会在重复部署时刷新 `root` 路径。HTTPS 也可单独增加 `conf.d` 片段。

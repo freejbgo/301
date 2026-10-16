@@ -15,8 +15,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // 生产续期/清理/health 由 /etc/cron.d/redi-renew 直接调用 artisan（见 deploy-master.sh）。
-        // 勿配置 schedule:run，以免与 Cron 重复。本地调试请手动执行 redi:* 命令。
+        // 生产续期/清理/health 仅由 /etc/cron.d/redi-renew 直调 artisan（deploy-master.sh）。勿 schedule:run。
+        // 本地：php artisan redi:renew-certificates | redi:prune-acme-challenges | redi:health
     }
 
     /**
