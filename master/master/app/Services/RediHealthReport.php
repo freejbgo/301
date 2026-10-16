@@ -236,7 +236,11 @@ class RediHealthReport
 
         $enabled = (int) RediNode::query()->enabled()->count();
         if ($enabled === 0) {
-            return [];
+            return [[
+                'level' => 'warning',
+                'code' => 'node_pool_empty',
+                'message' => '没有启用的边缘节点，证书无法部署、pool DNS 无 A 记录可同步',
+            ]];
         }
 
         if (RediNode::enabledPublicIps() !== []) {

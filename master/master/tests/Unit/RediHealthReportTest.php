@@ -328,6 +328,12 @@ class RediHealthReportTest extends TestCase
         $this->assertContains('edge_zone_missing', $codes);
     }
 
+    public function test_collect_issues_warns_when_no_enabled_nodes(): void
+    {
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('node_pool_empty', $codes);
+    }
+
     public function test_collect_issues_warns_enabled_nodes_without_public_ip(): void
     {
         \DB::table('redi_nodes')->insert([

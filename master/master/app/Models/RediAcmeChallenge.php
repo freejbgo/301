@@ -27,6 +27,15 @@ class RediAcmeChallenge extends Model
             throw new \InvalidArgumentException('ACME 挑战域名无效');
         }
 
+        $token = trim($token);
+        if ($token === '' || strlen($token) > 128 || ! preg_match('/^[A-Za-z0-9_-]+$/', $token)) {
+            throw new \InvalidArgumentException('ACME 挑战 token 无效');
+        }
+        $responseBody = trim($responseBody);
+        if ($responseBody === '') {
+            throw new \InvalidArgumentException('ACME 挑战响应体无效');
+        }
+
         return static::updateOrCreate(
             ['domain_name' => $domainName],
             [
