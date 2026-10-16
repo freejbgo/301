@@ -40,7 +40,7 @@ grep -E 'renew|prune|health' /etc/cron.d/redi-renew
 # 运营自检（节点心跳、证书到期；可接监控，非 0 表示有待处理项）
 cd /opt/301/master && php artisan redi:health
 php artisan redi:health --json
-# JSON 含 summary（queue/cache 驱动）、hints（多 worker 时请 redis 缓存）、issues（非空则退出码 1）
+# JSON 含 summary（queue/cache 驱动、health 队列阈值）、hints（多 worker 时请 redis 缓存）、issues（非空则退出码 1）
 # issues/hints 各 code 含义见 AUDIT-CENTOS7-PRODUCTION.md §3
 
 # 有问题时通知 Webhook（.env 配置 REDI_HEALTH_WEBHOOK_URL，POST JSON，含 text 摘要）
