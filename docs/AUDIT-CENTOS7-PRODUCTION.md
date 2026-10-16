@@ -67,7 +67,7 @@
 | `cert_validating_stuck` | warning | validating 超过 `REDI_HEALTH_VALIDATING_STUCK_HOURS` |
 | `queue_failed_jobs` | critical | `failed_jobs` 非空 |
 | `queue_backlog` | warning | `jobs` 积压超过阈值 |
-| `queue_stale` | warning | 最老 `jobs` 等待过久 |
+| `queue_stale` | warning | `jobs` 中 `available_at` 超过 **2 小时**仍未执行（worker 可能未跑） |
 
 ### `redi:health` 配置建议（`hints[]`，不影响退出码）
 
@@ -129,7 +129,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#81](https://github.com/freejbgo/301/pull/81)（`redi:health` 生产配置、`dev-preflight.sh`、§3 问题码表、主控 **`/opt/301/master`** 与 Cron 路径统一）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#82](https://github.com/freejbgo/301/pull/82)（`redi:health` 生产配置、`dev-preflight.sh`、§3 问题码表、主控 **`/opt/301/master`** 与 Cron 路径统一）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 

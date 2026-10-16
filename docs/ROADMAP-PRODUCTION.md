@@ -1,6 +1,6 @@
 # 生产能力路线图（P0 / P1 / P2）
 
-**说明：** **P0（阻塞上线）** 与 **运营必备（实为上线路 P1）** 已合并在 PR [#75](https://github.com/freejbgo/301/pull/75)（含 CentOS 7.9 单路径）。「全功能 / 长期运营」还包含下表剩余 P1/P2，会按优先级在 `main` 上继续合入。
+**说明：** **P0（阻塞上线）** 与 **运营必备 P1** 已合入 `main`（CentOS 7.9 单路径自 [#75](https://github.com/freejbgo/301/pull/75) 起；完整 PR 列表见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §7）。下表 P1/P2 随 `main` 继续演进。
 
 ## P0 — 阻塞首次商用上线（已合入 `main`，见 #75 等）
 
