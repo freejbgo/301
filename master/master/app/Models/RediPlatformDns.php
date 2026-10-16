@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\HostNameValidator;
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 
@@ -86,7 +87,7 @@ class RediPlatformDns extends Model
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('RediPlatformDns: api_credentials decrypt failed', [
                 'id' => $this->id,
-                'error' => $e->getMessage(),
+                'error' => OpsDisplaySanitizer::logSnippet($e->getMessage(), 300),
             ]);
 
             throw new \RuntimeException(
