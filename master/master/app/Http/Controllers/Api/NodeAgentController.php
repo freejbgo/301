@@ -10,6 +10,7 @@ use App\Models\RediNode;
 use App\Services\AcmeChallengeQuery;
 use App\Services\CertificateDeployService;
 use App\Services\NodeAgentRevisionService;
+use App\Support\AcmeHttp01Token;
 use App\Support\HostNameValidator;
 use App\Support\RediAgentVersionGate;
 use Illuminate\Http\Request;
@@ -108,7 +109,7 @@ class NodeAgentController extends Controller
             ->filter(function ($row) {
                 return $row['domain_name'] !== ''
                     && HostNameValidator::isValidHostLabel($row['domain_name'])
-                    && trim((string) $row['token']) !== '';
+                    && AcmeHttp01Token::isValid((string) $row['token']);
             })
             ->values();
 

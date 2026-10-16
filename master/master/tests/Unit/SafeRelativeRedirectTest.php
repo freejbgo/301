@@ -32,4 +32,9 @@ class SafeRelativeRedirectTest extends TestCase
     {
         $this->assertFalse(SafeRelativeRedirect::isSafe('/admin\\nodes'));
     }
+
+    public function test_rejects_crlf_in_path(): void
+    {
+        $this->assertFalse(SafeRelativeRedirect::isSafe("/admin\r\n/evil"));
+    }
 }

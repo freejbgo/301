@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\RediDomainCert;
+use App\Support\AcmeHttp01Token;
+use App\Support\HostNameValidator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -15,7 +17,18 @@ class NodeAgentRevisionService
     {
         $challenges = AcmeChallengeQuery::ready()
             ->orderBy('id')
-            ->get(['domain_name', 'token', 'updated_at']);
+            ->get(['domain_name', 'token', 'updated_at'])
+            ->map(function ($row) {
+                $row->domain_name = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
+
+                return $row;
+            })
+            ->filter(function ($row) {
+                return $row->domain_name !== ''
+                    && HostNameValidator::isValidHostLabel($row->domain_name)
+                    && AcmeHttp01Token::isValid((string) $row->token);
+            })
+            ->values();
 
         $certs = RediDomainCert::query()
             ->where(function ($query) {
@@ -33,12 +46,30 @@ class NodeAgentRevisionService
                 $query->where('status', 1);
             })
             ->orderBy('id')
-            ->get(['id', 'domain_name', 'updated_at']);
+            ->get(['id', 'domain_name', 'updated_at'])
+            ->map(function ($row) {
+                $row->domain_name = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
+
+                return $row;
+            })
+            ->filter(function ($row) {
+                return $row->domain_name !== '' && HostNameValidator::isValidHostLabel($row->domain_name);
+            })
+            ->values();
 
         $rules = DB::table('redi_admin_domain')
             ->where('status', 1)
             ->orderBy('id')
-            ->get(['id', 'original_url', 'force_https', 'updated_at']);
+            ->get(['id', 'original_url', 'force_https', 'updated_at'])
+            ->map(function ($row) {
+                $row->original_url = HostNameValidator::toCanonicalAscii((string) $row->original_url);
+
+                return $row;
+            })
+            ->filter(function ($row) {
+                return $row->original_url !== '' && HostNameValidator::isValidHostLabel($row->original_url);
+            })
+            ->values();
 
         $challengesRevision = $this->hashPayload($challenges);
         $rulesRevision = $this->hashPayload($rules);

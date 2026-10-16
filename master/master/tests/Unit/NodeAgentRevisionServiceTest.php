@@ -69,4 +69,30 @@ class NodeAgentRevisionServiceTest extends TestCase
 
         $this->assertSame($a['challenges_revision'], $b['challenges_revision']);
     }
+
+    public function test_rules_revision_ignores_invalid_hosts(): void
+    {
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => 'good.example',
+            'status' => 1,
+            'force_https' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $svc = new NodeAgentRevisionService();
+        $a = $svc->build();
+
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => '1.2.3.4',
+            'status' => 1,
+            'force_https' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $b = $svc->build();
+
+        $this->assertSame($a['rules_revision'], $b['rules_revision']);
+    }
 }
