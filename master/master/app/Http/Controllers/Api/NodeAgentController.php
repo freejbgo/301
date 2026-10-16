@@ -12,6 +12,7 @@ use App\Services\CertificateDeployService;
 use App\Services\NodeAgentRevisionService;
 use App\Support\AcmeHttp01Token;
 use App\Support\HostNameValidator;
+use App\Support\OpsDisplaySanitizer;
 use App\Support\RediAgentVersionGate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -193,7 +194,7 @@ class NodeAgentController extends Controller
             return response()->json(['ok' => true, 'ignored' => true]);
         }
 
-        $error = is_string($error) ? mb_substr(trim($error), 0, 2000) : null;
+        $error = is_string($error) ? OpsDisplaySanitizer::logSnippet($error, 2000) : null;
         if ($error === '') {
             $error = null;
         }

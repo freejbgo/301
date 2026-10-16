@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#135）：** health JSON/CLI 统一 `sanitizeHealthIssues`；节点 ack `last_error` 净化；EdgeDnsSync 用户可见异常文案截断；PHPUnit **173**。
+
 **2026-10-16 复核（#134）：** webhook 失败日志截断；POST payload issues 净化；证书 health 文案域名展示加固；prune 去重 domain 列表；PHPUnit **171**。
 
 **2026-10-16 复核（#133）：** 抽取 `OpsDisplaySanitizer` 统一运营输出净化；EdgeDnsSync 日志用规范化 FQDN；ops/health webhook 文案去控制字符；PHPUnit **169**。
@@ -325,4 +327,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **169** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **173** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。

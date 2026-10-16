@@ -29,6 +29,7 @@ class EdgeDnsSyncService
         if ($zone === '') {
             throw new RuntimeException('请先配置平台主域名');
         }
+        $zoneLabel = OpsDisplaySanitizer::field($zone, $zone, 253);
 
         $poolFqdn = $platform->poolFqdn();
         $poolCanonical = HostNameValidator::toCanonicalAscii($poolFqdn);
@@ -50,7 +51,7 @@ class EdgeDnsSyncService
         });
         if ($withFqdn->isNotEmpty() && $eligible->isEmpty()) {
             throw new RuntimeException(
-                '租户 edge 主机名均不在当前平台主域名 '.$zone.' 下，请修正 edge_fqdn 或平台主域名后再同步（尚未写入厂商 DNS）。'
+                '租户 edge 主机名均不在当前平台主域名 '.$zoneLabel.' 下，请修正 edge_fqdn 或平台主域名后再同步（尚未写入厂商 DNS）。'
             );
         }
 
@@ -64,7 +65,11 @@ class EdgeDnsSyncService
         try {
             $provider->upsertARecords($poolFqdn, $ips);
         } catch (Throwable $e) {
-            throw new RuntimeException('Pool A 记录同步失败：'.$e->getMessage(), 0, $e);
+            throw new RuntimeException(
+                'Pool A 记录同步失败：'.OpsDisplaySanitizer::logSnippet($e->getMessage(), 500),
+                0,
+                $e
+            );
         }
 
         $syncedEdgeIds = [];
@@ -90,7 +95,8 @@ class EdgeDnsSyncService
             }
         } catch (Throwable $e) {
             throw new RuntimeException(
-                '租户 CNAME 同步失败（Pool A 可能已在厂商侧更新，请修正后重试）：'.$e->getMessage(),
+                '租户 CNAME 同步失败（Pool A 可能已在厂商侧更新，请修正后重试）：'
+                    .OpsDisplaySanitizer::logSnippet($e->getMessage(), 500),
                 0,
                 $e
             );
@@ -98,7 +104,7 @@ class EdgeDnsSyncService
 
         if ($skipped > 0) {
             throw new RuntimeException(
-                "有 {$skipped} 条租户 edge 不在平台域名 {$zone} 下，已中止（Pool A 与已成功的 CNAME 可能已在厂商侧更新，请修正后重试）。"
+                "有 {$skipped} 条租户 edge 不在平台域名 {$zoneLabel} 下，已中止（Pool A 与已成功的 CNAME 可能已在厂商侧更新，请修正后重试）。"
             );
         }
 

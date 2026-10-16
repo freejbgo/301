@@ -19,7 +19,9 @@ class RediHealthCommand extends Command
     public function handle(): int
     {
         $warnDays = min(365, max(1, (int) $this->option('days')));
-        $issues = RediHealthReport::collectIssues($warnDays);
+        $issues = OpsDisplaySanitizer::sanitizeHealthIssues(
+            RediHealthReport::collectIssues($warnDays)
+        );
         $hasIssues = $issues !== [];
 
         $notifyDelivered = true;

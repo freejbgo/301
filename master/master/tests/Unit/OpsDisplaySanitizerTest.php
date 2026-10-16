@@ -25,4 +25,12 @@ class OpsDisplaySanitizerTest extends TestCase
         $this->assertSame('ab', OpsDisplaySanitizer::logSnippet("a\r\nb", 10));
         $this->assertSame(501, mb_strlen(OpsDisplaySanitizer::logSnippet(str_repeat('z', 600), 500)));
     }
+
+    public function test_sanitize_health_issues(): void
+    {
+        $out = OpsDisplaySanitizer::sanitizeHealthIssues([
+            ['level' => 'warning', 'code' => 'x', 'message' => "a\r\nb"],
+        ]);
+        $this->assertSame('ab', $out[0]['message']);
+    }
 }
