@@ -12,12 +12,17 @@ bash scripts/dev-preflight.sh   # 或见 AUDIT-CENTOS7-PRODUCTION.md §9 分步
 ./scripts/build-node-tar.sh
 ```
 
-主控（示例路径 `/opt/301/master`）：
+主控（发布包程序目录 **`/opt/301/master`**，`artisan` 在此；勿写成 `/opt/301/master/master`）：
 
 ```bash
 sudo systemctl stop redi-queue nginx php*-fpm 2>/dev/null || true
+sudo cp -a /opt/301/master/.env "/root/redi-master.env.bak.$(date +%Y%m%d%H%M)"
+# 覆盖解压（保留上一步备份的 .env；包内不含 .env）
 cd /opt/301/master && sudo tar -xzf /path/to/master.tar.gz --strip-components=1
-cd /opt/301/master && sudo -u nginx composer install --no-dev -o
+# 与 deploy-master 等价写法：sudo tar xzf /path/to/master.tar.gz -C /opt/301
+cd /opt/301/master
+# 发布包已含 vendor 时可跳过 composer；缺依赖时再执行：
+sudo -u nginx composer install --no-dev -o
 sudo -u nginx php artisan migrate --force
 sudo -u nginx php artisan config:cache
 sudo systemctl start php*-fpm nginx redi-queue
@@ -45,7 +50,7 @@ REDI_DNS_PRECHECK_ALLOW_A_TO_POOL=true
 
 ## 4. Cron：续期 / 清理 / 健康检查 + 失败 Webhook
 
-新装脚本已写入 `bash -c '... || php artisan redi:ops-webhook ...'`。**已有机房**可执行仓库脚本（需 root）：
+新装 `deploy-master` 已写入 `bash -c 'cd /opt/301/master && ... || php artisan redi:ops-webhook ...'`。**已有机房**若 Cron 里仍是错误的 `master/master` 路径，可执行仓库脚本（需 root）：
 
 ```bash
 sudo bash scripts/patch-master-cron-ops-webhook.sh

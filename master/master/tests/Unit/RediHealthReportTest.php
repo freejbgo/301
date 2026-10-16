@@ -119,6 +119,14 @@ class RediHealthReportTest extends TestCase
         $this->assertContains('queue_cache_file', $codes);
     }
 
+    public function test_collect_hints_agent_version_gate_off_in_production(): void
+    {
+        config(['app.env' => 'production', 'redi.min_agent_version' => '']);
+
+        $codes = array_column(RediHealthReport::collectHints(), 'code');
+        $this->assertContains('agent_version_gate_off', $codes);
+    }
+
     public function test_collect_issues_includes_stuck_validating_cert(): void
     {
         config(['redi.health_validating_stuck_hours' => 2]);
