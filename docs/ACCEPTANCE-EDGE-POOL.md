@@ -6,7 +6,7 @@
 
 绿场库见 [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md)（**一次导入** `redi_admin.sql`，含 `redi_node_bump_skip`）。
 
-- 主控：`composer install`、**`php artisan migrate --force`**、`QUEUE_CONNECTION=database`、`php artisan queue:work` 常驻
+- 主控：`composer install`、**`php artisan migrate --force`**、`QUEUE_CONNECTION=database`、`php artisan queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600` 常驻（或 CentOS `redi-queue` unit）
 - 续期/清理/健康：CentOS 用 `deploy-master` 写入的 `/etc/cron.d/redi-renew`（**03:10** 续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`）；配置 `REDI_HEALTH_WEBHOOK_URL` 后 Cron 在有 issues 且发送成功时退出 0。手工部署可写同等 cron，**勿**配置 `php artisan schedule:run`（仅认 `/etc/cron.d/redi-renew`）。多台 `queue:work` 时 `CACHE_DRIVER=redis`。
 - 节点：`REDI_MASTER_URL`、`REDI_NODE_TOKEN`、`REDI_DB_*`；防火墙对公网开放 80/443（CentOS 7 脚本不开放 8080）。`/c.js`、`/api.js` 由 **80/443** 同源提供（带 IP 限速），见 [SECURITY.md](../SECURITY.md)。
 
