@@ -7,7 +7,7 @@
 | [ensure-release-tarballs.sh](ensure-release-tarballs.sh) | `deploy-*.sh` 共用：缺 tar 时尝试本地构建 |
 | [verify-redi-db-deploy-path.sh](verify-redi-db-deploy-path.sh) | Docker 临时 MariaDB：建库 collation + `redi_admin.sql` + `CALL redi_node_bump_skip`（CI/`VERIFY_REDI_REQUIRE_DOCKER=1` 时无 docker 会失败） |
 | [verify-redi-node-procedure-sync.php](verify-redi-node-procedure-sync.php) | SQL dump 与迁移 `100009` 存储过程一致 |
-| [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | 已上线主控：升级 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`）；脚本结束会打印 `grep` / `redi:health` 验收提示 |
+| [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | 已上线主控：升级 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`；可传参 `bash …/patch-master-cron-ops-webhook.sh <artisan目录>`）；结束会打印 Cron / `redi:health --notify` 验收提示 |
 | [centos7/vars.example.env](centos7/vars.example.env) | 部署变量模板（`vars.env`）；Webhook URL 写在主控 `.env`，见文件内注释 |
 | [centos7/deploy-master.sh](centos7/deploy-master.sh) / [deploy-node.sh](centos7/deploy-node.sh) | CentOS 7 主控/节点一键部署 |
 | [centos7/grant-nodes-from-vars.sh](centos7/grant-nodes-from-vars.sh) | 按 `vars.env` 的 `NODE_IPS` 同步 MySQL + firewalld（**root**；`MYSQL_ROOT_PASS` 读 vars，不重装主控；`NODE_IPS` 为空时撤销已记录 IP，同 `deploy-master`） |

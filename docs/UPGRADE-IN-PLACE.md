@@ -57,6 +57,8 @@ REDI_DNS_PRECHECK_ALLOW_A_TO_POOL=true
 
 ```bash
 sudo bash scripts/patch-master-cron-ops-webhook.sh
+# 自定义程序目录时传入 artisan 所在路径，例如：
+# sudo bash scripts/patch-master-cron-ops-webhook.sh /opt/301/master
 ```
 
 或手工编辑 `/etc/cron.d/redi-renew`（Cron 用户与 deploy 一致，CentOS 一般为 `nginx`）：

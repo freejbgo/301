@@ -38,6 +38,11 @@ class PruneExpiredAcmeChallengesTest extends TestCase
         });
     }
 
+    public function test_prune_succeeds_when_nothing_to_prune(): void
+    {
+        $this->artisan('redi:prune-acme-challenges')->assertExitCode(0);
+    }
+
     public function test_prune_removes_expired_challenge_and_sync_rows(): void
     {
         RediAcmeChallenge::create([

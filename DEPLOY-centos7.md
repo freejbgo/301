@@ -158,6 +158,7 @@ sudo systemctl start redi-multi
 
 ```bash
 systemctl is-active nginx php-fpm mariadb redi-queue
+grep -q '\-\-max-time=3600' /etc/systemd/system/redi-queue.service
 grep -E 'renew|prune|health' /etc/cron.d/redi-renew
 ! grep -q 'schedule:run' /etc/cron.d/redi-renew
 ! grep -q 'master/master' /etc/cron.d/redi-renew

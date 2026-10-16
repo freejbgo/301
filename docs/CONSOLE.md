@@ -187,4 +187,4 @@ php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修�
 # php artisan redi:ops-webhook --task=redi:renew-certificates --message="测试"
 ```
 
-`issues` 非空时命令退出码为 1，适合告警；`hints` 不影响退出码。CentOS 生产续期/清理/health 仅由 `/etc/cron.d/redi-renew` 触发，验收 `grep` 见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)。Webhook 与多 worker 说明见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)、[AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。
+`issues` 非空时命令退出码为 1，适合告警；`hints` 不影响退出码。CentOS 生产续期/清理/health 仅由 `/etc/cron.d/redi-renew` 触发，验收 `grep` 见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)。Cron 写入 `storage/logs/renew.log`、`prune-acme.log`、`health.log`（排障续期/清理/health 失败）。Webhook 与多 worker 说明见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)、[AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。

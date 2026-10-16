@@ -29,6 +29,7 @@
 ```bash
 # 主控服务（CentOS deploy-master）
 systemctl is-active nginx php-fpm mariadb redi-queue
+grep -q '\-\-max-time=3600' /etc/systemd/system/redi-queue.service
 
 # Cron（与 deploy-master / patch-master-cron-ops-webhook 一致）
 grep -E 'renew|prune|health' /etc/cron.d/redi-renew
@@ -58,8 +59,8 @@ curl -fsS "https://<master>/api/nodes/revision" -H "Authorization: Bearer <token
 # 节点健康（部署脚本内已有）
 curl -fsS "http://127.0.0.1:<node-port>/revision"
 
-# DB 部署路径（CI 同款）
-./scripts/verify-redi-db-deploy-path.sh
+# DB 部署路径（CI 同款；在仓库根目录执行）
+bash scripts/verify-redi-db-deploy-path.sh
 ```
 
 ## 后台操作（运营）
