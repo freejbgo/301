@@ -9,6 +9,9 @@ trait EnsuresValidDnsNames
 {
     protected function requireDnsFqdn(string $fqdn, string $label = 'DNS FQDN'): string
     {
+        if ($this->dnsNameContainsControlChars($fqdn)) {
+            throw new RuntimeException($label.' 无效');
+        }
         $fqdn = HostNameValidator::toCanonicalAscii($fqdn);
         if ($fqdn === '' || ! HostNameValidator::isValidHostLabel($fqdn)) {
             throw new RuntimeException($label.' 无效');
@@ -19,7 +22,7 @@ trait EnsuresValidDnsNames
 
     protected function requireDnsRrLabel(string $name): string
     {
-        if (str_contains($name, "\r") || str_contains($name, "\n") || str_contains($name, "\0")) {
+        if ($this->dnsNameContainsControlChars($name)) {
             throw new RuntimeException('DNS 主机记录名无效');
         }
         $name = strtolower(trim($name, '.'));
@@ -31,5 +34,12 @@ trait EnsuresValidDnsNames
         }
 
         return $name;
+    }
+
+    protected function dnsNameContainsControlChars(string $value): bool
+    {
+        return str_contains($value, "\r")
+            || str_contains($value, "\n")
+            || str_contains($value, "\0");
     }
 }

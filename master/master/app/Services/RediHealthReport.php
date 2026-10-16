@@ -45,8 +45,8 @@ class RediHealthReport
                 'message' => sprintf(
                     '节点 #%d %s (%s) 超过 15 分钟无心跳',
                     $node->id,
-                    $node->name ?: '—',
-                    $node->public_ip ?: '—'
+                    self::sanitizeOpsDisplay($node->name),
+                    self::sanitizeOpsDisplay($node->public_ip)
                 ),
             ];
         }
@@ -442,6 +442,17 @@ class RediHealthReport
         $host = HostNameValidator::toCanonicalAscii($domainName);
 
         return $host !== '' && HostNameValidator::isValidHostLabel($host);
+    }
+
+    protected static function sanitizeOpsDisplay(?string $value, string $fallback = '—'): string
+    {
+        $text = str_replace(["\r", "\n", "\0"], '', (string) $value);
+        $text = trim($text);
+        if ($text === '') {
+            return $fallback;
+        }
+
+        return mb_strlen($text) > 120 ? mb_substr($text, 0, 120).'…' : $text;
     }
 
     /**

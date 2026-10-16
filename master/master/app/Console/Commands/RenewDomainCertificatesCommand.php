@@ -39,7 +39,6 @@ class RenewDomainCertificatesCommand extends Command
             if ($host === '' || ! HostNameValidator::isValidHostLabel($host)) {
                 Log::warning('redi:renew-certificates skip invalid domain_name', [
                     'cert_id' => $cert->id,
-                    'domain_name' => $cert->domain_name,
                 ]);
                 $this->warn('跳过非法域名 cert #'.$cert->id);
                 continue;

@@ -83,6 +83,24 @@ class RediHealthCommandTest extends TestCase
         $this->artisan('redi:health')->assertExitCode(1);
     }
 
+    public function test_health_stale_node_message_strips_control_chars(): void
+    {
+        \DB::table('redi_nodes')->insert([
+            'name' => "evil\r\nnode",
+            'public_ip' => '1.2.3.4',
+            'enabled' => true,
+            'last_heartbeat_at' => now()->subHour(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Artisan::call('redi:health');
+        $output = Artisan::output();
+        $this->assertStringContainsString('超过 15 分钟无心跳', $output);
+        $this->assertStringContainsString('evilnode', $output);
+        $this->assertStringNotContainsString("\r\n", $output);
+    }
+
     public function test_health_json_reports_expired_cert(): void
     {
         $domainId = \DB::table('redi_admin_domain')->insertGetId([
