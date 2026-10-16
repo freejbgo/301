@@ -111,7 +111,7 @@ else
 fi
 
 step "防火墙只开放 22、80、443"
-systemctl enable --now firewalld
+redi_svc_enable_now firewalld
 add_svc() {
   firewall-cmd --permanent --query-service="$1" >/dev/null \
     || firewall-cmd --permanent --add-service="$1"
@@ -180,9 +180,9 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl daemon-reload
-systemctl enable --now redi-multi
-systemctl restart redi-multi
+redi_svc_daemon_reload
+redi_svc_enable_now redi-multi
+redi_svc_restart redi-multi
 active=0
 for _ in 1 2 3 4 5 6 7 8; do
   if systemctl is-active --quiet redi-multi; then

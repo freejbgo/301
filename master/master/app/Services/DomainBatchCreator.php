@@ -100,6 +100,14 @@ class DomainBatchCreator
                 continue;
             }
 
+            if ($status === 1
+                && DomainDnsPointingGuard::mustPointToEdgeBeforeEnable()
+                && ! DomainDnsPointingGuard::pointsToTenantEdge($adminId, $originalUrl)) {
+                $edge = TenantEdgeService::cnameTargetForAdmin($adminId);
+                $result['errors'][] = "第 {$rowIndex} 行（{$originalUrl}）：启用前须 CNAME 到 {$edge} 或 A 到节点公网 IP";
+                continue;
+            }
+
             try {
                 $domain = new RediAdminDomain();
                 $domain->forceFill([

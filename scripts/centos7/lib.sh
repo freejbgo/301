@@ -169,6 +169,37 @@ PY
   fi
 }
 
+redi_systemd_usable() {
+  command -v systemctl >/dev/null 2>&1 || return 1
+  [[ -d /run/systemd/system ]] || return 1
+  systemctl list-units --type=service --no-legend --no-pager >/dev/null 2>&1 || return 1
+  return 0
+}
+
+redi_svc_enable_now() {
+  local unit="$1"
+  if redi_systemd_usable; then
+    systemctl enable --now "$unit"
+  else
+    echo "警告: systemd 不可用，跳过 systemctl enable --now ${unit}" >&2
+  fi
+}
+
+redi_svc_restart() {
+  local unit="$1"
+  if redi_systemd_usable; then
+    systemctl restart "$unit"
+  else
+    echo "警告: systemd 不可用，跳过 systemctl restart ${unit}" >&2
+  fi
+}
+
+redi_svc_daemon_reload() {
+  if redi_systemd_usable; then
+    systemctl daemon-reload
+  fi
+}
+
 redi_warn_master_https_mismatch() {
   local admin_https="${1:-false}"
   local master_url="${2:-}"

@@ -69,7 +69,7 @@ class NodeAgentApiTest extends TestCase
             $table->unsignedInteger('node_id');
             $table->string('status')->default('pending');
             $table->text('last_error')->nullable();
-            $table->timestamp('acked_at')->nullable();
+            $table->timestamp('deployed_at')->nullable();
             $table->timestamps();
             $table->unique(['cert_id', 'node_id']);
         });
