@@ -83,6 +83,19 @@ class RediHealthReportTest extends TestCase
         });
     }
 
+    public function test_summary_includes_configured_queue_health_thresholds(): void
+    {
+        config([
+            'redi.health_queue_pending_threshold' => 90,
+            'redi.health_queue_stale_hours' => 3,
+        ]);
+
+        $summary = RediHealthReport::summary();
+
+        $this->assertSame(90, $summary['health_queue_pending_threshold']);
+        $this->assertSame(3, $summary['health_queue_stale_hours']);
+    }
+
     public function test_collect_issues_includes_queue_stale_when_database_queue(): void
     {
         config(['queue.default' => 'database']);

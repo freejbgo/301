@@ -38,9 +38,11 @@ sudo systemctl start php*-fpm nginx redi-queue
 REDI_MIN_AGENT_VERSION=0.1.3
 REDI_REQUIRE_DNS_POINTING_TO_ENABLE=true
 REDI_DNS_PRECHECK_ALLOW_A_TO_POOL=true
-# 可选告警
+# 可选告警与 health 阈值（改后 config:cache）
 # REDI_HEALTH_WEBHOOK_URL=https://...
 # REDI_OPS_WEBHOOK_URL=https://...
+# REDI_HEALTH_QUEUE_PENDING_THRESHOLD=80
+# REDI_HEALTH_QUEUE_STALE_HOURS=2
 ```
 
 改完后：`php artisan config:cache`。

@@ -37,7 +37,7 @@ sudo systemctl restart redi-queue
 php artisan redi:health --json | jq '.hints,.summary.queue_connection,.summary.cache_driver'
 ```
 
-`hints` 中不应再出现 `queue_cache_file`（在已改 redis 且队列非 sync 时）。`queue_stale`（`jobs.available_at` 超过 2 小时）仅在 `QUEUE_CONNECTION=database` 时检测。各 hint/issue `code` 见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。
+`hints` 中不应再出现 `queue_cache_file`（在已改 redis 且队列非 sync 时）。`queue_stale`（`jobs.available_at` 超过 `REDI_HEALTH_QUEUE_STALE_HOURS`，默认 2）仅在 `QUEUE_CONNECTION=database` 时检测；`--json` 的 `summary` 含 `health_queue_pending_threshold` / `health_queue_stale_hours`。各 hint/issue `code` 见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。
 
 ## systemd
 
