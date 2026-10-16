@@ -32,4 +32,20 @@ final class OpsDisplaySanitizer
 
         return mb_strlen($text) > $maxLen ? mb_substr($text, 0, $maxLen).'…' : $text;
     }
+
+    /**
+     * @param  array<int, array{level: string, code: string, message: string}>  $issues
+     * @return array<int, array{level: string, code: string, message: string}>
+     */
+    public static function sanitizeHealthIssues(array $issues): array
+    {
+        foreach ($issues as $i => $row) {
+            if (isset($row['message'])) {
+                $row['message'] = self::stripControlChars((string) $row['message']);
+            }
+            $issues[$i] = $row;
+        }
+
+        return $issues;
+    }
 }

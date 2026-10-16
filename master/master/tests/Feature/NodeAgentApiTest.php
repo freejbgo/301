@@ -60,6 +60,7 @@ class NodeAgentApiTest extends TestCase
             $table->text('certificate')->nullable();
             $table->text('private_key')->nullable();
             $table->string('status')->default('active');
+            $table->text('last_error')->nullable();
             $table->timestamps();
         });
 
@@ -280,6 +281,53 @@ class NodeAgentApiTest extends TestCase
         $this->withToken($token)
             ->postJson('/api/nodes/ack', ['cert_id' => $certId, 'ok' => true])
             ->assertStatus(409);
+    }
+
+    public function test_ack_strips_control_chars_from_error(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->timestamps();
+        });
+
+        [$node, $token] = $this->createNodeWithToken();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'valid.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'valid.example',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/ack', [
+                'cert_id' => $certId,
+                'ok' => false,
+                'error' => "disk\r\nfull",
+            ])
+            ->assertOk();
+
+        $this->assertSame(
+            'diskfull',
+            \DB::table('redi_cert_deployments')->where('cert_id', $certId)->value('last_error')
+        );
     }
 
     public function test_ack_ignored_without_deployment_row(): void
