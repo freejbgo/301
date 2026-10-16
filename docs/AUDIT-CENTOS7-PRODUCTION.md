@@ -130,6 +130,10 @@
 
 **2026-10-16 #93 已合并 `main`：** 见 [PR #93](https://github.com/freejbgo/301/pull/93)（grant-nodes、firewalld、queue `--max-time`、prune sync 计数、运维脚本提示等）。
 
+**2026-10-16 #94 已合并 `main`：** 见 [PR #94](https://github.com/freejbgo/301/pull/94)（prune 单测、#93 合并记录、Cron 日志验收提示）。
+
+**2026-10-16 复核（#95）：** 真机验收补 `redi-queue` `--max-time=3600` grep；`patch-master-cron` 可选 APP 路径与 README；PRODUCTION/DEPLOY-centos7 verify 脚本从仓库根执行；CONSOLE 补 Cron 日志路径。
+
 **2026-10-16 复核（#94）：** `redi:prune-acme-challenges` 单测（过期/无效挑战 + sync 行）；AUDIT §6/#93 合并记录；PHPUnit **87**。
 
 **2026-10-16 复核（#93）：** firewalld/grant-nodes 脚本用法注释；DEPLOY-centos7 手工撤销补 firewalld-revoke；UPGRADE/验收/CONSOLE 补 `grant-nodes-from-vars` 不重装主控路径；firewalld 脚本用法错误提示与仓库路径一致；`grant-nodes-from-vars` 允许空 `NODE_IPS` 撤销已记录 IP（对齐 deploy-master）；grant/revoke/deploy-node/patch-cron 运维提示；续期 `REDI_RENEW_VALIDATING_STUCK_HOURS` 写入 CONSOLE；deploy-master/deploy-node/apply-mysql-skip/firewalld/lagran-cleanup/patch-cron 的 root 提示与 `scripts/centos7/...` 路径统一；验收 FAQ 补下线节点撤销 3306；DEPLOY/SECURITY/DEPLOY-centos7 与 `deploy-master` 对齐 `queue:work --max-time=3600`；单 IP grant/revoke 脚本结束提示配套 firewalld 命令；`redi:prune-acme-challenges` 清理无效挑战时计入 sync 删除数；PRODUCTION-READINESS/UPGRADE/CONSOLE 补 `redi-queue` 验收与 unit 核对。
@@ -161,7 +165,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#94](https://github.com/freejbgo/301/pull/94)（#93：grant-nodes、运维脚本与 queue unit 文档；#88–#92：Cron/webhook/health、MySQL/firewalld）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#95](https://github.com/freejbgo/301/pull/95)（#94：prune 单测；#93：grant-nodes、运维脚本与 queue unit；#88–#92：Cron/webhook/health、MySQL/firewalld）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
