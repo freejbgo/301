@@ -4,7 +4,7 @@
 
 ## 1. 发布包与代码
 
-在开发机或 CI 产物准备：
+在开发机或 CI 产物准备（发版前建议先跑 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §9）：
 
 ```bash
 ./scripts/build-master-tar.sh
@@ -64,6 +64,7 @@ PATH=/usr/sbin:/usr/bin:/sbin:/bin
 
 ```bash
 php artisan redi:health
+php artisan redi:health --json   # 监控用；issues/hints code 见 AUDIT §3
 php artisan list | grep redi:
 ```
 

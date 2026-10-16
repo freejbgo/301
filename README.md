@@ -15,6 +15,8 @@
 | [DEPLOY-centos7.md](DEPLOY-centos7.md) | CentOS 7 一键脚本与变量 |
 | [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) | CentOS 7.9 真机部署验收清单 |
 | [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) | 生产复核（P0/P1 与待办 P2） |
+| [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md) | 上线阻塞项与真机验收命令 |
+| [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) | 已上线主控/节点增量升级 |
 | [docs/OPS-MULTI-WORKER-QUEUE.md](docs/OPS-MULTI-WORKER-QUEUE.md) | 多 worker / Redis 缓存 |
 | [docs/CONSOLE.md](docs/CONSOLE.md) | 控制台操作手册 |
 | [docs/CUSTOMER-CNAME-HTTPS.md](docs/CUSTOMER-CNAME-HTTPS.md) | 交给客户的 CNAME 说明 |
