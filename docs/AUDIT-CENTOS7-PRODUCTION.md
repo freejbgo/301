@@ -114,6 +114,8 @@
 
 **2026-10-16 复核（#89）：** webhook 配置说明补入 `vars.example`、验收表、deploy 结束提示；`--json --notify` 单测。
 
+**2026-10-16 #89 已合并 `main`：** 见 [PR #89](https://github.com/freejbgo/301/pull/89)。
+
 **2026-10-16 深度复核（#88）：** `deploy-master` / `patch-master-cron` 安装后打印 Cron 验收；`DEPLOY-centos7` §11、`CONSOLE` 运营命令与 `queue_stale` 说明补齐；`scripts/README` 索引 CentOS 辅助脚本；`queue_stale` 单测；`SECURITY` Cron 时段说明；`redi:health --notify` 在 webhook 成功时退出 0、失败时由 `|| ops-webhook` 兜底；`grant-nodes-from-vars` 要求 root。
 
 | 维度 | 结论 |

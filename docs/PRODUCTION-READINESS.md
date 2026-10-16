@@ -79,6 +79,7 @@ curl -fsS "http://127.0.0.1:<node-port>/revision"
 `redi:health` 的 `issues` / `hints` 各 `code` 含义见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。摘要：
 
 - 生产配置：`APP_DEBUG`、ACME 邮箱 / Staging、`edge_zone`（见 §3 表）
+- Cron **08:30** `redi:health --notify`：建议配置 `REDI_HEALTH_WEBHOOK_URL`（未配置且有 issues 时退出 1，由 `|| redi:ops-webhook` 兜底）
 - `failed_jobs` > 0 → 严重（`queue_failed_jobs`）
 - `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）→ `queue_backlog`；`available_at` 超过 2 小时未执行 → `queue_stale`（仅 `QUEUE_CONNECTION=database`）
 

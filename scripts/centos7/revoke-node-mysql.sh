@@ -3,6 +3,11 @@
 # 用法: sudo MYSQL_ROOT_PASSWORD='root密码' ./revoke-node-mysql.sh <节点公网IP>
 set -euo pipefail
 
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "请用 root 执行: sudo MYSQL_ROOT_PASSWORD='...' $0 ..." >&2
+  exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "${SCRIPT_DIR}/lib.sh"
