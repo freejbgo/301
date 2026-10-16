@@ -98,4 +98,36 @@ class RediHealthReportTest extends TestCase
 
         $this->assertContains('cert_deploy_pending', $codes);
     }
+
+    public function test_collect_hints_warns_file_cache_with_database_queue(): void
+    {
+        config(['queue.default' => 'database']);
+        config(['cache.default' => 'file']);
+
+        $codes = array_column(RediHealthReport::collectHints(), 'code');
+        $this->assertContains('queue_cache_file', $codes);
+    }
+
+    public function test_collect_issues_includes_stuck_validating_cert(): void
+    {
+        config(['redi.health_validating_stuck_hours' => 2]);
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => 'stuck.example',
+            'status' => 'validating',
+            'expires_at' => now()->addMonth(),
+            'created_at' => now()->subHours(5),
+            'updated_at' => now()->subHours(5),
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('cert_validating_stuck', $codes);
+    }
 }

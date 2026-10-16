@@ -21,18 +21,13 @@ class RenewDomainCertificatesCommand extends Command
         $dryRun = (bool) $this->option('dry-run');
         $deadline = now()->addDays($days);
 
+        $validatingStuckHours = max(1, (int) config('redi.renew_validating_stuck_hours', 3));
+
         $certs = RediDomainCert::query()
-            ->whereIn('status', [
-                RediDomainCert::STATUS_ACTIVE,
-                RediDomainCert::STATUS_ISSUED,
-                RediDomainCert::STATUS_DEPLOYING,
-                RediDomainCert::STATUS_FAILED,
-            ])
+            ->renewalDue($deadline, $validatingStuckHours)
             ->whereHas('domain', function ($query) {
                 $query->where('status', 1);
             })
-            ->whereNotNull('expires_at')
-            ->where('expires_at', '<=', $deadline)
             ->orderBy('expires_at')
             ->get();
 
