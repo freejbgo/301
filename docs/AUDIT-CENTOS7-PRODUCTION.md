@@ -128,7 +128,7 @@
 
 **2026-10-16 #92 已合并 `main`：** 见 [PR #92](https://github.com/freejbgo/301/pull/92)。
 
-**2026-10-16 复核（#93）：** firewalld/grant-nodes 脚本用法注释；DEPLOY-centos7 手工撤销补 firewalld-revoke。
+**2026-10-16 复核（#93）：** firewalld/grant-nodes 脚本用法注释；DEPLOY-centos7 手工撤销补 firewalld-revoke；UPGRADE/验收/CONSOLE 补 `grant-nodes-from-vars` 不重装主控路径；firewalld 脚本用法错误提示与仓库路径一致。
 
 **2026-10-16 深度复核（#88）：** `deploy-master` / `patch-master-cron` 安装后打印 Cron 验收；`DEPLOY-centos7` §11、`CONSOLE` 运营命令与 `queue_stale` 说明补齐；`scripts/README` 索引 CentOS 辅助脚本；`queue_stale` 单测；`SECURITY` Cron 时段说明；`redi:health --notify` 在 webhook 成功时退出 0、失败时由 `|| ops-webhook` 兜底；`grant-nodes-from-vars` 要求 root。
 

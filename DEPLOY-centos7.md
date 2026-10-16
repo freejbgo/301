@@ -89,7 +89,7 @@ Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证�
 
 ## 5. 以后加一台节点
 
-在主控的 `vars.env` 里把新 IP 加进 `NODE_IPS`，执行 `sudo bash scripts/centos7/deploy-master.sh`。然后在新机器上执行 `deploy-node.sh`。后台新建节点，把 Token 写进新机器的 `vars.env` 再执行一次节点脚本。pool 的 A 记录要包含新 IP。删除节点不会自动删 DNS 记录。
+在主控的 `vars.env` 里把新 IP 加进 `NODE_IPS`，执行 `sudo bash scripts/centos7/deploy-master.sh`（或仅同步授权/防火墙：`sudo bash scripts/centos7/grant-nodes-from-vars.sh`）。然后在新机器上执行 `deploy-node.sh`。后台新建节点，把 Token 写进新机器的 `vars.env` 再执行一次节点脚本。pool 的 A 记录要包含新 IP。删除节点不会自动删 DNS 记录。
 
 **从 `NODE_IPS` 里去掉某个 IP 后**，再跑一次 `deploy-master.sh` 会撤销该 IP 的 MySQL 远程账号和 firewalld 3306 规则（状态记在 `/var/lib/redi/authorized_node_ips`）。手工撤销单 IP：`sudo MYSQL_ROOT_PASSWORD='…' bash scripts/centos7/revoke-node-mysql.sh <IP>` 与 `sudo bash scripts/centos7/firewalld-revoke-mysql-from-node.sh <IP>`。新增单 IP 而不重装主控：`sudo MYSQL_ROOT_PASSWORD='…' bash scripts/centos7/grant-node-mysql.sh <IP> <DB_PASS>` 并 `sudo bash scripts/centos7/firewalld-allow-mysql-from-node.sh <IP>`。节点库账号 **`redi_node`** 仅可 **EXECUTE** `redi_node_bump_skip`。
 

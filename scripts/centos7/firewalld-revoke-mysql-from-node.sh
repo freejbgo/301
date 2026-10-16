@@ -9,7 +9,7 @@ source "${SCRIPT_DIR}/lib.sh"
 
 NODE_IP="${1:-}"
 if [[ -z "$NODE_IP" ]]; then
-  echo "用法: $0 <节点公网IP>" >&2
+  echo "用法: sudo bash scripts/centos7/firewalld-revoke-mysql-from-node.sh <节点公网IP>" >&2
   exit 1
 fi
 redi_is_ipv4 "$NODE_IP" || {

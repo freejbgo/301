@@ -47,7 +47,7 @@ REDI_DNS_PRECHECK_ALLOW_A_TO_POOL=true
 
 - 所有节点升级到含 **Agent 0.1.3** 的 `redi-multi`。
 - 过渡：可暂时 `REDI_MIN_AGENT_VERSION=` 清空，升级完节点再改回 `0.1.3`。
-- 新增/下线节点 IP：更新主控 `vars.env` 的 `NODE_IPS` 后重跑 `deploy-master.sh`，或见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §5 手工 `grant-node-mysql` / `revoke-node-mysql`。
+- 新增/下线节点 IP：更新主控 `vars.env` 的 `NODE_IPS` 后重跑 `deploy-master.sh`，或仅同步授权/防火墙时 `sudo bash scripts/centos7/grant-nodes-from-vars.sh`（读 `vars.env` 的 `MYSQL_ROOT_PASS` / `DB_PASS`）；单 IP 见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §5 手工 `grant-node-mysql` / `revoke-node-mysql` 与 firewalld 脚本。
 
 ## 4. Cron：续期 / 清理 / 健康检查 + 失败 Webhook
 

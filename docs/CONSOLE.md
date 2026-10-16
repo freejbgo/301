@@ -170,7 +170,7 @@
 6. 分组管理建分组，域名管理添加客户域名，把 CNAME 目标发给客户。
 7. 预检「已指向」后申请证书，生效后再开强制 HTTPS。
 
-以后加一台机器：主控给新出口 IP 授权数据库，节点管理新建一条并下发 Token，再更新 pool 的 A。给现有机器加 IP：只改那一条的「其他公网 IP」，然后更新 pool 的 A。
+以后加一台机器：主控 `vars.env` 的 `NODE_IPS` 加上新出口 IP 后跑 `deploy-master.sh` 或 `grant-nodes-from-vars.sh`，节点管理新建一条并下发 Token，再更新 pool 的 A。给现有机器加 IP：只改那一条的「其他公网 IP」，然后更新 pool 的 A。
 
 ## 7. 运营自检（主控 SSH）
 
