@@ -25,6 +25,10 @@ fi
 if ! command -v firewall-cmd &>/dev/null; then
   exit 0
 fi
+if ! firewall-cmd --state 2>/dev/null | grep -qx running; then
+  echo "错误: firewalld 未运行。请 systemctl start firewalld 后重试。" >&2
+  exit 1
+fi
 
 RULE="rule family=ipv4 source address=${NODE_IP} port port=3306 protocol=tcp accept"
 if firewall-cmd --permanent --query-rich-rule="${RULE}" >/dev/null 2>&1; then

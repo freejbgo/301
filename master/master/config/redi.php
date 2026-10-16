@@ -74,4 +74,12 @@ return [
 
     'renew_validating_stuck_hours' => (int) env('REDI_RENEW_VALIDATING_STUCK_HOURS', 3),
 
+    /*
+    |--------------------------------------------------------------------------
+    | ACME HTTP-01 公网探测轮询间隔（秒，最小 1）
+    |--------------------------------------------------------------------------
+    */
+
+    'acme_http01_poll_seconds' => max(1, (int) env('REDI_ACME_HTTP01_POLL_SECONDS', 3)),
+
 ];

@@ -22,7 +22,7 @@ class PlatformDnsSettings extends Form implements LazyRenderable
         }
 
         $mode = $input['dns_mode'] ?? 'manual';
-        $driver = $input['dns_driver'] ?? 'manual';
+        $driver = strtolower(trim((string) ($input['dns_driver'] ?? 'manual')));
         if ($mode === 'api' && ($driver === '' || $driver === 'manual')) {
             return $this->response()->error('API 自动模式请选择具体 DNS 驱动，不能选「手动」');
         }

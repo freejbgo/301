@@ -67,4 +67,12 @@ class Http01PropagationWaiterTest extends TestCase
             return $request->url() === 'http://'.$domain.'/.well-known/acme-challenge/'.$token;
         });
     }
+
+    public function test_wait_throws_when_no_node_synced_before_deadline(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('HTTP-01 未在');
+
+        app(Http01PropagationWaiter::class)->wait('no-sync.example', 'tok', 'body', 0);
+    }
 }

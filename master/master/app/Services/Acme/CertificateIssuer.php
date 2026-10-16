@@ -7,6 +7,7 @@ use App\Models\RediAcmeChallenge;
 use App\Models\RediAdminDomain;
 use App\Models\RediDomainCert;
 use App\Models\RediPlatformDns;
+use App\Services\AcmeChallengeCleanup;
 use App\Services\CertificateDeployService;
 use App\Services\Acme\Http01PropagationWaiter;
 use App\Support\HostNameValidator;
@@ -49,6 +50,16 @@ class CertificateIssuer
         $cert->last_error = null;
         $cert->save();
 
+        try {
+            $this->runAcmeIssue($client, $cert, $domain);
+        } catch (\Throwable $e) {
+            AcmeChallengeCleanup::purgeForHosts([$domain]);
+            throw $e;
+        }
+    }
+
+    protected function runAcmeIssue(Client $client, RediDomainCert $cert, string $domain): void
+    {
         $order = $client->createOrder([$domain]);
         $authorizations = $client->authorize($order);
 

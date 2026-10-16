@@ -39,4 +39,10 @@ class DnsProviderFactoryTest extends TestCase
         $this->assertFalse(DnsProviderFactory::isSupportedApiDriver('typo_driver'));
         $this->assertContains('dns_com', DnsProviderFactory::supportedApiDrivers());
     }
+
+    public function test_supported_api_driver_normalizes_case_and_whitespace(): void
+    {
+        $this->assertTrue(DnsProviderFactory::isSupportedApiDriver('  Cloudflare  '));
+        $this->assertTrue(DnsProviderFactory::isSupportedApiDriver('DNS_COM'));
+    }
 }

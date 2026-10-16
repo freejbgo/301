@@ -144,6 +144,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#109）：** `REDI_ACME_HTTP01_POLL_SECONDS` 可配置轮询；签发失败 `CertificateIssuer` 内清理挑战；DNS 驱动大小写/空白归一；firewalld 脚本校验 daemon 运行；PHPUnit **113**。
+
 **2026-10-16 复核（#108）：** `Http01PropagationWaiter` 单测；`DnsProviderFactory::API_DRIVERS` 与后台保存校验；PHPUnit **111**。
 
 **2026-10-16 复核（#107）：** ACME 签发失败清理挑战、`CertificateIssuer` 无授权报错；`DnsProviderFactory` 未知驱动抛错；lagran `Enabled` 单测；AUDIT 全模块表；PHPUnit **109**。
@@ -187,7 +189,7 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **111**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **113**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
@@ -268,4 +270,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **111** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **113** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。

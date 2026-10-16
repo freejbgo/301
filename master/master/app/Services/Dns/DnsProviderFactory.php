@@ -18,6 +18,8 @@ class DnsProviderFactory
 
     public static function isSupportedApiDriver(string $driver): bool
     {
+        $driver = strtolower(trim($driver));
+
         return in_array($driver, self::API_DRIVERS, true);
     }
 
@@ -37,7 +39,7 @@ class DnsProviderFactory
             return new ManualDnsProvider();
         }
 
-        $driver = (string) $platform->dns_driver;
+        $driver = strtolower(trim((string) $platform->dns_driver));
 
         switch ($driver) {
             case 'cloudflare':
