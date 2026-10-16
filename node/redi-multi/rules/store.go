@@ -15,7 +15,7 @@ func ReplaceForceHTTPS(items map[string]bool) {
 	forceHTTPS = map[string]bool{}
 	for host, v := range items {
 		h := strings.ToLower(strings.TrimSpace(host))
-		if h == "" || strings.ContainsAny(h, "\r\n\x00") {
+		if h == "" || strings.ContainsAny(h, "\r\n\x00\t") {
 			continue
 		}
 		forceHTTPS[h] = v
