@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\RediAcmeChallenge;
 use App\Models\RediAcmeChallengeNodeSync;
+use App\Services\AcmeChallengeQuery;
 use Illuminate\Console\Command;
 
 class PruneExpiredAcmeChallenges extends Command
@@ -55,7 +56,26 @@ class PruneExpiredAcmeChallenges extends Command
                 ->delete();
         }
 
-        $this->info("pruned expired={$deletedChallenges}, invalid_empty={$deletedInvalid}, sync_rows={$deletedSync}");
+        $malformedDomains = AcmeChallengeQuery::ready()
+            ->get(['domain_name', 'token', 'response_body'])
+            ->filter(function ($row) {
+                return ! AcmeChallengeQuery::http01ContentValid($row->token, $row->response_body);
+            })
+            ->pluck('domain_name')
+            ->unique()
+            ->values();
+
+        $deletedMalformed = 0;
+        if ($malformedDomains->isNotEmpty()) {
+            $deletedMalformed = RediAcmeChallenge::query()
+                ->whereIn('domain_name', $malformedDomains->all())
+                ->delete();
+            $deletedSync += (int) RediAcmeChallengeNodeSync::query()
+                ->whereIn('domain_name', $malformedDomains->all())
+                ->delete();
+        }
+
+        $this->info("pruned expired={$deletedChallenges}, invalid_empty={$deletedInvalid}, malformed={$deletedMalformed}, sync_rows={$deletedSync}");
 
         return self::SUCCESS;
     }

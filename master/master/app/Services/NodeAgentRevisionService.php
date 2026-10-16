@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\RediDomainCert;
-use App\Support\AcmeHttp01Token;
 use App\Support\HostNameValidator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +16,7 @@ class NodeAgentRevisionService
     {
         $challenges = AcmeChallengeQuery::ready()
             ->orderBy('id')
-            ->get(['domain_name', 'token', 'updated_at'])
+            ->get(['domain_name', 'token', 'response_body', 'updated_at'])
             ->map(function ($row) {
                 $row->domain_name = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
 
@@ -26,7 +25,7 @@ class NodeAgentRevisionService
             ->filter(function ($row) {
                 return $row->domain_name !== ''
                     && HostNameValidator::isValidHostLabel($row->domain_name)
-                    && AcmeHttp01Token::isValid((string) $row->token);
+                    && AcmeChallengeQuery::http01ContentValid($row->token, $row->response_body);
             })
             ->values();
 

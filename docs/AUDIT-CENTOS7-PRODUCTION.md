@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#143）：** `AcmeChallengeQuery::http01ContentValid` 统一 challenges-sync / revision / prune；HTTP-01 waiter 拒绝控制字符响应体；PHPUnit **181**（+6）。
+
 **2026-10-16 复核（#142）：** PHP ACME `upsertForDomain` / 节点 `acme-challenges` 与 Go 对齐，拒绝响应体控制字符；`OpsDisplaySanitizer::containsControlChars`；PHPUnit **175**（+2）。
 
 **2026-10-16 复核（#141）：** Go `acme` 存储用 `CanonicalLookupHost` 且拒绝响应体控制字符；PHPUnit **173**（Go acme +2）。
@@ -341,4 +343,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **175** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **181** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
