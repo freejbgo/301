@@ -34,7 +34,7 @@
 |----|------|
 | Laravel / PHP 大版本升级 | 📋 |
 | MySQL 客户端 TLS | 📋 |
-| lagran NFQUEUE 卸载/升级脚本化 | 📋 |
+| lagran NFQUEUE 卸载/升级脚本化 | 📋 `scripts/centos7/lagran-diagnose.sh`、`lagran-cleanup-iptables.sh` |
 | 更强租户隔离审计（API/后台） | 📋 |
 
 ## 产品行为（非缺陷）
