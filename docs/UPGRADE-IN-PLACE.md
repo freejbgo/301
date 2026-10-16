@@ -69,6 +69,8 @@ PATH=/usr/sbin:/usr/bin:/sbin:/bin
 验证：
 
 ```bash
+grep -E 'renew|prune|health' /etc/cron.d/redi-renew
+! grep -q 'schedule:run' /etc/cron.d/redi-renew
 php artisan redi:health
 php artisan redi:health --json   # 监控用；issues/hints code 见 AUDIT §3
 php artisan list | grep redi:

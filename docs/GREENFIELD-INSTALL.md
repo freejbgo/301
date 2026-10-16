@@ -61,6 +61,6 @@ php artisan migrate --force
 
 若仓库新增了 `100010+` 迁移，这一步会改库；绿场初次安装若已导入当前版 `redi_admin.sql`，通常显示无待执行迁移。节点 MySQL 账号为 **`redi_node`** 时，对新增节点 IP 重跑 `grant-node-mysql.sh`（仅 `EXECUTE` 存储过程）。
 
-主控 cron（`deploy-master.sh` 写入 `/etc/cron.d/redi-renew`）：**03:10** 证书续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`（不要另配 `php artisan schedule:run`）。节点 `GetSkipUrl` 与主控一致对 Host 做 **punycode** 归一。
+主控 cron（`deploy-master.sh` 写入 `/etc/cron.d/redi-renew`）：**03:10** 证书续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`（勿配置 `php artisan schedule:run`）。节点 `GetSkipUrl` 与主控一致对 Host 做 **punycode** 归一。
 
 更新 **节点二进制**（限速、Agent 等）后须在开发机 `./scripts/build-node-tar.sh` 并在各节点重跑 `deploy-node.sh`（或替换 `bin/redi-multi` 后 `systemctl restart redi-multi`）。
