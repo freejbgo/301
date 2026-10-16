@@ -41,14 +41,14 @@ class RenewDomainCertificatesCommand extends Command
                     'cert_id' => $cert->id,
                     'domain_name' => $cert->domain_name,
                 ]);
-                $this->warn('跳过非法域名 cert #'.$cert->id.'：'.$cert->domain_name);
+                $this->warn('跳过非法域名 cert #'.$cert->id);
                 continue;
             }
 
             if ($dryRun) {
                 $this->line(sprintf(
                     '[dry-run] %s expires %s status=%s',
-                    $cert->domain_name,
+                    $host,
                     $cert->expires_at->format('Y-m-d H:i'),
                     $cert->status
                 ));
@@ -58,7 +58,7 @@ class RenewDomainCertificatesCommand extends Command
 
             IssueDomainCertificateJob::dispatch((int) $cert->domain_id)
                 ->delay(now()->addSeconds($i * 20));
-            $this->info('Queued renew for '.$cert->domain_name);
+            $this->info('Queued renew for '.$host);
             $i++;
             $queued++;
         }
