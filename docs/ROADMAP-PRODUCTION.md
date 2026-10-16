@@ -32,9 +32,10 @@
 
 | 项 | 状态 |
 |----|------|
-| Laravel / PHP 大版本升级 | 📋 |
-| MySQL 客户端 TLS | 📋 |
-| lagran NFQUEUE 卸载/升级脚本化 | ✅ 诊断/清理脚本（#77）；升级流程仍随 `deploy-node` / 换包 |
+| Laravel / PHP 大版本升级 | 📋 Dcat 锁 `2.2.3-beta`，`minimum-stability` 暂须 `dev` |
+| MySQL 客户端 TLS | ✅ 节点 `REDI_DB_TLS` + DEPLOY-centos7 §9；主控 MariaDB SSL 需自配 |
+| lagran NFQUEUE 卸载/升级脚本化 | ✅ `lagran_ports.py` 与进程端口一致 + 诊断/清理 |
+| 多机 queue + redis | ✅ [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md) + health hints |
 | 更强租户隔离审计（API/后台） | 📋 |
 
 ## 产品行为（非缺陷）

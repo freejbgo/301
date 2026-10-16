@@ -42,11 +42,20 @@
 | ACME 维护 | 计划任务 `redi:prune-acme-challenges`（CentOS `deploy-master` 每日 04:10）；`redi:normalize-domain-hosts` 可修正历史 IDN / `skip_url` |
 | 证书表 | `redi_domain_certs.domain_id` 外键级联删除，避免孤儿证书记录 |
 
+## 威胁模型（节点与边缘）
+
+| 场景 | 影响 | 缓解 |
+|------|------|------|
+| **节点 Token 泄露** | 可拉取本节点分配的证书 PEM、全平台 `redirect-rules`（含 `force_https`）、ACME 挑战 | 立即轮换 Token；隔离主机；`REDI_MIN_AGENT_VERSION`；监控异常心跳 |
+| **节点主机被控** | 同上 + 可能读 `env.sh` 中 DB 密码（仅 `redi_node` 存储过程权限） | 最小权限账号；`REDI_DB_TLS`；3306 仅主控 IP；重装节点 |
+| **主控 DB 备份泄露** | 证书密文（依赖 `APP_KEY`）、租户数据 | 保护 `APP_KEY` 与备份存储；轮换证书 |
+| **Dcat 静态资源在 git** | 前端库版本随仓库发布，需随 Dcat 升级整块替换 | 勿暴露后台到公网无 WAF；计划 Laravel/Dcat 升级 |
+
 ## 架构说明（已知限制）
 
 | 项 | 现状 | 建议 |
 |----|------|------|
-| 节点直连 MySQL | 仍为当前架构，便于部署 | DB 账号最小权限；IP 白名单；长期可改主控 API |
+| 节点直连 MySQL | 仍为当前架构，便于部署 | DB 账号最小权限；IP 白名单；`REDI_DB_TLS`；见 [DEPLOY-centos7.md](DEPLOY-centos7.md) §9 |
 | `/api.js` 无登录 | 跳转业务需要可被浏览器访问 | 防火墙 + 双档限速（见上；超限返回 `429` / `// rate limit`） |
 | `lagran` | 面向被干扰域名，生产默认 **开启**；需 root/CAP_NET_ADMIN | 仅调试时设 `REDI_LAGRAN_DISABLED=1` 或 `lagran.enabled=false` |
 | 默认后台密码 | 种子账号仍为文档中的初始密码 | 登录后 middleware 会强制跳转改密（`REDI_BLOCK_DEFAULT_ADMIN_PASSWORD=false` 可关） |

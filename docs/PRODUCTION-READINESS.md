@@ -70,7 +70,7 @@ curl -fsS "http://127.0.0.1:<node-port>/revision"
 - `failed_jobs` > 0 → 严重
 - `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）或超过 2 小时未执行 → 警告
 
-完整路线图见 [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)。
+完整路线图见 [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)。多 worker 队列见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)；节点 DB TLS 见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §9。
 
 ## 回滚
 

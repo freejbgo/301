@@ -170,26 +170,33 @@ class RediHealthReport
         $hours = max(1, (int) config('redi.health_validating_stuck_hours', 2));
         $cutoff = now()->subHours($hours);
 
-        $stuck = RediDomainCert::query()
+        $base = RediDomainCert::query()
             ->where('status', RediDomainCert::STATUS_VALIDATING)
             ->where('updated_at', '<=', $cutoff)
-            ->whereHas('domain', fn ($q) => $q->where('status', 1))
-            ->orderBy('updated_at')
-            ->limit(20)
-            ->get(['id', 'domain_name', 'updated_at']);
+            ->whereHas('domain', fn ($q) => $q->where('status', 1));
 
-        if ($stuck->isEmpty()) {
+        $total = (int) (clone $base)->count();
+        if ($total === 0) {
             return [];
         }
 
-        $names = $stuck->map(fn ($c) => $c->domain_name)->implode(', ');
+        $sample = (clone $base)
+            ->orderBy('updated_at')
+            ->limit(20)
+            ->pluck('domain_name')
+            ->all();
+
+        $names = implode(', ', $sample);
+        if ($total > count($sample)) {
+            $names .= sprintf(' …等共 %d 个', $total);
+        }
 
         return [[
             'level' => 'warning',
             'code' => 'cert_validating_stuck',
             'message' => sprintf(
                 '%d 张证书超过 %d 小时仍为 validating（可能 ACME 任务卡住）：%s',
-                $stuck->count(),
+                $total,
                 $hours,
                 $names
             ),

@@ -124,3 +124,26 @@ sudo systemctl stop redi-multi
 sudo bash scripts/centos7/lagran-cleanup-iptables.sh /opt/redi-multi/redi-multi
 sudo systemctl start redi-multi
 ```
+
+`lagran-cleanup-iptables.sh` 通过 `scripts/centos7/lagran_ports.py` 合并 `addr` / `tls_addr` 与 `lagran.port`，与节点进程写入 iptables 的 sport 一致。
+
+## 9. 节点连主控 MySQL 的 TLS（可选）
+
+节点 `env.sh` 支持 `REDI_DB_TLS`（见 [node/README.md](node/README.md)）：
+
+| 值 | 含义 |
+|----|------|
+| `1` 或 `true` | 启用 TLS 并校验服务端证书 |
+| `skip-verify` | 加密但不校验（内网自签） |
+
+在 `scripts/centos7/vars.env` 设置 `REDI_DB_TLS="skip-verify"` 或 `REDI_DB_TLS="1"` 后重跑 `deploy-node.sh` 即可写入 `env.sh`。主控 MariaDB 侧需自行配置 SSL 监听与证书；跨公网连库 **强烈建议** TLS + 安全组仅放行节点 IP。
+
+## 10. 多机 / 多 worker 队列（可选）
+
+默认 `QUEUE_CONNECTION=database` + `CACHE_DRIVER=file` 适合 **单台主控、单个 `redi-queue`**。若要多进程或多台跑 `queue:work`：
+
+1. 安装 Redis，`CACHE_DRIVER=redis`、`REDIS_*` 写入主控 `.env`
+2. `php artisan config:cache`
+3. 每台机器各跑 `queue:work`（或 systemd 多实例）
+
+详见 [docs/OPS-MULTI-WORKER-QUEUE.md](docs/OPS-MULTI-WORKER-QUEUE.md)。`php artisan redi:health --json` 的 `hints` 会在 file 缓存 + 非 sync 队列时提示改 redis。

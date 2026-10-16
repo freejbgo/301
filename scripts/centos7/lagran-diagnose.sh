@@ -3,6 +3,7 @@
 # 用法: bash scripts/centos7/lagran-diagnose.sh [/opt/redi-multi/redi-multi]
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP="${1:-/opt/redi-multi/redi-multi}"
 BIN="${APP}/bin/redi-multi"
 CFG="${APP}/config.json"
@@ -20,9 +21,10 @@ if [[ "${REDI_LAGRAN_DISABLED:-}" == "1" ]]; then
 fi
 
 if [[ -f "$CFG" ]] && command -v python3 >/dev/null 2>&1; then
-  python3 - "$CFG" <<'PY'
+  read -r LAGRAN_SPORT _rest < <(python3 "${SCRIPT_DIR}/lagran_ports.py" "$CFG" 2>/dev/null || echo "? ? ? ? ?")
+  python3 - "$CFG" "$LAGRAN_SPORT" <<'PY'
 import json, sys
-path = sys.argv[1]
+path, sport = sys.argv[1], sys.argv[2]
 with open(path, encoding="utf-8") as f:
     data = json.load(f)
 lag = data.get("lagran")
@@ -31,8 +33,7 @@ if lag is None:
 elif lag.get("enabled") is False:
     print("[config] lagran.enabled=false")
 else:
-    port = lag.get("port", "(默认合并 addr/tls)")
-    print(f"[config] lagran.enabled 未关闭, port={port}")
+    print(f"[config] lagran.enabled 未关闭, iptables --sport={sport}")
 PY
 else
   echo "[config] 未找到 ${CFG} 或无 python3"
