@@ -6,6 +6,7 @@ use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use App\Support\HostNameValidator;
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Support\Facades\DB;
 
 class CertificateDeployService
@@ -141,7 +142,9 @@ class CertificateDeployService
             }
 
             $deployment->status = $targetStatus;
-            $deployment->last_error = $error;
+            $deployment->last_error = $error !== null
+                ? OpsDisplaySanitizer::logSnippet($error, 2000)
+                : null;
             $deployment->deployed_at = $ok ? now() : null;
             $deployment->save();
 

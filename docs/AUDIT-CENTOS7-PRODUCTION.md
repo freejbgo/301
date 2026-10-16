@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#137）：** 部署 ack `last_error` 二次净化；批量导入错误文案；Go Agent ack error 净化；EdgeDnsSync 日志 zone；PHPUnit **175**。
+
 **2026-10-16 复核（#136）：** 签发 Job / 后台 DNS 同步 / DNS reconcile 删除失败文案 `logSnippet`；平台凭证解密日志净化；PHPUnit **173**。
 
 **2026-10-16 复核（#135）：** health JSON/CLI 统一 `sanitizeHealthIssues`；节点 ack `last_error` 净化；EdgeDnsSync 用户可见异常文案截断；PHPUnit **173**。

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\OpsDisplaySanitizer;
 use App\Models\RediAdminDomain;
 use App\Models\RediAdminGroup;
 use Illuminate\Database\QueryException;
@@ -86,12 +87,14 @@ class DomainBatchCreator
                 continue;
             }
             if (! DomainRecordNormalizer::isValidOriginalHost($originalUrl)) {
-                $result['errors'][] = "第 {$rowIndex} 行（{$originalUrl}）：原始域名格式无效";
+                $label = OpsDisplaySanitizer::field($originalUrl, '—', 253);
+                $result['errors'][] = "第 {$rowIndex} 行（{$label}）：原始域名格式无效";
                 continue;
             }
 
             if ($skipUrl === '') {
-                $result['errors'][] = "第 {$rowIndex} 行（{$originalUrl}）：缺少跳转地址，请填写「统一跳转地址」或在本行写「域名,跳转地址」";
+                $label = OpsDisplaySanitizer::field($originalUrl, '—', 253);
+                $result['errors'][] = "第 {$rowIndex} 行（{$label}）：缺少跳转地址，请填写「统一跳转地址」或在本行写「域名,跳转地址」";
                 continue;
             }
 
@@ -104,7 +107,9 @@ class DomainBatchCreator
                 && DomainDnsPointingGuard::mustPointToEdgeBeforeEnable()
                 && ! DomainDnsPointingGuard::pointsToTenantEdge($adminId, $originalUrl)) {
                 $edge = TenantEdgeService::cnameTargetForAdmin($adminId);
-                $result['errors'][] = "第 {$rowIndex} 行（{$originalUrl}）：启用前须 CNAME 到 {$edge} 或 A 到节点公网 IP";
+                $label = OpsDisplaySanitizer::field($originalUrl, '—', 253);
+                $edgeLabel = OpsDisplaySanitizer::field($edge, '—', 253);
+                $result['errors'][] = "第 {$rowIndex} 行（{$label}）：启用前须 CNAME 到 {$edgeLabel} 或 A 到节点公网 IP";
                 continue;
             }
 

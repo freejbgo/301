@@ -84,7 +84,7 @@ class EdgeDnsSyncService
                         Log::warning('EdgeDnsSync: skip tenant edge (FQDN not under edge_zone)', [
                             'edge_id' => $edge->id,
                             'fqdn' => OpsDisplaySanitizer::field($fqdn, '', 253),
-                            'edge_zone' => $zone,
+                            'edge_zone' => OpsDisplaySanitizer::field($zone, '', 253),
                         ]);
                     }
                     continue;
