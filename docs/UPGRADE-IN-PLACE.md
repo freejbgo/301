@@ -71,9 +71,10 @@ PATH=/usr/sbin:/usr/bin:/sbin:/bin
 ```bash
 grep -E 'renew|prune|health' /etc/cron.d/redi-renew
 ! grep -q 'schedule:run' /etc/cron.d/redi-renew
-php artisan redi:health
-php artisan redi:health --json   # 监控用；issues/hints code 见 AUDIT §3
-php artisan list | grep redi:
+! grep -q 'master/master' /etc/cron.d/redi-renew
+cd /opt/301/master && sudo -u nginx php artisan redi:health
+cd /opt/301/master && sudo -u nginx php artisan redi:health --json   # 监控用；issues/hints code 见 AUDIT §3
+cd /opt/301/master && sudo -u nginx php artisan list | grep redi:
 ```
 
 ## 5. 运营验收
@@ -84,4 +85,4 @@ php artisan list | grep redi:
 
 - 主控：恢复上一版 tar + `migrate:rollback`（仅当确认迁移可逆）。
 - `.env`：恢复旧 `REDI_MIN_AGENT_VERSION` 需同步旧节点二进制。
-- Cron：保留旧三行亦可（仅失去失败 Webhook，不影响续期本身）。
+- Cron：保留旧 cron 亦可（仅失去失败 Webhook 或缺 prune/health 行时须手工补齐）；勿恢复 `schedule:run`。

@@ -40,4 +40,9 @@ EOF
 chmod 644 "$CRON_FILE"
 
 echo "已写入 ${CRON_FILE}（用户 ${CRON_USER}，APP=${APP}）"
-echo "请确认: php artisan redi:health && php artisan list | grep redi:ops-webhook"
+echo "请确认:"
+echo "  grep -E 'renew|prune|health' ${CRON_FILE}"
+echo "  ! grep -q 'schedule:run' ${CRON_FILE}"
+echo "  ! grep -q 'master/master' ${CRON_FILE}"
+echo "  cd ${APP} && sudo -u ${CRON_USER} php artisan redi:health"
+echo "  cd ${APP} && sudo -u ${CRON_USER} php artisan list | grep redi:ops-webhook"

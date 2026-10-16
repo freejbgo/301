@@ -27,6 +27,11 @@
 ## 验收命令（真机）
 
 ```bash
+# Cron（与 deploy-master / patch-master-cron-ops-webhook 一致）
+grep -E 'renew|prune|health' /etc/cron.d/redi-renew
+! grep -q 'schedule:run' /etc/cron.d/redi-renew
+! grep -q 'master/master' /etc/cron.d/redi-renew
+
 # 运营自检（节点心跳、证书到期；可接监控，非 0 表示有待处理项）
 cd /opt/301/master && php artisan redi:health
 php artisan redi:health --json
@@ -34,9 +39,10 @@ php artisan redi:health --json
 # issues/hints 各 code 含义见 AUDIT-CENTOS7-PRODUCTION.md §3
 
 # 有问题时通知 Webhook（.env 配置 REDI_HEALTH_WEBHOOK_URL，POST JSON，含 text 摘要）
+# --notify：webhook 发送成功（或无 issues）时退出 0；未配置 URL 且有 issues 时退出 1，Cron 行 || ops-webhook 兜底
 php artisan redi:health --notify
 
-# Cron 任务异常退出时（deploy 已配置 || redi:ops-webhook）；可单独测：
+# Cron 续期/清理在 artisan 异常退出时走 || redi:ops-webhook
 # php artisan redi:ops-webhook --task=redi:renew-certificates --message="测试告警"
 
 # 续期预演（cron 实际跑的是 redi:renew-certificates，无 --dry-run）
@@ -74,7 +80,7 @@ curl -fsS "http://127.0.0.1:<node-port>/revision"
 
 - 生产配置：`APP_DEBUG`、ACME 邮箱 / Staging、`edge_zone`（见 §3 表）
 - `failed_jobs` > 0 → 严重（`queue_failed_jobs`）
-- `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）→ `queue_backlog`；`available_at` 超过 2 小时未执行 → `queue_stale`
+- `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）→ `queue_backlog`；`available_at` 超过 2 小时未执行 → `queue_stale`（仅 `QUEUE_CONNECTION=database`）
 
 完整路线图见 [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)。多 worker 队列见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)；节点 DB TLS 见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §9。
 

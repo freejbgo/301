@@ -44,9 +44,9 @@
 
 | 能力 | 命令 / 入口 |
 |------|-------------|
-| 健康检查 | `php artisan redi:health` / `--json` / `--notify` |
+| 健康检查 | `php artisan redi:health` / `--json` / `--notify`（Cron：`--notify` 在 webhook **发送成功**或无 issues 时退出 **0**） |
 | 续期 | Cron `redi:renew-certificates`；`--dry-run --days=` |
-| 失败告警 | Cron 行尾 `|| redi:ops-webhook`；`.env` Webhook URL |
+| 失败告警 | 续期/清理/health Cron 行尾 `|| redi:ops-webhook`（health 在 webhook 未发出且有 issues 时退出非 0 触发）；`.env` URL |
 | 队列健康 | health 内 `failed_jobs`、积压阈值 |
 | 后台 | 节点证书列、重试失败、域名筛选/导出 CSV、批量重下发 |
 | 全局重试 | `redi:requeue-failed-deployments` |
@@ -67,7 +67,7 @@
 | `cert_validating_stuck` | warning | validating 超过 `REDI_HEALTH_VALIDATING_STUCK_HOURS` |
 | `queue_failed_jobs` | critical | `failed_jobs` 非空 |
 | `queue_backlog` | warning | `jobs` 积压超过阈值 |
-| `queue_stale` | warning | `jobs` 中 `available_at` 超过 **2 小时**仍未执行（worker 可能未跑） |
+| `queue_stale` | warning | `jobs` 中 `available_at` 超过 **2 小时**仍未执行（worker 可能未跑）；仅 `QUEUE_CONNECTION=database` |
 
 ### `redi:health` 配置建议（`hints[]`，不影响退出码）
 
@@ -108,6 +108,10 @@
 
 **2026-10-16 深度审计：** 删除未使用的 `UserFactory`、`node/redi-multi/Makefile`；清空 `Kernel::schedule`（生产仅用 `/etc/cron.d`，避免误跑 `schedule:run` 双份续期）；`channels.php` 与未启用的 Broadcast 对齐；CI 下 `verify-redi-db-deploy-path` 无 docker 时失败。
 
+**2026-10-16 复核（#87）：** Cron 文档统一「勿 `schedule:run`」；`UPGRADE` / 验收清单补强 `grep renew|prune|health` 与 `schedule:run` 负向检查。
+
+**2026-10-16 深度复核（#88）：** `deploy-master` / `patch-master-cron` 安装后打印 Cron 验收；`DEPLOY-centos7` §11、`CONSOLE` 运营命令与 `queue_stale` 说明补齐；`scripts/README` 索引 CentOS 辅助脚本；`queue_stale` 单测；`SECURITY` Cron 时段说明；`redi:health --notify` 在 webhook 成功时退出 0、失败时由 `|| ops-webhook` 兜底；`grant-nodes-from-vars` 要求 root。
+
 | 维度 | 结论 |
 |------|------|
 | 部署脚本 | `deploy-master` / `deploy-node` 仅接受 CentOS 7；Cron 用户 `nginx`；`NODE_IPS` 同步授权与 firewalld 逻辑完整 |
@@ -117,7 +121,7 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **80**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **84**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
@@ -133,14 +137,19 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#86](https://github.com/freejbgo/301/pull/86)（深度审计、`Kernel` schedule 留空、Cron 文档统一）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#88](https://github.com/freejbgo/301/pull/88)（深度审计、`Kernel` schedule 留空、Cron 文档/脚本/验收 grep 统一）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
 ## 8. VPS 操作顺序（若尚未对齐 main）
 
 1. 将主控/节点升到当前 **main**。
-2. 主控：`docs/UPGRADE-IN-PLACE.md` → 备份 `.env`、新 tar、`migrate`、`config:cache`；`sudo bash scripts/patch-master-cron-ops-webhook.sh`（纠正 Cron 中错误的 `master/master` 路径）。
+2. 主控：`docs/UPGRADE-IN-PLACE.md` → 备份 `.env`、新 tar、`migrate`、`config:cache`；`sudo bash scripts/patch-master-cron-ops-webhook.sh`（纠正 Cron 中错误的 `master/master` 路径），并执行：
+   ```bash
+   grep -E 'renew|prune|health' /etc/cron.d/redi-renew
+   ! grep -q 'schedule:run' /etc/cron.d/redi-renew
+   ! grep -q 'master/master' /etc/cron.d/redi-renew
+   ```
 3. 各节点：升级 **Agent 0.1.3** 的 `redi-multi` 并重启服务。
 4. 跑 `php artisan redi:health`（会附带打印配置 **hints**）与 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) 中的 curl/DB 校验。
 5. 按 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) 完成真机验收（含第二节点、证书、CNAME 场景见 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)）。
@@ -175,4 +184,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **80** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **84** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。

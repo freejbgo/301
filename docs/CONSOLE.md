@@ -179,8 +179,11 @@
 ```bash
 php artisan redi:health
 php artisan redi:health --json    # 监控采集；issues/hints 的 code 见 AUDIT §3
+php artisan redi:health --notify  # 有 issues 时 POST webhook（Cron 08:30；发送成功退出 0）
 php artisan redi:renew-certificates --dry-run --days=25
+php artisan redi:prune-acme-challenges   # Cron 04:10；勿依赖 schedule:run
 php artisan redi:requeue-failed-deployments
+# php artisan redi:ops-webhook --task=redi:renew-certificates --message="测试"
 ```
 
-`issues` 非空时命令退出码为 1，适合告警。Webhook 与多 worker 说明见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)、[OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)、[AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。
+`issues` 非空时命令退出码为 1，适合告警；`hints` 不影响退出码。CentOS 生产续期/清理/health 仅由 `/etc/cron.d/redi-renew` 触发，验收 `grep` 见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)。Webhook 与多 worker 说明见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)、[AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。

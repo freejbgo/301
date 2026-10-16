@@ -394,7 +394,7 @@ redi_svc_daemon_reload
 redi_svc_enable_now redi-queue
 redi_svc_restart redi-queue
 
-# 证书续期/ACME 清理/health 仅由此 cron 直调 artisan（勿再配 schedule:run）。
+# 证书续期/ACME 清理/health 仅由此 cron 直调 artisan（勿配置 schedule:run）。
 cat > /etc/cron.d/redi-renew <<EOF
 SHELL=/bin/bash
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
@@ -420,4 +420,6 @@ echo
 echo "主控已安装到 ${APP}"
 echo "后台: ${MASTER_URL}/admin"
 echo "初始后台账号见 DEPLOY.md（导入 SQL 后的默认 admin 密码），登录后请立即修改。"
+echo "Cron: /etc/cron.d/redi-renew（03:10 续期 / 04:10 prune / 08:30 health --notify；勿另配 schedule:run）"
+echo "验收: grep -E 'renew|prune|health' /etc/cron.d/redi-renew && ! grep -q 'schedule:run' /etc/cron.d/redi-renew"
 echo "建好节点并复制 Token 后，再到节点机器执行 deploy-node.sh。"

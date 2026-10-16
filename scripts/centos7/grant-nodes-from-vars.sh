@@ -2,6 +2,11 @@
 # 在主控上：按 vars.env 里的 NODE_IPS 批量授权并放行 3306
 set -euo pipefail
 
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "请用 root 执行: sudo bash $0" >&2
+  exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "${SCRIPT_DIR}/lib.sh"

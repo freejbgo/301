@@ -240,5 +240,6 @@ if [[ -z "$REDI_NODE_TOKEN" ]]; then
   echo "Token 为空时进程可以跳转，但不会向主控注册，也不能同步证书。"
 else
   echo "已写入 Token。查看状态: systemctl status redi-multi"
+  echo "主控 API 自测: curl -fsS \"${REDI_MASTER_URL}/api/nodes/revision\" -H \"Authorization: Bearer <REDI_NODE_TOKEN>\""
 fi
 echo "同一台机器的其他公网 IP 填在后台该节点的「其他公网 IP」，不要再部署第二个进程。"
