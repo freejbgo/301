@@ -142,6 +142,8 @@
 
 **2026-10-16 #99 已合并 `main`：** 见 [PR #99](https://github.com/freejbgo/301/pull/99)（health JSON summary 队列阈值、文档同步）。
 
+**2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
+
 **2026-10-16 复核（#100）：** `redi:health --json` 单测断言 summary 阈值；AUDIT/DEPLOY-centos7 jq 采集示例；PHPUnit **92**。
 
 **2026-10-16 复核（#99）：** `redi:health --json` summary 暴露队列 health 阈值；UPGRADE/OPS/SECURITY/CONSOLE 同步；revoke-node `REDI_GRANT_BATCH` 注释；PHPUnit **91**。
@@ -175,6 +177,20 @@
 
 **未发现阻塞商用的 P0 代码缺陷。**
 
+### 复核范围说明（#88–#100 深度扫仓）
+
+| 类别 | 已扫内容 |
+|------|----------|
+| **运维 / 脚本** | `scripts/centos7/*`、`patch-master-cron`、NODE_IPS 授权与 firewalld、`grant-nodes-from-vars`、queue systemd、`lagran_*` 诊断脚本；用法提示与验收 `grep` |
+| **运营命令** | `redi:health`（含 `--json`/`--notify`、阈值 env）、`renew`/`prune`/`ops-webhook`、Cron 与 `storage/logs/*.log` |
+| **文档** | DEPLOY / DEPLOY-centos7 / UPGRADE / ACCEPTANCE / CONSOLE / SECURITY / OPS-MULTI-WORKER 与脚本行为对齐 |
+| **门禁** | `dev-preflight`（Go + PHPUnit **92** + bash -n + 存储过程）；与 `ci.yml` / `release.yml` 核心步骤一致 |
+| **PHP（以单测为扫仓锚点）** | 节点 API、证书部署状态机、DNS 启用/预检、Agent 版本门、health/renew/prune/webhook、部分 DNS 厂商与租户相关 Service（见 `master/master/tests/`） |
+| **Go `node/redi-multi`** | CI 全包 `go test ./...`；host/redirect/certs/api/masteragent 等目录有单测；lagran 以配置与运维脚本为主 |
+| **未专项改代码** | `CertificateIssuer` / ACME 全链路重构、Dcat 后台 UI 全量、Laravel/composer 大版本与 CVE 批量修复、`public/vendor/dcat-admin` 删减 |
+
+下一轮若指定 **ACME 签发**、**节点 API** 或 **后台权限** 可单独做代码向深度扫。
+
 ### 已知非阻塞项（P2 排期）
 
 - `composer audit` 对 `symfony/yaml` 等传递依赖有 CVE 公告 → 随 Laravel/Composer 升级处理。
@@ -185,7 +201,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#100](https://github.com/freejbgo/301/pull/100)（#99：health summary 阈值；#98：`queue_stale` 可配置；#93–#97：运维/Cron/NODE_IPS）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#100](https://github.com/freejbgo/301/pull/100)（#100：health JSON 单测与 jq 示例；#99–#98：summary/`queue_stale`；#93–#97：运维/Cron/NODE_IPS）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
