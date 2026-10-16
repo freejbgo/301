@@ -6,6 +6,29 @@ use App\Models\RediPlatformDns;
 
 class DnsProviderFactory
 {
+    /** @var list<string> */
+    public const API_DRIVERS = [
+        'cloudflare',
+        'aliyun_cn',
+        'aliyun_intl',
+        'dnspod_cn',
+        'dnspod_intl',
+        'dns_com',
+    ];
+
+    public static function isSupportedApiDriver(string $driver): bool
+    {
+        return in_array($driver, self::API_DRIVERS, true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function supportedApiDrivers(): array
+    {
+        return self::API_DRIVERS;
+    }
+
     public static function make(?RediPlatformDns $platform = null): DnsProviderInterface
     {
         $platform = $platform ?: RediPlatformDns::instance();
@@ -14,7 +37,7 @@ class DnsProviderFactory
             return new ManualDnsProvider();
         }
 
-        $driver = $platform->dns_driver;
+        $driver = (string) $platform->dns_driver;
 
         switch ($driver) {
             case 'cloudflare':

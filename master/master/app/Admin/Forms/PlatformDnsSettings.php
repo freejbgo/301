@@ -3,6 +3,7 @@
 namespace App\Admin\Forms;
 
 use App\Models\RediPlatformDns;
+use App\Services\Dns\DnsProviderFactory;
 use App\Services\TenantEdgeService;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Contracts\LazyRenderable;
@@ -24,6 +25,9 @@ class PlatformDnsSettings extends Form implements LazyRenderable
         $driver = $input['dns_driver'] ?? 'manual';
         if ($mode === 'api' && ($driver === '' || $driver === 'manual')) {
             return $this->response()->error('API 自动模式请选择具体 DNS 驱动，不能选「手动」');
+        }
+        if ($mode === 'api' && ! DnsProviderFactory::isSupportedApiDriver($driver)) {
+            return $this->response()->error('不支持的 DNS API 驱动: '.$driver);
         }
         if ($mode === 'manual') {
             $driver = 'manual';
