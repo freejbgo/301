@@ -122,6 +122,10 @@
 
 **2026-10-16 复核（#91）：** AUDIT §7/§8 与 `DEPLOY`/`GREENFIELD` 补全 grant 脚本 sudo 用法。
 
+**2026-10-16 #91 已合并 `main`：** 见 [PR #91](https://github.com/freejbgo/301/pull/91)。
+
+**2026-10-16 复核（#92）：** grant/revoke 脚本头注释与 SECURITY/DEPLOY-centos7 用法统一；README 索引 firewalld 脚本。
+
 **2026-10-16 深度复核（#88）：** `deploy-master` / `patch-master-cron` 安装后打印 Cron 验收；`DEPLOY-centos7` §11、`CONSOLE` 运营命令与 `queue_stale` 说明补齐；`scripts/README` 索引 CentOS 辅助脚本；`queue_stale` 单测；`SECURITY` Cron 时段说明；`redi:health --notify` 在 webhook 成功时退出 0、失败时由 `|| ops-webhook` 兜底；`grant-nodes-from-vars` 要求 root。
 
 | 维度 | 结论 |
@@ -149,7 +153,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#91](https://github.com/freejbgo/301/pull/91)（#88–#90：Cron 验收、`redi:health --notify` 退出码、webhook 文档、MySQL grant 脚本 root）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#92](https://github.com/freejbgo/301/pull/92)（#88–#91：Cron/webhook/health 退出码、grant 文档与验收）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 

@@ -12,7 +12,7 @@
 ## 你必须在服务器上完成的
 
 1. **修改所有默认密码**（后台 admin、MySQL、`.env` 的 `DB_PASSWORD`、节点 `env.sh`）。
-2. **MySQL 不对公网开放 3306**（见 `db/mysql_setup.example.sql`；节点出口 IP 用 `scripts/centos7/grant-node-mysql.sh`，防火墙只放行这些 IP）。
+2. **MySQL 不对公网开放 3306**（见 `db/mysql_setup.example.sql`；节点出口 IP 在主控用 `sudo MYSQL_ROOT_PASSWORD='…' bash scripts/centos7/grant-node-mysql.sh <IP> <DB_PASS>`，或 `sudo bash scripts/centos7/grant-nodes-from-vars.sh`；防火墙只放行这些 IP）。
 3. **关闭 DNS 反查**：主控执行 `scripts/centos7/apply-mysql-skip-name-resolve.sh`。
 4. **主控启用 HTTPS**（`ADMIN_HTTPS=true`，并且 Nginx 上的证书和 `APP_URL` 一致）。
 5. **防火墙** 只开放 22/80/443。节点不必对访客开放 8080。不要执行 `iptables -F`。

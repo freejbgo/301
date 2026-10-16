@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 为单个节点公网 IP 创建/更新 redi_node 库账号（仅可执行 redi_node_bump_skip，不能 SELECT 全表/视图）。
-# 用法: sudo MYSQL_ROOT_PASSWORD='root密码' ./grant-node-mysql.sh <节点公网IP> <redi_admin库账号密码>
+# 用法: sudo MYSQL_ROOT_PASSWORD='root密码' bash scripts/centos7/grant-node-mysql.sh <节点公网IP> <redi_admin库账号密码>
 # CentOS 7 请先用 deploy-master.sh 安装 MariaDB 10.6。5.5 没有 CREATE USER IF NOT EXISTS，也吃不下这份 utf8mb4 库。
 set -euo pipefail
 

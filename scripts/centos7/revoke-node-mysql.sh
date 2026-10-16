@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 撤销单个节点公网 IP 的远程 redi_node / 遗留 redi_admin 账号。
-# 用法: sudo MYSQL_ROOT_PASSWORD='root密码' ./revoke-node-mysql.sh <节点公网IP>
+# 用法: sudo MYSQL_ROOT_PASSWORD='root密码' bash scripts/centos7/revoke-node-mysql.sh <节点公网IP>
 set -euo pipefail
 
 if [[ "$(id -u)" -ne 0 ]]; then
