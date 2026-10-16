@@ -10,6 +10,7 @@ use App\Models\RediPlatformDns;
 use App\Services\AcmeChallengeCleanup;
 use App\Services\CertificateDeployService;
 use App\Services\Acme\Http01PropagationWaiter;
+use App\Support\AcmeHttp01Token;
 use App\Support\HostNameValidator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
@@ -70,7 +71,7 @@ class CertificateIssuer
             $authorized = true;
 
             $file = $authorization->getFile();
-            $token = basename($file->getFilename());
+            $token = AcmeHttp01Token::normalize(basename($file->getFilename()));
             $body = trim($file->getContents());
             if ($body === '') {
                 throw new RuntimeException('ACME HTTP-01 响应体为空');

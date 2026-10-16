@@ -152,14 +152,31 @@ class CloudflareDnsProvider implements DnsProviderInterface
 
     protected function listRecords(string $zoneId, string $type, string $name): array
     {
-        $res = $this->decode($this->http->get("zones/{$zoneId}/dns_records", [
-            'query' => [
-                'type' => $type,
-                'name' => $name,
-            ],
-        ]));
+        $all = [];
+        for ($page = 1; $page <= 100; $page++) {
+            $res = $this->decode($this->http->get("zones/{$zoneId}/dns_records", [
+                'query' => [
+                    'type' => $type,
+                    'name' => $name,
+                    'page' => $page,
+                    'per_page' => 100,
+                ],
+            ]));
+            $chunk = $res['result'] ?? [];
+            if (! is_array($chunk)) {
+                $chunk = [];
+            }
+            $all = array_merge($all, $chunk);
+            $totalPages = max(1, (int) ($res['result_info']['total_pages'] ?? 1));
+            if ($page >= $totalPages) {
+                break;
+            }
+            if ($page >= 100 && $totalPages > 100) {
+                throw new RuntimeException('Cloudflare DNS 记录分页超过上限，请手工清理重复记录后重试');
+            }
+        }
 
-        return $res['result'] ?? [];
+        return $all;
     }
 
     protected function decode($response): array
