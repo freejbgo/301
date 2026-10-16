@@ -229,7 +229,7 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 			if ackErr := postJSON(client, cfg, "/api/nodes/ack", map[string]interface{}{
 				"cert_id": row.CertID,
 				"ok":      false,
-				"error":   err.Error(),
+				"error":   sanitizeAckError(err.Error()),
 			}, nil, registered); ackErr != nil {
 				return ackErr
 			}
