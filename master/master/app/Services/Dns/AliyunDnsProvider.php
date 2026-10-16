@@ -4,6 +4,7 @@ namespace App\Services\Dns;
 
 use App\Models\RediNode;
 use App\Models\RediPlatformDns;
+use App\Services\Dns\Concerns\EnsuresValidDnsNames;
 use App\Services\Dns\Concerns\ParsesZoneNames;
 use App\Services\Dns\Concerns\ReconcilesDnsRecords;
 use App\Services\Dns\Support\AliyunDnsClient;
@@ -11,6 +12,7 @@ use RuntimeException;
 
 class AliyunDnsProvider implements DnsProviderInterface
 {
+    use EnsuresValidDnsNames;
     use ParsesZoneNames;
     use ReconcilesDnsRecords;
 
@@ -42,6 +44,7 @@ class AliyunDnsProvider implements DnsProviderInterface
 
     public function upsertARecords(string $fqdn, array $ipv4): void
     {
+        $fqdn = $this->requireDnsFqdn($fqdn);
         $ipv4 = RediNode::filterValidIpv4List($ipv4);
         $parts = $this->splitFqdn($fqdn, $this->zoneName());
         $rows = $this->listRecordRows($parts['domain'], $parts['rr'], 'A');
@@ -66,10 +69,17 @@ class AliyunDnsProvider implements DnsProviderInterface
 
     public function upsertCname(string $name, string $zone, string $targetFqdn): void
     {
-        $zone = strtolower(rtrim($zone, '.'));
+        $zone = $this->requireDnsFqdn($zone, 'DNS zone');
+        $targetFqdn = $this->requireDnsFqdn($targetFqdn, 'CNAME 目标');
         $name = strtolower(rtrim($name, '.'));
-        $targetFqdn = strtolower(rtrim($targetFqdn, '.'));
-        $rr = $name === $zone ? '@' : $name;
+        if ($name === $zone) {
+            $name = '@';
+        } elseif (\Illuminate\Support\Str::endsWith($name, '.'.$zone)) {
+            $suffix = substr($name, 0, -strlen('.'.$zone));
+            $name = $suffix === '' ? '@' : $suffix;
+        }
+        $name = $this->requireDnsRrLabel($name);
+        $rr = $name;
         $rows = $this->listRecordRows($zone, $rr, 'CNAME');
 
         $this->reconcileCnameTarget(

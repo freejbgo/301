@@ -4,6 +4,7 @@ namespace App\Services\Dns;
 
 use App\Models\RediNode;
 use App\Models\RediPlatformDns;
+use App\Services\Dns\Concerns\EnsuresValidDnsNames;
 use App\Services\Dns\Concerns\ReconcilesDnsRecords;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
@@ -11,6 +12,7 @@ use RuntimeException;
 
 class CloudflareDnsProvider implements DnsProviderInterface
 {
+    use EnsuresValidDnsNames;
     use ReconcilesDnsRecords;
 
     protected RediPlatformDns $platform;
@@ -51,7 +53,7 @@ class CloudflareDnsProvider implements DnsProviderInterface
 
     public function upsertARecords(string $fqdn, array $ipv4): void
     {
-        $fqdn = strtolower(rtrim($fqdn, '.'));
+        $fqdn = $this->requireDnsFqdn($fqdn);
         $ipv4 = RediNode::filterValidIpv4List($ipv4);
         $zoneId = $this->zoneId();
         $name = $this->recordNameForFqdn($fqdn);
@@ -83,12 +85,16 @@ class CloudflareDnsProvider implements DnsProviderInterface
 
     public function upsertCname(string $name, string $zone, string $targetFqdn): void
     {
-        $zone = strtolower(rtrim($zone, '.'));
-        $targetFqdn = strtolower(rtrim($targetFqdn, '.'));
+        $zone = $this->requireDnsFqdn($zone, 'DNS zone');
+        $targetFqdn = $this->requireDnsFqdn($targetFqdn, 'CNAME 目标');
         $name = strtolower(rtrim($name, '.'));
-        if (Str::endsWith($name, '.'.$zone)) {
-            $name = substr($name, 0, -strlen('.'.$zone));
+        if ($name === $zone) {
+            $name = '@';
+        } elseif (Str::endsWith($name, '.'.$zone)) {
+            $suffix = substr($name, 0, -strlen('.'.$zone));
+            $name = $suffix === '' ? '@' : $suffix;
         }
+        $name = $this->requireDnsRrLabel($name);
 
         $zoneId = $this->zoneId();
         $cnameFqdn = $name === '@' ? $zone : $name.'.'.$zone;

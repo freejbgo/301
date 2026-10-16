@@ -22,6 +22,11 @@ class HostNameValidatorTest extends TestCase
         $this->assertStringStartsWith('xn--', $ascii);
     }
 
+    public function test_to_canonical_ascii_rejects_control_chars(): void
+    {
+        $this->assertSame('', HostNameValidator::toCanonicalAscii("foo\r\n.com"));
+    }
+
     public function test_rejects_ip_path_and_garbage(): void
     {
         $this->assertFalse(HostNameValidator::isValidHostLabel(''));

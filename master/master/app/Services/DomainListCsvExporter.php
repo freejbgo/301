@@ -94,6 +94,10 @@ class DomainListCsvExporter
      */
     public static function dnsExportColumnsForDomain(RediAdminDomain $domain): array
     {
+        if (! \App\Support\HostNameValidator::isValidHostLabel((string) $domain->original_url)) {
+            return ['', 'unknown'];
+        }
+
         TenantEdgeService::ensureForAdmin((int) $domain->admin_id);
         $edge = TenantEdgeService::cnameTargetForAdmin((int) $domain->admin_id);
         if ($edge === '' || strncmp($edge, '（', 3) === 0) {

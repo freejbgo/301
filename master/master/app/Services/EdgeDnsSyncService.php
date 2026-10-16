@@ -54,7 +54,10 @@ class EdgeDnsSyncService
         }
 
         $poolHost = strtolower(trim($platform->pool_host, '.'));
-        $poolTarget = $poolHost.'.'.$zone;
+        $poolTarget = HostNameValidator::toCanonicalAscii($poolHost.'.'.$zone);
+        if ($poolTarget === '' || ! HostNameValidator::isValidHostLabel($poolTarget)) {
+            throw new RuntimeException('Pool CNAME 目标无效');
+        }
         $ips = RediNode::enabledPublicIps();
 
         try {
