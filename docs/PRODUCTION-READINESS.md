@@ -34,6 +34,7 @@ systemctl is-active nginx php-fpm mariadb redi-queue
 grep -E 'renew|prune|health' /etc/cron.d/redi-renew
 ! grep -q 'schedule:run' /etc/cron.d/redi-renew
 ! grep -q 'master/master' /etc/cron.d/redi-renew
+# Cron 输出日志（排障续期/清理/health）：storage/logs/renew.log、prune-acme.log、health.log
 
 # 运营自检（节点心跳、证书到期；可接监控，非 0 表示有待处理项）
 cd /opt/301/master && php artisan redi:health
