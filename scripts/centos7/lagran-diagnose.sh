@@ -21,8 +21,8 @@ if [[ "${REDI_LAGRAN_DISABLED:-}" == "1" ]]; then
 fi
 
 if [[ -f "$CFG" ]] && command -v python3 >/dev/null 2>&1; then
-  read -r LAGRAN_SPORT _rest < <(python3 "${SCRIPT_DIR}/lagran_ports.py" "$CFG" 2>/dev/null || echo "? ? ? ? ?")
-  python3 - "$CFG" "$LAGRAN_SPORT" <<'PY'
+  if LAGRAN_SPORT=$(python3 "${SCRIPT_DIR}/lagran_ports.py" "$CFG" 2>/dev/null | awk '{print $1}'); then
+    python3 - "$CFG" "$LAGRAN_SPORT" <<'PY'
 import json, sys
 path, sport = sys.argv[1], sys.argv[2]
 with open(path, encoding="utf-8") as f:
@@ -35,6 +35,9 @@ elif lag.get("enabled") is False:
 else:
     print(f"[config] lagran.enabled 未关闭, iptables --sport={sport}")
 PY
+  else
+    echo "[config] 无法解析 ${CFG}（lagran_ports.py 失败）"
+  fi
 else
   echo "[config] 未找到 ${CFG} 或无 python3"
 fi

@@ -83,8 +83,8 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **73** 通过；`bash -n` + procedure 校验通过 |
-| lagran 运维 | `scripts/centos7/lagran-diagnose.sh`、`lagran-cleanup-iptables.sh`（#77） |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **76+**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | 部分环境 CI 可能因 Runner/账单秒失败；以本地上述自检为准 |
 
 **未发现阻塞商用的 P0 代码缺陷。**
@@ -94,28 +94,21 @@
 - `composer audit` 对 `symfony/yaml` 等传递依赖有 CVE 公告 → 随 Laravel/Composer 升级处理。
 - 真机验收清单仍以人工打勾为主（无全自动真机 CI）。
 - CentOS 7 EOL：继续用 vault 源；长期换 OS 属架构决策。
-- `lagran-cleanup` 在未配置 `lagran.port` 时默认 sport `80`，与运行时合并端口可能不一致时需对照 `iptables -L`。
 
 ---
 
-## 7. 仓库合并基线（截至 main `9daf61c`）
+## 7. 仓库合并基线
 
-| PR | 内容 |
-|----|------|
-| [#75](https://github.com/freejbgo/301/pull/75) | P0/P1 运营 + CentOS 7.9 only |
-| [#76](https://github.com/freejbgo/301/pull/76) | health hints / validating 卡住 / 续期边界 |
-| [#77](https://github.com/freejbgo/301/pull/77) | lagran 诊断与 iptables 清理 |
-
-当前无未合并的开放 PR（旧 Ubuntu #71 已关闭）。
+跟踪 **`main`**（已含 #75–#79：P0/P1、health、lagran、复核修复与小优化）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
 ## 8. VPS 操作顺序（若尚未对齐 main）
 
-1. 将主控/节点升到 **main**（含 #75–#77）。
+1. 将主控/节点升到当前 **main**。
 2. 主控：`docs/UPGRADE-IN-PLACE.md` → 新 tar、`migrate`、`config:cache`、`patch-master-cron-ops-webhook.sh`。
 3. 各节点：升级 **Agent 0.1.3** 的 `redi-multi` 并重启服务。
-4. 跑 `php artisan redi:health` 与 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) 中的 curl/DB 校验。
+4. 跑 `php artisan redi:health`（会附带打印配置 **hints**）与 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) 中的 curl/DB 校验。
 5. 按 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) 完成真机验收（含第二节点、证书、CNAME 场景见 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)）。
 
 ---
@@ -135,4 +128,4 @@ php scripts/verify-redi-node-procedure-sync.php
 bash scripts/verify-redi-db-deploy-path.sh
 ```
 
-PHPUnit 用例数随分支演进（当前 **73** 条 Feature/Unit）；以 `phpunit` 退出码为准。
+PHPUnit 用例数随分支演进（当前 **76+** 条 Feature/Unit）；以 `phpunit` 退出码为准。

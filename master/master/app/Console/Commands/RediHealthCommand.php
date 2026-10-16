@@ -42,16 +42,29 @@ class RediHealthCommand extends Command
 
         if ($issues === []) {
             $this->info('redi:health 未发现待处理项。');
-
-            return self::SUCCESS;
+        } else {
+            $this->warn('发现 '.count($issues).' 项待关注：');
+            foreach ($issues as $row) {
+                $prefix = $row['level'] === 'critical' ? '[严重]' : '[注意]';
+                $this->line($prefix.' '.$row['message']);
+            }
         }
 
-        $this->warn('发现 '.count($issues).' 项待关注：');
-        foreach ($issues as $row) {
-            $prefix = $row['level'] === 'critical' ? '[严重]' : '[注意]';
-            $this->line($prefix.' '.$row['message']);
-        }
+        self::printHints($this);
 
-        return self::FAILURE;
+        return $issues === [] ? self::SUCCESS : self::FAILURE;
+    }
+
+    protected static function printHints(Command $command): void
+    {
+        $hints = RediHealthReport::collectHints();
+        if ($hints === []) {
+            return;
+        }
+        $command->line('');
+        $command->line('配置建议（不影响退出码）：');
+        foreach ($hints as $hint) {
+            $command->line('  · '.$hint['message']);
+        }
     }
 }

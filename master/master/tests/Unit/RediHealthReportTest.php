@@ -51,6 +51,14 @@ class RediHealthReportTest extends TestCase
             $table->timestamps();
         });
 
+        Schema::create('redi_platform_dns', function (Blueprint $table) {
+            $table->unsignedTinyInteger('id')->primary();
+            $table->string('edge_zone')->nullable();
+            $table->string('pool_host')->nullable();
+            $table->boolean('acme_staging')->default(false);
+            $table->timestamps();
+        });
+
         Schema::create('failed_jobs', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('uuid')->unique();
@@ -154,5 +162,21 @@ class RediHealthReportTest extends TestCase
         $row = collect($issues)->firstWhere('code', 'cert_validating_stuck');
         $this->assertNotNull($row);
         $this->assertStringContainsString('3 张证书', $row['message']);
+    }
+
+    public function test_collect_issues_warns_acme_staging_in_production(): void
+    {
+        config(['app.env' => 'production']);
+        \DB::table('redi_platform_dns')->insert([
+            'id' => 1,
+            'edge_zone' => 'example.com',
+            'pool_host' => 'pool',
+            'acme_staging' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('acme_staging_enabled', $codes);
     }
 }
