@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\AcmeHttp01Token;
 use App\Support\HostNameValidator;
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Database\Eloquent\Model;
 
 class RediAcmeChallenge extends Model
@@ -30,7 +31,7 @@ class RediAcmeChallenge extends Model
 
         $token = AcmeHttp01Token::normalize($token);
         $responseBody = trim($responseBody);
-        if ($responseBody === '') {
+        if ($responseBody === '' || OpsDisplaySanitizer::containsControlChars($responseBody)) {
             throw new \InvalidArgumentException('ACME 挑战响应体无效');
         }
 
