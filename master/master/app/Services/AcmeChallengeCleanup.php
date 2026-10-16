@@ -16,7 +16,7 @@ class AcmeChallengeCleanup
         $hosts = [];
         foreach ($domainNames as $raw) {
             $host = HostNameValidator::toCanonicalAscii((string) $raw);
-            if ($host !== '') {
+            if ($host !== '' && HostNameValidator::isValidHostLabel($host)) {
                 $hosts[$host] = true;
             }
         }

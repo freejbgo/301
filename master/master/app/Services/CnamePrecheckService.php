@@ -32,6 +32,11 @@ class CnamePrecheckService
             return false;
         }
 
+        if (! HostNameValidator::isValidHostLabel($customerDomain)
+            || ! HostNameValidator::isValidHostLabel($edgeFqdn)) {
+            return false;
+        }
+
         if (! function_exists('dns_get_record')) {
             return false;
         }
