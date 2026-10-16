@@ -208,4 +208,21 @@ class RediHealthReportTest extends TestCase
         $codes = array_column(RediHealthReport::collectIssues(7), 'code');
         $this->assertContains('app_debug_enabled', $codes);
     }
+
+    public function test_production_config_issues_include_missing_edge_zone(): void
+    {
+        config(['app.env' => 'production', 'app.debug' => false]);
+        \DB::table('redi_platform_dns')->insert([
+            'id' => 1,
+            'edge_zone' => '',
+            'pool_host' => 'pool',
+            'acme_staging' => false,
+            'acme_contact_email' => 'ops@example.com',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('edge_zone_missing', $codes);
+    }
 }

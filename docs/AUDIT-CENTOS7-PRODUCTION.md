@@ -19,6 +19,7 @@
 | 项 | 结论 |
 |----|------|
 | 主控/节点一键脚本 | `scripts/centos7/deploy-master.sh`、`deploy-node.sh` |
+| 主控程序目录 | 发布包解压后为 **`/opt/301/master`**（`artisan` 在此）；非 `/opt/301/master/master` |
 | 变量模板 | `scripts/centos7/vars.example.env` → 本地 `vars.env`（gitignore） |
 | MySQL 节点授权 / 防火墙 | `grant-nodes-from-vars.sh`、`firewalld` 按 `NODE_IPS` |
 | 存量 Cron 补 Webhook | `scripts/patch-master-cron-ops-webhook.sh`（默认 `nginx` 用户） |
@@ -112,7 +113,7 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **78**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **79**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
@@ -170,4 +171,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；无 docker 时脚本
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **78** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **79** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
