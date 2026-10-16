@@ -77,7 +77,7 @@ step "ufw：22、80、443"
 ufw allow OpenSSH >/dev/null 2>&1 || ufw allow 22/tcp
 ufw allow 80/tcp
 ufw allow 443/tcp
-ufw --force enable
+redi_ufw_enable_safe
 
 APP="${NODE_INSTALL_ROOT}/redi-multi"
 step "解压到 ${APP}"
@@ -124,9 +124,9 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl daemon-reload
-systemctl enable --now redi-multi
-systemctl restart redi-multi
+redi_svc_daemon_reload
+redi_svc_enable_now redi-multi
+redi_svc_restart redi-multi
 active=0
 for _ in 1 2 3 4 5 6 7 8; do
   if systemctl is-active --quiet redi-multi; then

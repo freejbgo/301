@@ -6,6 +6,7 @@
 
 | 领域 | 要求 |
 |------|------|
+| 域名占坑 | 默认 **新建为停用**；租户启用前须 CNAME 到 edge 或 **A 到启用节点公网 IP**（`REDI_REQUIRE_DNS_POINTING_TO_ENABLE`，平台管理员可跳过） |
 | 后台安全 | 默认密码拦截不再放行 `dcat-api`；`dcat-api` 须已登录后台；登录 10 次/分钟限速；域名列表分组名 HTML 转义 |
 | 证书下发 | 节点 register / 重新启用时 `syncDeploymentsForNode` 补齐 `redi_cert_deployments`；主控空证书列表时节点清空内存证书 |
 | 节点 Agent | 心跳优先于拉取；拉取失败不阻断后续心跳；ack 403/409 不触发重新 register；Agent ≥ `0.1.3`（`REDI_MIN_AGENT_VERSION`） |

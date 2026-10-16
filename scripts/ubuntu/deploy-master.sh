@@ -80,7 +80,7 @@ apt-get "${APT_OPTS[@]}" install -y -qq nginx mariadb-server mariadb-client \
 php -r 'if (PHP_VERSION_ID < 80002) { fwrite(STDERR, "需要 PHP >= 8.0.2，当前 ".PHP_VERSION."\n"); exit(1); }'
 echo "PHP $(php -r 'echo PHP_VERSION;')"
 
-systemctl enable --now mariadb
+redi_svc_enable_now mariadb
 ok=0
 for _ in $(seq 1 60); do
   if mysqladmin ping --silent >/dev/null 2>&1 \
@@ -138,7 +138,7 @@ bind-address = 0.0.0.0
 EOF
 chmod 644 /etc/mysql/mariadb.conf.d/99-redi-bind.cnf
 bash "${SCRIPT_DIR}/apply-mysql-skip-name-resolve.sh"
-systemctl restart mariadb
+redi_svc_restart mariadb
 ok=0
 for _ in $(seq 1 30); do
   mysql_root -e "SELECT 1" >/dev/null 2>&1 && ok=1 && break
@@ -220,8 +220,8 @@ pool="/etc/php/${PHP_DOT}/fpm/pool.d/www.conf"
 [[ -f "$pool" ]] || die "找不到 $pool"
 sed -i -E 's/^;?listen\.owner =.*/listen.owner = www-data/' "$pool"
 sed -i -E 's/^;?listen\.group =.*/listen.group = www-data/' "$pool"
-systemctl enable --now "php${PHP_DOT}-fpm"
-systemctl restart "php${PHP_DOT}-fpm"
+redi_svc_enable_now "php${PHP_DOT}-fpm"
+redi_svc_restart "php${PHP_DOT}-fpm"
 
 NGINX_SITE="/etc/nginx/sites-available/301-master.conf"
 if [[ -f "$NGINX_SITE" ]] && ! grep -q '301-master-managed' "$NGINX_SITE"; then
@@ -259,8 +259,8 @@ EOF
   rm -f /etc/nginx/sites-enabled/default
 fi
 nginx -t
-systemctl enable --now nginx
-systemctl reload nginx
+redi_svc_enable_now nginx
+systemctl reload nginx 2>/dev/null || redi_svc_restart nginx
 
 step "队列与 cron"
 cat > /etc/systemd/system/redi-queue.service <<EOF
@@ -280,9 +280,9 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl daemon-reload
-systemctl enable --now redi-queue
-systemctl restart redi-queue
+redi_svc_daemon_reload
+redi_svc_enable_now redi-queue
+redi_svc_restart redi-queue
 
 cat > /etc/cron.d/redi-renew <<EOF
 SHELL=/bin/bash
@@ -296,7 +296,7 @@ step "ufw：22、80、443；3306 仅 NODE_IPS"
 ufw allow OpenSSH >/dev/null 2>&1 || ufw allow 22/tcp
 ufw allow 80/tcp
 ufw allow 443/tcp
-ufw --force enable
+redi_ufw_enable_safe
 
 redi_warn_master_https_mismatch "${ADMIN_HTTPS}" "${MASTER_URL}"
 

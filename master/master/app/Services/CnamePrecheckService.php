@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\RediNode;
 use App\Models\RediPlatformDns;
 use Illuminate\Support\Facades\Cache;
 
@@ -45,6 +46,26 @@ class CnamePrecheckService
                 if (self::cnameChainReaches($target, $allowedTargets, 4)) {
                     return true;
                 }
+            }
+        }
+
+        if (filter_var(config('redi.dns_precheck_allow_a_to_pool', true), FILTER_VALIDATE_BOOLEAN)) {
+            return self::aRecordPointsToPool($customerDomain);
+        }
+
+        return false;
+    }
+
+    public static function aRecordPointsToPool(string $customerDomain): bool
+    {
+        $poolIps = RediNode::enabledPublicIps();
+        if ($poolIps === []) {
+            return false;
+        }
+        $flip = array_flip($poolIps);
+        foreach (self::resolveA($customerDomain) as $ip) {
+            if (isset($flip[$ip])) {
+                return true;
             }
         }
 

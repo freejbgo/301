@@ -13,6 +13,7 @@ use Dcat\Admin\Admin;
 use Dcat\Admin\Layout\Content;
 use App\Admin\Actions\Modal\BatchDomainModal;
 use App\Models\RediDomainCert;
+use App\Services\DomainDnsPointingGuard;
 use App\Services\DomainOriginalUrlGuard;
 use App\Services\DomainRecordNormalizer;
 use App\Services\CnamePrecheckService;
@@ -198,7 +199,8 @@ JS
             }
             $form->text('original_url', '原始域名')->help('客户主域名，如 foo.com（全平台唯一，供边缘节点按 Host 查询）');
             $form->text('skip_url', '跳转链接');
-            $form->radio('status', '状态')->options([1=>'启用', 2=>'停用'])->default(1);
+            $form->radio('status', '状态')->options([1=>'启用', 2=>'停用'])->default(2)
+                ->help('启用前须将域名 CNAME 到接入目标（或 A 到节点公网 IP）；平台管理员可跳过校验');
             $form->switch('force_https', '强制 HTTPS')->help('证书状态为「已生效」后再打开。开启后节点对 HTTP 请求 301 到 HTTPS');
             if ($form->isCreating() && ! AdminTenantContext::isPlatformAdministrator()) {
                 $form->hidden('admin_id')->value(Admin::user()->id);
@@ -297,6 +299,11 @@ JS
                             'force_https' => '证书尚未生效，不能开启强制 HTTPS。请先申请证书并等到状态为「已生效」。',
                         ]);
                     }
+                }
+
+                $newStatus = (int) ($request['status'] ?? 2);
+                if ($newStatus === 1) {
+                    DomainDnsPointingGuard::assertCanEnable($ownerAdminId, $originalUrl);
                 }
 
                 TenantEdgeService::ensureForAdmin($ownerAdminId);

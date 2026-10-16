@@ -139,6 +139,48 @@ PY
   fi
 }
 
+# 真机 VPS 应有 systemd；无 D-Bus / 容器的实验环境跳过 enable，避免 set -e 中断。
+redi_systemd_usable() {
+  command -v systemctl >/dev/null 2>&1 || return 1
+  [[ -d /run/systemd/system ]] || return 1
+  systemctl list-units --type=service --no-legend --no-pager >/dev/null 2>&1 || return 1
+  return 0
+}
+
+redi_svc_enable_now() {
+  local unit="$1"
+  if redi_systemd_usable; then
+    systemctl enable --now "$unit"
+  else
+    echo "警告: systemd 不可用，跳过 systemctl enable --now ${unit}" >&2
+  fi
+}
+
+redi_svc_restart() {
+  local unit="$1"
+  if redi_systemd_usable; then
+    systemctl restart "$unit"
+  else
+    echo "警告: systemd 不可用，跳过 systemctl restart ${unit}" >&2
+  fi
+}
+
+redi_svc_daemon_reload() {
+  if redi_systemd_usable; then
+    systemctl daemon-reload
+  fi
+}
+
+redi_ufw_enable_safe() {
+  command -v ufw >/dev/null 2>&1 || return 0
+  if ufw status 2>/dev/null | grep -qi 'Status: active'; then
+    return 0
+  fi
+  if ! ufw --force enable >/dev/null 2>&1; then
+    echo "警告: ufw enable 失败（常见于无 netfilter 权限的容器），已跳过" >&2
+  fi
+}
+
 redi_warn_master_https_mismatch() {
   local admin_https="${1:-false}"
   local master_url="${2:-}"

@@ -19,6 +19,7 @@ class RenewDomainCertificatesCommand extends Command
                 RediDomainCert::STATUS_ACTIVE,
                 RediDomainCert::STATUS_ISSUED,
                 RediDomainCert::STATUS_DEPLOYING,
+                RediDomainCert::STATUS_FAILED,
             ])
             ->whereHas('domain', function ($query) {
                 $query->where('status', 1);

@@ -34,4 +34,14 @@ return [
         'Redi301@Install2026',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | 启用域名前须解析指向平台（CNAME 到租户 edge 或 A 到启用节点公网 IP）
+    |--------------------------------------------------------------------------
+    */
+
+    'require_dns_pointing_to_enable' => env('REDI_REQUIRE_DNS_POINTING_TO_ENABLE', true),
+
+    'dns_precheck_allow_a_to_pool' => env('REDI_DNS_PRECHECK_ALLOW_A_TO_POOL', true),
+
 ];
