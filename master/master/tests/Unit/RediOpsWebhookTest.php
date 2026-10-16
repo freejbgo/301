@@ -39,4 +39,19 @@ class RediOpsWebhookTest extends TestCase
 
         $this->assertTrue(RediOpsWebhook::notifyTaskFailure('redi:health'));
     }
+
+    public function test_notify_task_failure_strips_control_chars_from_message(): void
+    {
+        config(['redi.ops_webhook_url' => 'https://hooks.example/ops']);
+
+        Http::fake(['https://hooks.example/*' => Http::response([], 200)]);
+
+        RediOpsWebhook::notifyTaskFailure('redi:prune-acme-challenges', "fail\r\nline");
+
+        Http::assertSent(function ($request) {
+            $data = $request->data();
+
+            return ($data['message'] ?? '') === 'failline';
+        });
+    }
 }

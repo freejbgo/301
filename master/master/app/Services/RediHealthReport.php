@@ -8,6 +8,7 @@ use App\Models\RediNode;
 use App\Models\RediPlatformDns;
 use App\Services\Dns\DnsProviderFactory;
 use App\Support\HostNameValidator;
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
@@ -45,8 +46,8 @@ class RediHealthReport
                 'message' => sprintf(
                     '节点 #%d %s (%s) 超过 15 分钟无心跳',
                     $node->id,
-                    self::sanitizeOpsDisplay($node->name),
-                    self::sanitizeOpsDisplay($node->public_ip)
+                    OpsDisplaySanitizer::field($node->name),
+                    OpsDisplaySanitizer::field($node->public_ip)
                 ),
             ];
         }
@@ -442,17 +443,6 @@ class RediHealthReport
         $host = HostNameValidator::toCanonicalAscii($domainName);
 
         return $host !== '' && HostNameValidator::isValidHostLabel($host);
-    }
-
-    protected static function sanitizeOpsDisplay(?string $value, string $fallback = '—'): string
-    {
-        $text = str_replace(["\r", "\n", "\0"], '', (string) $value);
-        $text = trim($text);
-        if ($text === '') {
-            return $fallback;
-        }
-
-        return mb_strlen($text) > 120 ? mb_substr($text, 0, 120).'…' : $text;
     }
 
     /**
