@@ -7,6 +7,7 @@ func sanitizeAckError(msg string) string {
 	msg = strings.ReplaceAll(msg, "\r", "")
 	msg = strings.ReplaceAll(msg, "\n", "")
 	msg = strings.ReplaceAll(msg, "\x00", "")
+	msg = strings.ReplaceAll(msg, "\t", "")
 	msg = strings.TrimSpace(msg)
 	if len(msg) > 2000 {
 		return msg[:2000]

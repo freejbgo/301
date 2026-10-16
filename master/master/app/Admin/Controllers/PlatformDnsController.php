@@ -100,7 +100,9 @@ HTML;
         try {
             $syncService->syncAll();
         } catch (\Throwable $e) {
-            Log::warning('EdgeDnsSync failed', ['exception' => $e]);
+            Log::warning('EdgeDnsSync failed', [
+                'message' => OpsDisplaySanitizer::logSnippet($e->getMessage(), 500),
+            ]);
 
             return response()->json([
                 'status' => false,
