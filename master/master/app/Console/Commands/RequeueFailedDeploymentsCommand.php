@@ -18,10 +18,27 @@ class RequeueFailedDeploymentsCommand extends Command
         $nodeId = $this->option('node');
         $certId = $this->option('cert');
 
-        $count = $deployService->requeueFailedDeployments(
-            $nodeId !== null && $nodeId !== '' ? (int) $nodeId : null,
-            $certId !== null && $certId !== '' ? (int) $certId : null
-        );
+        $nodeFilter = null;
+        if ($nodeId !== null && $nodeId !== '') {
+            $nodeFilter = (int) $nodeId;
+            if ($nodeFilter < 1) {
+                $this->error('节点 ID 须为正整数');
+
+                return self::FAILURE;
+            }
+        }
+
+        $certFilter = null;
+        if ($certId !== null && $certId !== '') {
+            $certFilter = (int) $certId;
+            if ($certFilter < 1) {
+                $this->error('证书 ID 须为正整数');
+
+                return self::FAILURE;
+            }
+        }
+
+        $count = $deployService->requeueFailedDeployments($nodeFilter, $certFilter);
 
         if ($count === 0) {
             $this->info('没有 failed 部署记录需要重试。');

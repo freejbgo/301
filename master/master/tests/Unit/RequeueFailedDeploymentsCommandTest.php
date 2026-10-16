@@ -61,6 +61,13 @@ class RequeueFailedDeploymentsCommandTest extends TestCase
         $this->assertStringContainsString('没有 failed', Artisan::output());
     }
 
+    public function test_command_rejects_invalid_node_id(): void
+    {
+        $exit = Artisan::call('redi:requeue-failed-deployments', ['--node' => '0']);
+        $this->assertSame(1, $exit);
+        $this->assertStringContainsString('正整数', Artisan::output());
+    }
+
     public function test_command_requeues_failed_deployments(): void
     {
         $nodeId = \DB::table('redi_nodes')->insertGetId([

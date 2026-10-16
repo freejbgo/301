@@ -63,6 +63,7 @@
 | `dns_api_credentials_missing` | warning | DNS API 模式但未保存凭证 |
 | `dns_zone_id_missing` | warning | Cloudflare 驱动未配置 Zone ID |
 | `node_stale` | warning | 启用节点超过 15 分钟无心跳 |
+| `node_no_public_ip` | warning | 启用节点均未配置公网 IP |
 | `cert_deploy_pending` | warning | 仍有 pending 证书部署 |
 | `cert_deploy_failed` | critical | 节点证书安装 failed |
 | `cert_expired` | critical | 已过期且域名仍启用 |
@@ -147,6 +148,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#113）：** `node_no_public_ip` health；证书 API 跳过空域名；requeue 命令校验 ID；masteragent redirect 规则归一；PHPUnit **123**。
+
 **2026-10-16 复核（#112）：** 证书 Job 与节点 API 统一 punycode `domain_name`；`dns_driver_invalid` health 码；masteragent 跳过空挑战域名；PHPUnit **121**。
 
 **2026-10-16 复核（#111）：** `redi:health` 生产检查 DNS API 凭证与 Cloudflare Zone ID；ACME 挑战/HTTP-01 全链 punycode；节点路径拒绝反斜杠；PHPUnit **120**。
@@ -198,7 +201,7 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **121**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **123**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
@@ -279,4 +282,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **121** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **123** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
