@@ -144,6 +144,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#110）：** `dns_mode` API 大小写归一（`isDnsApiMode`）；CNAME 预检与节点 `redirect-rules` 主机名 punycode 规范化；签发前统一 `AcmeChallengeCleanup`；节点 `sanitizeHost` 在 trim 前拒绝 CRLF；PHPUnit **117**。
+
 **2026-10-16 复核（#109）：** `REDI_ACME_HTTP01_POLL_SECONDS` 可配置轮询；签发失败 `CertificateIssuer` 内清理挑战；DNS 驱动大小写/空白归一；firewalld 脚本校验 daemon 运行；PHPUnit **113**。
 
 **2026-10-16 复核（#108）：** `Http01PropagationWaiter` 单测；`DnsProviderFactory::API_DRIVERS` 与后台保存校验；PHPUnit **111**。
@@ -189,7 +191,7 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **113**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **116**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
@@ -203,7 +205,7 @@
 | **运营命令** | PHPUnit + CONSOLE | health/renew/prune/ops-webhook/requeue |
 | **节点 API + Agent** | Feature `NodeAgentApiTest` + Go `masteragent` | challenges-synced、revision、证书 ack |
 | **ACME 签发链** | 编译 + Job 队列单测 | `CertificateIssuer` 无授权域名时明确失败；签发失败 Job 与 Issuer 内 `AcmeChallengeCleanup`；`REDI_ACME_HTTP01_POLL_SECONDS`；`parseCertExpiry` / **`Http01PropagationWaiter`** 单测 |
-| **DNS 厂商同步** | `EdgeDnsSyncServiceTest`、厂商 upsert 单测 | `DnsProviderFactory` 未知 `dns_driver` **抛错**；`API_DRIVERS` 常量 + 后台保存校验 |
+| **DNS 厂商同步** | `EdgeDnsSyncServiceTest`、厂商 upsert 单测 | `isDnsApiMode()` 大小写归一；`DnsProviderFactory` 未知 `dns_driver` **抛错**；`API_DRIVERS` + 后台校验 |
 | **Go lagran** | `go test ./...` | 新增 `lagran/enabled_test.go`（`REDI_LAGRAN_DISABLED`）；`lagran_ports.py` + 运维脚本 |
 | **后台 Dcat** | 手工扫路由/middleware | #105 `_redirect` 防 `//`；未全量 UI 审计 |
 | **文档** | 与脚本/命令对齐 | AUDIT / DEPLOY / SECURITY / OPS 随 PR 更新 |
@@ -270,4 +272,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **113** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **116** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。

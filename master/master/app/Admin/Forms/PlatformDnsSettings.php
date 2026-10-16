@@ -21,7 +21,10 @@ class PlatformDnsSettings extends Form implements LazyRenderable
             return $this->response()->error('仅超级管理员可修改平台 DNS / ACME 设置');
         }
 
-        $mode = $input['dns_mode'] ?? 'manual';
+        $mode = strtolower(trim((string) ($input['dns_mode'] ?? 'manual')));
+        if (! in_array($mode, ['manual', 'api'], true)) {
+            return $this->response()->error('解析模式无效');
+        }
         $driver = strtolower(trim((string) ($input['dns_driver'] ?? 'manual')));
         if ($mode === 'api' && ($driver === '' || $driver === 'manual')) {
             return $this->response()->error('API 自动模式请选择具体 DNS 驱动，不能选「手动」');

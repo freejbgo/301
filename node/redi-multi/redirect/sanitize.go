@@ -6,11 +6,11 @@ import (
 )
 
 func sanitizeHost(host string) string {
-	host = strings.ToLower(strings.TrimSpace(host))
-	if host == "" {
+	if strings.ContainsAny(host, "\r\n\x00") {
 		return ""
 	}
-	if strings.ContainsAny(host, "\r\n\x00") {
+	host = strings.ToLower(strings.TrimSpace(host))
+	if host == "" {
 		return ""
 	}
 	if net.ParseIP(host) != nil {

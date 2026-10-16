@@ -35,7 +35,7 @@ class DnsProviderFactory
     {
         $platform = $platform ?: RediPlatformDns::instance();
 
-        if ($platform->dns_mode !== 'api') {
+        if (! $platform->isDnsApiMode()) {
             return new ManualDnsProvider();
         }
 

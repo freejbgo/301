@@ -4,13 +4,16 @@ namespace App\Services;
 
 use App\Models\RediNode;
 use App\Models\RediPlatformDns;
+use App\Support\HostNameValidator;
 use Illuminate\Support\Facades\Cache;
 
 class CnamePrecheckService
 {
     public static function pointsToEdgeCached(string $customerDomain, string $edgeFqdn, int $seconds = 60): bool
     {
-        $key = 'cname-precheck:'.md5(strtolower($customerDomain).'|'.strtolower($edgeFqdn));
+        $customerDomain = HostNameValidator::toCanonicalAscii($customerDomain);
+        $edgeFqdn = HostNameValidator::toCanonicalAscii($edgeFqdn);
+        $key = 'cname-precheck:'.md5($customerDomain.'|'.$edgeFqdn);
 
         return (bool) Cache::remember($key, $seconds, function () use ($customerDomain, $edgeFqdn) {
             return self::pointsToEdge($customerDomain, $edgeFqdn);
@@ -22,8 +25,8 @@ class CnamePrecheckService
      */
     public static function pointsToEdge(string $customerDomain, string $edgeFqdn): bool
     {
-        $customerDomain = strtolower(trim($customerDomain, '.'));
-        $edgeFqdn = strtolower(trim($edgeFqdn, '.'));
+        $customerDomain = HostNameValidator::toCanonicalAscii($customerDomain);
+        $edgeFqdn = HostNameValidator::toCanonicalAscii($edgeFqdn);
 
         if ($customerDomain === '' || $edgeFqdn === '') {
             return false;

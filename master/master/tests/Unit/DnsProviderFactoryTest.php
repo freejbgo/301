@@ -45,4 +45,16 @@ class DnsProviderFactoryTest extends TestCase
         $this->assertTrue(DnsProviderFactory::isSupportedApiDriver('  Cloudflare  '));
         $this->assertTrue(DnsProviderFactory::isSupportedApiDriver('DNS_COM'));
     }
+
+    public function test_api_dns_mode_is_case_insensitive(): void
+    {
+        $platform = new RediPlatformDns([
+            'dns_mode' => 'API',
+            'dns_driver' => 'not_a_real_driver',
+        ]);
+
+        $this->expectException(InvalidArgumentException::class);
+
+        DnsProviderFactory::make($platform);
+    }
 }

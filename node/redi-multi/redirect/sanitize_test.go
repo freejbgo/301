@@ -19,3 +19,9 @@ func TestSanitizeLocationURLStripsCRLF(t *testing.T) {
 		t.Fatalf("expected /, got %q", loc)
 	}
 }
+
+func TestSanitizeHostStripsCRLF(t *testing.T) {
+	if h := sanitizeHost("evil.com\r\n"); h != "" {
+		t.Fatalf("expected empty host, got %q", h)
+	}
+}

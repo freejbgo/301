@@ -186,9 +186,12 @@ class NodeAgentController extends Controller
             ->get(['original_url', 'force_https'])
             ->map(function ($row) {
                 return [
-                    'original_url' => $row->original_url,
+                    'original_url' => HostNameValidator::toCanonicalAscii((string) $row->original_url),
                     'force_https' => (bool) $row->force_https,
                 ];
+            })
+            ->filter(function ($row) {
+                return $row['original_url'] !== '';
             })
             ->values();
 

@@ -12,7 +12,6 @@ use App\Services\CertificateDeployService;
 use App\Services\Acme\Http01PropagationWaiter;
 use App\Support\HostNameValidator;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
@@ -73,7 +72,7 @@ class CertificateIssuer
             $file = $authorization->getFile();
             $token = basename($file->getFilename());
             $body = $file->getContents();
-            DB::table('redi_acme_challenge_node_sync')->where('domain_name', $domain)->delete();
+            AcmeChallengeCleanup::purgeForHosts([$domain]);
             RediAcmeChallenge::upsertForDomain(
                 $domain,
                 $token,

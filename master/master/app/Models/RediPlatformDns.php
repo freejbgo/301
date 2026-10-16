@@ -44,6 +44,11 @@ class RediPlatformDns extends Model
         );
     }
 
+    public function isDnsApiMode(): bool
+    {
+        return strtolower(trim((string) $this->dns_mode)) === 'api';
+    }
+
     public function poolFqdn(): string
     {
         $zone = trim($this->edge_zone, '.');
