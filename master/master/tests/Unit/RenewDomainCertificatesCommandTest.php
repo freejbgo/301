@@ -67,6 +67,34 @@ class RenewDomainCertificatesCommandTest extends TestCase
         });
     }
 
+    public function test_renew_skips_invalid_domain_name(): void
+    {
+        Bus::fake();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => '1.2.3.4',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => '1.2.3.4',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+            'expires_at' => now()->addDays(10),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertSame(0, Artisan::call('redi:renew-certificates', ['--days' => 25]));
+        $output = Artisan::output();
+        $this->assertStringContainsString('跳过非法域名', $output);
+        $this->assertStringContainsString('没有需要续期的证书', $output);
+
+        Bus::assertNothingDispatched();
+    }
+
     public function test_renew_reports_when_no_certs_due(): void
     {
         Bus::fake();

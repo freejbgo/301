@@ -147,4 +147,28 @@ class CertificateDeployServiceTest extends TestCase
         $svc = app(CertificateDeployService::class);
         $this->assertTrue($svc->markNodeAck($cert, $node, true));
     }
+
+    public function test_sync_skips_certs_with_invalid_domain_name(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => '1.2.3.4',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => '1.2.3.4',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        app(CertificateDeployService::class)->syncDeploymentsForNode($node);
+
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
+    }
 }

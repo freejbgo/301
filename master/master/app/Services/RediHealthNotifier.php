@@ -30,9 +30,14 @@ class RediHealthNotifier
         $lines = ['[301] redi:health 发现 '.count($issues).' 项待处理：'];
         foreach ($issues as $row) {
             $tag = $row['level'] === 'critical' ? '严重' : '注意';
-            $lines[] = '['.$tag.'] '.$row['message'];
+            $lines[] = '['.$tag.'] '.mb_substr((string) ($row['message'] ?? ''), 0, 500);
         }
 
-        return implode("\n", $lines);
+        $text = implode("\n", $lines);
+        if (strlen($text) > 4000) {
+            return substr($text, 0, 3997).'...';
+        }
+
+        return $text;
     }
 }
