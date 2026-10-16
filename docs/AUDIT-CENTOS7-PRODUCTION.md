@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#129）：** `ReconcilesDnsRecords` CNAME 目标校验；`RediHealthReport` 证书告警跳过非法 `domain_name`；Cloudflare CNAME/CSV 单测补强；PHPUnit **160**。
+
 **2026-10-16 复核（#128）：** DNS 厂商 `EnsuresValidDnsNames`；`HostNameValidator` 拒绝控制字符；同步校验 pool CNAME 目标；CSV 导出 DNS 列跳过非法域名；PHPUnit **157**。
 
 **2026-10-16 复核（#127）：** 后台 DNS 表单与 `TenantEdgeService` 统一 `HostNameValidator`；手动 DNS 参考表跳过非法 edge；`challenges-synced` 拒绝超长域名；Go redirect `sanitizeHost` punycode；PHPUnit **155**。
@@ -313,4 +315,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **157** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **160** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。

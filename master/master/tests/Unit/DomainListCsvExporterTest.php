@@ -110,4 +110,19 @@ class DomainListCsvExporterTest extends TestCase
         $this->assertSame('', $target);
         $this->assertSame('unknown', $ok);
     }
+
+    public function test_dns_export_unknown_for_invalid_original_url(): void
+    {
+        $domain = new \App\Models\RediAdminDomain();
+        $domain->forceFill([
+            'id' => 2,
+            'admin_id' => 1,
+            'original_url' => '1.2.3.4',
+            'skip_url' => 'https://d.com',
+            'status' => 1,
+        ]);
+
+        [, $ok] = DomainListCsvExporter::dnsExportColumnsForDomain($domain);
+        $this->assertSame('unknown', $ok);
+    }
 }

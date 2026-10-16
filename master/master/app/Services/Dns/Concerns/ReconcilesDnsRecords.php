@@ -3,6 +3,7 @@
 namespace App\Services\Dns\Concerns;
 
 use App\Models\RediNode;
+use App\Support\HostNameValidator;
 
 /**
  * 先增/改、后删，避免「先删后建」在 API 失败时把记录删光。
@@ -54,10 +55,11 @@ trait ReconcilesDnsRecords
      */
     protected function reconcileCnameTarget(array $existing, string $targetFqdn, callable $create, callable $update, callable $deleteById): void
     {
-        $target = strtolower(rtrim(trim($targetFqdn), '.'));
-        if ($target === '') {
+        $target = HostNameValidator::toCanonicalAscii($targetFqdn);
+        if ($target === '' || ! HostNameValidator::isValidHostLabel($target)) {
             throw new \RuntimeException('CNAME 目标无效');
         }
+        $target = strtolower(rtrim($target, '.'));
 
         $keeperId = null;
         $toDelete = [];
