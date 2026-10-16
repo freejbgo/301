@@ -47,4 +47,23 @@ class NormalizeDomainHostsCommandTest extends TestCase
             'skip_url' => '',
         ]);
     }
+
+    public function test_skips_invalid_original_url_without_echoing_raw_value(): void
+    {
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => "evil.com\r\n",
+            'skip_url' => 'https://ok.example/',
+            'status' => 2,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Artisan::call('redi:normalize-domain-hosts');
+        $output = Artisan::output();
+        $this->assertStringContainsString('跳过 id=1 非法 original_url', $output);
+        $this->assertStringNotContainsString("\r\n", $output);
+        $this->assertDatabaseHas('redi_admin_domain', [
+            'original_url' => "evil.com\r\n",
+        ]);
+    }
 }

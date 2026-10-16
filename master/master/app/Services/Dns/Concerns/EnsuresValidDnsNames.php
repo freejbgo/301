@@ -19,6 +19,9 @@ trait EnsuresValidDnsNames
 
     protected function requireDnsRrLabel(string $name): string
     {
+        if (str_contains($name, "\r") || str_contains($name, "\n") || str_contains($name, "\0")) {
+            throw new RuntimeException('DNS 主机记录名无效');
+        }
         $name = strtolower(trim($name, '.'));
         if ($name === '' || $name === '@') {
             return '@';
