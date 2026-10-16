@@ -29,6 +29,9 @@ php artisan redi:health --json
 # 有问题时通知 Webhook（.env 配置 REDI_HEALTH_WEBHOOK_URL，POST JSON，含 text 摘要）
 php artisan redi:health --notify
 
+# Cron 任务异常退出时（deploy 已配置 || redi:ops-webhook）；可单独测：
+# php artisan redi:ops-webhook --task=redi:renew-certificates --message="测试告警"
+
 # 续期预演（cron 实际跑的是 redi:renew-certificates，无 --dry-run）
 php artisan redi:renew-certificates --dry-run --days=25
 

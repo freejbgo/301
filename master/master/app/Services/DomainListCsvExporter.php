@@ -29,6 +29,8 @@ class DomainListCsvExporter
                 'admin_name',
                 'cert_status',
                 'cert_expires_at',
+                'cname_target',
+                'dns_points_to_platform',
                 'force_https',
                 'skip_num',
             ]);
@@ -36,6 +38,7 @@ class DomainListCsvExporter
             $query = self::filteredQuery($request);
             foreach ($query->cursor() as $domain) {
                 $cert = $domain->certificate;
+                [$cnameTarget, $dnsOk] = self::dnsExportColumnsForDomain($domain);
                 fputcsv($handle, [
                     $domain->id,
                     $domain->original_url,
@@ -45,6 +48,8 @@ class DomainListCsvExporter
                     $domain->admin_name,
                     $cert ? $cert->status : 'none',
                     $cert && $cert->expires_at ? $cert->expires_at->format('Y-m-d') : '',
+                    $cnameTarget,
+                    $dnsOk,
                     $domain->force_https ? '1' : '0',
                     $domain->skip_num,
                 ]);
@@ -82,5 +87,21 @@ class DomainListCsvExporter
         }
 
         return $query;
+    }
+
+    /**
+     * @return DnsExportColumns [cname_target, dns_points_to_platform yes|no|unknown]
+     */
+    public static function dnsExportColumnsForDomain(RediAdminDomain $domain): array
+    {
+        TenantEdgeService::ensureForAdmin((int) $domain->admin_id);
+        $edge = TenantEdgeService::cnameTargetForAdmin((int) $domain->admin_id);
+        if ($edge === '' || strncmp($edge, '（', 3) === 0) {
+            return ['', 'unknown'];
+        }
+
+        $ok = CnamePrecheckService::pointsToEdgeCached($domain->original_url, $edge);
+
+        return [$edge, $ok ? 'yes' : 'no'];
     }
 }

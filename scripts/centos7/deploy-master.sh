@@ -398,9 +398,9 @@ redi_svc_restart redi-queue
 cat > /etc/cron.d/redi-renew <<EOF
 SHELL=/bin/bash
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
-10 3 * * * nginx cd ${APP} && /usr/bin/php artisan redi:renew-certificates >> ${APP}/storage/logs/renew.log 2>&1
-10 4 * * * nginx cd ${APP} && /usr/bin/php artisan redi:prune-acme-challenges >> ${APP}/storage/logs/prune-acme.log 2>&1
-30 8 * * * nginx cd ${APP} && /usr/bin/php artisan redi:health --notify >> ${APP}/storage/logs/health.log 2>&1
+10 3 * * * nginx bash -c 'cd ${APP} && /usr/bin/php artisan redi:renew-certificates >> ${APP}/storage/logs/renew.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:renew-certificates >> ${APP}/storage/logs/renew.log 2>&1'
+10 4 * * * nginx bash -c 'cd ${APP} && /usr/bin/php artisan redi:prune-acme-challenges >> ${APP}/storage/logs/prune-acme.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:prune-acme-challenges >> ${APP}/storage/logs/prune-acme.log 2>&1'
+30 8 * * * nginx bash -c 'cd ${APP} && /usr/bin/php artisan redi:health --notify >> ${APP}/storage/logs/health.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:health >> ${APP}/storage/logs/health.log 2>&1'
 EOF
 chmod 644 /etc/cron.d/redi-renew
 

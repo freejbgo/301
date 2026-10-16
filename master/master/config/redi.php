@@ -52,4 +52,12 @@ return [
 
     'health_webhook_url' => env('REDI_HEALTH_WEBHOOK_URL', ''),
 
+    /*
+    |--------------------------------------------------------------------------
+    | 运维 Webhook（cron 失败等）；未配置时回退到 REDI_HEALTH_WEBHOOK_URL
+    |--------------------------------------------------------------------------
+    */
+
+    'ops_webhook_url' => env('REDI_OPS_WEBHOOK_URL', ''),
+
 ];

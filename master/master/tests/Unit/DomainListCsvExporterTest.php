@@ -73,4 +73,41 @@ class DomainListCsvExporterTest extends TestCase
 
         $this->assertSame(['a.com'], $urls);
     }
+
+    public function test_dns_export_unknown_without_edge(): void
+    {
+        Schema::create('redi_platform_dns', function (Blueprint $table) {
+            $table->unsignedTinyInteger('id')->primary();
+            $table->string('edge_zone')->default('');
+            $table->string('pool_host')->default('pool');
+            $table->timestamps();
+        });
+        Schema::create('redi_tenant_edge', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('admin_id')->unique();
+            $table->string('token', 32);
+            $table->string('edge_fqdn', 255)->nullable();
+            $table->timestamps();
+        });
+        \DB::table('redi_platform_dns')->insert([
+            'id' => 1,
+            'edge_zone' => '',
+            'pool_host' => 'pool',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $domain = new \App\Models\RediAdminDomain();
+        $domain->forceFill([
+            'id' => 1,
+            'admin_id' => 99,
+            'original_url' => 'x.com',
+            'skip_url' => 'https://d.com',
+            'status' => 1,
+        ]);
+
+        [$target, $ok] = DomainListCsvExporter::dnsExportColumnsForDomain($domain);
+        $this->assertSame('', $target);
+        $this->assertSame('unknown', $ok);
+    }
 }

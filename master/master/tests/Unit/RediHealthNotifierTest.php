@@ -19,7 +19,10 @@ class RediHealthNotifierTest extends TestCase
 
     public function test_notify_posts_json_payload(): void
     {
-        config(['redi.health_webhook_url' => 'https://hooks.example/health']);
+        config([
+            'redi.health_webhook_url' => 'https://hooks.example/health',
+            'redi.ops_webhook_url' => '',
+        ]);
 
         Http::fake([
             'https://hooks.example/*' => Http::response(['ok' => true], 200),
