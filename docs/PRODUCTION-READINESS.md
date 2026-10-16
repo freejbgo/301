@@ -27,6 +27,11 @@
 ## 验收命令（真机）
 
 ```bash
+# Cron（与 deploy-master / patch-master-cron-ops-webhook 一致）
+grep -E 'renew|prune|health' /etc/cron.d/redi-renew
+! grep -q 'schedule:run' /etc/cron.d/redi-renew
+! grep -q 'master/master' /etc/cron.d/redi-renew
+
 # 运营自检（节点心跳、证书到期；可接监控，非 0 表示有待处理项）
 cd /opt/301/master && php artisan redi:health
 php artisan redi:health --json

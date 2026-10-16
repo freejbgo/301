@@ -108,6 +108,8 @@
 
 **2026-10-16 深度审计：** 删除未使用的 `UserFactory`、`node/redi-multi/Makefile`；清空 `Kernel::schedule`（生产仅用 `/etc/cron.d`，避免误跑 `schedule:run` 双份续期）；`channels.php` 与未启用的 Broadcast 对齐；CI 下 `verify-redi-db-deploy-path` 无 docker 时失败。
 
+**2026-10-16 复核（#87）：** Cron 文档统一「勿 `schedule:run`」；`UPGRADE` / 验收清单补强 `grep renew|prune|health` 与 `schedule:run` 负向检查。
+
 | 维度 | 结论 |
 |------|------|
 | 部署脚本 | `deploy-master` / `deploy-node` 仅接受 CentOS 7；Cron 用户 `nginx`；`NODE_IPS` 同步授权与 firewalld 逻辑完整 |
@@ -133,14 +135,19 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#86](https://github.com/freejbgo/301/pull/86)（深度审计、`Kernel` schedule 留空、Cron 文档统一）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#87](https://github.com/freejbgo/301/pull/87)（深度审计、`Kernel` schedule 留空、Cron 文档与验收 grep 统一）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
 ## 8. VPS 操作顺序（若尚未对齐 main）
 
 1. 将主控/节点升到当前 **main**。
-2. 主控：`docs/UPGRADE-IN-PLACE.md` → 备份 `.env`、新 tar、`migrate`、`config:cache`；`sudo bash scripts/patch-master-cron-ops-webhook.sh`（纠正 Cron 中错误的 `master/master` 路径）。
+2. 主控：`docs/UPGRADE-IN-PLACE.md` → 备份 `.env`、新 tar、`migrate`、`config:cache`；`sudo bash scripts/patch-master-cron-ops-webhook.sh`（纠正 Cron 中错误的 `master/master` 路径），并执行：
+   ```bash
+   grep -E 'renew|prune|health' /etc/cron.d/redi-renew
+   ! grep -q 'schedule:run' /etc/cron.d/redi-renew
+   ! grep -q 'master/master' /etc/cron.d/redi-renew
+   ```
 3. 各节点：升级 **Agent 0.1.3** 的 `redi-multi` 并重启服务。
 4. 跑 `php artisan redi:health`（会附带打印配置 **hints**）与 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) 中的 curl/DB 校验。
 5. 按 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) 完成真机验收（含第二节点、证书、CNAME 场景见 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)）。

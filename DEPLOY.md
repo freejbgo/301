@@ -105,13 +105,9 @@ php artisan queue:work --sleep=3 --timeout=320 --tries=100
 
 证书续期 / ACME 清理 / 运营自检（CentOS `deploy-master` 写入 `/etc/cron.d/redi-renew`，含 **03:10** 续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`）：
 
-`/etc/cron.d/` 里必须写用户名。发布包安装的程序目录是 `/opt/301/master`；git 克隆时把路径换成 `master/master`。续期示例：
+`/etc/cron.d/` 里必须写用户名。发布包安装的程序目录是 `/opt/301/master`；git 克隆时把路径换成 `master/master`。生产须 **三行**（03:10 续期、04:10 清理 ACME、08:30 `redi:health --notify`），且建议 `bash -c 'cd … && php artisan … || php artisan redi:ops-webhook …'`（与 `deploy-master` 一致）。
 
-```bash
-10 3 * * * nginx cd /opt/301/master && /usr/bin/php artisan redi:renew-certificates >> storage/logs/renew.log 2>&1
-```
-
-完整三行与失败 Webhook 见 `scripts/centos7/deploy-master.sh` 或 [UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) §4。
+完整内容与验收 `grep` 见 `scripts/centos7/deploy-master.sh` 或 [UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) §4。
 
 主控域名的 HTTPS 证书用面板或 certbot 签在 Nginx 上。这张证书只保护后台，和客户域名的跳转证书不是同一张。
 

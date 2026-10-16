@@ -78,7 +78,9 @@ php -r 'echo PHP_VERSION, "\n";'
 mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SELECT COUNT(*) FROM redi_admin.admin_users;"
 curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/admin"
 cd /opt/301/master && sudo -u nginx php artisan redi:health
+grep -E 'renew|prune|health' /etc/cron.d/redi-renew
 grep -E 'cd /opt/301/master' /etc/cron.d/redi-renew
+grep -q 'redi:prune-acme-challenges' /etc/cron.d/redi-renew
 grep -q 'redi:health' /etc/cron.d/redi-renew
 ! grep -q 'master/master' /etc/cron.d/redi-renew
 ! grep -q 'schedule:run' /etc/cron.d/redi-renew
