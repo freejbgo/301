@@ -135,7 +135,7 @@ class RediNodeController extends AdminController
                 }
 
                 $primary = trim((string) $form->input('public_ip'));
-                if (filter_var($primary, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === false) {
+                if (! RediNode::isValidPublicIpv4($primary)) {
                     throw ValidationException::withMessages([
                         'public_ip' => '主公网 IP 必须是 IPv4',
                     ]);
