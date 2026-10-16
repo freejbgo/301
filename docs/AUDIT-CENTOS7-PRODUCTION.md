@@ -67,7 +67,7 @@
 | `cert_validating_stuck` | warning | validating 超过 `REDI_HEALTH_VALIDATING_STUCK_HOURS` |
 | `queue_failed_jobs` | critical | `failed_jobs` 非空 |
 | `queue_backlog` | warning | `jobs` 积压超过阈值 |
-| `queue_stale` | warning | `jobs` 中 `available_at` 超过 **2 小时**仍未执行（worker 可能未跑）；仅 `QUEUE_CONNECTION=database` |
+| `queue_stale` | warning | `jobs` 中 `available_at` 超过 **N 小时**仍未执行（默认 **2**，`REDI_HEALTH_QUEUE_STALE_HOURS`）；仅 `QUEUE_CONNECTION=database` |
 
 ### `redi:health` 配置建议（`hints[]`，不影响退出码）
 
@@ -136,6 +136,10 @@
 
 **2026-10-16 #96 已合并 `main`：** 见 [PR #96](https://github.com/freejbgo/301/pull/96)（renew 日志 summary、批量 grant firewalld 提示降噪）。
 
+**2026-10-16 #97 已合并 `main`：** 见 [PR #97](https://github.com/freejbgo/301/pull/97)（批量 revoke 提示降噪、renew summary 单测、子 shell 错误传播）。
+
+**2026-10-16 复核（#98）：** `REDI_HEALTH_QUEUE_STALE_HOURS` 可配置 `queue_stale`；renew 无待续期证书单测；grant-node 头注释 `REDI_GRANT_BATCH`；PHPUnit **90**。
+
 **2026-10-16 复核（#97）：** 批量 `revoke-node-mysql` 同步抑制 firewalld 提示；`redi_sync_node_ips_access` 用子 shell 承载 `REDI_GRANT_BATCH`；renew 入队 summary 单测；CONSOLE 续期日志说明。
 
 **2026-10-16 复核（#96）：** `redi:renew-certificates` 入队后打印 summary（`renew.log` 可读）；批量 `grant-node-mysql` 不再重复 firewalld 提示（`REDI_GRANT_BATCH`）；验收清单对齐 `max-time` grep。
@@ -157,7 +161,7 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **88**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **90**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
@@ -173,7 +177,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#97](https://github.com/freejbgo/301/pull/97)（#96：renew 日志与批量 grant；#95：验收 queue unit；#93–#94：运维与 prune 单测）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#98](https://github.com/freejbgo/301/pull/98)（#97：批量 revoke 与 renew 单测；#96–#95：renew/queue 验收；#93–#94：运维与 prune）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
@@ -222,4 +226,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **88** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **90** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。

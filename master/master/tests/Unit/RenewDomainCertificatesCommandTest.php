@@ -67,6 +67,16 @@ class RenewDomainCertificatesCommandTest extends TestCase
         });
     }
 
+    public function test_renew_reports_when_no_certs_due(): void
+    {
+        Bus::fake();
+
+        $this->assertSame(0, Artisan::call('redi:renew-certificates', ['--days' => 25]));
+        $this->assertStringContainsString('没有需要续期的证书', Artisan::output());
+
+        Bus::assertNothingDispatched();
+    }
+
     public function test_renew_dry_run_does_not_dispatch(): void
     {
         Bus::fake();

@@ -304,14 +304,19 @@ class RediHealthReport
         }
 
         if ($connection === 'database' && Schema::hasTable('jobs')) {
+            $staleHours = max(1, (int) config('redi.health_queue_stale_hours', 2));
             $stale = (int) \DB::table('jobs')
-                ->where('available_at', '<', now()->subHours(2)->timestamp)
+                ->where('available_at', '<', now()->subHours($staleHours)->timestamp)
                 ->count();
             if ($stale > 0) {
                 $issues[] = [
                     'level' => 'warning',
                     'code' => 'queue_stale',
-                    'message' => sprintf('有 %d 条队列任务超过 2 小时未执行，可能 worker 未运行', $stale),
+                    'message' => sprintf(
+                        '有 %d 条队列任务超过 %d 小时未执行，可能 worker 未运行',
+                        $stale,
+                        $staleHours
+                    ),
                 ];
             }
         }
