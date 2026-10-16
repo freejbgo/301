@@ -16,7 +16,7 @@
 3. **关闭 DNS 反查**：主控执行 `scripts/centos7/apply-mysql-skip-name-resolve.sh`。
 4. **主控启用 HTTPS**（`ADMIN_HTTPS=true`，并且 Nginx 上的证书和 `APP_URL` 一致）。
 5. **防火墙** 只开放 22/80/443。节点不必对访客开放 8080。不要执行 `iptables -F`。
-6. **运营监控**：CentOS 由 `/etc/cron.d/redi-renew` 直调 artisan（**03:10** 续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`）；**勿**配置 `php artisan schedule:run`。配置 `REDI_HEALTH_WEBHOOK_URL` 后，Cron 的 `--notify` 在发送成功时退出 0。亦可采集 `redi:health --json`。`issues[].code` / `hints[].code` 见 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) §3；生产须关 `APP_DEBUG` 并配置 ACME 邮箱与 `edge_zone`。
+6. **运营监控**：CentOS 由 `/etc/cron.d/redi-renew` 直调 artisan（**03:10** 续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`）；**勿**配置 `php artisan schedule:run`。配置 `REDI_HEALTH_WEBHOOK_URL` 后，Cron 的 `--notify` 在发送成功时退出 0（health 通知**仅**发往该 URL；`REDI_OPS_WEBHOOK_URL` 用于 Cron 行 `|| redi:ops-webhook` 等运维失败兜底）。亦可采集 `redi:health --json`。`issues[].code` / `hints[].code` 见 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) §3；生产须关 `APP_DEBUG` 并配置 ACME 邮箱与 `edge_zone`。
 
 ## 边缘池与证书（一期）
 

@@ -17,6 +17,24 @@ class RediHealthNotifierTest extends TestCase
         ]));
     }
 
+    public function test_notify_uses_health_url_when_ops_url_also_set(): void
+    {
+        config([
+            'redi.health_webhook_url' => 'https://hooks.example/health',
+            'redi.ops_webhook_url' => 'https://hooks.example/ops',
+        ]);
+
+        Http::fake([
+            'https://hooks.example/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $this->assertTrue(RediHealthNotifier::notifyWebhook([
+            ['level' => 'warning', 'code' => 'test', 'message' => 'x'],
+        ]));
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://hooks.example/health');
+    }
+
     public function test_notify_posts_json_payload(): void
     {
         config([
