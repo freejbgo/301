@@ -129,14 +129,14 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**（已含 #75–#80）。**[#81](https://github.com/freejbgo/301/pull/81)** 待发：生产 `redi:health` 扩展、`dev-preflight.sh`、主控路径 **`/opt/301/master`** 文档/脚本统一、问题码表与发版自检串联。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#81](https://github.com/freejbgo/301/pull/81)（`redi:health` 生产配置、`dev-preflight.sh`、§3 问题码表、主控 **`/opt/301/master`** 与 Cron 路径统一）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
 ## 8. VPS 操作顺序（若尚未对齐 main）
 
 1. 将主控/节点升到当前 **main**。
-2. 主控：`docs/UPGRADE-IN-PLACE.md` → 新 tar、`migrate`、`config:cache`、`patch-master-cron-ops-webhook.sh`。
+2. 主控：`docs/UPGRADE-IN-PLACE.md` → 备份 `.env`、新 tar、`migrate`、`config:cache`；`sudo bash scripts/patch-master-cron-ops-webhook.sh`（纠正 Cron 中错误的 `master/master` 路径）。
 3. 各节点：升级 **Agent 0.1.3** 的 `redi-multi` 并重启服务。
 4. 跑 `php artisan redi:health`（会附带打印配置 **hints**）与 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) 中的 curl/DB 校验。
 5. 按 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) 完成真机验收（含第二节点、证书、CNAME 场景见 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)）。
