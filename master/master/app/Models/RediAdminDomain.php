@@ -92,4 +92,50 @@ class RediAdminDomain extends Model
     {
         return $this->hasOne(RediDomainCert::class, 'domain_id');
     }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<self>  $query
+     */
+    public static function applyCertificateListFilter($query, ?string $filter): void
+    {
+        $filter = trim((string) $filter);
+        if ($filter === '') {
+            return;
+        }
+
+        switch ($filter) {
+            case 'needs_attention':
+                $query->whereHas('certificate', function ($q) {
+                    $q->whereIn('status', [
+                        RediDomainCert::STATUS_PENDING_DNS,
+                        RediDomainCert::STATUS_FAILED,
+                        RediDomainCert::STATUS_DEPLOYING,
+                        RediDomainCert::STATUS_VALIDATING,
+                    ]);
+                });
+                break;
+            case 'active':
+                $query->whereHas('certificate', function ($q) {
+                    $q->where('status', RediDomainCert::STATUS_ACTIVE);
+                });
+                break;
+            case 'expiring':
+                $query->whereHas('certificate', function ($q) {
+                    $q->whereIn('status', [
+                        RediDomainCert::STATUS_ACTIVE,
+                        RediDomainCert::STATUS_ISSUED,
+                        RediDomainCert::STATUS_DEPLOYING,
+                    ])
+                        ->whereNotNull('expires_at')
+                        ->where('expires_at', '>=', now())
+                        ->where('expires_at', '<=', now()->addDays(14));
+                });
+                break;
+            case 'none':
+                $query->whereDoesntHave('certificate');
+                break;
+            default:
+                break;
+        }
+    }
 }

@@ -21,6 +21,7 @@ use App\Services\TenantEdgeService;
 use App\Support\AdminTenantContext;
 use App\Admin\Actions\Grid\ApplyCertificate;
 use App\Admin\Actions\Grid\BatchApplyCertificate;
+use App\Admin\Actions\Grid\BatchRedeployCertificate;
 use App\Admin\Actions\Grid\RedeployCertificate;
 use App\Jobs\IssueDomainCertificateJob;
 use App\Models\RediAcmeChallenge;
@@ -50,6 +51,7 @@ class RediAdminDomainController extends AdminController
 
             $grid->batchActions(function ($batch) {
                 $batch->add(new BatchApplyCertificate());
+                $batch->add(new BatchRedeployCertificate());
             });
 
             $grid->actions(function (Grid\Displayers\Actions $actions) {
@@ -148,6 +150,16 @@ JS
                 $filter->like('original_url', '原始域名')->width(4);
                 $filter->like('skip_url', '跳转地址')->width(4);
                 $filter->equal('status', '状态')->select([1 => '启用', 2 => '停用'])->width(3);
+
+                $filter->where('cert_filter', function ($query) {
+                    \App\Models\RediAdminDomain::applyCertificateListFilter($query, $this->input);
+                }, '证书')->select([
+                    '' => '全部',
+                    'needs_attention' => '待处理',
+                    'active' => '已生效',
+                    'expiring' => '14 天内到期',
+                    'none' => '未申请',
+                ])->width(3);
 
             });
         });

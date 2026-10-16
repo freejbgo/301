@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\RediAdminDomain;
+use App\Models\RediDomainCert;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
@@ -50,6 +51,50 @@ class RediAdminDomainModelTest extends TestCase
             $table->boolean('force_https')->default(false);
             $table->timestamps();
         });
+
+        Schema::create('redi_domain_certs', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('domain_id');
+            $table->string('domain_name');
+            $table->string('status')->default('none');
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function test_certificate_list_filter_none(): void
+    {
+        RediAdminDomain::query()->insert([
+            'group_id' => 1,
+            'admin_id' => 1,
+            'original_url' => 'a.com',
+            'skip_url' => 'https://x.com',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $withCert = RediAdminDomain::query()->insertGetId([
+            'group_id' => 1,
+            'admin_id' => 1,
+            'original_url' => 'b.com',
+            'skip_url' => 'https://x.com',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $withCert,
+            'domain_name' => 'b.com',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $ids = RediAdminDomain::query()->tap(function ($q) {
+            RediAdminDomain::applyCertificateListFilter($q, 'none');
+        })->pluck('original_url')->all();
+
+        $this->assertSame(['a.com'], $ids);
     }
 
     public function test_rejects_invalid_skip_url_on_save(): void
