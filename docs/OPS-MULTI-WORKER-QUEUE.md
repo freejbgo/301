@@ -34,10 +34,10 @@ sudo systemctl restart redi-queue
 ## 自检
 
 ```bash
-php artisan redi:health --json | jq '.summary.health_queue_pending_threshold,.summary.health_queue_stale_hours,.summary.health_validating_stuck_hours,.hints,.summary.queue_connection,.summary.cache_driver'
+php artisan redi:health --json | jq '.summary.health_queue_pending_threshold,.summary.health_queue_stale_hours,.summary.health_validating_stuck_hours,.summary.health_renew_validating_stuck_hours,.hints,.summary.queue_connection,.summary.cache_driver'
 ```
 
-`hints` 中不应再出现 `queue_cache_file`（在已改 redis 且队列非 sync 时）。`queue_stale`（`jobs.available_at` 超过 `REDI_HEALTH_QUEUE_STALE_HOURS`，默认 2）仅在 `QUEUE_CONNECTION=database` 时检测；`--json` 的 `summary` 含 `health_queue_pending_threshold` / `health_queue_stale_hours` / `health_validating_stuck_hours`。各 hint/issue `code` 见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。
+`hints` 中不应再出现 `queue_cache_file`（在已改 redis 且队列非 sync 时）。`queue_stale`（`jobs.available_at` 超过 `REDI_HEALTH_QUEUE_STALE_HOURS`，默认 2）仅在 `QUEUE_CONNECTION=database` 时检测；`--json` 的 `summary` 含 `health_queue_pending_threshold` / `health_queue_stale_hours` / `health_validating_stuck_hours` / `health_renew_validating_stuck_hours`。各 hint/issue `code` 见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。
 
 ## systemd
 

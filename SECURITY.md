@@ -41,7 +41,8 @@
 | 节点 Agent | `REDI_MASTER_URL` 必须 **https://**；可选 `REDI_DB_TLS=1`；Agent **0.1.3+** 分项 revision；默认 `REDI_MIN_AGENT_VERSION=0.1.3`，**全部** `/api/nodes/*` 受版本门（请求 `version` 或库内 `agent_version`）；设 `REDI_MIN_AGENT_VERSION=` 可禁用 |
 | `TRUSTED_PROXIES` / `REDI_ALLOW_TRUST_ALL_PROXIES` | 生产拒绝 `*` 除非 `config('redi.allow_trust_all_proxies')` 为 true（**`php artisan config:cache` 后仍有效**）；Web 与 `queue:work` 启动时均检查 |
 | ACME 维护 | CentOS `/etc/cron.d/redi-renew`：**03:10** `redi:renew-certificates`、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`；`redi:normalize-domain-hosts` 可修正历史 IDN / `skip_url` |
-| `redi:health` 阈值 | `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）、`REDI_HEALTH_QUEUE_STALE_HOURS`（默认 2）；`--json` 的 `summary` 回显当前配置 |
+| `redi:health` 阈值 | `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）、`REDI_HEALTH_QUEUE_STALE_HOURS`（默认 2）、`REDI_HEALTH_VALIDATING_STUCK_HOURS` / `REDI_RENEW_VALIDATING_STUCK_HOURS`；`--json` 的 `summary` 回显当前配置 |
+| 后台运维重定向 | 超管「重试失败部署」等 POST 的 `_redirect` 仅接受站内 `/path`，拒绝 `//` 协议相对外链 |
 | 证书表 | `redi_domain_certs.domain_id` 外键级联删除，避免孤儿证书记录 |
 
 ## 威胁模型（节点与边缘）
