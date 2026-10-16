@@ -10,7 +10,6 @@ use App\Models\RediNode;
 use App\Services\AcmeChallengeQuery;
 use App\Services\CertificateDeployService;
 use App\Services\NodeAgentRevisionService;
-use App\Support\AcmeHttp01Token;
 use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
 use App\Support\RediAgentVersionGate;
@@ -39,11 +38,19 @@ class NodeAgentController extends Controller
         $node = $request->attributes->get('redi_node');
         $domains = array_slice((array) $request->input('domains', []), 0, 200);
         $allowed = AcmeChallengeQuery::ready()
-            ->pluck('domain_name')
-            ->map(function ($d) {
-                return HostNameValidator::toCanonicalAscii((string) $d);
+            ->get(['domain_name', 'token', 'response_body'])
+            ->filter(function ($row) {
+                $domain = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
+
+                return $domain !== ''
+                    && HostNameValidator::isValidHostLabel($domain)
+                    && AcmeChallengeQuery::http01ContentValid($row->token, $row->response_body);
             })
-            ->flip();
+            ->mapWithKeys(function ($row) {
+                $domain = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
+
+                return [$domain => true];
+            });
         $now = now();
         $synced = [];
         $ignored = 0;
@@ -108,13 +115,9 @@ class NodeAgentController extends Controller
                 ];
             })
             ->filter(function ($row) {
-                $body = (string) ($row['response_body'] ?? '');
-
                 return $row['domain_name'] !== ''
                     && HostNameValidator::isValidHostLabel($row['domain_name'])
-                    && AcmeHttp01Token::isValid((string) $row['token'])
-                    && $body !== ''
-                    && ! OpsDisplaySanitizer::containsControlChars($body);
+                    && AcmeChallengeQuery::http01ContentValid($row['token'] ?? null, $row['response_body'] ?? null);
             })
             ->values();
 

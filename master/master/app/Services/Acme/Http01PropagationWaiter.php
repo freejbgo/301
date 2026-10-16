@@ -30,7 +30,7 @@ class Http01PropagationWaiter
         $path = '/.well-known/acme-challenge/'.$token;
         $publicUrl = 'http://'.$domain.$path;
         $expectedBody = trim($expectedBody);
-        if ($expectedBody === '') {
+        if ($expectedBody === '' || OpsDisplaySanitizer::containsControlChars($expectedBody)) {
             throw new RuntimeException('HTTP-01 响应体无效');
         }
         $deadline = time() + max(0, $maxSeconds);

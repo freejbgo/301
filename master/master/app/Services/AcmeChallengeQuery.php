@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\RediAcmeChallenge;
+use App\Support\AcmeHttp01Token;
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Database\Eloquent\Builder;
 
 class AcmeChallengeQuery
@@ -16,5 +18,14 @@ class AcmeChallengeQuery
             ->where('token', '!=', '')
             ->whereNotNull('response_body')
             ->where('response_body', '!=', '');
+    }
+
+    public static function http01ContentValid(?string $token, ?string $responseBody): bool
+    {
+        $body = trim((string) $responseBody);
+
+        return AcmeHttp01Token::isValid((string) $token)
+            && $body !== ''
+            && ! OpsDisplaySanitizer::containsControlChars($body);
     }
 }
