@@ -27,7 +27,7 @@ with open(path, encoding="utf-8") as f:
     data = json.load(f)
 lag = data.get("lagran")
 if lag is None:
-    print("[config] lagran 节省略 → 默认 enabled=true")
+    print("[config] config.json 未配置 lagran 节 → 默认 enabled=true")
 elif lag.get("enabled") is False:
     print("[config] lagran.enabled=false")
 else:
