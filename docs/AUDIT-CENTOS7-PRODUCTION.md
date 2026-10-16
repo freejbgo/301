@@ -133,7 +133,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#85](https://github.com/freejbgo/301/pull/85)（含深度审计与 `Kernel` schedule 留空）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#86](https://github.com/freejbgo/301/pull/86)（深度审计、`Kernel` schedule 留空、Cron 文档统一）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 

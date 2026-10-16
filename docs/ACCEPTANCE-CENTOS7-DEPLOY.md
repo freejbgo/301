@@ -81,6 +81,7 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health
 grep -E 'cd /opt/301/master' /etc/cron.d/redi-renew
 grep -q 'redi:health' /etc/cron.d/redi-renew
 ! grep -q 'master/master' /etc/cron.d/redi-renew
+! grep -q 'schedule:run' /etc/cron.d/redi-renew
 ss -lntp | egrep ':80|:443|:3306' || true
 sudo firewall-cmd --list-all
 ```
