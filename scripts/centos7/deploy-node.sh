@@ -229,7 +229,7 @@ if mysql --defaults-extra-file="$db_cnf" -e "CALL redi_node_bump_skip('__redi_de
   echo "数据库连接正常（redi_node EXECUTE redi_node_bump_skip）"
 else
   rm -f "$db_cnf"
-  die "连不上 ${MASTER_IP} 或 redi_node 无 EXECUTE 权限。请先在主控导入 redi_admin.sql（或 migrate）后执行 grant-node-mysql.sh，并放行 3306"
+  die "连不上 ${MASTER_IP} 或 redi_node 无 EXECUTE 权限。请先在主控：NODE_IPS 含本机公网 IP 后 deploy-master.sh 或 grant-nodes-from-vars.sh（或 grant-node-mysql.sh + firewalld-allow），并放行云安全组 3306"
 fi
 rm -f "$db_cnf"
 

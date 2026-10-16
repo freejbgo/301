@@ -180,7 +180,7 @@
 php artisan redi:health
 php artisan redi:health --json    # 监控采集；issues/hints 的 code 见 AUDIT §3
 php artisan redi:health --notify  # 有 issues 时 POST webhook（Cron 08:30；发送成功退出 0）
-php artisan redi:renew-certificates --dry-run --days=25
+php artisan redi:renew-certificates --dry-run --days=25   # 续期；validating 卡住超过 REDI_RENEW_VALIDATING_STUCK_HOURS 可重试
 php artisan redi:prune-acme-challenges   # Cron 04:10；勿依赖 schedule:run
 php artisan redi:requeue-failed-deployments
 php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修正（见 DEPLOY.md）

@@ -21,7 +21,7 @@
 1. 修改后台默认密码（种子文档密码在 `config/redi.php` 的 `known_default_admin_passwords` 中会被拦截）。
 2. 确认 `APP_KEY` 稳定且已备份（证书密文依赖它）。
 3. 主控仅 HTTPS 暴露；节点 `REDI_MASTER_URL` 使用 `https://`（实验环境才用 `REDI_MASTER_INSECURE=1`）。
-4. 按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 执行主控/节点脚本，并准备 `release` 包（见 `scripts/ensure-release-tarballs.sh`）。
+4. 按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 执行主控/节点脚本，并准备 `release` 包（见 `scripts/ensure-release-tarballs.sh`）。主控 `NODE_IPS` 变更后须 `deploy-master.sh` 或 `grant-nodes-from-vars.sh` 同步 MySQL/firewalld。
 5. **在开发机打 tar 或发 `v*` tag 前**：`bash scripts/dev-preflight.sh`（见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §9）。
 
 ## 验收命令（真机）
