@@ -14,7 +14,7 @@
 | 证书下发 | 节点 register / 重新启用时 `syncDeploymentsForNode` 补齐 `redi_cert_deployments`；主控空证书列表时节点清空内存证书 |
 | 节点 Agent | 心跳优先于拉取；拉取失败不阻断后续心跳；ack 403/409 不触发重新 register；Agent ≥ `0.1.3`（`REDI_MIN_AGENT_VERSION`） |
 | API 限流 | 节点 API 在认证后按 `node_id` 限流（`throttle:redi-node`） |
-| ACME / 生产配置 | `redi:health` 在生产下检查：`app_debug_enabled`、`acme_email_missing`、`acme_staging_enabled`、`edge_zone_missing`、`dns_api_credentials_missing`、`dns_zone_id_missing` |
+| ACME / 生产配置 | `redi:health` 在生产下检查：`app_debug_enabled`、`acme_email_missing`、`acme_staging_enabled`、`edge_zone_missing`、`dns_driver_invalid`、`dns_api_credentials_missing`、`dns_zone_id_missing` |
 
 ## 部署前
 

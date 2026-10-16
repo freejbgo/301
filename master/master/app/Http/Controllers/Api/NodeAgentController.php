@@ -92,7 +92,18 @@ class NodeAgentController extends Controller
     public function acmeChallenges()
     {
         $rows = AcmeChallengeQuery::ready()
-            ->get(['domain_name', 'token', 'response_body']);
+            ->get(['domain_name', 'token', 'response_body'])
+            ->map(function ($row) {
+                return [
+                    'domain_name' => HostNameValidator::toCanonicalAscii((string) $row->domain_name),
+                    'token' => $row->token,
+                    'response_body' => $row->response_body,
+                ];
+            })
+            ->filter(function ($row) {
+                return $row['domain_name'] !== '' && trim((string) $row['token']) !== '';
+            })
+            ->values();
 
         return response()->json(['challenges' => $rows]);
     }
@@ -135,7 +146,7 @@ class NodeAgentController extends Controller
             }
             $payload[] = [
                 'cert_id' => $cert->id,
-                'domain' => $cert->domain_name,
+                'domain' => HostNameValidator::toCanonicalAscii((string) $cert->domain_name),
                 'certificate' => $pem,
                 'private_key' => $key,
                 'force_https' => (bool) optional($cert->domain)->force_https,

@@ -328,6 +328,25 @@ class RediHealthReportTest extends TestCase
         $this->assertContains('edge_zone_missing', $codes);
     }
 
+    public function test_production_warns_when_dns_api_mode_with_manual_driver(): void
+    {
+        config(['app.env' => 'production', 'app.debug' => false]);
+        \DB::table('redi_platform_dns')->insert([
+            'id' => 1,
+            'edge_zone' => 'example.com',
+            'pool_host' => 'pool',
+            'dns_mode' => 'api',
+            'dns_driver' => 'manual',
+            'acme_staging' => false,
+            'acme_contact_email' => 'ops@example.com',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('dns_driver_invalid', $codes);
+    }
+
     public function test_production_warns_when_dns_api_mode_without_credentials(): void
     {
         config(['app.env' => 'production', 'app.debug' => false]);

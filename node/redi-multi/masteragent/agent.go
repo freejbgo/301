@@ -143,15 +143,16 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 	items := make([]acme.Item, 0, len(out.Challenges))
 	domains := make([]string, 0, len(out.Challenges))
 	for _, c := range out.Challenges {
-		if strings.TrimSpace(c.Token) == "" || strings.TrimSpace(c.ResponseBody) == "" {
+		domain := strings.TrimSpace(c.DomainName)
+		if domain == "" || strings.TrimSpace(c.Token) == "" || strings.TrimSpace(c.ResponseBody) == "" {
 			continue
 		}
 		items = append(items, acme.Item{
-			DomainName:   c.DomainName,
+			DomainName:   domain,
 			Token:        c.Token,
 			ResponseBody: c.ResponseBody,
 		})
-		domains = append(domains, c.DomainName)
+		domains = append(domains, domain)
 	}
 	acme.ReplaceAll(items)
 	if len(domains) > 0 {
