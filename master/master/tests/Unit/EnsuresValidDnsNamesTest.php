@@ -9,6 +9,21 @@ use Tests\TestCase;
 
 class EnsuresValidDnsNamesTest extends TestCase
 {
+    public function test_cloudflare_upsert_rejects_control_chars_in_fqdn(): void
+    {
+        $platform = new RediPlatformDns([
+            'dns_zone_id' => 'zone123',
+        ]);
+        $platform->setApiCredentialsArray(['api_key' => 'token']);
+
+        $provider = new CloudflareDnsProvider($platform);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('DNS FQDN 无效');
+
+        $provider->upsertARecords("pool\r\n.example.com", ['1.2.3.4']);
+    }
+
     public function test_cloudflare_upsert_rejects_invalid_fqdn(): void
     {
         $platform = new RediPlatformDns([
