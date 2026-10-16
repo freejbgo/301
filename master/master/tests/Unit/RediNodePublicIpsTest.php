@@ -26,4 +26,12 @@ class RediNodePublicIpsTest extends TestCase
 
         $this->assertSame(['1.2.3.4', '5.6.7.8'], $node->publicIps());
     }
+
+    public function test_filter_valid_ipv4_list_dedupes_and_drops_invalid(): void
+    {
+        $this->assertSame(
+            ['1.2.3.4', '5.6.7.8'],
+            RediNode::filterValidIpv4List(['1.2.3.4', 'bad', '5.6.7.8', '1.2.3.4'])
+        );
+    }
 }

@@ -103,7 +103,7 @@ HTML;
 
             return response()->json([
                 'status' => false,
-                'message' => 'DNS 同步失败，请检查平台 DNS 配置与厂商凭证；详情见主控 storage/logs。',
+                'message' => 'DNS 同步失败：'.$e->getMessage(),
             ], 422);
         }
 
