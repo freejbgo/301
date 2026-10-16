@@ -64,6 +64,11 @@ class NodeAgentController extends Controller
             $synced[] = $domain;
         }
 
+        if ($synced !== []) {
+            $node->last_heartbeat_at = $now;
+            $node->save();
+        }
+
         return response()->json([
             'ok' => true,
             'synced' => $synced,
