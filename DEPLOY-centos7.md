@@ -163,6 +163,7 @@ grep -E 'renew|prune|health' /etc/cron.d/redi-renew
 ! grep -q 'schedule:run' /etc/cron.d/redi-renew
 ! grep -q 'master/master' /etc/cron.d/redi-renew
 cd /opt/301/master && sudo -u nginx php artisan redi:health --json
+# 可选：jq '.summary.health_queue_pending_threshold,.summary.health_queue_stale_hours,.issues'
 # 生产建议在 .env 配置 REDI_HEALTH_WEBHOOK_URL，并验证：sudo -u nginx php artisan redi:health --notify; echo exit=$?
 ```
 
