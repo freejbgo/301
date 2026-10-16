@@ -4,6 +4,11 @@
 # CentOS 7 请先用 deploy-master.sh 安装 MariaDB 10.6。5.5 没有 CREATE USER IF NOT EXISTS，也吃不下这份 utf8mb4 库。
 set -euo pipefail
 
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "请用 root 执行: sudo MYSQL_ROOT_PASSWORD='...' $0 ..." >&2
+  exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "${SCRIPT_DIR}/lib.sh"
