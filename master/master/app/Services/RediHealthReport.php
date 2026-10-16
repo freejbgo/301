@@ -292,6 +292,10 @@ class RediHealthReport
             ];
         }
 
+        foreach ($hints as $i => $hint) {
+            $hints[$i]['message'] = OpsDisplaySanitizer::stripControlChars((string) ($hint['message'] ?? ''));
+        }
+
         return $hints;
     }
 

@@ -8,7 +8,7 @@ import (
 
 // CanonicalLookupHost 与主控 HostNameValidator::toCanonicalAscii 对齐（小写 + punycode）。
 func CanonicalLookupHost(raw string) string {
-	if strings.ContainsAny(raw, "\r\n\x00") {
+	if strings.ContainsAny(raw, "\r\n\x00\t") {
 		return ""
 	}
 	host := strings.ToLower(strings.TrimSpace(raw))

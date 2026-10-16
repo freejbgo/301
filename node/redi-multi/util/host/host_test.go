@@ -23,3 +23,9 @@ func TestCanonicalLookupHostRejectsCRLF(t *testing.T) {
 		t.Fatal("expected empty for CRLF host")
 	}
 }
+
+func TestCanonicalLookupHostRejectsTab(t *testing.T) {
+	if CanonicalLookupHost("evil\t.com") != "" {
+		t.Fatal("expected empty for tab in host")
+	}
+}

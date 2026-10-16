@@ -32,6 +32,12 @@ func TestSanitizeHostStripsCRLF(t *testing.T) {
 	}
 }
 
+func TestSanitizeHostRejectsTab(t *testing.T) {
+	if h := sanitizeHost("evil\t.com"); h != "" {
+		t.Fatalf("expected empty host, got %q", h)
+	}
+}
+
 func TestSanitizeHostCanonicalizesAscii(t *testing.T) {
 	if h := sanitizeHost("Foo.COM"); h != "foo.com" {
 		t.Fatalf("expected foo.com, got %q", h)

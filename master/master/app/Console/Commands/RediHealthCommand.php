@@ -44,8 +44,7 @@ class RediHealthCommand extends Command
             $this->warn('发现 '.count($issues).' 项待关注：');
             foreach ($issues as $row) {
                 $prefix = $row['level'] === 'critical' ? '[严重]' : '[注意]';
-                $msg = OpsDisplaySanitizer::stripControlChars((string) ($row['message'] ?? ''));
-                $this->line($prefix.' '.mb_substr($msg, 0, 500));
+                $this->line($prefix.' '.mb_substr((string) ($row['message'] ?? ''), 0, 500));
             }
         } else {
             $this->info('redi:health 未发现待处理项。');
