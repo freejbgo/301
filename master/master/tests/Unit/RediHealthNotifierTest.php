@@ -35,6 +35,23 @@ class RediHealthNotifierTest extends TestCase
         Http::assertSent(fn ($request) => $request->url() === 'https://hooks.example/health');
     }
 
+    public function test_format_plain_text_truncates_very_long_output(): void
+    {
+        $issues = [];
+        for ($i = 0; $i < 50; $i++) {
+            $issues[] = [
+                'level' => 'warning',
+                'code' => 'test',
+                'message' => str_repeat('x', 200),
+            ];
+        }
+
+        $text = RediHealthNotifier::formatPlainText($issues);
+
+        $this->assertLessThanOrEqual(4000, strlen($text));
+        $this->assertStringEndsWith('...', $text);
+    }
+
     public function test_notify_posts_json_payload(): void
     {
         config([

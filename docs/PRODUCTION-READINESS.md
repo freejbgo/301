@@ -16,6 +16,7 @@
 | API 限流 | 节点 API 在认证后按 `node_id` 限流（`throttle:redi-node`） |
 | ACME / 生产配置 | `redi:health` 在生产下检查：`app_debug_enabled`、`acme_email_missing`、`acme_staging_enabled`、`edge_zone_missing`、`dns_driver_invalid`、`dns_api_credentials_missing`、`dns_zone_id_missing` |
 | 节点池 | `redi:health` 告警 `node_pool_empty` / `node_no_public_ip`；pool A 仅使用合法 IPv4（节点模型 + DNS reconcile 双层过滤） |
+| 证书续期/下发 | `redi:renew-certificates` 与 `syncDeploymentsForNode` 跳过非法主机名的证书记录，避免无效 ACME 入队 |
 
 ## 部署前
 

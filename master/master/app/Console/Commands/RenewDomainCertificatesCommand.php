@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Jobs\IssueDomainCertificateJob;
 use App\Models\RediDomainCert;
+use App\Support\HostNameValidator;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -34,6 +35,16 @@ class RenewDomainCertificatesCommand extends Command
         $queued = 0;
         $i = 0;
         foreach ($certs as $cert) {
+            $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
+            if ($host === '' || ! HostNameValidator::isValidHostLabel($host)) {
+                Log::warning('redi:renew-certificates skip invalid domain_name', [
+                    'cert_id' => $cert->id,
+                    'domain_name' => $cert->domain_name,
+                ]);
+                $this->warn('跳过非法域名 cert #'.$cert->id.'：'.$cert->domain_name);
+                continue;
+            }
+
             if ($dryRun) {
                 $this->line(sprintf(
                     '[dry-run] %s expires %s status=%s',

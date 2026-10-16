@@ -24,7 +24,7 @@ class RediAcmeChallenge extends Model
     public static function upsertForDomain(string $domainName, string $token, string $responseBody, \DateTimeInterface $expiresAt): self
     {
         $domainName = HostNameValidator::toCanonicalAscii($domainName);
-        if ($domainName === '') {
+        if ($domainName === '' || ! HostNameValidator::isValidHostLabel($domainName)) {
             throw new \InvalidArgumentException('ACME 挑战域名无效');
         }
 

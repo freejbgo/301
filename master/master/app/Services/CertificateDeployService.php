@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
+use App\Support\HostNameValidator;
 use Illuminate\Support\Facades\DB;
 
 class CertificateDeployService
@@ -219,6 +220,11 @@ class CertificateDeployService
                         ->where('certificate', '!=', '');
                 });
             })
-            ->get();
+            ->get()
+            ->filter(function (RediDomainCert $cert) {
+                $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
+
+                return $host !== '' && HostNameValidator::isValidHostLabel($host);
+            });
     }
 }
