@@ -2,6 +2,7 @@
 
 namespace App\Services\Dns;
 
+use App\Models\RediNode;
 use App\Models\RediPlatformDns;
 use App\Services\Dns\Concerns\ReconcilesDnsRecords;
 use GuzzleHttp\Client;
@@ -51,7 +52,7 @@ class CloudflareDnsProvider implements DnsProviderInterface
     public function upsertARecords(string $fqdn, array $ipv4): void
     {
         $fqdn = strtolower(rtrim($fqdn, '.'));
-        $ipv4 = array_values(array_unique(array_filter($ipv4)));
+        $ipv4 = RediNode::filterValidIpv4List($ipv4);
         $zoneId = $this->zoneId();
         $name = $this->recordNameForFqdn($fqdn);
         $existing = $this->listRecords($zoneId, 'A', $fqdn);

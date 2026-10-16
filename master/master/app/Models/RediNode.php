@@ -63,9 +63,26 @@ class RediNode extends Model
         return $ips;
     }
 
-    protected static function isValidPublicIpv4(string $ip): bool
+    public static function isValidPublicIpv4(string $ip): bool
     {
         return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false;
+    }
+
+    /**
+     * @param  array<int, mixed>  $ips
+     * @return string[]
+     */
+    public static function filterValidIpv4List(array $ips): array
+    {
+        $out = [];
+        foreach ($ips as $ip) {
+            $ip = trim((string) $ip);
+            if ($ip !== '' && self::isValidPublicIpv4($ip) && ! in_array($ip, $out, true)) {
+                $out[] = $ip;
+            }
+        }
+
+        return $out;
     }
 
     /**

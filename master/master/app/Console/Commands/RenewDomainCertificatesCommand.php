@@ -17,7 +17,7 @@ class RenewDomainCertificatesCommand extends Command
 
     public function handle(): int
     {
-        $days = max(1, (int) $this->option('days'));
+        $days = min(365, max(1, (int) $this->option('days')));
         $dryRun = (bool) $this->option('dry-run');
         $deadline = now()->addDays($days);
 

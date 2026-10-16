@@ -2,6 +2,7 @@
 
 namespace App\Services\Dns;
 
+use App\Models\RediNode;
 use App\Models\RediPlatformDns;
 use App\Services\Dns\Concerns\ParsesZoneNames;
 use App\Services\Dns\Concerns\ReconcilesDnsRecords;
@@ -43,7 +44,7 @@ class DnsComDnsProvider implements DnsProviderInterface
 
     public function upsertARecords(string $fqdn, array $ipv4): void
     {
-        $ipv4 = array_values(array_unique(array_filter($ipv4)));
+        $ipv4 = RediNode::filterValidIpv4List($ipv4);
         $parts = $this->splitFqdn($fqdn, $this->zoneName());
         $rows = $this->listRecordRows($parts['domain'], $parts['rr'], 'A');
 
