@@ -6,6 +6,7 @@ use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use App\Models\RediPlatformDns;
+use App\Services\Dns\DnsProviderFactory;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
@@ -192,6 +193,14 @@ class RediHealthReport
         }
 
         if ($platform->isDnsApiMode()) {
+            $driver = strtolower(trim((string) $platform->dns_driver));
+            if ($driver === '' || $driver === 'manual' || ! DnsProviderFactory::isSupportedApiDriver($driver)) {
+                $issues[] = [
+                    'level' => 'warning',
+                    'code' => 'dns_driver_invalid',
+                    'message' => 'DNS 为 API 自动模式但驱动无效（请在后台 DNS 与节点池选择具体厂商驱动）',
+                ];
+            }
             $creds = $platform->getApiCredentialsArray();
             if (trim((string) ($creds['api_key'] ?? '')) === '') {
                 $issues[] = [
@@ -200,7 +209,6 @@ class RediHealthReport
                     'message' => 'DNS 为 API 自动模式但未保存 API 凭证，无法同步 pool / 租户 CNAME',
                 ];
             }
-            $driver = strtolower(trim((string) $platform->dns_driver));
             if ($driver === 'cloudflare' && trim((string) $platform->dns_zone_id) === '') {
                 $issues[] = [
                     'level' => 'warning',

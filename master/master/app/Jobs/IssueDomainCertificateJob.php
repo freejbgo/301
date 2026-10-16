@@ -72,15 +72,17 @@ class IssueDomainCertificateJob implements ShouldQueue
             return;
         }
 
+        $canonicalHost = HostNameValidator::toCanonicalAscii((string) $domain->original_url);
+
         $cert = RediDomainCert::firstOrCreate(
             ['domain_id' => $domain->id],
             [
-                'domain_name' => $domain->original_url,
+                'domain_name' => $canonicalHost,
                 'status' => RediDomainCert::STATUS_NONE,
             ]
         );
 
-        $cert->domain_name = $domain->original_url;
+        $cert->domain_name = $canonicalHost;
         $cert->admin_id = (int) $domain->admin_id;
         $cert->save();
 
@@ -96,7 +98,7 @@ class IssueDomainCertificateJob implements ShouldQueue
             return;
         }
 
-        $customerHost = HostNameValidator::toCanonicalAscii((string) $domain->original_url);
+        $customerHost = $canonicalHost;
         $edgeHost = HostNameValidator::toCanonicalAscii($edgeFqdn);
         if (! CnamePrecheckService::pointsToEdge($customerHost, $edgeHost)) {
             $cert->status = RediDomainCert::STATUS_PENDING_DNS;
@@ -113,10 +115,7 @@ class IssueDomainCertificateJob implements ShouldQueue
         try {
             $issuer->issue($cert);
         } catch (Throwable $e) {
-            AcmeChallengeCleanup::purgeForHosts([
-                $domain->original_url,
-                (string) $cert->domain_name,
-            ]);
+            AcmeChallengeCleanup::purgeForHosts([$customerHost, (string) $cert->domain_name]);
             if ($stillValid && in_array($previousStatus, [
                 RediDomainCert::STATUS_ACTIVE,
                 RediDomainCert::STATUS_ISSUED,
