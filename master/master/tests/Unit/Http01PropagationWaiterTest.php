@@ -91,4 +91,12 @@ class Http01PropagationWaiterTest extends TestCase
 
         app(Http01PropagationWaiter::class)->wait('valid.example', '../evil', 'body', 0);
     }
+
+    public function test_wait_rejects_empty_response_body(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('响应体无效');
+
+        app(Http01PropagationWaiter::class)->wait('valid.example', 'tok', '   ', 0);
+    }
 }

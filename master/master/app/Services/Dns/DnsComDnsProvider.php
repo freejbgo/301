@@ -144,6 +144,9 @@ class DnsComDnsProvider implements DnsProviderInterface
                 }
             }
             $page++;
+            if ($page > 100) {
+                throw new RuntimeException('dns.com 记录分页超过上限，请手工清理重复记录后重试');
+            }
         } while (count($list) === 100);
 
         return $rows;

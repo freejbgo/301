@@ -71,7 +71,10 @@ class CertificateIssuer
 
             $file = $authorization->getFile();
             $token = basename($file->getFilename());
-            $body = $file->getContents();
+            $body = trim($file->getContents());
+            if ($body === '') {
+                throw new RuntimeException('ACME HTTP-01 响应体为空');
+            }
             AcmeChallengeCleanup::purgeForHosts([$domain]);
             RediAcmeChallenge::upsertForDomain(
                 $domain,
