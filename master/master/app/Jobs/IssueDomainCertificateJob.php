@@ -9,6 +9,7 @@ use App\Services\AcmeChallengeCleanup;
 use App\Services\CnamePrecheckService;
 use App\Services\TenantEdgeService;
 use App\Support\HostNameValidator;
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -138,10 +139,11 @@ class IssueDomainCertificateJob implements ShouldQueue
                 RediDomainCert::STATUS_DEPLOYING,
             ], true)) {
                 $cert->status = $previousStatus;
-                $cert->last_error = '续期/重签失败（节点仍使用旧证书）：'.$e->getMessage();
+                $cert->last_error = '续期/重签失败（节点仍使用旧证书）：'
+                    .OpsDisplaySanitizer::logSnippet($e->getMessage(), 1500);
             } else {
                 $cert->status = RediDomainCert::STATUS_FAILED;
-                $cert->last_error = $e->getMessage();
+                $cert->last_error = OpsDisplaySanitizer::logSnippet($e->getMessage(), 2000);
             }
             $cert->save();
             throw $e;

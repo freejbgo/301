@@ -4,6 +4,7 @@ namespace App\Services\Dns\Concerns;
 
 use App\Models\RediNode;
 use App\Support\HostNameValidator;
+use App\Support\OpsDisplaySanitizer;
 
 /**
  * 先增/改、后删，避免「先删后建」在 API 失败时把记录删光。
@@ -116,7 +117,7 @@ trait ReconcilesDnsRecords
             try {
                 $deleteById($id);
             } catch (\Throwable $e) {
-                $failed[] = $id.': '.$e->getMessage();
+                $failed[] = $id.': '.OpsDisplaySanitizer::logSnippet($e->getMessage(), 200);
             }
         }
         if ($failed !== []) {

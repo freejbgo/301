@@ -13,6 +13,7 @@ use Dcat\Admin\Widgets\Table;
 use App\Services\EdgeDnsManualReference;
 use App\Services\EdgeDnsSyncService;
 use Illuminate\Http\Request;
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Support\Facades\Log;
 
 class PlatformDnsController extends Controller
@@ -103,7 +104,7 @@ HTML;
 
             return response()->json([
                 'status' => false,
-                'message' => 'DNS 同步失败：'.$e->getMessage(),
+                'message' => 'DNS 同步失败：'.OpsDisplaySanitizer::logSnippet($e->getMessage(), 500),
             ], 422);
         }
 
