@@ -4,6 +4,7 @@ namespace App\Admin\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Services\RediHealthReport;
+use App\Support\OpsDisplaySanitizer;
 use App\Services\TenantOpsSummary;
 use App\Support\AdminTenantContext;
 use Dcat\Admin\Admin;
@@ -20,7 +21,7 @@ class HomeController extends Controller
         $user = Admin::user();
         if ($user && method_exists($user, 'isAdministrator') && $user->isAdministrator()) {
             $summary = RediHealthReport::summary();
-            $issues = RediHealthReport::collectIssues(7);
+            $issues = OpsDisplaySanitizer::sanitizeHealthIssues(RediHealthReport::collectIssues(7));
             $issueHtml = $issues === []
                 ? '<p class="text-success mb-0">redi:health 当前无待处理项。</p>'
                 : '<ul class="mb-0">'.implode('', array_map(function ($row) {

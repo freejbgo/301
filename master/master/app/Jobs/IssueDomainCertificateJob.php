@@ -119,7 +119,7 @@ class IssueDomainCertificateJob implements ShouldQueue
 
         if (! CnamePrecheckService::pointsToEdge($customerHost, $edgeHost)) {
             $cert->status = RediDomainCert::STATUS_PENDING_DNS;
-            $cert->last_error = 'CNAME 尚未指向 '.$edgeHost;
+            $cert->last_error = 'CNAME 尚未指向 '.OpsDisplaySanitizer::field($edgeHost, $edgeHost, 253);
             $cert->save();
 
             return;
