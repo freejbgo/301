@@ -57,6 +57,7 @@ redi_is_ipv4() {
 }
 
 # 按 vars.env 的 NODE_IPS 同步：新增授权/防火墙，移除已删 IP 的账号与规则。
+# 批量调用 grant/revoke 脚本时设 REDI_GRANT_BATCH=1，避免重复打印单 IP firewalld 提示。
 redi_sync_node_ips_access() {
   local script_dir="$1"
   local node_ips="${2:-}"
@@ -87,30 +88,33 @@ redi_sync_node_ips_access() {
   fi
 
   local old new found
-  for old in ${old_ips[@]+"${old_ips[@]}"}; do
-    found=0
-    for new in ${new_ips[@]+"${new_ips[@]}"}; do
-      [[ "$old" == "$new" ]] && found=1 && break
+  if ! (
+    export REDI_GRANT_BATCH=1
+    for old in ${old_ips[@]+"${old_ips[@]}"}; do
+      found=0
+      for new in ${new_ips[@]+"${new_ips[@]}"}; do
+        [[ "$old" == "$new" ]] && found=1 && break
+      done
+      if [[ "$found" == 0 ]]; then
+        echo "移除节点 IP ${old} 的 MySQL 与防火墙"
+        if ! bash "${script_dir}/revoke-node-mysql.sh" "$old"; then
+          echo "错误: revoke-node-mysql.sh 失败 (${old})" >&2
+          exit 1
+        fi
+        if ! bash "${script_dir}/firewalld-revoke-mysql-from-node.sh" "$old"; then
+          echo "错误: firewalld-revoke-mysql-from-node.sh 失败 (${old})" >&2
+          exit 1
+        fi
+      fi
     done
-    if [[ "$found" == 0 ]]; then
-      echo "移除节点 IP ${old} 的 MySQL 与防火墙"
-      if ! bash "${script_dir}/revoke-node-mysql.sh" "$old"; then
-        echo "错误: revoke-node-mysql.sh 失败 (${old})" >&2
-        return 1
-      fi
-      if ! bash "${script_dir}/firewalld-revoke-mysql-from-node.sh" "$old"; then
-        echo "错误: firewalld-revoke-mysql-from-node.sh 失败 (${old})" >&2
-        return 1
-      fi
-    fi
-  done
 
-  export REDI_GRANT_BATCH=1
-  for new in ${new_ips[@]+"${new_ips[@]}"}; do
-    bash "${script_dir}/grant-node-mysql.sh" "$new" "$db_pass"
-    bash "${script_dir}/firewalld-allow-mysql-from-node.sh" "$new"
-  done
-  unset REDI_GRANT_BATCH
+    for new in ${new_ips[@]+"${new_ips[@]}"}; do
+      bash "${script_dir}/grant-node-mysql.sh" "$new" "$db_pass"
+      bash "${script_dir}/firewalld-allow-mysql-from-node.sh" "$new"
+    done
+  ); then
+    return 1
+  fi
 
   if [[ ${#new_ips[@]} -gt 0 ]]; then
     printf '%s\n' "${new_ips[@]}" > "$state_file"

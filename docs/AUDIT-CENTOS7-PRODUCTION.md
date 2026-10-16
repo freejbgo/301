@@ -134,6 +134,10 @@
 
 **2026-10-16 #95 已合并 `main`：** 见 [PR #95](https://github.com/freejbgo/301/pull/95)（验收 `redi-queue --max-time`、patch-cron 路径、prune 空跑单测）。
 
+**2026-10-16 #96 已合并 `main`：** 见 [PR #96](https://github.com/freejbgo/301/pull/96)（renew 日志 summary、批量 grant firewalld 提示降噪）。
+
+**2026-10-16 复核（#97）：** 批量 `revoke-node-mysql` 同步抑制 firewalld 提示；`redi_sync_node_ips_access` 用子 shell 承载 `REDI_GRANT_BATCH`；renew 入队 summary 单测；CONSOLE 续期日志说明。
+
 **2026-10-16 复核（#96）：** `redi:renew-certificates` 入队后打印 summary（`renew.log` 可读）；批量 `grant-node-mysql` 不再重复 firewalld 提示（`REDI_GRANT_BATCH`）；验收清单对齐 `max-time` grep。
 
 **2026-10-16 复核（#95）：** 真机验收补 `redi-queue` `--max-time=3600` grep；`patch-master-cron` 可选 APP 路径与 README；PRODUCTION/DEPLOY-centos7 verify 脚本从仓库根执行；CONSOLE 补 Cron 日志路径；prune 空库单测；PHPUnit **88**。
@@ -169,7 +173,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#96](https://github.com/freejbgo/301/pull/96)（#95：验收 queue unit；#94：prune 单测；#93：grant-nodes 与运维脚本；#88–#92：Cron/webhook/health）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#97](https://github.com/freejbgo/301/pull/97)（#96：renew 日志与批量 grant；#95：验收 queue unit；#93–#94：运维与 prune 单测）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
