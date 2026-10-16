@@ -13,21 +13,30 @@ class RediHealthNotifier
             return false;
         }
 
+        $total = count($issues);
+        $payload = $total > 40 ? array_slice($issues, 0, 40) : $issues;
+
         return RediOpsWebhook::post([
             'source' => 'redi-health',
             'ok' => false,
             'checked_at' => now()->toIso8601String(),
-            'issues' => $issues,
-            'text' => self::formatPlainText($issues),
+            'issues' => $payload,
+            'issues_total' => $total,
+            'issues_truncated' => $total > 40,
+            'text' => self::formatPlainText($payload, $total),
         ], RediOpsWebhook::healthWebhookUrl());
     }
 
     /**
      * @param  array<int, array{level: string, code: string, message: string}>  $issues
      */
-    public static function formatPlainText(array $issues): string
+    public static function formatPlainText(array $issues, ?int $totalCount = null): string
     {
-        $lines = ['[301] redi:health 发现 '.count($issues).' 项待处理：'];
+        $total = $totalCount ?? count($issues);
+        $lines = ['[301] redi:health 发现 '.$total.' 项待处理：'];
+        if ($total > count($issues)) {
+            $lines[] = '[注意] 以下仅展示前 '.count($issues).' 条（完整列表见 --json）';
+        }
         foreach ($issues as $row) {
             $tag = $row['level'] === 'critical' ? '严重' : '注意';
             $lines[] = '['.$tag.'] '.mb_substr((string) ($row['message'] ?? ''), 0, 500);

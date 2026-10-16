@@ -62,7 +62,7 @@ func SyncFromMaster(valid []Entry, remoteIDs []int) {
 func upsertIntoMaps(hostMap map[string]Entry, idMap map[int]Entry, list []Entry) {
 	for _, e := range list {
 		d := strings.ToLower(strings.TrimSpace(e.Domain))
-		if d == "" {
+		if d == "" || strings.ContainsAny(d, "\r\n\x00") {
 			continue
 		}
 		hostMap[d] = e

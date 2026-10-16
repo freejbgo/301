@@ -42,7 +42,14 @@ class CnamePrecheckService
         }
 
         $poolFqdn = RediPlatformDns::instance()->poolFqdn();
-        $allowedTargets = array_filter([$edgeFqdn, $poolFqdn]);
+        $allowedTargets = [];
+        foreach ([$edgeFqdn, $poolFqdn] as $target) {
+            $target = HostNameValidator::toCanonicalAscii((string) $target);
+            if ($target !== '' && HostNameValidator::isValidHostLabel($target)) {
+                $allowedTargets[] = $target;
+            }
+        }
+        $allowedTargets = array_values(array_unique($allowedTargets));
 
         $cnames = @dns_get_record($customerDomain, DNS_CNAME);
         if (is_array($cnames)) {
@@ -66,6 +73,11 @@ class CnamePrecheckService
 
     public static function aRecordPointsToPool(string $customerDomain): bool
     {
+        $customerDomain = HostNameValidator::toCanonicalAscii($customerDomain);
+        if ($customerDomain === '' || ! HostNameValidator::isValidHostLabel($customerDomain)) {
+            return false;
+        }
+
         $poolIps = RediNode::enabledPublicIps();
         if ($poolIps === []) {
             return false;
@@ -109,7 +121,7 @@ class CnamePrecheckService
     protected static function resolveA(string $host): array
     {
         $host = HostNameValidator::toCanonicalAscii($host);
-        if ($host === '') {
+        if ($host === '' || ! HostNameValidator::isValidHostLabel($host)) {
             return [];
         }
         $rows = @dns_get_record($host, DNS_A);

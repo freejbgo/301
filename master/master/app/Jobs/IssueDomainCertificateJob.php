@@ -108,6 +108,14 @@ class IssueDomainCertificateJob implements ShouldQueue
 
         $customerHost = $canonicalHost;
         $edgeHost = HostNameValidator::toCanonicalAscii($edgeFqdn);
+        if ($edgeHost === '' || ! HostNameValidator::isValidHostLabel($edgeHost)) {
+            $cert->status = RediDomainCert::STATUS_PENDING_DNS;
+            $cert->last_error = '租户 edge 主机名无效，请检查平台主域名与租户 token';
+            $cert->save();
+
+            return;
+        }
+
         if (! CnamePrecheckService::pointsToEdge($customerHost, $edgeHost)) {
             $cert->status = RediDomainCert::STATUS_PENDING_DNS;
             $cert->last_error = 'CNAME 尚未指向 '.$edgeHost;

@@ -35,6 +35,28 @@ class RediHealthNotifierTest extends TestCase
         Http::assertSent(fn ($request) => $request->url() === 'https://hooks.example/health');
     }
 
+    public function test_notify_truncates_large_issue_list(): void
+    {
+        config(['redi.health_webhook_url' => 'https://hooks.example/health']);
+
+        Http::fake(['https://hooks.example/*' => Http::response([], 200)]);
+
+        $issues = [];
+        for ($i = 0; $i < 45; $i++) {
+            $issues[] = ['level' => 'warning', 'code' => 'test', 'message' => 'm'.$i];
+        }
+
+        $this->assertTrue(RediHealthNotifier::notifyWebhook($issues));
+
+        Http::assertSent(function ($request) {
+            $data = $request->data();
+
+            return count($data['issues'] ?? []) === 40
+                && ($data['issues_total'] ?? 0) === 45
+                && ($data['issues_truncated'] ?? false) === true;
+        });
+    }
+
     public function test_format_plain_text_truncates_very_long_output(): void
     {
         $issues = [];
