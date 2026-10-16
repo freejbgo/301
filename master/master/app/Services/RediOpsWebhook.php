@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -67,7 +68,8 @@ class RediOpsWebhook
         if ($task === '') {
             $task = 'redi:ops';
         }
-        $message = trim($message) !== '' ? trim($message) : "定时任务失败：{$task}";
+        $message = OpsDisplaySanitizer::stripControlChars(trim($message));
+        $message = $message !== '' ? $message : "定时任务失败：{$task}";
         $message = mb_substr($message, 0, 4000);
 
         return self::post([

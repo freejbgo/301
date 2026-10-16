@@ -100,4 +100,14 @@ class RediHealthNotifierTest extends TestCase
                 && str_contains((string) ($data['text'] ?? ''), 'a.com');
         });
     }
+
+    public function test_format_plain_text_strips_control_chars(): void
+    {
+        $text = RediHealthNotifier::formatPlainText([
+            ['level' => 'warning', 'code' => 'test', 'message' => "bad\r\nmsg"],
+        ]);
+
+        $this->assertStringContainsString('badmsg', $text);
+        $this->assertStringNotContainsString("\r\n", $text);
+    }
 }

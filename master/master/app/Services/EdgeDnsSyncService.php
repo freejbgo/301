@@ -9,6 +9,7 @@ use App\Models\RediTenantEdge;
 use App\Services\Dns\DnsProviderFactory;
 use App\Services\Dns\DnsProviderInterface;
 use App\Support\HostNameValidator;
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -77,7 +78,7 @@ class EdgeDnsSyncService
                         $skipped++;
                         Log::warning('EdgeDnsSync: skip tenant edge (FQDN not under edge_zone)', [
                             'edge_id' => $edge->id,
-                            'edge_fqdn' => $edge->edge_fqdn,
+                            'fqdn' => OpsDisplaySanitizer::field($fqdn, '', 253),
                             'edge_zone' => $zone,
                         ]);
                     }
