@@ -57,7 +57,7 @@ trait ReconcilesDnsRecords
     {
         $target = HostNameValidator::toCanonicalAscii($targetFqdn);
         if ($target === '' || ! HostNameValidator::isValidHostLabel($target)) {
-            throw new \RuntimeException('CNAME 目标无效');
+            throw new \RuntimeException('CNAME 目标 无效');
         }
         $target = strtolower(rtrim($target, '.'));
 

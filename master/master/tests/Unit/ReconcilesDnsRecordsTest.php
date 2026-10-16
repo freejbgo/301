@@ -110,6 +110,32 @@ class ReconcilesDnsRecordsTest extends TestCase
         $this->assertSame([], $deleted);
     }
 
+    public function test_reconcile_cname_rejects_invalid_target(): void
+    {
+        $helper = new class
+        {
+            use ReconcilesDnsRecords;
+
+            public function run(string $target): void
+            {
+                $this->reconcileCnameTarget(
+                    [],
+                    $target,
+                    function (string $t) {
+                    },
+                    function (string $id, string $t) {
+                    },
+                    function (string $id) {
+                    }
+                );
+            }
+        };
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('CNAME 目标 无效');
+        $helper->run('not..valid');
+    }
+
     public function test_reconcile_a_ignores_invalid_ipv4_in_desired(): void
     {
         $helper = new class
