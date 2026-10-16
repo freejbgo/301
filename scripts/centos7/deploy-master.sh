@@ -257,7 +257,7 @@ if [[ -n "$NODE_IPS" ]]; then
   redi_sync_node_ips_access "${SCRIPT_DIR}" "$NODE_IPS" "$DB_PASS" "$MYSQL_ROOT_PASS"
 else
   echo "NODE_IPS 为空，尚未授权节点。加节点前写上 IP 并重新执行本脚本。"
-  redi_sync_node_ips_access "${SCRIPT_DIR}" "" "$DB_PASS" "$MYSQL_ROOT_PASS" || true
+  redi_sync_node_ips_access "${SCRIPT_DIR}" "" "$DB_PASS" "$MYSQL_ROOT_PASS"
 fi
 php artisan config:clear
 if [[ ! -L public/storage ]]; then

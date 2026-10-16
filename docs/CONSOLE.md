@@ -182,7 +182,7 @@ php artisan redi:health --json    # 监控采集；summary 含队列阈值；iss
 php artisan redi:health --notify  # 有 issues 时 POST webhook（Cron 08:30；发送成功退出 0）
 php artisan redi:renew-certificates --dry-run --days=25   # 续期预演；正式 Cron 跑无 --dry-run，入队后日志含 queued: N cert(s)（见 renew.log）
 php artisan redi:prune-acme-challenges   # Cron 04:10；勿依赖 schedule:run
-php artisan redi:requeue-failed-deployments
+php artisan redi:requeue-failed-deployments   # 可选 --node= / --cert=
 php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修正（见 DEPLOY.md）
 # php artisan redi:ops-webhook --task=redi:renew-certificates --message="测试"
 ```

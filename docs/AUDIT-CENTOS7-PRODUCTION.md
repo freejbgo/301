@@ -144,6 +144,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#101）：** §6 复核范围说明（#88–#100）；`redi_sync_node_ips_access` 批量 grant/firewalld 失败时退出并避免误写 `authorized_node_ips`；`deploy-master` 空 `NODE_IPS` 同步不再 `|| true` 掩盖撤销失败；CONSOLE 补 `requeue` 可选参数。
+
 **2026-10-16 复核（#100）：** `redi:health --json` 单测断言 summary 阈值；AUDIT/DEPLOY-centos7 jq 采集示例；PHPUnit **92**。
 
 **2026-10-16 复核（#99）：** `redi:health --json` summary 暴露队列 health 阈值；UPGRADE/OPS/SECURITY/CONSOLE 同步；revoke-node `REDI_GRANT_BATCH` 注释；PHPUnit **91**。
@@ -201,7 +203,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#100](https://github.com/freejbgo/301/pull/100)（#100：health JSON 单测与 jq 示例；#99–#98：summary/`queue_stale`；#93–#97：运维/Cron/NODE_IPS）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#101](https://github.com/freejbgo/301/pull/101)（#101：AUDIT 复核范围 + NODE_IPS grant 错误传播；#100：health JSON 单测与 jq 示例）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
