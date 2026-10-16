@@ -22,7 +22,7 @@ die() { echo "错误: $*" >&2; exit 1; }
 step() { echo ""; echo "==> $*"; }
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  die "请用 root 执行: sudo bash $0"
+  die "请用 root 执行: sudo bash scripts/centos7/deploy-master.sh"
 fi
 if [[ ! -f /etc/os-release ]]; then
   die "找不到 /etc/os-release"
@@ -33,7 +33,7 @@ if [[ "${ID:-}" != "centos" || "${VERSION_ID:-}" != 7* ]]; then
   die "这个脚本只用于 CentOS 7.x，当前是 ${ID:-unknown} ${VERSION_ID:-unknown}"
 fi
 if [[ ! -f "$VARS_FILE" ]]; then
-  die "请先复制并编辑 ${SCRIPT_DIR}/vars.example.env 为 vars.env"
+  die "请先复制并编辑: cp scripts/centos7/vars.example.env scripts/centos7/vars.env"
 fi
 # shellcheck disable=SC1090
 source "$VARS_FILE"
@@ -423,4 +423,5 @@ echo "初始后台账号见 DEPLOY.md（导入 SQL 后的默认 admin 密码）�
 echo "Cron: /etc/cron.d/redi-renew（03:10 续期 / 04:10 prune / 08:30 health --notify；勿另配 schedule:run）"
 echo "验收: grep -E 'renew|prune|health' /etc/cron.d/redi-renew && ! grep -q 'schedule:run' /etc/cron.d/redi-renew"
 echo "建议: 在 ${APP}/.env 配置 REDI_HEALTH_WEBHOOK_URL（08:30 health --notify；见 docs/UPGRADE-IN-PLACE.md §4）"
+echo "仅同步 NODE_IPS（MySQL/firewalld）而不重装: sudo bash scripts/centos7/grant-nodes-from-vars.sh"
 echo "建好节点并复制 Token 后，再到节点机器执行 deploy-node.sh。"

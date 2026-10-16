@@ -236,6 +236,7 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 | 现象 | 处理 |
 |------|------|
 | 节点 `deploy-node.sh` 连不上 MySQL | 主控 `NODE_IPS` 是否含节点公网 IP；主控是否 `deploy-master.sh` 或 `grant-nodes-from-vars.sh`；云安全组 3306 |
+| 下线节点后仍能从公网连主控 3306 | 从 `NODE_IPS` 去掉该 IP（或清空列表）后重跑 `deploy-master.sh` 或 `grant-nodes-from-vars.sh` |
 | 节点无心跳 | `REDI_MASTER_URL` 是否可达；Token 是否正确；`systemctl status redi-multi` 日志 |
 | 后台 502/空白 | `systemctl status php-fpm nginx`；`/opt/301/master/storage` 权限属 `nginx` |
 | 重复跑主控脚本后 HTTPS 没了 | 是否曾去掉 `301-master-managed`；HTTPS 建议单独 `conf.d` 文件 |

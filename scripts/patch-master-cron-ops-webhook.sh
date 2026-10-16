@@ -6,7 +6,7 @@ set -euo pipefail
 
 CRON_FILE="/etc/cron.d/redi-renew"
 
-[[ "$(id -u)" -eq 0 ]] || { echo "请用 root 执行" >&2; exit 1; }
+[[ "$(id -u)" -eq 0 ]] || { echo "请用 root 执行: sudo bash scripts/patch-master-cron-ops-webhook.sh" >&2; exit 1; }
 
 if [[ -n "${1:-}" ]]; then
   APP="$1"

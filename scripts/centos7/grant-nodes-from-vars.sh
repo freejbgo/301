@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# 在主控上：按 vars.env 里的 NODE_IPS 批量授权并放行 3306（与 deploy-master 内 redi_sync_node_ips_access 相同逻辑）。
+# 在主控上：按 vars.env 的 NODE_IPS 同步 MySQL + firewalld（redi_sync_node_ips_access，与 deploy-master 相同）。
+# NODE_IPS 为空时撤销 /var/lib/redi/authorized_node_ips 中已记录 IP。
 # 用法: sudo bash scripts/centos7/grant-nodes-from-vars.sh
 set -euo pipefail
 

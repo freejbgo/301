@@ -18,7 +18,7 @@ redi_is_ipv4 "$NODE_IP" || {
 }
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  echo "请用 root 执行" >&2
+  echo "请用 root 执行: sudo bash scripts/centos7/firewalld-allow-mysql-from-node.sh <节点公网IP>" >&2
   exit 1
 fi
 

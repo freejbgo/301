@@ -59,7 +59,7 @@ cd /opt/301/master   # 或你的程序目录
 php artisan migrate --force
 ```
 
-若仓库新增了 `100010+` 迁移，这一步会改库；绿场初次安装若已导入当前版 `redi_admin.sql`，通常显示无待执行迁移。节点 MySQL 账号为 **`redi_node`** 时，对新增节点 IP 在主控上重跑 `sudo MYSQL_ROOT_PASSWORD='…' bash scripts/centos7/grant-node-mysql.sh <IP> <DB_PASS>`（仅 `EXECUTE` 存储过程）。
+若仓库新增了 `100010+` 迁移，这一步会改库；绿场初次安装若已导入当前版 `redi_admin.sql`，通常显示无待执行迁移。节点 MySQL 账号为 **`redi_node`** 时，在主控更新 `vars.env` 的 `NODE_IPS` 后执行 `grant-nodes-from-vars.sh` 或 `deploy-master.sh`；单 IP 可用 `grant-node-mysql.sh`（仅 `EXECUTE` 存储过程）。
 
 主控 cron（`deploy-master.sh` 写入 `/etc/cron.d/redi-renew`）：**03:10** 证书续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`（需 `REDI_HEALTH_WEBHOOK_URL` 方能在有 issues 时静默退出 0；勿配置 `php artisan schedule:run`）。节点 `GetSkipUrl` 与主控一致对 Host 做 **punycode** 归一。
 

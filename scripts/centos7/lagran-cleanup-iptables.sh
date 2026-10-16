@@ -9,7 +9,7 @@ APP="${1:-/opt/redi-multi/redi-multi}"
 CFG="${APP}/config.json"
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  echo "请用 root 执行" >&2
+  echo "请用 root 执行: sudo bash scripts/centos7/lagran-cleanup-iptables.sh [/opt/redi-multi/redi-multi]" >&2
   exit 1
 fi
 
