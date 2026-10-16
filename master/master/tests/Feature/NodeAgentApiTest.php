@@ -192,6 +192,15 @@ class NodeAgentApiTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_challenges_synced_rejects_overlong_domain_with_422(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/challenges-synced', ['domains' => [str_repeat('a', 254).'.com']])
+            ->assertStatus(422);
+    }
+
     public function test_certificates_only_returns_certs_assigned_to_node(): void
     {
         [$node, $token] = $this->createNodeWithToken();

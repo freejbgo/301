@@ -5,6 +5,7 @@ namespace App\Admin\Forms;
 use App\Models\RediPlatformDns;
 use App\Services\Dns\DnsProviderFactory;
 use App\Services\TenantEdgeService;
+use App\Support\HostNameValidator;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Contracts\LazyRenderable;
 use Dcat\Admin\Traits\LazyWidget;
@@ -38,13 +39,19 @@ class PlatformDnsSettings extends Form implements LazyRenderable
 
         $platform = RediPlatformDns::instance();
         $oldZone = trim($platform->edge_zone ?? '');
-        $edgeZone = strtolower(trim($input['edge_zone'] ?? ''));
-        $poolHost = strtolower(trim($input['pool_host'] ?? 'pool') ?: 'pool');
-        if ($edgeZone === '' || ! preg_match('/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i', $edgeZone)) {
+        $edgeZone = strtolower(trim((string) ($input['edge_zone'] ?? '')));
+        $poolHost = strtolower(trim((string) ($input['pool_host'] ?? 'pool') ?: 'pool'));
+        if (str_contains($edgeZone, "\r") || str_contains($edgeZone, "\n")
+            || str_contains($poolHost, "\r") || str_contains($poolHost, "\n")) {
+            return $this->response()->error('域名配置不能包含换行符');
+        }
+        $edgeZone = HostNameValidator::toCanonicalAscii($edgeZone);
+        if ($edgeZone === '' || ! HostNameValidator::isValidHostLabel($edgeZone)) {
             return $this->response()->error('平台主域名格式无效');
         }
-        if (! preg_match('/^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/i', $poolHost)) {
-            return $this->response()->error('Pool 主机名格式无效');
+        if ($poolHost === '' || str_contains($poolHost, '.')
+            || ! HostNameValidator::isValidHostLabel($poolHost)) {
+            return $this->response()->error('Pool 主机名格式无效（单段主机名，不含点）');
         }
         $platform->edge_zone = $edgeZone;
         $platform->pool_host = $poolHost;

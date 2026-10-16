@@ -51,7 +51,7 @@ class NodeAgentController extends Controller
             if ($domain === '') {
                 continue;
             }
-            if (! HostNameValidator::isValidHostLabel($domain)) {
+            if (strlen($domain) > 253 || ! HostNameValidator::isValidHostLabel($domain)) {
                 return response()->json(['message' => 'invalid domain', 'domain' => (string) $raw], 422);
             }
             if (! $allowed->has($domain)) {
