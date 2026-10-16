@@ -60,9 +60,9 @@ return [
 
     'ops_webhook_url' => env('REDI_OPS_WEBHOOK_URL', ''),
 
-    'health_queue_pending_threshold' => (int) env('REDI_HEALTH_QUEUE_PENDING_THRESHOLD', 80),
+    'health_queue_pending_threshold' => min(100_000, max(1, (int) env('REDI_HEALTH_QUEUE_PENDING_THRESHOLD', 80))),
 
-    'health_queue_stale_hours' => (int) env('REDI_HEALTH_QUEUE_STALE_HOURS', 2),
+    'health_queue_stale_hours' => min(720, max(1, (int) env('REDI_HEALTH_QUEUE_STALE_HOURS', 2))),
 
     /*
     |--------------------------------------------------------------------------
@@ -70,9 +70,9 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'health_validating_stuck_hours' => (int) env('REDI_HEALTH_VALIDATING_STUCK_HOURS', 2),
+    'health_validating_stuck_hours' => min(720, max(1, (int) env('REDI_HEALTH_VALIDATING_STUCK_HOURS', 2))),
 
-    'renew_validating_stuck_hours' => (int) env('REDI_RENEW_VALIDATING_STUCK_HOURS', 3),
+    'renew_validating_stuck_hours' => min(720, max(1, (int) env('REDI_RENEW_VALIDATING_STUCK_HOURS', 3))),
 
     /*
     |--------------------------------------------------------------------------
@@ -80,6 +80,6 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'acme_http01_poll_seconds' => max(1, (int) env('REDI_ACME_HTTP01_POLL_SECONDS', 3)),
+    'acme_http01_poll_seconds' => min(60, max(1, (int) env('REDI_ACME_HTTP01_POLL_SECONDS', 3))),
 
 ];

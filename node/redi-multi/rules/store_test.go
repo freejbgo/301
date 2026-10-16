@@ -17,3 +17,16 @@ func TestForceHTTPS(t *testing.T) {
 		t.Fatal("expected false for unknown host")
 	}
 }
+
+func TestReplaceForceHTTPSSkipsMalformedHost(t *testing.T) {
+	ReplaceForceHTTPS(map[string]bool{
+		"good.example":     true,
+		"evil\r\n.example": true,
+	})
+	if !ForceHTTPS("good.example") {
+		t.Fatal("expected good.example")
+	}
+	if ForceHTTPS("evil.example") {
+		t.Fatal("malformed host must not be stored")
+	}
+}

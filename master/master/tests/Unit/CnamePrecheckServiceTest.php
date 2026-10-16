@@ -17,4 +17,10 @@ class CnamePrecheckServiceTest extends TestCase
     {
         $this->assertFalse(CnamePrecheckService::pointsToEdgeCached('', 'edge.example.com'));
     }
+
+    public function test_points_to_edge_returns_false_for_invalid_host_label(): void
+    {
+        $this->assertFalse(CnamePrecheckService::pointsToEdge('1.2.3.4', 'edge.example.com'));
+        $this->assertFalse(CnamePrecheckService::pointsToEdge('customer.example.com', '1.2.3.4'));
+    }
 }
