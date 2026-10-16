@@ -23,6 +23,14 @@ final class OpsDisplaySanitizer
         return str_replace(["\r", "\n", "\0", "\t"], '', $value);
     }
 
+    public static function containsControlChars(string $value): bool
+    {
+        return str_contains($value, "\r")
+            || str_contains($value, "\n")
+            || str_contains($value, "\0")
+            || str_contains($value, "\t");
+    }
+
     public static function logSnippet(?string $value, int $maxLen = 500): string
     {
         $text = trim(self::stripControlChars((string) $value));

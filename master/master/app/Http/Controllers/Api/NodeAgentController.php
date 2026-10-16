@@ -108,9 +108,13 @@ class NodeAgentController extends Controller
                 ];
             })
             ->filter(function ($row) {
+                $body = (string) ($row['response_body'] ?? '');
+
                 return $row['domain_name'] !== ''
                     && HostNameValidator::isValidHostLabel($row['domain_name'])
-                    && AcmeHttp01Token::isValid((string) $row['token']);
+                    && AcmeHttp01Token::isValid((string) $row['token'])
+                    && $body !== ''
+                    && ! OpsDisplaySanitizer::containsControlChars($body);
             })
             ->values();
 

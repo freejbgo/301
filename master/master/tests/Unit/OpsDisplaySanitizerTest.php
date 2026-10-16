@@ -27,6 +27,12 @@ class OpsDisplaySanitizerTest extends TestCase
         $this->assertSame(501, mb_strlen(OpsDisplaySanitizer::logSnippet(str_repeat('z', 600), 500)));
     }
 
+    public function test_contains_control_chars(): void
+    {
+        $this->assertTrue(OpsDisplaySanitizer::containsControlChars("a\tb"));
+        $this->assertFalse(OpsDisplaySanitizer::containsControlChars('ab'));
+    }
+
     public function test_sanitize_health_issues(): void
     {
         $out = OpsDisplaySanitizer::sanitizeHealthIssues([
