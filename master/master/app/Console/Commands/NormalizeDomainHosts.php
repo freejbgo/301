@@ -22,7 +22,7 @@ class NormalizeDomainHosts extends Command
             foreach ($rows as $domain) {
                 $canonical = DomainRecordNormalizer::normalizeOriginalUrl($domain->original_url);
                 if ($canonical === '' || ! HostNameValidator::isValidHostLabel($canonical)) {
-                    $this->warn("跳过 id={$domain->id} 非法 original_url: {$domain->original_url}");
+                    $this->warn("跳过 id={$domain->id} 非法 original_url");
                     continue;
                 }
                 $skip = DomainRecordNormalizer::normalizeSkipUrl($domain->skip_url);
@@ -32,10 +32,10 @@ class NormalizeDomainHosts extends Command
                     continue;
                 }
                 if ($skip === '' && trim((string) $domain->skip_url) !== '') {
-                    $this->warn("id={$domain->id} skip_url 无效将清空（请尽快在后台补合法 http/https 链接）: {$domain->skip_url}");
+                    $this->warn("id={$domain->id} skip_url 无效将清空（请尽快在后台补合法 http/https 链接）");
                 }
                 if ($dry) {
-                    $this->line("would update id={$domain->id} {$domain->original_url} -> {$canonical}, skip_url -> {$skip}");
+                    $this->line("would update id={$domain->id} {$canonical}, skip_url -> {$skip}");
                     $updated++;
                     continue;
                 }
