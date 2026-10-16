@@ -141,7 +141,7 @@
 
 申请前要满足：
 
-- 主控上的队列在跑（`queue:work` 常驻）。
+- 主控上的队列在跑（CentOS：`systemctl is-active redi-queue`；参数见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md) / `scripts/systemd/redi-queue.service.example`）。
 - 平台主域名、ACME 邮箱已保存。正式环境不要开 ACME 测试环境。
 - 客户域名的解析预检为「已指向」。
 - 所有 **启用** 的节点在线，并且已经用 Token 连上主控。Let's Encrypt 访问客户域名时可能落到池里任意一个 A 记录，所以每台启用节点都要能回答验证。

@@ -28,6 +28,8 @@ sudo -u nginx php artisan config:cache
 sudo systemctl start php*-fpm nginx redi-queue
 ```
 
+仅覆盖 tar、未重跑 `deploy-master` 时，请核对 `/etc/systemd/system/redi-queue.service` 的 `queue:work` 是否含 **`--max-time=3600`**（与 [scripts/systemd/redi-queue.service.example](../scripts/systemd/redi-queue.service.example) 一致）；过旧可手工改 unit 后 `systemctl daemon-reload && systemctl restart redi-queue`，或重跑 `deploy-master` 刷新 unit。
+
 节点：用 `deploy-node.sh` 或仅替换 `bin/redi-multi` 后 `systemctl restart redi-multi`。
 
 ## 2. 主控 `.env` 建议新增/核对

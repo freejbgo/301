@@ -46,7 +46,7 @@ class PruneExpiredAcmeChallenges extends Command
             ->delete();
 
         if ($invalidDomains->isNotEmpty()) {
-            RediAcmeChallengeNodeSync::query()
+            $deletedSync += (int) RediAcmeChallengeNodeSync::query()
                 ->whereIn('domain_name', $invalidDomains->all())
                 ->delete();
         }

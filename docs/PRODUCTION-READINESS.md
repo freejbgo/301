@@ -27,6 +27,9 @@
 ## 验收命令（真机）
 
 ```bash
+# 主控服务（CentOS deploy-master）
+systemctl is-active nginx php-fpm mariadb redi-queue
+
 # Cron（与 deploy-master / patch-master-cron-ops-webhook 一致）
 grep -E 'renew|prune|health' /etc/cron.d/redi-renew
 ! grep -q 'schedule:run' /etc/cron.d/redi-renew
