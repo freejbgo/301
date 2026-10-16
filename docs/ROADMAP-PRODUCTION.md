@@ -10,7 +10,7 @@
 | Agent 0.1.3 心跳/ack/空证书/限流 | ✅ |
 | 后台 dcat-api、默认密码、登录限速、XSS | ✅ |
 | 启用前 DNS 指向（CNAME/A 池） | ✅ |
-| 双 OS 部署脚本与 DB 校验路径 | ✅（#72/#73 + #74） |
+| CentOS 7 部署脚本与 DB 校验路径 | ✅（#72/#73 + #74；Ubuntu 路径已移除，仅维护 CentOS） |
 
 ## P1 — 上线后日常运营（PR #74 已大部分覆盖）
 
@@ -26,7 +26,7 @@
 | 队列积压 / failed_jobs 健康检查 | ✅ |
 | 多机 `queue:work` + `CACHE_DRIVER=redis` 文档与自检 | 📋 文档已有，可加 health 提示 |
 | ACME 续期全状态（validating 等）边界 | 📋 待补单测与状态机梳理 |
-| CentOS/Ubuntu 真机验收清单自动化 | 📋 部分脚本已有 |
+| CentOS 7.9 真机验收清单自动化 | 📋 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) + CI 容器冒烟 |
 
 ## P2 — 架构与合规（未阻塞首单）
 

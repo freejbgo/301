@@ -56,9 +56,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy script syntax (CentOS 7 + Ubuntu)
+      - name: Deploy script syntax (CentOS 7)
         run: |
-          for f in scripts/centos7/*.sh scripts/ubuntu/*.sh scripts/patch-master-cron-ops-webhook.sh; do bash -n "$f"; done
+          for f in scripts/centos7/*.sh scripts/patch-master-cron-ops-webhook.sh; do bash -n "$f"; done
           php scripts/verify-redi-node-procedure-sync.php
           bash scripts/verify-redi-db-deploy-path.sh
 

@@ -5,7 +5,7 @@
 
 按这个顺序做：先主控和数据库，再节点，最后到后台把 DNS、节点和域名配好。控制台里每一步点哪里，见 [docs/CONSOLE.md](docs/CONSOLE.md)。
 
-CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。**Ubuntu 22.04 / 24.04** 见 [DEPLOY-ubuntu.md](DEPLOY-ubuntu.md) 与 `scripts/ubuntu/deploy-*.sh`。填好的变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md) / [DEPLOY-ubuntu-example.md](DEPLOY-ubuntu-example.md)。真机验收见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 或 [docs/ACCEPTANCE-UBUNTU-DEPLOY.md](docs/ACCEPTANCE-UBUNTU-DEPLOY.md)。
+**生产仅支持 CentOS 7.9（7.x）**：两个全自动脚本见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。真机验收见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)；能力复核见 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md)。
 
 **主控已在跑、只想跟上新能力（Agent 0.1.3、cron Webhook、运营命令等）**：见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md)。能力分级见 [docs/ROADMAP-PRODUCTION.md](docs/ROADMAP-PRODUCTION.md)。
 
@@ -91,7 +91,7 @@ php artisan storage:link
 chown -R nginx:nginx storage bootstrap/cache
 ```
 
-`chown` 的用户按网站运行用户改。Debian/Ubuntu 常见是 `www-data`，CentOS 的 Nginx 常见是 `nginx`。
+`chown` 的用户按网站运行用户改。CentOS 上 Nginx 常见为 `nginx`。
 
 从仓库手动安装时，网站根目录是 `master/master/public`。CentOS 7 脚本使用发布包，网站根目录是 `/opt/301/master/public`。Nginx 将请求交给 `index.php`。PHP-FPM 的监听地址以 `/etc/php-fpm.d/www.conf`（或发行版对应文件）里的 `listen` 为准，不要猜 sock 路径。
 
@@ -101,7 +101,7 @@ chown -R nginx:nginx storage bootstrap/cache
 php artisan queue:work --sleep=3 --timeout=320 --tries=100
 ```
 
-生产环境用 systemd，示例是 `scripts/systemd/redi-queue.service.example`。CentOS 上把其中的 `User=www-data` 改成 `nginx`，并改对 `WorkingDirectory`。
+生产环境用 systemd，示例是 `scripts/systemd/redi-queue.service.example`（默认 `User=nginx`）。请改对 `WorkingDirectory` 与 PHP-FPM 用户一致。
 
 证书续期每天一次：
 

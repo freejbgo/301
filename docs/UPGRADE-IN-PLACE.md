@@ -16,9 +16,9 @@
 ```bash
 sudo systemctl stop redi-queue nginx php*-fpm 2>/dev/null || true
 cd /opt/301/master && sudo tar -xzf /path/to/master.tar.gz --strip-components=1
-cd /opt/301/master/master && sudo -u www-data composer install --no-dev -o
-sudo -u www-data php artisan migrate --force
-sudo -u www-data php artisan config:cache
+cd /opt/301/master/master && sudo -u nginx composer install --no-dev -o
+sudo -u nginx php artisan migrate --force
+sudo -u nginx php artisan config:cache
 sudo systemctl start php*-fpm nginx redi-queue
 ```
 
@@ -50,14 +50,14 @@ REDI_DNS_PRECHECK_ALLOW_A_TO_POOL=true
 sudo bash scripts/patch-master-cron-ops-webhook.sh /opt/301/master/master
 ```
 
-或手工编辑 `/etc/cron.d/redi-renew`（用户 `www-data` 或 `nginx` 与当初 deploy 一致）：
+或手工编辑 `/etc/cron.d/redi-renew`（Cron 用户与 deploy 一致，CentOS 一般为 `nginx`）：
 
 ```cron
 SHELL=/bin/bash
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
-10 3 * * * www-data bash -c 'cd /opt/301/master/master && /usr/bin/php artisan redi:renew-certificates >> /opt/301/master/master/storage/logs/renew.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:renew-certificates >> /opt/301/master/master/storage/logs/renew.log 2>&1'
-10 4 * * * www-data bash -c 'cd /opt/301/master/master && /usr/bin/php artisan redi:prune-acme-challenges >> /opt/301/master/master/storage/logs/prune-acme.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:prune-acme-challenges >> /opt/301/master/master/storage/logs/prune-acme.log 2>&1'
-30 8 * * * www-data bash -c 'cd /opt/301/master/master && /usr/bin/php artisan redi:health --notify >> /opt/301/master/master/storage/logs/health.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:health >> /opt/301/master/master/storage/logs/health.log 2>&1'
+10 3 * * * nginx bash -c 'cd /opt/301/master/master && /usr/bin/php artisan redi:renew-certificates >> /opt/301/master/master/storage/logs/renew.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:renew-certificates >> /opt/301/master/master/storage/logs/renew.log 2>&1'
+10 4 * * * nginx bash -c 'cd /opt/301/master/master && /usr/bin/php artisan redi:prune-acme-challenges >> /opt/301/master/master/storage/logs/prune-acme.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:prune-acme-challenges >> /opt/301/master/master/storage/logs/prune-acme.log 2>&1'
+30 8 * * * nginx bash -c 'cd /opt/301/master/master && /usr/bin/php artisan redi:health --notify >> /opt/301/master/master/storage/logs/health.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:health >> /opt/301/master/master/storage/logs/health.log 2>&1'
 ```
 
 验证：

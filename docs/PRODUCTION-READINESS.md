@@ -1,6 +1,6 @@
 # 生产就绪检查（上线运营 / 全功能）
 
-本文档汇总 **阻塞上线** 与 **验收必做** 项，与 CentOS 7 / Ubuntu 双路径部署文档配合使用。
+本文档汇总 **阻塞上线** 与 **验收必做** 项，与 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 及 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) 配合使用。**生产环境仅维护 CentOS 7.9（7.x）部署路径。**
 
 - **已上线升级（不重装）**：[UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（含 `scripts/patch-master-cron-ops-webhook.sh`）
 - **P0/P1/P2 全表**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)（不仅 P0；PR #74 已含大量 P1 运营能力）
@@ -20,7 +20,7 @@
 1. 修改后台默认密码（种子文档密码在 `config/redi.php` 的 `known_default_admin_passwords` 中会被拦截）。
 2. 确认 `APP_KEY` 稳定且已备份（证书密文依赖它）。
 3. 主控仅 HTTPS 暴露；节点 `REDI_MASTER_URL` 使用 `https://`（实验环境才用 `REDI_MASTER_INSECURE=1`）。
-4. 按 OS 执行：`DEPLOY-centos7.md` 或 `DEPLOY-ubuntu.md`，并准备 `release` 包（见 `scripts/ensure-release-tarballs.sh`）。
+4. 按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 执行主控/节点脚本，并准备 `release` 包（见 `scripts/ensure-release-tarballs.sh`）。
 
 ## 验收命令（真机）
 
@@ -74,4 +74,4 @@ curl -fsS "http://127.0.0.1:<node-port>/revision"
 ## 回滚
 
 - 主控：恢复上一版 `release` 包与 `php artisan migrate:rollback`（仅在确认无不可逆迁移时使用）。
-- 节点：替换 `redi-multi` 二进制并 `systemctl restart redi-node`（或 Ubuntu 等价服务名）。
+- 节点：替换 `redi-multi` 二进制并 `systemctl restart redi-multi`（或部署脚本注册的服务名）。

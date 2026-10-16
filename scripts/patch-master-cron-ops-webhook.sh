@@ -9,12 +9,12 @@ CRON_FILE="/etc/cron.d/redi-renew"
 [[ "$(id -u)" -eq 0 ]] || { echo "请用 root 执行" >&2; exit 1; }
 [[ -f "${APP}/artisan" ]] || { echo "找不到 artisan: ${APP}" >&2; exit 1; }
 
-if id www-data &>/dev/null; then
-  CRON_USER="www-data"
-elif id nginx &>/dev/null; then
+if id nginx &>/dev/null; then
   CRON_USER="nginx"
+elif id www-data &>/dev/null; then
+  CRON_USER="www-data"
 else
-  echo "未找到 www-data 或 nginx 用户" >&2
+  echo "未找到 nginx 或 www-data 用户" >&2
   exit 1
 fi
 
