@@ -20,6 +20,19 @@ func TestResponseForPathRequiresHostAndToken(t *testing.T) {
 	}
 }
 
+func TestReplaceAllSkipsResponseBodyWithControlChars(t *testing.T) {
+	ReplaceAll([]Item{{
+		DomainName:   "example.com",
+		Token:        "tok123",
+		ResponseBody: "bo\r\ndy",
+	}})
+
+	_, ok := ResponseForPath("example.com", "/.well-known/acme-challenge/tok123")
+	if ok {
+		t.Fatal("control chars in response body must not be stored")
+	}
+}
+
 func TestReplaceAllSkipsEmptyResponseBody(t *testing.T) {
 	ReplaceAll([]Item{{
 		DomainName:   "example.com",
@@ -30,6 +43,19 @@ func TestReplaceAllSkipsEmptyResponseBody(t *testing.T) {
 	_, ok := ResponseForPath("example.com", "/.well-known/acme-challenge/tok123")
 	if ok {
 		t.Fatal("empty response body must not be stored")
+	}
+}
+
+func TestReplaceAllSkipsInvalidDomain(t *testing.T) {
+	ReplaceAll([]Item{{
+		DomainName:   "evil\t.com",
+		Token:        "tok123",
+		ResponseBody: "body",
+	}})
+
+	_, ok := ResponseForPath("evil.com", "/.well-known/acme-challenge/tok123")
+	if ok {
+		t.Fatal("tab domain must not be stored")
 	}
 }
 
