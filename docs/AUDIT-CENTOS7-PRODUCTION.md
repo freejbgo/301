@@ -44,9 +44,9 @@
 
 | 能力 | 命令 / 入口 |
 |------|-------------|
-| 健康检查 | `php artisan redi:health` / `--json` / `--notify` |
+| 健康检查 | `php artisan redi:health` / `--json` / `--notify`（Cron：`--notify` 在 webhook **发送成功**或无 issues 时退出 **0**） |
 | 续期 | Cron `redi:renew-certificates`；`--dry-run --days=` |
-| 失败告警 | Cron 行尾 `|| redi:ops-webhook`；`.env` Webhook URL |
+| 失败告警 | 续期/清理/health Cron 行尾 `|| redi:ops-webhook`（health 在 webhook 未发出且有 issues 时退出非 0 触发）；`.env` URL |
 | 队列健康 | health 内 `failed_jobs`、积压阈值 |
 | 后台 | 节点证书列、重试失败、域名筛选/导出 CSV、批量重下发 |
 | 全局重试 | `redi:requeue-failed-deployments` |
@@ -110,7 +110,7 @@
 
 **2026-10-16 复核（#87）：** Cron 文档统一「勿 `schedule:run`」；`UPGRADE` / 验收清单补强 `grep renew|prune|health` 与 `schedule:run` 负向检查。
 
-**2026-10-16 深度复核（#88）：** `deploy-master` / `patch-master-cron` 安装后打印 Cron 验收；`DEPLOY-centos7` §11、`CONSOLE` 运营命令与 `queue_stale` 说明补齐；`scripts/README` 索引 CentOS 辅助脚本；`queue_stale` 单测；`SECURITY` Cron 时段说明；`redi:health --notify` Cron 退出 0（避免与 `|| ops-webhook` 重复告警）；`grant-nodes-from-vars` 要求 root。
+**2026-10-16 深度复核（#88）：** `deploy-master` / `patch-master-cron` 安装后打印 Cron 验收；`DEPLOY-centos7` §11、`CONSOLE` 运营命令与 `queue_stale` 说明补齐；`scripts/README` 索引 CentOS 辅助脚本；`queue_stale` 单测；`SECURITY` Cron 时段说明；`redi:health --notify` 在 webhook 成功时退出 0、失败时由 `|| ops-webhook` 兜底；`grant-nodes-from-vars` 要求 root。
 
 | 维度 | 结论 |
 |------|------|
@@ -121,7 +121,7 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **83**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **84**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
@@ -184,4 +184,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **83** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **84** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。

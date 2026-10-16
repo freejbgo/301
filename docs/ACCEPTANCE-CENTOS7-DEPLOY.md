@@ -76,6 +76,7 @@ mysql --defaults-extra-file=/root/.redi-mysql.cnf redi_admin -e \
 systemctl is-active firewalld mariadb php-fpm nginx redi-queue
 php -r 'echo PHP_VERSION, "\n";'
 mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SELECT COUNT(*) FROM redi_admin.admin_users;"
+mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SHOW VARIABLES LIKE 'skip_name_resolve';" | grep -qi 'ON'
 curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/admin"
 cd /opt/301/master && sudo -u nginx php artisan redi:health
 grep -E 'renew|prune|health' /etc/cron.d/redi-renew
@@ -94,6 +95,7 @@ sudo firewall-cmd --list-all
 | `/etc/cron.d/redi-renew` | **03:10** `redi:renew-certificates`、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`；`cd` 为 **`/opt/301/master`**（勿含 `master/master`）；勿另配 `schedule:run`（`Kernel` 无内置 schedule）。自定义 `MASTER_INSTALL_ROOT` 时把下面 `grep` 中的路径改成 `${MASTER_INSTALL_ROOT}/master` |
 | PHP 版本 | **8.0.x**（`deploy-master` 仅接受 8.0.x） |
 | `admin_users` | ≥ 1 |
+| `skip_name_resolve` | **ON**（`deploy-master` 安装 `redi-skip-name-resolve.cnf`） |
 | `curl` 后台 | **302** 或 **200** |
 | 3306 | 监听；**不要**对 `0.0.0.0/0` 在安全组全网开放 |
 | firewalld | 含 `ssh` `http` `https`；对节点 IP 有 mysql 相关 rich rule（若已配置 `NODE_IPS`） |

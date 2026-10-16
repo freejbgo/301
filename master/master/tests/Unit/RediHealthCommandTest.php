@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\RediDomainCert;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -103,8 +104,11 @@ class RediHealthCommandTest extends TestCase
             ->assertExitCode(1);
     }
 
-    public function test_health_notify_exits_zero_even_with_issues(): void
+    public function test_health_notify_exits_zero_when_webhook_delivered(): void
     {
+        config(['redi.health_webhook_url' => 'https://hooks.example/health']);
+        Http::fake(['https://hooks.example/*' => Http::response([], 200)]);
+
         \DB::table('redi_nodes')->insert([
             'name' => 'stale',
             'public_ip' => '1.2.3.4',
@@ -115,6 +119,22 @@ class RediHealthCommandTest extends TestCase
         ]);
 
         $this->artisan('redi:health', ['--notify' => true])->assertExitCode(0);
+    }
+
+    public function test_health_notify_exits_one_when_webhook_not_configured(): void
+    {
+        config(['redi.health_webhook_url' => '']);
+
+        \DB::table('redi_nodes')->insert([
+            'name' => 'stale',
+            'public_ip' => '1.2.3.4',
+            'enabled' => true,
+            'last_heartbeat_at' => now()->subHour(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->artisan('redi:health', ['--notify' => true])->assertExitCode(1);
     }
 
     public function test_health_text_mode_prints_hints_without_failing(): void

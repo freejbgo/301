@@ -21,8 +21,10 @@ class RediHealthCommand extends Command
         $issues = RediHealthReport::collectIssues($warnDays);
         $hasIssues = $issues !== [];
 
+        $notifyDelivered = true;
         if ($this->option('notify') && $hasIssues) {
-            if (RediHealthNotifier::notifyWebhook($issues)) {
+            $notifyDelivered = RediHealthNotifier::notifyWebhook($issues);
+            if ($notifyDelivered) {
                 $this->info('已发送 health webhook 通知。');
             } else {
                 $this->warn('未发送 webhook（未配置 URL 或请求失败）。');
@@ -51,9 +53,9 @@ class RediHealthCommand extends Command
             self::printHints($this);
         }
 
-        // Cron 使用 --notify：issues 已由 webhook 上报，退出 0，避免 || redi:ops-webhook 重复告警。
+        // Cron --notify：webhook 成功则退出 0；未配置/发送失败时退出 1，由 || redi:ops-webhook 兜底。
         if ($this->option('notify')) {
-            return self::SUCCESS;
+            return ($hasIssues && ! $notifyDelivered) ? self::FAILURE : self::SUCCESS;
         }
 
         return $hasIssues ? self::FAILURE : self::SUCCESS;
