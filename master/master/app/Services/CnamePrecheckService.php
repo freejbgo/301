@@ -97,7 +97,10 @@ class CnamePrecheckService
         if ($depth <= 0) {
             return false;
         }
-        $host = strtolower(rtrim($host, '.'));
+        $host = HostNameValidator::toCanonicalAscii($host);
+        if ($host === '' || ! HostNameValidator::isValidHostLabel($host)) {
+            return false;
+        }
         if (in_array($host, $targets, true)) {
             return true;
         }

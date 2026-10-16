@@ -16,6 +16,7 @@ class Http01PropagationWaiter
      */
     public function wait(string $domain, string $token, string $expectedBody, int $maxSeconds = 120): void
     {
+        $maxSeconds = min(600, max(10, $maxSeconds));
         $domain = HostNameValidator::toCanonicalAscii($domain);
         if ($domain === '' || ! HostNameValidator::isValidHostLabel($domain)) {
             throw new RuntimeException('HTTP-01 域名无效');
