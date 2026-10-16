@@ -8,6 +8,10 @@ SQL="${REPO_ROOT}/db/redi_admin.sql"
 [[ -f "$SQL" ]] || { echo "缺少 $SQL" >&2; exit 1; }
 
 if ! command -v docker >/dev/null 2>&1; then
+  if [[ "${GITHUB_ACTIONS:-}" == "true" || "${VERIFY_REDI_REQUIRE_DOCKER:-}" == "1" ]]; then
+    echo "verify-redi-db-deploy-path: 需要 docker（CI 或设 VERIFY_REDI_REQUIRE_DOCKER=1）" >&2
+    exit 1
+  fi
   echo "跳过 verify-redi-db-deploy-path：未安装 docker" >&2
   exit 0
 fi

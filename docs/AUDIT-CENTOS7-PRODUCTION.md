@@ -104,7 +104,9 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-16 全库复核（#83 后）：** `go test ./...` + PHPUnit **80** + `dev-preflight` 通过；`scripts/` 与 `centos7/` 脚本均有文档或 CI 引用，**无删除**；`master/master/public/vendor/dcat-admin` 为 Dcat 后台静态资源（约 800+ 文件），随 Dcat 升级整块替换，**不在此次精简**。已移除 Laravel 默认 `inspire` 控制台示例；根 `.gitignore` 补充本地日志/PHPUnit 缓存。
+**2026-10-16 全库复核（#83 后）：** `go test ./...` + PHPUnit **80** + `dev-preflight` 通过；`scripts/` 与 `centos7/` 脚本均有文档或 CI 引用；`public/vendor/dcat-admin` 为 Dcat 静态资源，**不删**；移除 `inspire` 示例；根 `.gitignore` 补充本地缓存。
+
+**2026-10-16 深度审计：** 删除未使用的 `UserFactory`、`node/redi-multi/Makefile`；清空 `Kernel::schedule`（生产仅用 `/etc/cron.d`，避免误跑 `schedule:run` 双份续期）；`channels.php` 与未启用的 Broadcast 对齐；CI 下 `verify-redi-db-deploy-path` 无 docker 时失败。
 
 | 维度 | 结论 |
 |------|------|
@@ -131,7 +133,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#83](https://github.com/freejbgo/301/pull/83)（`redi:health`、`dev-preflight.sh`、主控路径与 Cron 文档、全库复核卫生项）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#84](https://github.com/freejbgo/301/pull/84) 及后续深度审计 PR。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
@@ -168,7 +170,7 @@ cd master/master && composer install && ./vendor/bin/phpunit --testsuite Unit,Fe
 for f in scripts/centos7/*.sh scripts/patch-master-cron-ops-webhook.sh; do bash -n "$f"; done
 python3 scripts/centos7/lagran_ports.py node/redi-multi/config.json.example | grep -q '80'
 php scripts/verify-redi-node-procedure-sync.php
-bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；无 docker 时脚本 exit 0 跳过
+bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳过，CI 无 docker 则失败
 ```
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
