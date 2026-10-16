@@ -49,6 +49,34 @@
 | 后台 | 节点证书列、重试失败、域名筛选/导出 CSV、批量重下发 |
 | 全局重试 | `redi:requeue-failed-deployments` |
 
+### `redi:health` 问题码（`issues[]`，影响退出码）
+
+| `code` | 级别 | 含义 |
+|--------|------|------|
+| `app_debug_enabled` | critical | 生产环境 `APP_DEBUG=true` |
+| `acme_email_missing` | warning | 未配置 ACME 联系邮箱 |
+| `acme_staging_enabled` | warning | 生产仍开启 ACME Staging |
+| `edge_zone_missing` | warning | 未配置平台 `edge_zone` |
+| `node_stale` | warning | 启用节点超过 15 分钟无心跳 |
+| `cert_deploy_pending` | warning | 仍有 pending 证书部署 |
+| `cert_deploy_failed` | critical | 节点证书安装 failed |
+| `cert_expired` | critical | 已过期且域名仍启用 |
+| `cert_expiring` | warning | 在 `--days` 窗口内即将到期 |
+| `cert_validating_stuck` | warning | validating 超过 `REDI_HEALTH_VALIDATING_STUCK_HOURS` |
+| `queue_failed_jobs` | critical | `failed_jobs` 非空 |
+| `queue_backlog` | warning | `jobs` 积压超过阈值 |
+| `queue_stale` | warning | 最老 `jobs` 等待过久 |
+
+### `redi:health` 配置建议（`hints[]`，不影响退出码）
+
+| `code` | 含义 |
+|--------|------|
+| `queue_cache_file` | 队列非 sync 但 `CACHE_DRIVER=file` |
+| `queue_database_single_host` | 队列用 database 且与 DB 同机（多 worker 建议 Redis） |
+| `agent_version_gate_off` | 生产下 `REDI_MIN_AGENT_VERSION` 为空 |
+
+采集示例：`php artisan redi:health --json | jq '.issues,.hints'`
+
 **上线后建议：** 配置 `REDI_HEALTH_WEBHOOK_URL`（或 ops Webhook），监控采集 `redi:health --json`；真机按 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) 打勾。
 
 ---
@@ -59,7 +87,7 @@
 |----|------|
 | Laravel / PHP 大版本 | 当前锁 PHP 8.0 兼容；长期需升级计划 |
 | MySQL 客户端 TLS | 节点连主控库可考虑加密通道 |
-| lagran NFQUEUE | 升级/卸载脚本化、文档化 |
+| lagran NFQUEUE | 诊断/清理与 `lagran_ports.py` 已脚本化；更深自动化仍排期 |
 | 租户隔离审计 | API/后台更强审计与单测 |
 
 ---
@@ -85,7 +113,7 @@
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
 | 自动化测试 | 本地：Go 全包测试通过；PHPUnit **78**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
-| GitHub Actions | 部分环境 CI 可能因 Runner/账单秒失败；以本地上述自检为准 |
+| GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
 **未发现阻塞商用的 P0 代码缺陷。**
 
@@ -99,7 +127,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**（已含 #75–#79：P0/P1、health、lagran、复核修复与小优化）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**（已含 #75–#80；#81 草稿含扩展生产配置 health 检查）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
@@ -115,6 +143,8 @@
 
 ## 9. 本地/CI 快速自检（开发机）
 
+与 GitHub **CI** 对齐：`node` + `master-phpunit`（8.4/8.0）+ `centos7-scripts`（含下方脚本校验）+ 可选 `centos7-integration` 容器冒烟。打 `v*` 标签时 **release.yml** 在上传 Release 前跑同一套检查。
+
 ```bash
 # Go
 cd node/redi-multi && go test ./...
@@ -122,10 +152,13 @@ cd node/redi-multi && go test ./...
 # PHP（需 8.0+ 与 composer）
 cd master/master && composer install && ./vendor/bin/phpunit --testsuite Unit,Feature
 
-# 部署脚本语法
+# 部署脚本语法（= CI job centos7-scripts 核心步骤）
 for f in scripts/centos7/*.sh scripts/patch-master-cron-ops-webhook.sh; do bash -n "$f"; done
+python3 scripts/centos7/lagran_ports.py node/redi-multi/config.json.example | grep -q '80'
 php scripts/verify-redi-node-procedure-sync.php
-bash scripts/verify-redi-db-deploy-path.sh
+bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；无 docker 时脚本 exit 0 跳过
 ```
 
-PHPUnit 用例数随分支演进（当前 **76+** 条 Feature/Unit）；以 `phpunit` 退出码为准。
+`verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
+
+PHPUnit 当前 **78** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。

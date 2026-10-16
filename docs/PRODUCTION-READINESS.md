@@ -30,6 +30,7 @@
 cd /opt/301/master/master && php artisan redi:health
 php artisan redi:health --json
 # JSON 含 summary（queue/cache 驱动）、hints（多 worker 时请 redis 缓存）、issues（非空则退出码 1）
+# issues/hints 各 code 含义见 AUDIT-CENTOS7-PRODUCTION.md §3
 
 # 有问题时通知 Webhook（.env 配置 REDI_HEALTH_WEBHOOK_URL，POST JSON，含 text 摘要）
 php artisan redi:health --notify
