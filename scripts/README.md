@@ -10,7 +10,7 @@
 | [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | 已上线主控：升级 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`）；脚本结束会打印 `grep` / `redi:health` 验收提示 |
 | [centos7/vars.example.env](centos7/vars.example.env) | 部署变量模板（`vars.env`）；Webhook URL 写在主控 `.env`，见文件内注释 |
 | [centos7/deploy-master.sh](centos7/deploy-master.sh) / [deploy-node.sh](centos7/deploy-node.sh) | CentOS 7 主控/节点一键部署 |
-| [centos7/grant-nodes-from-vars.sh](centos7/grant-nodes-from-vars.sh) | 仅按 `vars.env` 的 `NODE_IPS` 补 MySQL 授权与 firewalld（不重装主控） |
+| [centos7/grant-nodes-from-vars.sh](centos7/grant-nodes-from-vars.sh) | 按 `vars.env` 的 `NODE_IPS` 同步 MySQL + firewalld（**root**；`MYSQL_ROOT_PASS` 读 vars，不重装主控） |
 | [centos7/grant-node-mysql.sh](centos7/grant-node-mysql.sh) / [revoke-node-mysql.sh](centos7/revoke-node-mysql.sh) | 单节点 IP 授权/撤销（**root** + `MYSQL_ROOT_PASSWORD`） |
 | [centos7/firewalld-allow-mysql-from-node.sh](centos7/firewalld-allow-mysql-from-node.sh) / [firewalld-revoke-mysql-from-node.sh](centos7/firewalld-revoke-mysql-from-node.sh) | 单节点 IP 放行/撤销主控 3306（**root**） |
 | [centos7/apply-mysql-skip-name-resolve.sh](centos7/apply-mysql-skip-name-resolve.sh) | 关闭 MySQL 反向 DNS 解析（生产建议） |

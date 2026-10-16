@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 在主控机上：撤销某节点公网 IP 访问本机 3306 的 firewalld 规则。
-# 用法: sudo ./firewalld-revoke-mysql-from-node.sh <节点公网IP>
+# 用法: sudo bash scripts/centos7/firewalld-revoke-mysql-from-node.sh <节点公网IP>
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

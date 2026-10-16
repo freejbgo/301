@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 在主控机上：仅允许某节点公网 IP 访问本机 3306（需 firewalld）。
-# 用法: sudo ./firewalld-allow-mysql-from-node.sh <节点公网IP>
+# 用法: sudo bash scripts/centos7/firewalld-allow-mysql-from-node.sh <节点公网IP>
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

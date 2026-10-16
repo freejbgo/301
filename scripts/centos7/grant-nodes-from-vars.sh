@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# 在主控上：按 vars.env 里的 NODE_IPS 批量授权并放行 3306
+# 在主控上：按 vars.env 里的 NODE_IPS 批量授权并放行 3306（与 deploy-master 内 redi_sync_node_ips_access 相同逻辑）。
+# 用法: sudo bash scripts/centos7/grant-nodes-from-vars.sh
 set -euo pipefail
 
 if [[ "$(id -u)" -ne 0 ]]; then
