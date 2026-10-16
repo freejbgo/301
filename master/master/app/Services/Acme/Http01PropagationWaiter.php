@@ -6,6 +6,7 @@ use App\Models\RediAcmeChallengeNodeSync;
 use App\Models\RediNode;
 use App\Support\AcmeHttp01Token;
 use App\Support\HostNameValidator;
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -53,7 +54,8 @@ class Http01PropagationWaiter
         }
 
         throw new RuntimeException(
-            'HTTP-01 未在 '.$maxSeconds.' 秒内就绪：请确认至少一台在线节点已同步挑战、CNAME 已生效，且公网 80 可访问 '.$publicUrl
+            'HTTP-01 未在 '.$maxSeconds.' 秒内就绪：请确认至少一台在线节点已同步挑战、CNAME 已生效，且公网 80 可访问 '
+            .OpsDisplaySanitizer::field($domain, $domain, 253).$path
         );
     }
 
