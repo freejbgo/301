@@ -3,7 +3,7 @@
 本文档汇总 **阻塞上线** 与 **验收必做** 项，与 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 及 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) 配合使用。**生产环境仅维护 CentOS 7.9（7.x）部署路径。**
 
 - **已上线升级（不重装）**：[UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（含 `scripts/patch-master-cron-ops-webhook.sh`）
-- **P0/P1/P2 全表**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)（能力随 `main` 演进，当前基线含 #75–#81）
+- **P0/P1/P2 全表**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)（合并基线见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §7）
 
 ## 阻塞上线（P0，本仓库已加固）
 
@@ -74,7 +74,7 @@ curl -fsS "http://127.0.0.1:<node-port>/revision"
 
 - 生产配置：`APP_DEBUG`、ACME 邮箱 / Staging、`edge_zone`（见 §3 表）
 - `failed_jobs` > 0 → 严重（`queue_failed_jobs`）
-- `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）或超过 2 小时未执行 → 警告（`queue_backlog` / `queue_stale`）
+- `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）→ `queue_backlog`；`available_at` 超过 2 小时未执行 → `queue_stale`
 
 完整路线图见 [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)。多 worker 队列见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)；节点 DB TLS 见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §9。
 

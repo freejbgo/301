@@ -79,6 +79,7 @@ mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SELECT COUNT(*) FROM redi_
 curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/admin"
 cd /opt/301/master && sudo -u nginx php artisan redi:health
 grep -E 'cd /opt/301/master' /etc/cron.d/redi-renew
+grep -q 'redi:health' /etc/cron.d/redi-renew
 ! grep -q 'master/master' /etc/cron.d/redi-renew
 ss -lntp | egrep ':80|:443|:3306' || true
 sudo firewall-cmd --list-all
@@ -87,7 +88,7 @@ sudo firewall-cmd --list-all
 | 检查项 | 期望 |
 |--------|------|
 | `firewalld` / `mariadb` / `php-fpm` / `nginx` / `redi-queue` | 均为 `active` |
-| `/etc/cron.d/redi-renew` | 含 **03:10** `redi:renew-certificates`、**04:10** `redi:prune-acme-challenges`；`cd` 目标为 **`/opt/301/master`**（勿含 `master/master`）；勿另配 `schedule:run` |
+| `/etc/cron.d/redi-renew` | **03:10** `redi:renew-certificates`、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`；`cd` 为 **`/opt/301/master`**（勿含 `master/master`）；勿另配 `schedule:run` |
 | PHP 版本 | **8.0.x**（`deploy-master` 仅接受 8.0.x） |
 | `admin_users` | ≥ 1 |
 | `curl` 后台 | **302** 或 **200** |

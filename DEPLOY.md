@@ -103,13 +103,15 @@ php artisan queue:work --sleep=3 --timeout=320 --tries=100
 
 生产环境用 systemd，示例是 `scripts/systemd/redi-queue.service.example`（默认 `User=nginx`）。请改对 `WorkingDirectory` 与 PHP-FPM 用户一致。
 
-证书续期每天一次：
+证书续期 / ACME 清理 / 运营自检（CentOS `deploy-master` 写入 `/etc/cron.d/redi-renew`，含 **03:10** 续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`）：
 
-`/etc/cron.d/` 里必须写用户名。发布包安装的程序目录是 `/opt/301/master`；git 克隆时把路径换成 `master/master`：
+`/etc/cron.d/` 里必须写用户名。发布包安装的程序目录是 `/opt/301/master`；git 克隆时把路径换成 `master/master`。续期示例：
 
 ```bash
 10 3 * * * nginx cd /opt/301/master && /usr/bin/php artisan redi:renew-certificates >> storage/logs/renew.log 2>&1
 ```
+
+完整三行与失败 Webhook 见 `scripts/centos7/deploy-master.sh` 或 [UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) §4。
 
 主控域名的 HTTPS 证书用面板或 certbot 签在 Nginx 上。这张证书只保护后台，和客户域名的跳转证书不是同一张。
 
