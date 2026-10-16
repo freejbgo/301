@@ -184,7 +184,7 @@ mysql -h 主控IP -u redi_node -p redi_admin -e "CALL redi_node_bump_skip('__smo
 - 默认已启用 `REDI_MIN_AGENT_VERSION=0.1.3`（全部节点 API）；旧节点须升级 `redi-multi` 或临时设 `REDI_MIN_AGENT_VERSION=` 禁用。
 - `php artisan config:cache` 前请确认 `.env` 中 `REDI_ALLOW_TRUST_ALL_PROXIES`、`REDI_MIN_AGENT_VERSION` 等已写入（它们进入 `config/redi.php`，缓存后仍生效）。
 - 续期/清理/health 由 `/etc/cron.d/redi-renew` 直调 `artisan`（**03:10 / 04:10 / 08:30**），**勿**配置 `php artisan schedule:run`。若有历史 Unicode 域名可执行 `php artisan redi:normalize-domain-hosts --dry-run` 再正式跑。
-- 更新主控代码后执行 `php artisan migrate --force`（仅当仓库有新迁移）。节点库账号为 **`redi_node`** 时重跑 `grant-node-mysql.sh`（仅 `EXECUTE` 该过程）。
+- 更新主控代码后执行 `php artisan migrate --force`（仅当仓库有新迁移）。节点库账号为 **`redi_node`** 时重跑 `sudo MYSQL_ROOT_PASSWORD='…' bash scripts/centos7/grant-node-mysql.sh <节点IP> <DB_PASS>`（仅 `EXECUTE` 该过程）。
 
 客户自己要做的事见 [docs/CUSTOMER-CNAME-HTTPS.md](docs/CUSTOMER-CNAME-HTTPS.md)。
 

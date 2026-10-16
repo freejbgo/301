@@ -79,6 +79,7 @@ mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SELECT COUNT(*) FROM redi_
 mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SHOW VARIABLES LIKE 'skip_name_resolve';" | grep -qi 'ON'
 curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/admin"
 cd /opt/301/master && sudo -u nginx php artisan redi:health
+grep -E '^REDI_HEALTH_WEBHOOK_URL=.+' /opt/301/master/.env || echo '建议配置 REDI_HEALTH_WEBHOOK_URL（Cron 08:30 --notify）'
 grep -E 'renew|prune|health' /etc/cron.d/redi-renew
 grep -E 'cd /opt/301/master' /etc/cron.d/redi-renew
 grep -q 'redi:prune-acme-challenges' /etc/cron.d/redi-renew
