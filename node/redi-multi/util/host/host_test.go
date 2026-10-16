@@ -17,3 +17,9 @@ func TestCanonicalLookupHostPlain(t *testing.T) {
 		t.Fatal("expected lower ascii")
 	}
 }
+
+func TestCanonicalLookupHostRejectsCRLF(t *testing.T) {
+	if CanonicalLookupHost("evil.com\r\n") != "" {
+		t.Fatal("expected empty for CRLF host")
+	}
+}

@@ -249,4 +249,36 @@ class EdgeDnsSyncServiceTest extends TestCase
 
         $this->assertNotNull(\DB::table('redi_tenant_edge')->where('id', 1)->value('dns_synced_at'));
     }
+
+    public function test_sync_rejects_invalid_pool_fqdn(): void
+    {
+        \DB::table('redi_platform_dns')->insert([
+            'edge_zone' => 'example.com',
+            'pool_host' => '..',
+            'dns_mode' => 'api',
+            'dns_driver' => 'cloudflare',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $provider = new class implements DnsProviderInterface
+        {
+            public function testConnection(): void
+            {
+            }
+
+            public function upsertARecords(string $fqdn, array $ipv4): void
+            {
+            }
+
+            public function upsertCname(string $name, string $zone, string $targetFqdn): void
+            {
+            }
+        };
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Pool FQDN 无效');
+
+        app(EdgeDnsSyncService::class)->syncAll($provider);
+    }
 }

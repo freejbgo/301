@@ -8,7 +8,11 @@ class DomainRecordNormalizer
 {
     public static function normalizeOriginalUrl(?string $url): string
     {
-        $url = trim((string) $url);
+        $raw = (string) $url;
+        if ($raw === '' || str_contains($raw, "\r") || str_contains($raw, "\n") || str_contains($raw, "\0")) {
+            return '';
+        }
+        $url = trim($raw);
         $url = preg_replace('#^https?://#i', '', $url);
         $url = strtolower(rtrim($url, '/'));
         if (str_contains($url, '/') || str_contains($url, '?') || str_contains($url, '#')) {
