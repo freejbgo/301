@@ -10,6 +10,7 @@
 | [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md) | P0/P1/P2 路线图 |
 | [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) | 真机逐步打勾 |
 | [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) | 已上线环境增量升级 |
+| [../scripts/dev-preflight.sh](../scripts/dev-preflight.sh) | 开发机发版前自检（§9） |
 
 ---
 
@@ -21,7 +22,7 @@
 | 变量模板 | `scripts/centos7/vars.example.env` → 本地 `vars.env`（gitignore） |
 | MySQL 节点授权 / 防火墙 | `grant-nodes-from-vars.sh`、`firewalld` 按 `NODE_IPS` |
 | 存量 Cron 补 Webhook | `scripts/patch-master-cron-ops-webhook.sh`（默认 `nginx` 用户） |
-| CI 校验 | `bash -n scripts/centos7/*.sh`、`verify-redi-*`、`container-integration-test.sh` |
+| CI 校验 | `scripts/dev-preflight.sh`（或 §9 分步）、`container-integration-test.sh`（release 门禁） |
 | Ubuntu 路径 | **已删除**（`scripts/ubuntu/`、`DEPLOY-ubuntu*.md`、`ACCEPTANCE-UBUNTU-DEPLOY.md`） |
 
 ---

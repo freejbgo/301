@@ -77,6 +77,7 @@ systemctl is-active firewalld mariadb php-fpm nginx redi-queue
 php -r 'echo PHP_VERSION, "\n";'
 mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SELECT COUNT(*) FROM redi_admin.admin_users;"
 curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/admin"
+cd /opt/301/master && sudo -u nginx php artisan redi:health
 ss -lntp | egrep ':80|:443|:3306' || true
 sudo firewall-cmd --list-all
 ```
@@ -91,6 +92,7 @@ sudo firewall-cmd --list-all
 | 3306 | 监听；**不要**对 `0.0.0.0/0` 在安全组全网开放 |
 | firewalld | 含 `ssh` `http` `https`；对节点 IP 有 mysql 相关 rich rule（若已配置 `NODE_IPS`） |
 | 节点 DB 权限 | 远程账号 `redi_node` 仅 EXECUTE `redi_node_bump_skip`（`grant-node-mysql.sh`；导入 SQL 后执行） |
+| `redi:health` | 退出码 **0**（可有 **hints**，见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3）；生产须已关 `APP_DEBUG` 并配好 DNS 与节点池 |
 
 Nginx 重复部署行为：
 
@@ -236,6 +238,8 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 ```bash
 sudo bash scripts/centos7/run-on-centos7-host.sh
 ```
+
+发版前在开发机还可跑 `bash scripts/dev-preflight.sh`（Go/PHPUnit/脚本校验，见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §9）。
 
 见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §7。
 

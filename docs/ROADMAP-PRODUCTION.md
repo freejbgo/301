@@ -23,6 +23,7 @@
 | 域名筛选、批量/单行重新下发、CSV 导出（含 CNAME 预检列） | ✅ |
 | Cron 失败 `redi:ops-webhook` | ✅ |
 | 存量升级文档 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) | ✅ |
+| 开发机发版前 `dev-preflight.sh` + AUDIT §9 | ✅（#81） |
 | 队列积压 / failed_jobs 健康检查 | ✅ |
 | 多机 `queue:work` + `CACHE_DRIVER=redis` 文档与自检 | ✅ `redi:health --json` 的 `hints` + summary 含 queue/cache |
 | ACME 续期全状态（validating 等）边界 | ✅ 续期跳过进行中 validating；卡住可重试；health `cert_validating_stuck` |

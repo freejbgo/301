@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 # 开发机发版前自检，与 .github/workflows/ci.yml 的 node + centos7-scripts 核心步骤对齐。
 # 完整说明见 docs/AUDIT-CENTOS7-PRODUCTION.md §9（含 PHP 8.0 job、容器冒烟、composer audit）。
+# 用法: bash scripts/dev-preflight.sh [--help]
 set -euo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  echo "用法: bash scripts/dev-preflight.sh"
+  echo "说明: docs/AUDIT-CENTOS7-PRODUCTION.md §9"
+  exit 0
+fi
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"

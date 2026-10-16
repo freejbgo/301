@@ -171,3 +171,16 @@
 7. 预检「已指向」后申请证书，生效后再开强制 HTTPS。
 
 以后加一台机器：主控给新出口 IP 授权数据库，节点管理新建一条并下发 Token，再更新 pool 的 A。给现有机器加 IP：只改那一条的「其他公网 IP」，然后更新 pool 的 A。
+
+## 7. 运营自检（主控 SSH）
+
+日常与 Cron 使用（在 `master/master` 或发布目录 `/opt/301/master`）：
+
+```bash
+php artisan redi:health
+php artisan redi:health --json    # 监控采集；issues/hints 的 code 见 AUDIT §3
+php artisan redi:renew-certificates --dry-run --days=25
+php artisan redi:requeue-failed-deployments
+```
+
+`issues` 非空时命令退出码为 1，适合告警。Webhook 与多 worker 说明见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)、[OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)、[AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。
