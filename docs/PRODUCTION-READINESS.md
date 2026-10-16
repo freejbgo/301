@@ -3,7 +3,7 @@
 本文档汇总 **阻塞上线** 与 **验收必做** 项，与 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 及 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) 配合使用。**生产环境仅维护 CentOS 7.9（7.x）部署路径。**
 
 - **已上线升级（不重装）**：[UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（含 `scripts/patch-master-cron-ops-webhook.sh`）
-- **P0/P1/P2 全表**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)（不仅 P0；PR #74 已含大量 P1 运营能力）
+- **P0/P1/P2 全表**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)（不仅 P0；PR #75 已含大量 P1 运营能力）
 
 ## 阻塞上线（P0，本仓库已加固）
 

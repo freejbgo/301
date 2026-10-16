@@ -1,6 +1,6 @@
 # 已上线环境升级（不重装 deploy-master）
 
-适用于 **主控/节点已在跑**，只需跟上 `main` / PR [#74](https://github.com/freejbgo/301/pull/74) 一类能力时使用。按顺序做，每步可单独回滚。
+适用于 **主控/节点已在跑**，只需跟上 `main` / PR [#75](https://github.com/freejbgo/301/pull/75) 一类能力时使用。按顺序做，每步可单独回滚。
 
 ## 1. 发布包与代码
 

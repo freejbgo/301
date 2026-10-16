@@ -1,8 +1,8 @@
 # 生产能力路线图（P0 / P1 / P2）
 
-**说明：** 此前多轮开发集中在 **P0（阻塞上线）** 与 **运营必备（实为上线路 P1）**，集中在 PR [#74](https://github.com/freejbgo/301/pull/74)。「全功能 / 长期运营」还包含下表 P1/P2，会按优先级继续合入，而不是只做 P0。
+**说明：** **P0（阻塞上线）** 与 **运营必备（实为上线路 P1）** 已合并在 PR [#75](https://github.com/freejbgo/301/pull/75)（含 CentOS 7.9 单路径）。「全功能 / 长期运营」还包含下表剩余 P1/P2，会按优先级在 `main` 上继续合入。
 
-## P0 — 阻塞首次商用上线（PR #74 已覆盖）
+## P0 — 阻塞首次商用上线（PR #75 已覆盖）
 
 | 项 | 状态 |
 |----|------|
@@ -10,9 +10,9 @@
 | Agent 0.1.3 心跳/ack/空证书/限流 | ✅ |
 | 后台 dcat-api、默认密码、登录限速、XSS | ✅ |
 | 启用前 DNS 指向（CNAME/A 池） | ✅ |
-| CentOS 7 部署脚本与 DB 校验路径 | ✅（#72/#73 + #74；Ubuntu 路径已移除，仅维护 CentOS） |
+| CentOS 7 部署脚本与 DB 校验路径 | ✅（#72/#73 + #75；仅维护 CentOS） |
 
-## P1 — 上线后日常运营（PR #74 已大部分覆盖）
+## P1 — 上线后日常运营（PR #75 已大部分覆盖）
 
 | 项 | 状态 |
 |----|------|
@@ -44,7 +44,7 @@
 
 ## 建议合并与升级顺序
 
-1. 合并 **#74** → 主控/节点按 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) 升级。  
+1. 合并 **#75** → 主控/节点按 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) 升级。  
 2. 真机跑 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) 验收。  
 3. 配置 Webhook 与监控采集 `redi:health --json`。  
 4. 再排 P2 技术债（与业务节奏一起排期）。

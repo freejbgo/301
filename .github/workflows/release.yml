@@ -63,6 +63,7 @@ jobs:
         run: |
           for f in scripts/centos7/*.sh scripts/patch-master-cron-ops-webhook.sh; do bash -n "$f"; done
           php scripts/verify-redi-node-procedure-sync.php
+          bash scripts/verify-redi-db-deploy-path.sh
 
   centos7-integration:
     runs-on: ubuntu-latest
