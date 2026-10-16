@@ -151,3 +151,17 @@ sudo systemctl start redi-multi
 3. 每台机器各跑 `queue:work`（或 systemd 多实例）
 
 详见 [docs/OPS-MULTI-WORKER-QUEUE.md](docs/OPS-MULTI-WORKER-QUEUE.md)。`php artisan redi:health --json` 的 `hints` 会在 file 缓存 + 非 sync 队列时提示改 redis。
+
+## 11. 主控安装后快速验收
+
+默认程序目录为 `/opt/301/master`（`vars.env` 的 `MASTER_INSTALL_ROOT=/opt/301`）。完整清单见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)。
+
+```bash
+systemctl is-active nginx php-fpm mariadb redi-queue
+grep -E 'renew|prune|health' /etc/cron.d/redi-renew
+! grep -q 'schedule:run' /etc/cron.d/redi-renew
+! grep -q 'master/master' /etc/cron.d/redi-renew
+cd /opt/301/master && sudo -u nginx php artisan redi:health --json
+```
+
+已上线主控若 Cron 仍是旧写法，可 `sudo bash scripts/patch-master-cron-ops-webhook.sh`（见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) §4）。

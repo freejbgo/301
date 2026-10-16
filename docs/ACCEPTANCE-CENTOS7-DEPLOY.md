@@ -91,7 +91,7 @@ sudo firewall-cmd --list-all
 | 检查项 | 期望 |
 |--------|------|
 | `firewalld` / `mariadb` / `php-fpm` / `nginx` / `redi-queue` | 均为 `active` |
-| `/etc/cron.d/redi-renew` | **03:10** `redi:renew-certificates`、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`；`cd` 为 **`/opt/301/master`**（勿含 `master/master`）；勿另配 `schedule:run`（`Kernel` 无内置 schedule） |
+| `/etc/cron.d/redi-renew` | **03:10** `redi:renew-certificates`、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`；`cd` 为 **`/opt/301/master`**（勿含 `master/master`）；勿另配 `schedule:run`（`Kernel` 无内置 schedule）。自定义 `MASTER_INSTALL_ROOT` 时把下面 `grep` 中的路径改成 `${MASTER_INSTALL_ROOT}/master` |
 | PHP 版本 | **8.0.x**（`deploy-master` 仅接受 8.0.x） |
 | `admin_users` | ≥ 1 |
 | `curl` 后台 | **302** 或 **200** |
