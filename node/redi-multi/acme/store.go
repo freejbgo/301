@@ -41,10 +41,11 @@ func ReplaceAll(items []Item) {
 	for _, it := range items {
 		d := strings.ToLower(strings.TrimSpace(it.DomainName))
 		t := strings.TrimSpace(it.Token)
-		if d == "" || !validChallengeToken(t) {
+		resp := strings.TrimSpace(it.ResponseBody)
+		if d == "" || !validChallengeToken(t) || resp == "" {
 			continue
 		}
-		byDomain[d] = challenge{token: t, response: it.ResponseBody}
+		byDomain[d] = challenge{token: t, response: resp}
 	}
 	mu.Unlock()
 }
