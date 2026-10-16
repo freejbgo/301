@@ -144,6 +144,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#106）：** `redi:normalize-domain-hosts` 修正无效 `skip_url` 检测并清空（`withoutEvents`）；prune 输出说明；`SafeRelativeRedirect` 拒绝反斜杠路径；PHPUnit **104**。
+
 **2026-10-16 复核（#105）：** 后台运维 `_redirect` 拒绝 `//` 协议相对路径（`SafeRelativeRedirect`）；OPS/PRODUCTION 文档补 summary 字段；PHPUnit **102**。
 
 **2026-10-16 复核（#104）：** health JSON `summary` 含 `health_renew_validating_stuck_hours`；`redi:ops-webhook` 命令单测；`CertificateIssuer` 去掉重复 `assertDomainIssuable`；`masteragent` gofmt；PHPUnit **98**。
@@ -181,7 +183,7 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **102**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **104**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
@@ -194,7 +196,7 @@
 | **运维 / 脚本** | `scripts/centos7/*`、`patch-master-cron`、NODE_IPS 授权与 firewalld、`grant-nodes-from-vars`、queue systemd、`lagran_*` 诊断脚本；用法提示与验收 `grep` |
 | **运营命令** | `redi:health`（含 `--json`/`--notify`、阈值 env）、`renew`/`prune`/`ops-webhook`、Cron 与 `storage/logs/*.log` |
 | **文档** | DEPLOY / DEPLOY-centos7 / UPGRADE / ACCEPTANCE / CONSOLE / SECURITY / OPS-MULTI-WORKER 与脚本行为对齐 |
-| **门禁** | `dev-preflight`（Go + PHPUnit **102** + bash -n + 存储过程）；与 `ci.yml` / `release.yml` 核心步骤一致 |
+| **门禁** | `dev-preflight`（Go + PHPUnit **104** + bash -n + 存储过程）；与 `ci.yml` / `release.yml` 核心步骤一致 |
 | **PHP（以单测为扫仓锚点）** | 节点 API、证书部署状态机、DNS 启用/预检、Agent 版本门、health/renew/prune/webhook、部分 DNS 厂商与租户相关 Service（见 `master/master/tests/`） |
 | **Go `node/redi-multi`** | CI 全包 `go test ./...`；host/redirect/certs/api/masteragent 等目录有单测；lagran 以配置与运维脚本为主 |
 | **未专项改代码** | `CertificateIssuer` / ACME 全链路重构、Dcat 后台 UI 全量、Laravel/composer 大版本与 CVE 批量修复、`public/vendor/dcat-admin` 删减 |
@@ -260,4 +262,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **102** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **104** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。

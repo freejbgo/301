@@ -27,4 +27,9 @@ class SafeRelativeRedirectTest extends TestCase
         $this->assertFalse(SafeRelativeRedirect::isSafe(''));
         $this->assertFalse(SafeRelativeRedirect::isSafe(null));
     }
+
+    public function test_rejects_backslash_in_path(): void
+    {
+        $this->assertFalse(SafeRelativeRedirect::isSafe('/admin\\nodes'));
+    }
 }

@@ -27,21 +27,24 @@ class NormalizeDomainHosts extends Command
                 }
                 $skip = DomainRecordNormalizer::normalizeSkipUrl($domain->skip_url);
                 $dirty = $canonical !== $domain->original_url
-                    || ($skip !== '' && $skip !== $domain->skip_url);
+                    || $skip !== (string) $domain->skip_url;
                 if (! $dirty) {
                     continue;
                 }
+                if ($skip === '' && trim((string) $domain->skip_url) !== '') {
+                    $this->warn("id={$domain->id} skip_url 无效将清空（请尽快在后台补合法 http/https 链接）: {$domain->skip_url}");
+                }
                 if ($dry) {
-                    $this->line("would update id={$domain->id} {$domain->original_url} -> {$canonical}");
+                    $this->line("would update id={$domain->id} {$domain->original_url} -> {$canonical}, skip_url -> {$skip}");
                     $updated++;
                     continue;
                 }
                 $domain->original_url = $canonical;
                 $domain->original_url_hash = DomainRecordNormalizer::originalUrlHash($canonical);
-                if ($skip !== '') {
-                    $domain->skip_url = $skip;
-                }
-                $domain->save();
+                $domain->skip_url = $skip;
+                RediAdminDomain::withoutEvents(function () use ($domain) {
+                    $domain->save();
+                });
                 $updated++;
             }
         });

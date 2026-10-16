@@ -10,6 +10,7 @@ class SafeRelativeRedirect
         return is_string($path)
             && $path !== ''
             && str_starts_with($path, '/')
-            && ! str_starts_with($path, '//');
+            && ! str_starts_with($path, '//')
+            && ! str_contains($path, '\\');
     }
 }
