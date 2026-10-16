@@ -19,6 +19,7 @@ use App\Services\DomainRecordNormalizer;
 use App\Services\CnamePrecheckService;
 use App\Services\TenantEdgeService;
 use App\Support\AdminTenantContext;
+use App\Support\OpsDisplaySanitizer;
 use App\Admin\Actions\Grid\ApplyCertificate;
 use App\Admin\Actions\Grid\BatchApplyCertificate;
 use App\Admin\Actions\Grid\BatchRedeployCertificate;
@@ -119,7 +120,7 @@ class RediAdminDomainController extends AdminController
                 if ($cert->storedCredentialsUnreadable()) {
                     $label .= '<br><span class="text-danger">证书密文无法解密（检查 APP_KEY 是否变更）</span>';
                 } elseif ($cert->last_error) {
-                    $label .= '<br><span class="text-danger">'.e($cert->last_error).'</span>';
+                    $label .= '<br><span class="text-danger">'.e(OpsDisplaySanitizer::field($cert->last_error, '—', 500)).'</span>';
                 }
                 if ($cert->expires_at) {
                     $exp = $cert->expires_at;

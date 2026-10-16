@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\RediAcmeChallenge;
 use App\Support\AcmeHttp01Token;
+use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -22,10 +23,21 @@ class AcmeChallengeQuery
 
     public static function http01ContentValid(?string $token, ?string $responseBody): bool
     {
-        $body = trim((string) $responseBody);
+        $raw = (string) $responseBody;
+        if (OpsDisplaySanitizer::containsControlChars($raw)) {
+            return false;
+        }
+        $body = trim($raw);
 
-        return AcmeHttp01Token::isValid((string) $token)
-            && $body !== ''
-            && ! OpsDisplaySanitizer::containsControlChars($body);
+        return AcmeHttp01Token::isValid((string) $token) && $body !== '';
+    }
+
+    public static function nodeReadyRow(?string $domainName, ?string $token, ?string $responseBody): bool
+    {
+        $domain = HostNameValidator::toCanonicalAscii((string) $domainName);
+
+        return $domain !== ''
+            && HostNameValidator::isValidHostLabel($domain)
+            && self::http01ContentValid($token, $responseBody);
     }
 }

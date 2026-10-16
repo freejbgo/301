@@ -11,7 +11,7 @@ class PruneExpiredAcmeChallenges extends Command
 {
     protected $signature = 'redi:prune-acme-challenges';
 
-    protected $description = '删除已过期的 ACME 挑战行、无效空 token 行及对应节点同步记录';
+    protected $description = '删除已过期的 ACME 挑战行、空 token/响应体或畸形 HTTP-01 内容及对应节点同步记录';
 
     public function handle(): int
     {
@@ -59,7 +59,7 @@ class PruneExpiredAcmeChallenges extends Command
         $malformedDomains = AcmeChallengeQuery::ready()
             ->get(['domain_name', 'token', 'response_body'])
             ->filter(function ($row) {
-                return ! AcmeChallengeQuery::http01ContentValid($row->token, $row->response_body);
+                return ! AcmeChallengeQuery::nodeReadyRow($row->domain_name, $row->token, $row->response_body);
             })
             ->pluck('domain_name')
             ->unique()

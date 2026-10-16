@@ -148,13 +148,15 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 		if domain == "" {
 			continue
 		}
-		if strings.TrimSpace(c.Token) == "" || strings.TrimSpace(c.ResponseBody) == "" {
+		token := strings.TrimSpace(c.Token)
+		resp := strings.TrimSpace(c.ResponseBody)
+		if token == "" || resp == "" || strings.ContainsAny(resp, "\r\n\x00\t") {
 			continue
 		}
 		items = append(items, acme.Item{
 			DomainName:   domain,
-			Token:        c.Token,
-			ResponseBody: c.ResponseBody,
+			Token:        token,
+			ResponseBody: resp,
 		})
 		domains = append(domains, domain)
 	}

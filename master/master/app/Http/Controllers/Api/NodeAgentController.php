@@ -40,11 +40,7 @@ class NodeAgentController extends Controller
         $allowed = AcmeChallengeQuery::ready()
             ->get(['domain_name', 'token', 'response_body'])
             ->filter(function ($row) {
-                $domain = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
-
-                return $domain !== ''
-                    && HostNameValidator::isValidHostLabel($domain)
-                    && AcmeChallengeQuery::http01ContentValid($row->token, $row->response_body);
+                return AcmeChallengeQuery::nodeReadyRow($row->domain_name, $row->token, $row->response_body);
             })
             ->mapWithKeys(function ($row) {
                 $domain = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
@@ -115,9 +111,11 @@ class NodeAgentController extends Controller
                 ];
             })
             ->filter(function ($row) {
-                return $row['domain_name'] !== ''
-                    && HostNameValidator::isValidHostLabel($row['domain_name'])
-                    && AcmeChallengeQuery::http01ContentValid($row['token'] ?? null, $row['response_body'] ?? null);
+                return AcmeChallengeQuery::nodeReadyRow(
+                    $row['domain_name'] ?? null,
+                    $row['token'] ?? null,
+                    $row['response_body'] ?? null
+                );
             })
             ->values();
 
