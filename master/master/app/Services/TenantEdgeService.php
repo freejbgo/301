@@ -23,9 +23,13 @@ class TenantEdgeService
         }
 
         $token = self::generateToken();
-        $fqdn = $zone === '请先在 DNS 与节点池 配置平台主域名'
-            ? ''
-            : strtolower($token.'.'.$zone);
+        $fqdn = '';
+        if ($zone !== '请先在 DNS 与节点池 配置平台主域名') {
+            $candidate = HostNameValidator::toCanonicalAscii(strtolower($token.'.'.$zone));
+            if ($candidate !== '' && HostNameValidator::isValidHostLabel($candidate)) {
+                $fqdn = $candidate;
+            }
+        }
 
         $edge = new RediTenantEdge();
         $edge->forceFill([
@@ -55,13 +59,14 @@ class TenantEdgeService
 
     public static function rebuildAllEdgeFqdn(string $zone): void
     {
-        $zone = strtolower(trim($zone, '.'));
-        if ($zone === '') {
+        $zone = HostNameValidator::toCanonicalAscii(strtolower(trim($zone, '.')));
+        if ($zone === '' || ! HostNameValidator::isValidHostLabel($zone)) {
             return;
         }
 
         RediTenantEdge::query()->each(function (RediTenantEdge $edge) use ($zone) {
-            $edge->edge_fqdn = strtolower($edge->token.'.'.$zone);
+            $fqdn = HostNameValidator::toCanonicalAscii(strtolower($edge->token.'.'.$zone));
+            $edge->edge_fqdn = HostNameValidator::isValidHostLabel($fqdn) ? $fqdn : '';
             $edge->dns_synced_at = null;
             $edge->save();
         });

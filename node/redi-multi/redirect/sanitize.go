@@ -2,6 +2,7 @@ package redirect
 
 import (
 	"net"
+	hostutil "redi-multi/util/host"
 	"strings"
 )
 
@@ -19,7 +20,11 @@ func sanitizeHost(host string) string {
 	if strings.Contains(host, ":") && !strings.Contains(host, "]") {
 		return ""
 	}
-	return host
+	canonical := hostutil.CanonicalLookupHost(host)
+	if canonical == "" {
+		return ""
+	}
+	return canonical
 }
 
 func sanitizeRequestPath(path string) string {

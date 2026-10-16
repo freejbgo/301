@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\RediNode;
 use App\Models\RediPlatformDns;
 use App\Models\RediTenantEdge;
+use App\Support\HostNameValidator;
 use Illuminate\Support\Str;
 
 /**
@@ -45,7 +46,10 @@ class EdgeDnsManualReference
                 $tenant[] = ['CNAME', '（租户 token）', $poolTarget.'（租户登录并添加域名后生成）'];
             } else {
                 foreach ($edges as $edge) {
-                    $fqdn = strtolower(rtrim($edge->edge_fqdn, '.'));
+                    $fqdn = HostNameValidator::toCanonicalAscii((string) $edge->edge_fqdn);
+                    if ($fqdn === '' || ! HostNameValidator::isValidHostLabel($fqdn)) {
+                        continue;
+                    }
                     $rr = $edge->token;
                     if ($fqdn !== '' && Str::endsWith($fqdn, '.'.$zone)) {
                         $rr = substr($fqdn, 0, -strlen('.'.$zone));
