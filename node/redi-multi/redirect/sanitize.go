@@ -36,6 +36,9 @@ func sanitizeRequestPath(path string) string {
 	if strings.HasPrefix(path, "//") {
 		return "/"
 	}
+	if strings.Contains(path, "\\") {
+		return "/"
+	}
 	return path
 }
 

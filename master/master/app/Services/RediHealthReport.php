@@ -191,6 +191,25 @@ class RediHealthReport
             ];
         }
 
+        if ($platform->isDnsApiMode()) {
+            $creds = $platform->getApiCredentialsArray();
+            if (trim((string) ($creds['api_key'] ?? '')) === '') {
+                $issues[] = [
+                    'level' => 'warning',
+                    'code' => 'dns_api_credentials_missing',
+                    'message' => 'DNS 为 API 自动模式但未保存 API 凭证，无法同步 pool / 租户 CNAME',
+                ];
+            }
+            $driver = strtolower(trim((string) $platform->dns_driver));
+            if ($driver === 'cloudflare' && trim((string) $platform->dns_zone_id) === '') {
+                $issues[] = [
+                    'level' => 'warning',
+                    'code' => 'dns_zone_id_missing',
+                    'message' => 'Cloudflare 驱动未配置 Zone ID，API 同步将失败',
+                ];
+            }
+        }
+
         return $issues;
     }
 

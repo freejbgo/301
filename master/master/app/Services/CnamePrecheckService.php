@@ -103,7 +103,7 @@ class CnamePrecheckService
      */
     protected static function resolveA(string $host): array
     {
-        $host = strtolower(trim($host, '.'));
+        $host = HostNameValidator::toCanonicalAscii($host);
         if ($host === '') {
             return [];
         }

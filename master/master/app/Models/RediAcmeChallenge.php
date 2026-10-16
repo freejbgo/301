@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\HostNameValidator;
 use Illuminate\Database\Eloquent\Model;
 
 class RediAcmeChallenge extends Model
@@ -21,8 +22,13 @@ class RediAcmeChallenge extends Model
 
     public static function upsertForDomain(string $domainName, string $token, string $responseBody, \DateTimeInterface $expiresAt): self
     {
+        $domainName = HostNameValidator::toCanonicalAscii($domainName);
+        if ($domainName === '') {
+            throw new \InvalidArgumentException('ACME 挑战域名无效');
+        }
+
         return static::updateOrCreate(
-            ['domain_name' => strtolower($domainName)],
+            ['domain_name' => $domainName],
             [
                 'token' => $token,
                 'response_body' => $responseBody,

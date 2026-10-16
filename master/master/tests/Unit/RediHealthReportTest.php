@@ -57,6 +57,8 @@ class RediHealthReportTest extends TestCase
             $table->string('pool_host')->nullable();
             $table->string('dns_mode')->default('manual');
             $table->string('dns_driver')->default('manual');
+            $table->string('dns_zone_id')->nullable();
+            $table->text('api_credentials')->nullable();
             $table->string('acme_contact_email')->nullable();
             $table->boolean('acme_staging')->default(false);
             $table->timestamps();
@@ -324,5 +326,46 @@ class RediHealthReportTest extends TestCase
 
         $codes = array_column(RediHealthReport::collectIssues(7), 'code');
         $this->assertContains('edge_zone_missing', $codes);
+    }
+
+    public function test_production_warns_when_dns_api_mode_without_credentials(): void
+    {
+        config(['app.env' => 'production', 'app.debug' => false]);
+        \DB::table('redi_platform_dns')->insert([
+            'id' => 1,
+            'edge_zone' => 'example.com',
+            'pool_host' => 'pool',
+            'dns_mode' => 'api',
+            'dns_driver' => 'cloudflare',
+            'dns_zone_id' => 'zone123',
+            'acme_staging' => false,
+            'acme_contact_email' => 'ops@example.com',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('dns_api_credentials_missing', $codes);
+    }
+
+    public function test_production_warns_cloudflare_without_zone_id(): void
+    {
+        config(['app.env' => 'production', 'app.debug' => false]);
+        $platform = new \App\Models\RediPlatformDns([
+            'id' => 1,
+            'edge_zone' => 'example.com',
+            'pool_host' => 'pool',
+            'dns_mode' => 'api',
+            'dns_driver' => 'cloudflare',
+            'dns_zone_id' => '',
+            'acme_staging' => false,
+            'acme_contact_email' => 'ops@example.com',
+        ]);
+        $platform->setApiCredentialsArray(['api_key' => 'token', 'api_secret' => '']);
+        $platform->save();
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('dns_zone_id_missing', $codes);
+        $this->assertNotContains('dns_api_credentials_missing', $codes);
     }
 }

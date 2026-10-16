@@ -170,7 +170,10 @@ class NodeAgentController extends Controller
             return response()->json(['ok' => true, 'ignored' => true]);
         }
 
-        $error = is_string($error) ? mb_substr($error, 0, 2000) : null;
+        $error = is_string($error) ? mb_substr(trim($error), 0, 2000) : null;
+        if ($error === '') {
+            $error = null;
+        }
 
         if (! $deployService->markNodeAck($cert, $node, $ok, $error)) {
             return response()->json(['message' => 'ack not applied'], 409);
