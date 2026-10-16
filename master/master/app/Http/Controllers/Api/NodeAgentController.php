@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class NodeAgentController extends Controller
 {
-    public function register(Request $request)
+    public function register(Request $request, CertificateDeployService $deployService)
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
@@ -25,6 +25,8 @@ class NodeAgentController extends Controller
         $node->last_heartbeat_at = now();
         $node->agent_version = $version;
         $node->save();
+
+        $deployService->syncDeploymentsForNode($node);
 
         return response()->json(['ok' => true, 'node_id' => $node->id]);
     }
@@ -158,12 +160,12 @@ class NodeAgentController extends Controller
             return response()->json(['message' => 'cert not found'], 404);
         }
 
-        $pendingDeploy = RediCertDeployment::query()
+        $hasDeployment = RediCertDeployment::query()
             ->where('cert_id', $certId)
             ->where('node_id', $node->id)
             ->exists();
-        if (! $pendingDeploy) {
-            return response()->json(['message' => 'forbidden'], 403);
+        if (! $hasDeployment) {
+            return response()->json(['ok' => true, 'ignored' => true]);
         }
 
         $error = is_string($error) ? mb_substr($error, 0, 2000) : null;

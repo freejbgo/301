@@ -17,7 +17,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const agentVersion = "0.1.2"
+const agentVersion = "0.1.3"
 
 type config struct {
 	MasterURL string
@@ -76,6 +76,9 @@ func tick(client *http.Client, cfg config, registered *bool, revs *revisionState
 		RulesRevision        string `json:"rules_revision"`
 		CertificatesRevision string `json:"certificates_revision"`
 	}
+	if err := postJSON(client, cfg, "/api/nodes/heartbeat", map[string]string{"version": agentVersion}, nil, registered); err != nil {
+		return err
+	}
 	if err := getJSON(client, cfg, "/api/nodes/revision", &rev, registered); err != nil {
 		return err
 	}
@@ -83,39 +86,45 @@ func tick(client *http.Client, cfg config, registered *bool, revs *revisionState
 	if split {
 		if rev.ChallengesRevision != "" && rev.ChallengesRevision != revs.challenges {
 			if err := pullChallenges(client, cfg, registered); err != nil {
-				return err
+				logrus.Warnf("[masteragent] pull challenges: %v", err)
+			} else {
+				revs.challenges = rev.ChallengesRevision
 			}
-			revs.challenges = rev.ChallengesRevision
 		}
 		if rev.RulesRevision != "" && rev.RulesRevision != revs.rules {
 			if err := pullRedirectRules(client, cfg, registered); err != nil {
-				return err
+				logrus.Warnf("[masteragent] pull redirect rules: %v", err)
+			} else {
+				revs.rules = rev.RulesRevision
 			}
-			revs.rules = rev.RulesRevision
 		}
 		if rev.CertificatesRevision != "" && rev.CertificatesRevision != revs.certificates {
 			if err := pullCertificates(client, cfg, registered); err != nil {
-				return err
+				logrus.Warnf("[masteragent] pull certificates: %v", err)
+			} else {
+				revs.certificates = rev.CertificatesRevision
 			}
-			revs.certificates = rev.CertificatesRevision
 		}
 		if rev.Revision != "" {
 			revs.legacy = rev.Revision
 		}
 	} else if rev.Revision != "" && rev.Revision != revs.legacy {
+		var pullErr error
 		if err := pullChallenges(client, cfg, registered); err != nil {
-			return err
+			pullErr = err
+			logrus.Warnf("[masteragent] pull challenges: %v", err)
 		}
 		if err := pullRedirectRules(client, cfg, registered); err != nil {
-			return err
+			pullErr = err
+			logrus.Warnf("[masteragent] pull redirect rules: %v", err)
 		}
 		if err := pullCertificates(client, cfg, registered); err != nil {
-			return err
+			pullErr = err
+			logrus.Warnf("[masteragent] pull certificates: %v", err)
 		}
-		revs.legacy = rev.Revision
-	}
-	if err := postJSON(client, cfg, "/api/nodes/heartbeat", map[string]string{"version": agentVersion}, nil, registered); err != nil {
-		return err
+		if pullErr == nil {
+			revs.legacy = rev.Revision
+		}
 	}
 	return nil
 }
@@ -187,6 +196,7 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 		return err
 	}
 	if len(out.Certificates) == 0 {
+		certs.ReplaceAll(nil)
 		return nil
 	}
 	list := make([]certs.Entry, 0, len(out.Certificates))
@@ -247,7 +257,7 @@ func getJSON(client *http.Client, cfg config, path string, dest interface{}, reg
 		return err
 	}
 	defer res.Body.Close()
-	if res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden {
+	if shouldClearRegistration(path, res.StatusCode) {
 		if registered != nil {
 			*registered = false
 		}
@@ -280,7 +290,7 @@ func postJSON(client *http.Client, cfg config, path string, body interface{}, de
 		return err
 	}
 	defer res.Body.Close()
-	if res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden {
+	if shouldClearRegistration(path, res.StatusCode) {
 		if registered != nil {
 			*registered = false
 		}
@@ -298,6 +308,18 @@ func postJSON(client *http.Client, cfg config, path string, body interface{}, de
 		return json.NewDecoder(io.LimitReader(res.Body, maxMasterJSONBytes)).Decode(dest)
 	}
 	return nil
+}
+
+// 仅 401 视为 Token 失效；ack 等业务 403/409 不应触发重新 register。
+func shouldClearRegistration(path string, status int) bool {
+	if status == http.StatusUnauthorized {
+		return true
+	}
+	if status == http.StatusForbidden && !strings.HasSuffix(path, "/ack") {
+		return true
+	}
+
+	return false
 }
 
 func stringsTrimRightSlash(s string) string {

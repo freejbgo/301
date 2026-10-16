@@ -9,6 +9,16 @@ use Illuminate\Validation\ValidationException;
 
 class RediNode extends Model
 {
+    protected static function booted(): void
+    {
+        static::saved(function (RediNode $node) {
+            if (! $node->enabled || ! $node->wasChanged('enabled')) {
+                return;
+            }
+            app(\App\Services\CertificateDeployService::class)->syncDeploymentsForNode($node);
+        });
+    }
+
     protected $table = 'redi_nodes';
 
     protected $guarded = [

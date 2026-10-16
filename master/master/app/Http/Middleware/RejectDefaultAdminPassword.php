@@ -25,7 +25,6 @@ class RejectDefaultAdminPassword
             $prefix.'/auth/setting',
             $prefix.'/auth/setting/*',
             $prefix.'/auth/logout',
-            $prefix.'/dcat-api/*',
             $prefix.'/assets/*',
         ];
         foreach ($allowed as $pattern) {

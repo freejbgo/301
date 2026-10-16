@@ -9,6 +9,43 @@ use Illuminate\Support\Facades\DB;
 
 class CertificateDeployService
 {
+    /**
+     * 新启用或新注册的节点：为所有应下发的证书补齐 pending 部署行（不重置已 ok 的行）。
+     */
+    public function syncDeploymentsForNode(RediNode $node): void
+    {
+        if (! $node->enabled) {
+            return;
+        }
+
+        foreach ($this->deployableCertsForNodes() as $cert) {
+            if (! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem()) {
+                continue;
+            }
+
+            $existing = RediCertDeployment::query()
+                ->where('cert_id', $cert->id)
+                ->where('node_id', $node->id)
+                ->first();
+
+            if ($existing && $existing->status === 'ok') {
+                continue;
+            }
+
+            RediCertDeployment::updateOrCreate(
+                [
+                    'cert_id' => $cert->id,
+                    'node_id' => $node->id,
+                ],
+                [
+                    'status' => 'pending',
+                    'last_error' => null,
+                    'deployed_at' => null,
+                ]
+            );
+        }
+    }
+
     public function queueDeploy(RediDomainCert $cert): void
     {
         $cert->status = RediDomainCert::STATUS_DEPLOYING;
@@ -50,17 +87,24 @@ class CertificateDeployService
             }
             $cert->loadMissing('domain');
 
-            $updated = RediCertDeployment::where('cert_id', $cert->id)
+            $deployment = RediCertDeployment::where('cert_id', $cert->id)
                 ->where('node_id', $node->id)
-                ->update([
-                    'status' => $ok ? 'ok' : 'failed',
-                    'last_error' => $error,
-                    'deployed_at' => $ok ? now() : null,
-                ]);
+                ->lockForUpdate()
+                ->first();
 
-            if ($updated === 0) {
+            if (! $deployment) {
                 return false;
             }
+
+            $targetStatus = $ok ? 'ok' : 'failed';
+            if ($deployment->status === $targetStatus) {
+                return true;
+            }
+
+            $deployment->status = $targetStatus;
+            $deployment->last_error = $error;
+            $deployment->deployed_at = $ok ? now() : null;
+            $deployment->save();
 
             $liveNodeIds = RediNode::enabled()
                 ->where('last_heartbeat_at', '>=', now()->subMinutes(15))
@@ -114,5 +158,29 @@ class CertificateDeployService
 
             return true;
         });
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, RediDomainCert>
+     */
+    protected function deployableCertsForNodes()
+    {
+        return RediDomainCert::query()
+            ->with('domain')
+            ->whereHas('domain', function ($query) {
+                $query->where('status', 1);
+            })
+            ->where(function ($query) {
+                $query->whereIn('status', [
+                    RediDomainCert::STATUS_ISSUED,
+                    RediDomainCert::STATUS_DEPLOYING,
+                    RediDomainCert::STATUS_ACTIVE,
+                ])->orWhere(function ($inner) {
+                    $inner->where('status', RediDomainCert::STATUS_VALIDATING)
+                        ->whereNotNull('certificate')
+                        ->where('certificate', '!=', '');
+                });
+            })
+            ->get();
     }
 }

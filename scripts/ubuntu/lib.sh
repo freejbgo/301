@@ -92,7 +92,7 @@ redi_sync_node_ips_access() {
 redi_sync_master_env() {
   local env_file="$1"
   export MASTER_URL DB_PASS ADMIN_HTTPS
-  export REDI_MIN_AGENT_VERSION="${REDI_MIN_AGENT_VERSION:-0.1.2}"
+  export REDI_MIN_AGENT_VERSION="${REDI_MIN_AGENT_VERSION:-0.1.3}"
   export REDI_ALLOW_TRUST_ALL_PROXIES="${REDI_ALLOW_TRUST_ALL_PROXIES:-false}"
   php -r '
     $p = $argv[1];

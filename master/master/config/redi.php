@@ -12,7 +12,7 @@ return [
     |
     */
 
-    'min_agent_version' => env('REDI_MIN_AGENT_VERSION', '0.1.2'),
+    'min_agent_version' => env('REDI_MIN_AGENT_VERSION', '0.1.3'),
 
     /*
     |--------------------------------------------------------------------------

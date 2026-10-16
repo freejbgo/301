@@ -58,7 +58,9 @@ class RediAdminDomainController extends AdminController
 
             $grid->column('id')->sortable();
             $grid->column('group_id', '分组名称')->display(function () {
-                return $this->group?->name ?? '（分组不存在）';
+                $name = $this->group?->name;
+
+                return $name !== null && $name !== '' ? e($name) : '（分组不存在）';
             });
             $grid->column('original_url', '原始域名');
             $grid->column('cname_target', 'CNAME 目标')->display(function () {
