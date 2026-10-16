@@ -83,36 +83,36 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **69** 通过；`bash -n` + procedure 校验通过 |
-| GitHub Actions | PR #75 CI 可能因账户/Runner 基础设施失败；与代码无关时以本地上述自检为准 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **73** 通过；`bash -n` + procedure 校验通过 |
+| lagran 运维 | `scripts/centos7/lagran-diagnose.sh`、`lagran-cleanup-iptables.sh`（#77） |
+| GitHub Actions | 部分环境 CI 可能因 Runner/账单秒失败；以本地上述自检为准 |
 
-**未发现需在本 PR 内再修的 P0 代码缺陷。**
+**未发现阻塞商用的 P0 代码缺陷。**
 
-### 已知非阻塞项（合并后或 P2 排期）
+### 已知非阻塞项（P2 排期）
 
-- `composer audit` 对 `symfony/yaml` 等传递依赖有 CVE 公告 → 随 Laravel/Composer 升级处理（P2）。
-- P1 剩余：ACME 续期边界状态机单测、多机 `queue:work` + Redis 在 health 文案里更强提示（见 [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)）。
-- CentOS 7 EOL：生产可接受前提下继续用 vault 源；长期迁移 OS 属架构决策（P2）。
-
----
-
-## 7. 先合并还是先继续开发？
-
-**建议：先合并 PR [#75](https://github.com/freejbgo/301/pull/75)，再在 `main` 上开新分支做 P2/剩余 P1。**
-
-理由：
-
-1. P0 与大部分 P1 已闭环，继续堆功能会让 VPS 升级与真机验收一直对不上一个固定基线。
-2. CentOS-only 清理后，后续只需维护一条部署路径，减少文档与脚本分叉。
-3. 未合并前，线上与 `main` 差距大，Issue/PR 难以对齐「已上线」状态。
-
-合并后立刻在真机做：[UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) + [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md)。新功能（Laravel 升级、DB TLS、lagran 脚本等）在 `main` 上按 P2 优先级迭代即可。
+- `composer audit` 对 `symfony/yaml` 等传递依赖有 CVE 公告 → 随 Laravel/Composer 升级处理。
+- 真机验收清单仍以人工打勾为主（无全自动真机 CI）。
+- CentOS 7 EOL：继续用 vault 源；长期换 OS 属架构决策。
+- `lagran-cleanup` 在未配置 `lagran.port` 时默认 sport `80`，与运行时合并端口可能不一致时需对照 `iptables -L`。
 
 ---
 
-## 8. 合并后 VPS 操作顺序
+## 7. 仓库合并基线（截至 main `9daf61c`）
 
-1. 合并 **#75**。
+| PR | 内容 |
+|----|------|
+| [#75](https://github.com/freejbgo/301/pull/75) | P0/P1 运营 + CentOS 7.9 only |
+| [#76](https://github.com/freejbgo/301/pull/76) | health hints / validating 卡住 / 续期边界 |
+| [#77](https://github.com/freejbgo/301/pull/77) | lagran 诊断与 iptables 清理 |
+
+当前无未合并的开放 PR（旧 Ubuntu #71 已关闭）。
+
+---
+
+## 8. VPS 操作顺序（若尚未对齐 main）
+
+1. 将主控/节点升到 **main**（含 #75–#77）。
 2. 主控：`docs/UPGRADE-IN-PLACE.md` → 新 tar、`migrate`、`config:cache`、`patch-master-cron-ops-webhook.sh`。
 3. 各节点：升级 **Agent 0.1.3** 的 `redi-multi` 并重启服务。
 4. 跑 `php artisan redi:health` 与 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) 中的 curl/DB 校验。
@@ -135,4 +135,4 @@ php scripts/verify-redi-node-procedure-sync.php
 bash scripts/verify-redi-db-deploy-path.sh
 ```
 
-PHPUnit 用例数随分支演进（当前约 **69** 条 Feature/Unit）；以 `phpunit` 退出码为准。
+PHPUnit 用例数随分支演进（当前 **73** 条 Feature/Unit）；以 `phpunit` 退出码为准。
