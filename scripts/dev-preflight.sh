@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# 开发机发版前自检，与 .github/workflows/ci.yml 的 node + centos7-scripts 核心步骤对齐。
+# 完整说明见 docs/AUDIT-CENTOS7-PRODUCTION.md §9（含 PHP 8.0 job、容器冒烟、composer audit）。
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO_ROOT"
+
+echo "==> Go vet + test (node/redi-multi)"
+(
+  cd node/redi-multi
+  go vet ./...
+  go test ./...
+)
+
+echo "==> PHPUnit (master/master, PHP $(php -r 'echo PHP_VERSION;'))"
+(
+  cd master/master
+  composer install --no-interaction --prefer-dist
+  ./vendor/bin/phpunit --testsuite Unit,Feature
+)
+
+echo "==> CentOS 7 部署脚本语法 + lagran_ports"
+for f in scripts/centos7/*.sh scripts/patch-master-cron-ops-webhook.sh; do
+  bash -n "$f"
+done
+python3 scripts/centos7/lagran_ports.py node/redi-multi/config.json.example | grep -q '80'
+
+echo "==> SQL 与节点存储过程校验"
+php scripts/verify-redi-node-procedure-sync.php
+bash scripts/verify-redi-db-deploy-path.sh
+
+echo "dev-preflight: OK"

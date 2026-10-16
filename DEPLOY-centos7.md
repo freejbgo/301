@@ -19,7 +19,7 @@
 
 ## 开发机 / 发版前（与 CI 一致）
 
-在本地打 `v*` 标签或上传 tar 到服务器之前，建议在仓库根目录跑一遍 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) **§9**（Go + PHPUnit + `bash -n` + `verify-redi-db-deploy-path.sh` 等）。与 GitHub `ci.yml` / `release.yml` 门禁相同；本机无 Docker 时 DB 校验脚本会跳过，有 Docker 时才会真正起 MariaDB 容器。
+在本地打 `v*` 标签或上传 tar 到服务器之前，建议在仓库根目录执行 **`bash scripts/dev-preflight.sh`**（或按 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) **§9** 分步跑）。与 GitHub `ci.yml` / `release.yml` 核心门禁相同；本机无 Docker 时 DB 校验脚本会跳过，有 Docker 时才会真正起 MariaDB 容器。
 
 ## 1. 准备变量
 

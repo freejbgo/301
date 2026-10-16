@@ -145,6 +145,14 @@
 
 与 GitHub **CI** 对齐：`node` + `master-phpunit`（8.4/8.0）+ `centos7-scripts`（含下方脚本校验）+ 可选 `centos7-integration` 容器冒烟。打 `v*` 标签时 **release.yml** 在上传 Release 前跑同一套检查。
 
+一键（推荐）：
+
+```bash
+bash scripts/dev-preflight.sh
+```
+
+分步：
+
 ```bash
 # Go
 cd node/redi-multi && go test ./...
