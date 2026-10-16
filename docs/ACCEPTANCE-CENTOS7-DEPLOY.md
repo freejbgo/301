@@ -101,7 +101,7 @@ sudo firewall-cmd --list-all
 | `curl` 后台 | **302** 或 **200** |
 | 3306 | 监听；**不要**对 `0.0.0.0/0` 在安全组全网开放 |
 | firewalld | 含 `ssh` `http` `https`；对节点 IP 有 mysql 相关 rich rule（若已配置 `NODE_IPS`） |
-| 节点 DB 权限 | 远程账号 `redi_node` 仅 EXECUTE `redi_node_bump_skip`（`grant-node-mysql.sh`；导入 SQL 后执行） |
+| 节点 DB 权限 | 远程账号 `redi_node` 仅 EXECUTE `redi_node_bump_skip`（主控 `sudo … grant-node-mysql.sh` 或 `deploy-master` 按 `NODE_IPS` 同步） |
 | `redi:health` | 退出码 **0**（可有 **hints**，见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3）；生产须已关 `APP_DEBUG` 并配好 DNS 与节点池 |
 
 Nginx 重复部署行为：
