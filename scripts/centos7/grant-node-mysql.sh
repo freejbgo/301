@@ -5,7 +5,7 @@
 set -euo pipefail
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  echo "请用 root 执行: sudo MYSQL_ROOT_PASSWORD='...' $0 ..." >&2
+  echo "请用 root 执行: sudo MYSQL_ROOT_PASSWORD='...' bash scripts/centos7/grant-node-mysql.sh ..." >&2
   exit 1
 fi
 
@@ -17,7 +17,7 @@ NODE_IP="${1:-}"
 DB_PASS="${2:-}"
 
 if [[ -z "$NODE_IP" || -z "$DB_PASS" ]]; then
-  echo "用法: MYSQL_ROOT_PASSWORD='...' $0 <节点公网IP> <与主控相同的 DB 密码>" >&2
+  echo "用法: sudo MYSQL_ROOT_PASSWORD='...' bash scripts/centos7/grant-node-mysql.sh <节点公网IP> <与主控相同的 DB 密码>" >&2
   exit 1
 fi
 
@@ -59,3 +59,4 @@ mysql_run() {
 
 mysql_run < "$sqlfile"
 echo "已授权 redi_node@'${NODE_IP}'（仅 EXECUTE redi_node_bump_skip）"
+echo "若尚未放行主控 firewalld 3306: sudo bash scripts/centos7/firewalld-allow-mysql-from-node.sh ${NODE_IP}"

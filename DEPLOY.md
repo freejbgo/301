@@ -60,7 +60,7 @@ mysql -u redi_admin -p redi_admin -e \
 sudo MYSQL_ROOT_PASSWORD='root密码' bash scripts/centos7/grant-node-mysql.sh '节点出口IP' '与 SQL 里相同的库密码'
 ```
 
-多台节点可以把 IP 写进 `scripts/centos7/vars.env`（从 `vars.example.env` 复制，权限 `600`），再执行 `sudo bash scripts/centos7/grant-nodes-from-vars.sh`。
+多台节点可把 IP 写入 `scripts/centos7/vars.env`（`cp scripts/centos7/vars.example.env scripts/centos7/vars.env`，`chmod 600`），再执行 `sudo bash scripts/centos7/grant-nodes-from-vars.sh`（从列表删 IP 或清空 `NODE_IPS` 后重跑可撤销已记录授权，与 `deploy-master` 相同）。
 
 ## 2. 主控
 
@@ -98,7 +98,7 @@ chown -R nginx:nginx storage bootstrap/cache
 队列要常驻。证书任务会等待全局锁，超时和重试必须用下面这组参数：
 
 ```bash
-php artisan queue:work --sleep=3 --timeout=320 --tries=100
+php artisan queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600
 ```
 
 生产环境用 systemd，示例是 `scripts/systemd/redi-queue.service.example`（默认 `User=nginx`）。请改对 `WorkingDirectory` 与 PHP-FPM 用户一致。

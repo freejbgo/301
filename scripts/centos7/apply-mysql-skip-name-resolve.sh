@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # 将 skip-name-resolve 配置安装到 CentOS/RHEL 的 my.cnf.d 并重启数据库（幂等）。
+# 用法: sudo bash scripts/centos7/apply-mysql-skip-name-resolve.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -12,7 +13,7 @@ if [[ ! -f "$SRC" ]]; then
 fi
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  echo "请用 root 执行: sudo $0" >&2
+  echo "请用 root 执行: sudo bash scripts/centos7/apply-mysql-skip-name-resolve.sh" >&2
   exit 1
 fi
 

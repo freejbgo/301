@@ -41,4 +41,4 @@ php artisan redi:health --json | jq '.hints,.summary.queue_connection,.summary.c
 
 ## systemd
 
-继续复用 `scripts/systemd/redi-queue.service.example`；多实例可复制 unit 并区分 `WorkingDirectory` 与日志，或使用 Supervisor。
+继续复用 `scripts/systemd/redi-queue.service.example`（含 `--max-time=3600`，与 `deploy-master` 一致）；多实例可复制 unit 并区分 `WorkingDirectory` 与日志，或使用 Supervisor。

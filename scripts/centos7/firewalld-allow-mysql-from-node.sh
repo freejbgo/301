@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 在主控机上：仅允许某节点公网 IP 访问本机 3306（需 firewalld）。
-# 用法: sudo ./firewalld-allow-mysql-from-node.sh <节点公网IP>
+# 用法: sudo bash scripts/centos7/firewalld-allow-mysql-from-node.sh <节点公网IP>
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -9,7 +9,7 @@ source "${SCRIPT_DIR}/lib.sh"
 
 NODE_IP="${1:-}"
 if [[ -z "$NODE_IP" ]]; then
-  echo "用法: $0 <节点公网IP>" >&2
+  echo "用法: sudo bash scripts/centos7/firewalld-allow-mysql-from-node.sh <节点公网IP>" >&2
   exit 1
 fi
 redi_is_ipv4 "$NODE_IP" || {
@@ -18,7 +18,7 @@ redi_is_ipv4 "$NODE_IP" || {
 }
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  echo "请用 root 执行" >&2
+  echo "请用 root 执行: sudo bash scripts/centos7/firewalld-allow-mysql-from-node.sh <节点公网IP>" >&2
   exit 1
 fi
 

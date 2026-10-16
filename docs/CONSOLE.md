@@ -141,7 +141,7 @@
 
 申请前要满足：
 
-- 主控上的队列在跑（`queue:work` 常驻）。
+- 主控上的队列在跑（CentOS：`systemctl is-active redi-queue`；参数见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md) / `scripts/systemd/redi-queue.service.example`）。
 - 平台主域名、ACME 邮箱已保存。正式环境不要开 ACME 测试环境。
 - 客户域名的解析预检为「已指向」。
 - 所有 **启用** 的节点在线，并且已经用 Token 连上主控。Let's Encrypt 访问客户域名时可能落到池里任意一个 A 记录，所以每台启用节点都要能回答验证。
@@ -170,7 +170,7 @@
 6. 分组管理建分组，域名管理添加客户域名，把 CNAME 目标发给客户。
 7. 预检「已指向」后申请证书，生效后再开强制 HTTPS。
 
-以后加一台机器：主控给新出口 IP 授权数据库，节点管理新建一条并下发 Token，再更新 pool 的 A。给现有机器加 IP：只改那一条的「其他公网 IP」，然后更新 pool 的 A。
+以后加一台机器：主控 `vars.env` 的 `NODE_IPS` 加上新出口 IP 后跑 `deploy-master.sh` 或 `grant-nodes-from-vars.sh`，节点管理新建一条并下发 Token，再更新 pool 的 A。给现有机器加 IP：只改那一条的「其他公网 IP」，然后更新 pool 的 A。
 
 ## 7. 运营自检（主控 SSH）
 
@@ -180,7 +180,7 @@
 php artisan redi:health
 php artisan redi:health --json    # 监控采集；issues/hints 的 code 见 AUDIT §3
 php artisan redi:health --notify  # 有 issues 时 POST webhook（Cron 08:30；发送成功退出 0）
-php artisan redi:renew-certificates --dry-run --days=25
+php artisan redi:renew-certificates --dry-run --days=25   # 续期；validating 卡住超过 REDI_RENEW_VALIDATING_STUCK_HOURS 可重试
 php artisan redi:prune-acme-challenges   # Cron 04:10；勿依赖 schedule:run
 php artisan redi:requeue-failed-deployments
 php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修正（见 DEPLOY.md）

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # CentOS 7.x（推荐 7.9）节点全自动部署。程序是静态二进制，内核不需要重编，也不编译内核模块。
 #
-# 主控上的 deploy-master.sh 已经把这台机器的公网 IP 写入 NODE_IPS 之后再执行。
+# 主控上 NODE_IPS 已含本机公网 IP（deploy-master.sh 或 grant-nodes-from-vars.sh）之后再执行。
 #   cp scripts/centos7/vars.example.env scripts/centos7/vars.env
 #   chmod 600 scripts/centos7/vars.env
 #   填 NODE_PUBLIC_IP、REDI_MASTER_URL、REDI_NODE_TOKEN
@@ -25,7 +25,7 @@ die() { echo "错误: $*" >&2; exit 1; }
 step() { echo ""; echo "==> $*"; }
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  die "请用 root 执行: sudo bash $0"
+  die "请用 root 执行: sudo bash scripts/centos7/deploy-node.sh"
 fi
 if [[ ! -f /etc/os-release ]]; then
   die "找不到 /etc/os-release"
@@ -36,7 +36,7 @@ if [[ "${ID:-}" != "centos" || "${VERSION_ID:-}" != 7* ]]; then
   die "这个脚本只用于 CentOS 7.x，当前是 ${ID:-unknown} ${VERSION_ID:-unknown}"
 fi
 if [[ ! -f "$VARS_FILE" ]]; then
-  die "请先复制并编辑 vars.example.env 为 vars.env"
+  die "请先复制并编辑: cp scripts/centos7/vars.example.env scripts/centos7/vars.env"
 fi
 # shellcheck disable=SC1090
 source "$VARS_FILE"
@@ -229,7 +229,7 @@ if mysql --defaults-extra-file="$db_cnf" -e "CALL redi_node_bump_skip('__redi_de
   echo "数据库连接正常（redi_node EXECUTE redi_node_bump_skip）"
 else
   rm -f "$db_cnf"
-  die "连不上 ${MASTER_IP} 或 redi_node 无 EXECUTE 权限。请先在主控导入 redi_admin.sql（或 migrate）后执行 grant-node-mysql.sh，并放行 3306"
+  die "连不上 ${MASTER_IP} 或 redi_node 无 EXECUTE 权限。请先在主控：NODE_IPS 含本机公网 IP 后 deploy-master.sh 或 grant-nodes-from-vars.sh（或 grant-node-mysql.sh + firewalld-allow），并放行云安全组 3306"
 fi
 rm -f "$db_cnf"
 

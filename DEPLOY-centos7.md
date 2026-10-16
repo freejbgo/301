@@ -53,7 +53,7 @@ sudo bash scripts/centos7/deploy-master.sh
 5. 库是空的才导入 `db/redi_admin.sql`（菜单 + 业务表 + 默认 `admin` + 节点存储过程 **`redi_node_bump_skip`**；`migrations` 登记至 `100009`）。已经有 `admin_users` 时不会覆盖。
 6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（绿场常无新迁移；发版后有新迁移时改库）、`storage:link`，并 **检查存储过程是否存在**（应由上一步 SQL 导入；不存在则脚本失败退出）。
 7. 配置 PHP-FPM（用户 `nginx`，sock `/var/run/php-fpm/www.sock`）和 Nginx。开启 SELinux 时会放行网站访问网络和数据库。
-8. 安装队列 `redi-queue`：`queue:work --sleep=3 --timeout=320 --tries=100`。`/etc/cron.d/redi-renew` 每天 **03:10** 续期证书、**04:10** 清理 ACME、**08:30** `redi:health --notify`（webhook 发送成功或无 issues 时 **退出 0**；未配置 URL 且有 issues 或 artisan 异常时 `|| redi:ops-webhook`）；直接 `php artisan …`，**勿**配置 `php artisan schedule:run`（续期/清理/health 仅由本文件触发；`Kernel` 内已无 schedule 任务）。多台机器跑 `queue:work` 时主控 `.env` 须 `CACHE_DRIVER=redis`（ACME 全局锁）。
+8. 安装队列 `redi-queue`：`queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600`（worker 每小时由 systemd 重启，避免长期内存增长）。`/etc/cron.d/redi-renew` 每天 **03:10** 续期证书、**04:10** 清理 ACME、**08:30** `redi:health --notify`（webhook 发送成功或无 issues 时 **退出 0**；未配置 URL 且有 issues 或 artisan 异常时 `|| redi:ops-webhook`）；直接 `php artisan …`，**勿**配置 `php artisan schedule:run`（续期/清理/health 仅由本文件触发；`Kernel` 内已无 schedule 任务）。多台机器跑 `queue:work` 时主控 `.env` 须 `CACHE_DRIVER=redis`（ACME 全局锁）。
 9. 防火墙开放 22、80、443。
 
 重复执行不会重置已有 `.env`、`APP_KEY` 和业务数据。`/etc/nginx/conf.d/301-master.conf` 若**没有** `301-master-managed` 标记则不会覆盖（便于你在同一文件里手工加 HTTPS）；带该标记或由脚本生成的文件会在重复部署时刷新 `root` 路径。HTTPS 也可单独增加 `conf.d` 片段。
@@ -89,9 +89,9 @@ Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证�
 
 ## 5. 以后加一台节点
 
-在主控的 `vars.env` 里把新 IP 加进 `NODE_IPS`，执行 `sudo bash scripts/centos7/deploy-master.sh`。然后在新机器上执行 `deploy-node.sh`。后台新建节点，把 Token 写进新机器的 `vars.env` 再执行一次节点脚本。pool 的 A 记录要包含新 IP。删除节点不会自动删 DNS 记录。
+在主控的 `vars.env` 里把新 IP 加进 `NODE_IPS`，执行 `sudo bash scripts/centos7/deploy-master.sh`（或仅同步授权/防火墙：`sudo bash scripts/centos7/grant-nodes-from-vars.sh`）。然后在新机器上执行 `deploy-node.sh`。后台新建节点，把 Token 写进新机器的 `vars.env` 再执行一次节点脚本。pool 的 A 记录要包含新 IP。删除节点不会自动删 DNS 记录。
 
-**从 `NODE_IPS` 里去掉某个 IP 后**，再跑一次 `deploy-master.sh` 会撤销该 IP 的 MySQL 远程账号和 firewalld 3306 规则（状态记在 `/var/lib/redi/authorized_node_ips`）。手工撤销单 IP：`sudo MYSQL_ROOT_PASSWORD='…' bash scripts/centos7/revoke-node-mysql.sh <IP>`。新增单 IP 而不重装主控：`sudo MYSQL_ROOT_PASSWORD='…' bash scripts/centos7/grant-node-mysql.sh <IP> <DB_PASS>` 并 `sudo bash scripts/centos7/firewalld-allow-mysql-from-node.sh <IP>`。节点库账号 **`redi_node`** 仅可 **EXECUTE** `redi_node_bump_skip`。
+**从 `NODE_IPS` 里去掉某个 IP 后**（或清空 `NODE_IPS` 撤销全部已记录节点），再跑一次 `deploy-master.sh` 或 `grant-nodes-from-vars.sh` 会撤销对应 IP 的 MySQL 远程账号和 firewalld 3306 规则（状态记在 `/var/lib/redi/authorized_node_ips`）。手工撤销单 IP：`sudo MYSQL_ROOT_PASSWORD='…' bash scripts/centos7/revoke-node-mysql.sh <IP>` 与 `sudo bash scripts/centos7/firewalld-revoke-mysql-from-node.sh <IP>`。新增单 IP 而不重装主控：`sudo MYSQL_ROOT_PASSWORD='…' bash scripts/centos7/grant-node-mysql.sh <IP> <DB_PASS>` 并 `sudo bash scripts/centos7/firewalld-allow-mysql-from-node.sh <IP>`。节点库账号 **`redi_node`** 仅可 **EXECUTE** `redi_node_bump_skip`。
 
 ## 6. 重新打包
 

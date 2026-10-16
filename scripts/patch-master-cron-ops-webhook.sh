@@ -6,7 +6,7 @@ set -euo pipefail
 
 CRON_FILE="/etc/cron.d/redi-renew"
 
-[[ "$(id -u)" -eq 0 ]] || { echo "请用 root 执行" >&2; exit 1; }
+[[ "$(id -u)" -eq 0 ]] || { echo "请用 root 执行: sudo bash scripts/patch-master-cron-ops-webhook.sh" >&2; exit 1; }
 
 if [[ -n "${1:-}" ]]; then
   APP="$1"
@@ -45,5 +45,6 @@ echo "  grep -E 'renew|prune|health' ${CRON_FILE}"
 echo "  ! grep -q 'schedule:run' ${CRON_FILE}"
 echo "  ! grep -q 'master/master' ${CRON_FILE}"
 echo "  cd ${APP} && sudo -u ${CRON_USER} php artisan redi:health"
+echo "  cd ${APP} && sudo -u ${CRON_USER} php artisan redi:health --notify; echo exit=\$?"
 echo "  cd ${APP} && sudo -u ${CRON_USER} php artisan list | grep redi:ops-webhook"
 echo "  （建议 .env 配置 REDI_HEALTH_WEBHOOK_URL，08:30 --notify 才能在有 issues 时退出 0）"

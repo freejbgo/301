@@ -101,7 +101,7 @@ sudo firewall-cmd --list-all
 | `curl` 后台 | **302** 或 **200** |
 | 3306 | 监听；**不要**对 `0.0.0.0/0` 在安全组全网开放 |
 | firewalld | 含 `ssh` `http` `https`；对节点 IP 有 mysql 相关 rich rule（若已配置 `NODE_IPS`） |
-| 节点 DB 权限 | 远程账号 `redi_node` 仅 EXECUTE `redi_node_bump_skip`（主控 `sudo … grant-node-mysql.sh` 或 `deploy-master` 按 `NODE_IPS` 同步） |
+| 节点 DB 权限 | 远程账号 `redi_node` 仅 EXECUTE `redi_node_bump_skip`（`deploy-master` / `grant-nodes-from-vars` 按 `NODE_IPS` 同步，或单 IP `grant-node-mysql.sh`） |
 | `redi:health` | 退出码 **0**（可有 **hints**，见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3）；生产须已关 `APP_DEBUG` 并配好 DNS 与节点池 |
 
 Nginx 重复部署行为：
@@ -132,11 +132,13 @@ sudo -u nginx php /opt/301/master/artisan about 2>/dev/null | head -5
 - [ ] 新建节点，**主公网 IP** = `5.6.7.8`。
 - [ ] 复制 **只显示一次** 的 Token，保存到节点 `vars.env` 的 `REDI_NODE_TOKEN`。
 
-若主控部署时 `NODE_IPS` 为空，补写后重跑：
+若主控部署时 `NODE_IPS` 为空，补写后同步授权（二选一）：
 
 ```bash
 # 主控 vars.env 加上 NODE_IPS="5.6.7.8"
 sudo bash scripts/centos7/deploy-master.sh
+# 或仅同步 MySQL + firewalld，不重装主控：
+sudo bash scripts/centos7/grant-nodes-from-vars.sh
 ```
 
 - [ ] 主控脚本再次成功；节点 IP 已授权 MySQL（可用下面节点步骤验证连库）。
@@ -233,7 +235,8 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 
 | 现象 | 处理 |
 |------|------|
-| 节点 `deploy-node.sh` 连不上 MySQL | 主控 `NODE_IPS` 是否含节点公网 IP；主控是否重跑 `deploy-master.sh`；云安全组 3306 |
+| 节点 `deploy-node.sh` 连不上 MySQL | 主控 `NODE_IPS` 是否含节点公网 IP；主控是否 `deploy-master.sh` 或 `grant-nodes-from-vars.sh`；云安全组 3306 |
+| 下线节点后仍能从公网连主控 3306 | 从 `NODE_IPS` 去掉该 IP（或清空列表）后重跑 `deploy-master.sh` 或 `grant-nodes-from-vars.sh` |
 | 节点无心跳 | `REDI_MASTER_URL` 是否可达；Token 是否正确；`systemctl status redi-multi` 日志 |
 | 后台 502/空白 | `systemctl status php-fpm nginx`；`/opt/301/master/storage` 权限属 `nginx` |
 | 重复跑主控脚本后 HTTPS 没了 | 是否曾去掉 `301-master-managed`；HTTPS 建议单独 `conf.d` 文件 |

@@ -28,6 +28,8 @@ sudo -u nginx php artisan config:cache
 sudo systemctl start php*-fpm nginx redi-queue
 ```
 
+仅覆盖 tar、未重跑 `deploy-master` 时，请核对 `/etc/systemd/system/redi-queue.service` 的 `queue:work` 是否含 **`--max-time=3600`**（与 [scripts/systemd/redi-queue.service.example](../scripts/systemd/redi-queue.service.example) 一致）；过旧可手工改 unit 后 `systemctl daemon-reload && systemctl restart redi-queue`，或重跑 `deploy-master` 刷新 unit。
+
 节点：用 `deploy-node.sh` 或仅替换 `bin/redi-multi` 后 `systemctl restart redi-multi`。
 
 ## 2. 主控 `.env` 建议新增/核对
@@ -47,7 +49,7 @@ REDI_DNS_PRECHECK_ALLOW_A_TO_POOL=true
 
 - 所有节点升级到含 **Agent 0.1.3** 的 `redi-multi`。
 - 过渡：可暂时 `REDI_MIN_AGENT_VERSION=` 清空，升级完节点再改回 `0.1.3`。
-- 新增/下线节点 IP：更新主控 `vars.env` 的 `NODE_IPS` 后重跑 `deploy-master.sh`，或见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §5 手工 `grant-node-mysql` / `revoke-node-mysql`。
+- 新增/下线节点 IP：更新主控 `vars.env` 的 `NODE_IPS` 后重跑 `deploy-master.sh`，或仅同步授权/防火墙时 `sudo bash scripts/centos7/grant-nodes-from-vars.sh`（读 `vars.env` 的 `MYSQL_ROOT_PASS` / `DB_PASS`；从列表删 IP 或清空 `NODE_IPS` 后重跑可撤销已记录授权）。单 IP 见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §5 手工 `grant-node-mysql` / `revoke-node-mysql` 与 firewalld 脚本。
 
 ## 4. Cron：续期 / 清理 / 健康检查 + 失败 Webhook
 
