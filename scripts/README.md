@@ -8,7 +8,12 @@
 | [verify-redi-db-deploy-path.sh](verify-redi-db-deploy-path.sh) | Docker 临时 MariaDB：建库 collation + `redi_admin.sql` + `CALL redi_node_bump_skip`（CI/`VERIFY_REDI_REQUIRE_DOCKER=1` 时无 docker 会失败） |
 | [verify-redi-node-procedure-sync.php](verify-redi-node-procedure-sync.php) | SQL dump 与迁移 `100009` 存储过程一致 |
 | [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | 已上线主控：升级 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`）；脚本结束会打印 `grep` / `redi:health` 验收提示 |
-| [centos7/](centos7/) | CentOS 7 一键部署、防火墙、MySQL 授权、lagran 诊断/清理 |
+| [centos7/deploy-master.sh](centos7/deploy-master.sh) / [deploy-node.sh](centos7/deploy-node.sh) | CentOS 7 主控/节点一键部署 |
+| [centos7/grant-nodes-from-vars.sh](centos7/grant-nodes-from-vars.sh) | 仅按 `vars.env` 的 `NODE_IPS` 补 MySQL 授权与 firewalld（不重装主控） |
+| [centos7/grant-node-mysql.sh](centos7/grant-node-mysql.sh) / [revoke-node-mysql.sh](centos7/revoke-node-mysql.sh) | 单节点 IP 授权/撤销 |
+| [centos7/apply-mysql-skip-name-resolve.sh](centos7/apply-mysql-skip-name-resolve.sh) | 关闭 MySQL 反向 DNS 解析（生产建议） |
+| [centos7/run-on-centos7-host.sh](centos7/run-on-centos7-host.sh) | 开发机 Docker/Podman 跑 CentOS 7 容器冒烟 |
+| [centos7/lagran-diagnose.sh](centos7/lagran-diagnose.sh) / [lagran-cleanup-iptables.sh](centos7/lagran-cleanup-iptables.sh) | 节点 lagran 诊断与 iptables 清理 |
 | [systemd/](systemd/) | `redi-queue` unit 示例 |
 
 CentOS 生产路径见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)。

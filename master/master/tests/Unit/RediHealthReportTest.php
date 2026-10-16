@@ -71,6 +71,50 @@ class RediHealthReportTest extends TestCase
             $table->longText('exception');
             $table->timestamp('failed_at');
         });
+
+        Schema::create('jobs', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('queue')->index();
+            $table->longText('payload');
+            $table->unsignedTinyInteger('attempts');
+            $table->unsignedInteger('reserved_at')->nullable();
+            $table->unsignedInteger('available_at');
+            $table->unsignedInteger('created_at');
+        });
+    }
+
+    public function test_collect_issues_includes_queue_stale_when_database_queue(): void
+    {
+        config(['queue.default' => 'database']);
+        $staleAt = now()->subHours(3)->timestamp;
+        \DB::table('jobs')->insert([
+            'queue' => 'default',
+            'payload' => '{}',
+            'attempts' => 0,
+            'reserved_at' => null,
+            'available_at' => $staleAt,
+            'created_at' => $staleAt,
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('queue_stale', $codes);
+    }
+
+    public function test_queue_stale_not_reported_for_sync_queue(): void
+    {
+        config(['queue.default' => 'sync']);
+        $staleAt = now()->subHours(3)->timestamp;
+        \DB::table('jobs')->insert([
+            'queue' => 'default',
+            'payload' => '{}',
+            'attempts' => 0,
+            'reserved_at' => null,
+            'available_at' => $staleAt,
+            'created_at' => $staleAt,
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertNotContains('queue_stale', $codes);
     }
 
     public function test_collect_issues_includes_failed_jobs_when_database_queue(): void

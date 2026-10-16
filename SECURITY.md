@@ -16,7 +16,7 @@
 3. **关闭 DNS 反查**：主控执行 `scripts/centos7/apply-mysql-skip-name-resolve.sh`。
 4. **主控启用 HTTPS**（`ADMIN_HTTPS=true`，并且 Nginx 上的证书和 `APP_URL` 一致）。
 5. **防火墙** 只开放 22/80/443。节点不必对访客开放 8080。不要执行 `iptables -F`。
-6. **运营监控**：Cron 跑 `php artisan redi:health --notify`（或采集 `redi:health --json`）。`issues[].code` / `hints[].code` 含义见 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) §3；生产环境务必关闭 `APP_DEBUG` 并配置 ACME 联系邮箱与 `edge_zone`（health 会告警）。
+6. **运营监控**：CentOS 由 `/etc/cron.d/redi-renew` 直调 artisan（**03:10** 续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`）；**勿**配置 `php artisan schedule:run`。亦可采集 `redi:health --json`。`issues[].code` / `hints[].code` 见 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) §3；生产须关 `APP_DEBUG` 并配置 ACME 邮箱与 `edge_zone`。
 
 ## 边缘池与证书（一期）
 
@@ -40,7 +40,7 @@
 | ACME 并发 | 全局锁 `redi-acme-le-global` + 按域名锁；**多台** `queue:work` 时 `CACHE_DRIVER` 须为 **redis**（或共享缓存），否则文件锁不跨机 |
 | 节点 Agent | `REDI_MASTER_URL` 必须 **https://**；可选 `REDI_DB_TLS=1`；Agent **0.1.3+** 分项 revision；默认 `REDI_MIN_AGENT_VERSION=0.1.3`，**全部** `/api/nodes/*` 受版本门（请求 `version` 或库内 `agent_version`）；设 `REDI_MIN_AGENT_VERSION=` 可禁用 |
 | `TRUSTED_PROXIES` / `REDI_ALLOW_TRUST_ALL_PROXIES` | 生产拒绝 `*` 除非 `config('redi.allow_trust_all_proxies')` 为 true（**`php artisan config:cache` 后仍有效**）；Web 与 `queue:work` 启动时均检查 |
-| ACME 维护 | 计划任务 `redi:prune-acme-challenges`（CentOS `deploy-master` 每日 04:10）；`redi:normalize-domain-hosts` 可修正历史 IDN / `skip_url` |
+| ACME 维护 | CentOS `/etc/cron.d/redi-renew`：**03:10** `redi:renew-certificates`、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`；`redi:normalize-domain-hosts` 可修正历史 IDN / `skip_url` |
 | 证书表 | `redi_domain_certs.domain_id` 外键级联删除，避免孤儿证书记录 |
 
 ## 威胁模型（节点与边缘）

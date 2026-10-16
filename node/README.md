@@ -2,7 +2,7 @@
 
 本仓库的跳转节点面向 **被干扰、被重置、访问不稳的域名**（需要改 TCP 窗口的 **lagran** 配合 80/443 跳转），不是给「完全正常、无干扰」的纯 301 场景设计的。部署时请保持 **lagran 开启**，并给二进制 `CAP_NET_ADMIN`（见 [../DEPLOY.md](../DEPLOY.md)）。
 
-部署整套系统见 [../DEPLOY.md](../DEPLOY.md)。这里只说明节点包本身。
+生产 CentOS 7 见 [../DEPLOY-centos7.md](../DEPLOY-centos7.md)；通用说明见 [../DEPLOY.md](../DEPLOY.md)。这里只说明节点包本身。
 
 发布包是 **`redi-multi.tar.gz`**。解压后目录为 `redi-multi/`，里面有源码、`config.json.example`、`env.example` 和编译好的 `bin/redi-multi`。首次部署从 example 复制 `config.json`（`deploy-node.sh` 会自动复制）。**`redirector` 字段不参与运行**，跳转来自 MySQL 与 `default_redirect_url`。线上运行这个二进制，不要 `go run main.go`。
 

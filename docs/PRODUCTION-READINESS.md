@@ -79,7 +79,7 @@ curl -fsS "http://127.0.0.1:<node-port>/revision"
 
 - 生产配置：`APP_DEBUG`、ACME 邮箱 / Staging、`edge_zone`（见 §3 表）
 - `failed_jobs` > 0 → 严重（`queue_failed_jobs`）
-- `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）→ `queue_backlog`；`available_at` 超过 2 小时未执行 → `queue_stale`
+- `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）→ `queue_backlog`；`available_at` 超过 2 小时未执行 → `queue_stale`（仅 `QUEUE_CONNECTION=database`）
 
 完整路线图见 [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)。多 worker 队列见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)；节点 DB TLS 见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §9。
 
