@@ -59,9 +59,9 @@ class RenewDomainCertificatesCommand extends Command
             $days
         );
         Log::info($summary);
-        if (! $dryRun && $queued === 0) {
+        if ($queued === 0 && ! $dryRun) {
             $this->info('没有需要续期的证书。');
-        } elseif ($dryRun) {
+        } else {
             $this->info($summary);
         }
 

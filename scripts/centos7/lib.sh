@@ -105,10 +105,12 @@ redi_sync_node_ips_access() {
     fi
   done
 
+  export REDI_GRANT_BATCH=1
   for new in ${new_ips[@]+"${new_ips[@]}"}; do
     bash "${script_dir}/grant-node-mysql.sh" "$new" "$db_pass"
     bash "${script_dir}/firewalld-allow-mysql-from-node.sh" "$new"
   done
+  unset REDI_GRANT_BATCH
 
   if [[ ${#new_ips[@]} -gt 0 ]]; then
     printf '%s\n' "${new_ips[@]}" > "$state_file"

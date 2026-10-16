@@ -59,4 +59,6 @@ mysql_run() {
 
 mysql_run < "$sqlfile"
 echo "已授权 redi_node@'${NODE_IP}'（仅 EXECUTE redi_node_bump_skip）"
-echo "若尚未放行主控 firewalld 3306: sudo bash scripts/centos7/firewalld-allow-mysql-from-node.sh ${NODE_IP}"
+if [[ -z "${REDI_GRANT_BATCH:-}" ]]; then
+  echo "若尚未放行主控 firewalld 3306: sudo bash scripts/centos7/firewalld-allow-mysql-from-node.sh ${NODE_IP}"
+fi
