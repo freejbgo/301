@@ -32,6 +32,8 @@ class RediHealthCommand extends Command
             $this->line(json_encode([
                 'ok' => $issues === [],
                 'checked_at' => now()->toIso8601String(),
+                'summary' => RediHealthReport::summary(),
+                'hints' => RediHealthReport::collectHints(),
                 'issues' => $issues,
             ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 

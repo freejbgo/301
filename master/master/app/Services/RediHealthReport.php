@@ -123,11 +123,77 @@ class RediHealthReport
             ];
         }
 
+        foreach (self::certValidatingStuckIssues() as $issue) {
+            $issues[] = $issue;
+        }
+
         foreach (self::queueIssues() as $issue) {
             $issues[] = $issue;
         }
 
         return $issues;
+    }
+
+    /**
+     * 不影响退出码的配置建议（redi:health --json 的 hints 字段）。
+     *
+     * @return array<int, array{code: string, message: string}>
+     */
+    public static function collectHints(): array
+    {
+        $hints = [];
+        $queue = (string) config('queue.default', 'sync');
+        $cache = (string) config('cache.default', 'file');
+
+        if ($queue !== 'sync' && $cache === 'file') {
+            $hints[] = [
+                'code' => 'queue_cache_file',
+                'message' => 'QUEUE_CONNECTION 非 sync 且 CACHE_DRIVER=file：仅适合单台机器单个 queue:work；多 worker 或多机请改 CACHE_DRIVER=redis 并配置 REDIS_*（IssueDomainCertificateJob 的 WithoutOverlapping 依赖共享缓存锁）',
+            ];
+        }
+
+        if ($queue === 'database') {
+            $hints[] = [
+                'code' => 'queue_database_single_host',
+                'message' => '当前队列为 database：请确保 systemd redi-queue 持续运行；扩容 worker 前先将缓存改为 redis',
+            ];
+        }
+
+        return $hints;
+    }
+
+    /**
+     * @return array<int, array{level: string, code: string, message: string}>
+     */
+    protected static function certValidatingStuckIssues(): array
+    {
+        $hours = max(1, (int) config('redi.health_validating_stuck_hours', 2));
+        $cutoff = now()->subHours($hours);
+
+        $stuck = RediDomainCert::query()
+            ->where('status', RediDomainCert::STATUS_VALIDATING)
+            ->where('updated_at', '<=', $cutoff)
+            ->whereHas('domain', fn ($q) => $q->where('status', 1))
+            ->orderBy('updated_at')
+            ->limit(20)
+            ->get(['id', 'domain_name', 'updated_at']);
+
+        if ($stuck->isEmpty()) {
+            return [];
+        }
+
+        $names = $stuck->map(fn ($c) => $c->domain_name)->implode(', ');
+
+        return [[
+            'level' => 'warning',
+            'code' => 'cert_validating_stuck',
+            'message' => sprintf(
+                '%d 张证书超过 %d 小时仍为 validating（可能 ACME 任务卡住）：%s',
+                $stuck->count(),
+                $hours,
+                $names
+            ),
+        ]];
     }
 
     /**
@@ -202,6 +268,8 @@ class RediHealthReport
         $queueFailed = Schema::hasTable('failed_jobs') ? (int) \DB::table('failed_jobs')->count() : 0;
 
         return [
+            'queue_connection' => (string) config('queue.default', 'sync'),
+            'cache_driver' => (string) config('cache.default', 'file'),
             'enabled_nodes' => $enabled,
             'stale_nodes' => $stale,
             'pending_deploys' => (int) RediCertDeployment::query()

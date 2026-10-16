@@ -91,4 +91,57 @@ class RenewDomainCertificatesCommandTest extends TestCase
 
         Bus::assertNothingDispatched();
     }
+
+    public function test_renew_skips_recent_validating_cert(): void
+    {
+        Bus::fake();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'validating.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => 'validating.example',
+            'status' => RediDomainCert::STATUS_VALIDATING,
+            'expires_at' => now()->addDays(10),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->artisan('redi:renew-certificates', ['--days' => 25])
+            ->assertExitCode(0);
+
+        Bus::assertNothingDispatched();
+    }
+
+    public function test_renew_queues_stuck_validating_cert(): void
+    {
+        Bus::fake();
+        config(['redi.renew_validating_stuck_hours' => 3]);
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'stuck.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => 'stuck.example',
+            'status' => RediDomainCert::STATUS_VALIDATING,
+            'expires_at' => now()->addDays(10),
+            'created_at' => now()->subHours(5),
+            'updated_at' => now()->subHours(5),
+        ]);
+
+        $this->artisan('redi:renew-certificates', ['--days' => 25])
+            ->assertExitCode(0);
+
+        Bus::assertDispatched(IssueDomainCertificateJob::class);
+    }
 }

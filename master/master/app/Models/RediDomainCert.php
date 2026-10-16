@@ -22,6 +22,29 @@ class RediDomainCert extends Model
 
     public const STATUS_FAILED = 'failed';
 
+    /**
+     * 续期 cron 可入队的状态：进行中 validating 仅在超过卡住阈值后重试。
+     */
+    public function scopeRenewalDue($query, \DateTimeInterface $expiresBefore, int $validatingStuckHours = 3)
+    {
+        $stuckBefore = now()->subHours(max(1, $validatingStuckHours));
+
+        return $query
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<=', $expiresBefore)
+            ->where(function ($statusQuery) use ($stuckBefore) {
+                $statusQuery->whereIn('status', [
+                    self::STATUS_ACTIVE,
+                    self::STATUS_ISSUED,
+                    self::STATUS_DEPLOYING,
+                    self::STATUS_FAILED,
+                ])->orWhere(function ($inner) use ($stuckBefore) {
+                    $inner->where('status', self::STATUS_VALIDATING)
+                        ->where('updated_at', '<=', $stuckBefore);
+                });
+            });
+    }
+
     protected $table = 'redi_domain_certs';
 
     protected $guarded = [
