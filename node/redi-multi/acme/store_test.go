@@ -19,3 +19,16 @@ func TestResponseForPathRequiresHostAndToken(t *testing.T) {
 		t.Fatal("must not serve challenge for wrong host")
 	}
 }
+
+func TestResponseForPathRejectsMalformedToken(t *testing.T) {
+	ReplaceAll([]Item{{
+		DomainName:   "example.com",
+		Token:        "ok-token",
+		ResponseBody: "body",
+	}})
+
+	_, ok := ResponseForPath("example.com", "/.well-known/acme-challenge/../ok-token")
+	if ok {
+		t.Fatal("path traversal token must not match")
+	}
+}

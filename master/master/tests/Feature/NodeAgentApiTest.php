@@ -113,7 +113,9 @@ class NodeAgentApiTest extends TestCase
 
     public function test_challenges_synced_records_valid_domain(): void
     {
-        [, $token] = $this->createNodeWithToken();
+        [$node, $token] = $this->createNodeWithToken();
+        $node->last_heartbeat_at = now()->subHour();
+        $node->save();
 
         RediAcmeChallenge::create([
             'domain_name' => 'valid.example',
@@ -129,6 +131,8 @@ class NodeAgentApiTest extends TestCase
         $this->assertDatabaseHas('redi_acme_challenge_node_sync', [
             'domain_name' => 'valid.example',
         ]);
+        $node->refresh();
+        $this->assertTrue($node->last_heartbeat_at->greaterThan(now()->subMinutes(5)));
     }
 
     public function test_acme_challenges_omits_empty_token_rows(): void

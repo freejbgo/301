@@ -4,6 +4,7 @@ namespace App\Services\Acme;
 
 use App\Models\RediAcmeChallengeNodeSync;
 use App\Models\RediNode;
+use App\Support\AcmeHttp01Token;
 use App\Support\HostNameValidator;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -19,9 +20,10 @@ class Http01PropagationWaiter
         if ($domain === '' || ! HostNameValidator::isValidHostLabel($domain)) {
             throw new RuntimeException('HTTP-01 域名无效');
         }
-        $token = trim($token);
-        if ($token === '' || strlen($token) > 128 || ! preg_match('/^[A-Za-z0-9_-]+$/', $token)) {
-            throw new RuntimeException('HTTP-01 token 无效');
+        try {
+            $token = AcmeHttp01Token::normalize($token);
+        } catch (\InvalidArgumentException $e) {
+            throw new RuntimeException('HTTP-01 token 无效', 0, $e);
         }
         $path = '/.well-known/acme-challenge/'.$token;
         $publicUrl = 'http://'.$domain.$path;

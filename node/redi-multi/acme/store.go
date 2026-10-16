@@ -21,13 +21,27 @@ var (
 	byDomain   = map[string]challenge{}
 )
 
+func validChallengeToken(token string) bool {
+	if token == "" || len(token) > 128 {
+		return false
+	}
+	for _, r := range token {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9', r == '_', r == '-':
+		default:
+			return false
+		}
+	}
+	return true
+}
+
 func ReplaceAll(items []Item) {
 	mu.Lock()
 	byDomain = map[string]challenge{}
 	for _, it := range items {
 		d := strings.ToLower(strings.TrimSpace(it.DomainName))
 		t := strings.TrimSpace(it.Token)
-		if d == "" || t == "" {
+		if d == "" || !validChallengeToken(t) {
 			continue
 		}
 		byDomain[d] = challenge{token: t, response: it.ResponseBody}
@@ -44,7 +58,7 @@ func ResponseForPath(host, path string) (body string, ok bool) {
 	}
 	token := strings.TrimPrefix(path, prefix)
 	token = strings.Trim(token, "/")
-	if token == "" {
+	if !validChallengeToken(token) {
 		return "", false
 	}
 	mu.RLock()

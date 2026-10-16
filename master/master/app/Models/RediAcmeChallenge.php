@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\AcmeHttp01Token;
 use App\Support\HostNameValidator;
 use Illuminate\Database\Eloquent\Model;
 
@@ -27,10 +28,7 @@ class RediAcmeChallenge extends Model
             throw new \InvalidArgumentException('ACME 挑战域名无效');
         }
 
-        $token = trim($token);
-        if ($token === '' || strlen($token) > 128 || ! preg_match('/^[A-Za-z0-9_-]+$/', $token)) {
-            throw new \InvalidArgumentException('ACME 挑战 token 无效');
-        }
+        $token = AcmeHttp01Token::normalize($token);
         $responseBody = trim($responseBody);
         if ($responseBody === '') {
             throw new \InvalidArgumentException('ACME 挑战响应体无效');

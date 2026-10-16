@@ -86,6 +86,14 @@ class IssueDomainCertificateJob implements ShouldQueue
         $cert->admin_id = (int) $domain->admin_id;
         $cert->save();
 
+        if ($canonicalHost === '' || ! HostNameValidator::isValidHostLabel($canonicalHost)) {
+            $cert->status = RediDomainCert::STATUS_FAILED;
+            $cert->last_error = '域名主机名无效，无法签发证书';
+            $cert->save();
+
+            return;
+        }
+
         TenantEdgeService::ensureForAdmin((int) $domain->admin_id);
         $edge = \App\Models\RediTenantEdge::where('admin_id', $domain->admin_id)->first();
         $edgeFqdn = $edge ? $edge->edge_fqdn : '';
