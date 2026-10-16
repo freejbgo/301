@@ -100,6 +100,37 @@ class RediHealthReportTest extends TestCase
         $this->assertContains('queue_stale', $codes);
     }
 
+    public function test_queue_stale_respects_configurable_stale_hours(): void
+    {
+        config(['queue.default' => 'database', 'redi.health_queue_stale_hours' => 4]);
+        $recentAt = now()->subHours(3)->timestamp;
+        \DB::table('jobs')->insert([
+            'queue' => 'default',
+            'payload' => '{}',
+            'attempts' => 0,
+            'reserved_at' => null,
+            'available_at' => $recentAt,
+            'created_at' => $recentAt,
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertNotContains('queue_stale', $codes);
+
+        \DB::table('jobs')->truncate();
+        $staleAt = now()->subHours(5)->timestamp;
+        \DB::table('jobs')->insert([
+            'queue' => 'default',
+            'payload' => '{}',
+            'attempts' => 0,
+            'reserved_at' => null,
+            'available_at' => $staleAt,
+            'created_at' => $staleAt,
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('queue_stale', $codes);
+    }
+
     public function test_queue_stale_not_reported_for_sync_queue(): void
     {
         config(['queue.default' => 'sync']);

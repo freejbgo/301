@@ -62,6 +62,8 @@ return [
 
     'health_queue_pending_threshold' => (int) env('REDI_HEALTH_QUEUE_PENDING_THRESHOLD', 80),
 
+    'health_queue_stale_hours' => (int) env('REDI_HEALTH_QUEUE_STALE_HOURS', 2),
+
     /*
     |--------------------------------------------------------------------------
     | 证书长期处于 validating 视为卡住（redi:health / 续期重试）
