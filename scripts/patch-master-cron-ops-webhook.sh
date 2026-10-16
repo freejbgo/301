@@ -1,12 +1,24 @@
 #!/usr/bin/env bash
 # 已上线主控：将 /etc/cron.d/redi-renew 升级为带 ops-webhook 失败告警的写法（不重装 deploy-master）。
-# 用法: sudo bash scripts/patch-master-cron-ops-webhook.sh [/opt/301/master/master]
+# 用法: sudo bash scripts/patch-master-cron-ops-webhook.sh [/opt/301/master]
+# 发布包部署（deploy-master）程序目录为 /opt/301/master；勿与仓库克隆路径 master/master 混淆。
 set -euo pipefail
 
-APP="${1:-/opt/301/master/master}"
 CRON_FILE="/etc/cron.d/redi-renew"
 
 [[ "$(id -u)" -eq 0 ]] || { echo "请用 root 执行" >&2; exit 1; }
+
+if [[ -n "${1:-}" ]]; then
+  APP="$1"
+elif [[ -f /opt/301/master/artisan ]]; then
+  APP=/opt/301/master
+elif [[ -f /opt/301/master/master/artisan ]]; then
+  APP=/opt/301/master/master
+  echo "警告: 检测到 ${APP}，CentOS 发布包标准路径为 /opt/301/master" >&2
+else
+  APP=/opt/301/master
+fi
+
 [[ -f "${APP}/artisan" ]] || { echo "找不到 artisan: ${APP}" >&2; exit 1; }
 
 if id nginx &>/dev/null; then

@@ -102,7 +102,7 @@ func setIptable(sport string) {
 	logrus.Debugf("[lagran] sport:%s", sport)
 	ipt, err := iptables.New()
 	if err != nil {
-		logrus.Errorf("[lagran] Iptabels new error:%v\n", err)
+		logrus.Errorf("[lagran] iptables new error:%v\n", err)
 		return
 	}
 
@@ -135,7 +135,7 @@ func setIptable(sport string) {
 func UnsetIptable(sport string) {
 	ipt, err := iptables.New()
 	if err != nil {
-		logrus.Errorf("[lagran] failed to new iptabels, err: %v\n", err)
+		logrus.Errorf("[lagran] failed to new iptables, err: %v\n", err)
 		return
 	}
 	if config.LagranBool("syn_ack", true) {

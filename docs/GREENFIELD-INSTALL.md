@@ -11,7 +11,9 @@
 | [DEPLOY-centos7-example.md](../DEPLOY-centos7-example.md) | `vars.env` 填 IP 示例 |
 | [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) | 真机逐步验收 |
 | [docs/CONSOLE.md](CONSOLE.md) | 后台操作 |
+| [docs/PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) | 上线验收与 `redi:health` |
 | [SECURITY.md](../SECURITY.md) | 密码、端口、节点权限 |
+| [docs/AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §9 | 开发机发版前 `dev-preflight.sh` |
 
 ## 数据库：绿场一次导入即可
 

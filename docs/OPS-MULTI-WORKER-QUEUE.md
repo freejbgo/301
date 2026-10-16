@@ -37,7 +37,7 @@ sudo systemctl restart redi-queue
 php artisan redi:health --json | jq '.hints,.summary.queue_connection,.summary.cache_driver'
 ```
 
-`hints` 中不应再出现 `queue_cache_file`（在已改 redis 且队列非 sync 时）。
+`hints` 中不应再出现 `queue_cache_file`（在已改 redis 且队列非 sync 时）。各 hint/issue `code` 见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。
 
 ## systemd
 

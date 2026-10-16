@@ -22,10 +22,11 @@ def port_from_listen(addr: str) -> str:
 
 def merge_listener_ports(lagran_port, http_addr: str, tls_addr: str) -> str:
     ports: set[str] = set()
-    raw = lagran_port
-    if isinstance(raw, int):
-        raw = str(raw)
-    if isinstance(raw, str) and raw.strip():
+    if isinstance(lagran_port, int):
+        raw = str(lagran_port)
+    else:
+        raw = lagran_port if isinstance(lagran_port, str) else ""
+    if raw.strip():
         for p in raw.split(","):
             p = p.strip()
             if p:

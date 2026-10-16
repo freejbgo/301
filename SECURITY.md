@@ -16,6 +16,7 @@
 3. **关闭 DNS 反查**：主控执行 `scripts/centos7/apply-mysql-skip-name-resolve.sh`。
 4. **主控启用 HTTPS**（`ADMIN_HTTPS=true`，并且 Nginx 上的证书和 `APP_URL` 一致）。
 5. **防火墙** 只开放 22/80/443。节点不必对访客开放 8080。不要执行 `iptables -F`。
+6. **运营监控**：Cron 跑 `php artisan redi:health --notify`（或采集 `redi:health --json`）。`issues[].code` / `hints[].code` 含义见 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) §3；生产环境务必关闭 `APP_DEBUG` 并配置 ACME 联系邮箱与 `edge_zone`（health 会告警）。
 
 ## 边缘池与证书（一期）
 
@@ -66,4 +67,4 @@
 
 CI 会执行 `composer audit`（忽略 abandoned 包）。当前 **Laravel 8** 锁文件在 advisory 库中仍关联若干 CVE/GHSA（见 `composer.json` → `config.audit.ignore`）；清除需 **大版本升级 Laravel/Dcat**，单期以 `APP_DEBUG=false`、后台 HTTPS、不暴露调试页等缓解。升级前勿移除 ignore 项。
 
-打 `v*` 标签发布 Release 时，`.github/workflows/release.yml` 会在上传包之前跑与 CI 相同的 Go/PHPUnit/audit、脚本校验与 CentOS 7 容器冒烟。
+打 `v*` 标签发布 Release 时，`.github/workflows/release.yml` 会在上传包之前跑与 CI 相同的 Go/PHPUnit/audit、脚本校验与 CentOS 7 容器冒烟。本地可先执行 `./scripts/dev-preflight.sh`（与 CI 核心步骤一致；无 Docker 时 DB 路径校验会跳过）。

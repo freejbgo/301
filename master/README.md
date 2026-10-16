@@ -4,7 +4,7 @@
 
 CentOS 7 自动部署把包解压到 `/opt/301/master`，网站根目录是 `/opt/301/master/public`。
 
-克隆整个仓库看源码时，网站根目录是 `master/master/public`，`php artisan` 的工作目录是 `master/master`。重新打包：`./scripts/build-master-tar.sh`。
+克隆整个仓库看源码时，网站根目录是 `master/master/public`，`php artisan` 的工作目录是 `master/master`。重新打包前可在仓库根目录跑 `bash scripts/dev-preflight.sh`，再执行 `./scripts/build-master-tar.sh`。
 
 安装按 [../DEPLOY.md](../DEPLOY.md)。CentOS 7 命令见 [../DEPLOY-centos7.md](../DEPLOY-centos7.md)。
 

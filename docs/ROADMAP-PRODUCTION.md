@@ -2,7 +2,7 @@
 
 **说明：** **P0（阻塞上线）** 与 **运营必备（实为上线路 P1）** 已合并在 PR [#75](https://github.com/freejbgo/301/pull/75)（含 CentOS 7.9 单路径）。「全功能 / 长期运营」还包含下表剩余 P1/P2，会按优先级在 `main` 上继续合入。
 
-## P0 — 阻塞首次商用上线（PR #75 已覆盖）
+## P0 — 阻塞首次商用上线（已合入 `main`，见 #75 等）
 
 | 项 | 状态 |
 |----|------|
@@ -12,17 +12,18 @@
 | 启用前 DNS 指向（CNAME/A 池） | ✅ |
 | CentOS 7 部署脚本与 DB 校验路径 | ✅（#72/#73 + #75；仅维护 CentOS） |
 
-## P1 — 上线后日常运营（PR #75 已大部分覆盖）
+## P1 — 上线后日常运营（已合入 `main`，#75–#80 及后续 PR）
 
 | 项 | 状态 |
 |----|------|
-| `redi:health` / JSON / Webhook | ✅ |
+| `redi:health` / JSON / Webhook；生产下 APP_DEBUG、ACME 邮箱/staging、edge_zone | ✅ |
 | 续期 `renew` + dry-run；failed 纳入续期 | ✅ |
 | 超管/租户首页看板 | ✅ |
 | 节点证书部署列、重试失败（单节点/全局） | ✅ |
 | 域名筛选、批量/单行重新下发、CSV 导出（含 CNAME 预检列） | ✅ |
 | Cron 失败 `redi:ops-webhook` | ✅ |
 | 存量升级文档 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) | ✅ |
+| 开发机发版前 `dev-preflight.sh` + AUDIT §9 | ✅（#81） |
 | 队列积压 / failed_jobs 健康检查 | ✅ |
 | 多机 `queue:work` + `CACHE_DRIVER=redis` 文档与自检 | ✅ `redi:health --json` 的 `hints` + summary 含 queue/cache |
 | ACME 续期全状态（validating 等）边界 | ✅ 续期跳过进行中 validating；卡住可重试；health `cert_validating_stuck` |

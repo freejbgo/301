@@ -55,6 +55,9 @@ class RediHealthReportTest extends TestCase
             $table->unsignedTinyInteger('id')->primary();
             $table->string('edge_zone')->nullable();
             $table->string('pool_host')->nullable();
+            $table->string('dns_mode')->default('manual');
+            $table->string('dns_driver')->default('manual');
+            $table->string('acme_contact_email')->nullable();
             $table->boolean('acme_staging')->default(false);
             $table->timestamps();
         });
@@ -116,6 +119,14 @@ class RediHealthReportTest extends TestCase
         $this->assertContains('queue_cache_file', $codes);
     }
 
+    public function test_collect_hints_agent_version_gate_off_in_production(): void
+    {
+        config(['app.env' => 'production', 'redi.min_agent_version' => '']);
+
+        $codes = array_column(RediHealthReport::collectHints(), 'code');
+        $this->assertContains('agent_version_gate_off', $codes);
+    }
+
     public function test_collect_issues_includes_stuck_validating_cert(): void
     {
         config(['redi.health_validating_stuck_hours' => 2]);
@@ -172,11 +183,54 @@ class RediHealthReportTest extends TestCase
             'edge_zone' => 'example.com',
             'pool_host' => 'pool',
             'acme_staging' => true,
+            'acme_contact_email' => 'ops@example.com',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
         $codes = array_column(RediHealthReport::collectIssues(7), 'code');
         $this->assertContains('acme_staging_enabled', $codes);
+    }
+
+    public function test_production_config_issues_include_missing_acme_email(): void
+    {
+        config(['app.env' => 'production', 'app.debug' => false]);
+        \DB::table('redi_platform_dns')->insert([
+            'id' => 1,
+            'edge_zone' => 'example.com',
+            'pool_host' => 'pool',
+            'acme_staging' => false,
+            'acme_contact_email' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('acme_email_missing', $codes);
+    }
+
+    public function test_app_debug_critical_in_production(): void
+    {
+        config(['app.env' => 'production', 'app.debug' => true]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('app_debug_enabled', $codes);
+    }
+
+    public function test_production_config_issues_include_missing_edge_zone(): void
+    {
+        config(['app.env' => 'production', 'app.debug' => false]);
+        \DB::table('redi_platform_dns')->insert([
+            'id' => 1,
+            'edge_zone' => '',
+            'pool_host' => 'pool',
+            'acme_staging' => false,
+            'acme_contact_email' => 'ops@example.com',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('edge_zone_missing', $codes);
     }
 }

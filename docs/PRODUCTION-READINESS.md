@@ -3,7 +3,7 @@
 本文档汇总 **阻塞上线** 与 **验收必做** 项，与 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 及 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) 配合使用。**生产环境仅维护 CentOS 7.9（7.x）部署路径。**
 
 - **已上线升级（不重装）**：[UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（含 `scripts/patch-master-cron-ops-webhook.sh`）
-- **P0/P1/P2 全表**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)（不仅 P0；PR #75 已含大量 P1 运营能力）
+- **P0/P1/P2 全表**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)（P0/P1 能力已合入 `main`）
 
 ## 阻塞上线（P0，本仓库已加固）
 
@@ -14,7 +14,7 @@
 | 证书下发 | 节点 register / 重新启用时 `syncDeploymentsForNode` 补齐 `redi_cert_deployments`；主控空证书列表时节点清空内存证书 |
 | 节点 Agent | 心跳优先于拉取；拉取失败不阻断后续心跳；ack 403/409 不触发重新 register；Agent ≥ `0.1.3`（`REDI_MIN_AGENT_VERSION`） |
 | API 限流 | 节点 API 在认证后按 `node_id` 限流（`throttle:redi-node`） |
-| ACME 生产 | `redi:health` 在 `APP_ENV=production` 且开启 Staging 时告警 `acme_staging_enabled` |
+| ACME / 生产配置 | `redi:health` 在生产下检查：`app_debug_enabled`、`acme_email_missing`、`acme_staging_enabled`、`edge_zone_missing` |
 
 ## 部署前
 
@@ -22,14 +22,16 @@
 2. 确认 `APP_KEY` 稳定且已备份（证书密文依赖它）。
 3. 主控仅 HTTPS 暴露；节点 `REDI_MASTER_URL` 使用 `https://`（实验环境才用 `REDI_MASTER_INSECURE=1`）。
 4. 按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 执行主控/节点脚本，并准备 `release` 包（见 `scripts/ensure-release-tarballs.sh`）。
+5. **在开发机打 tar 或发 `v*` tag 前**：`bash scripts/dev-preflight.sh`（见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §9）。
 
 ## 验收命令（真机）
 
 ```bash
 # 运营自检（节点心跳、证书到期；可接监控，非 0 表示有待处理项）
-cd /opt/301/master/master && php artisan redi:health
+cd /opt/301/master && php artisan redi:health
 php artisan redi:health --json
 # JSON 含 summary（queue/cache 驱动）、hints（多 worker 时请 redis 缓存）、issues（非空则退出码 1）
+# issues/hints 各 code 含义见 AUDIT-CENTOS7-PRODUCTION.md §3
 
 # 有问题时通知 Webhook（.env 配置 REDI_HEALTH_WEBHOOK_URL，POST JSON，含 text 摘要）
 php artisan redi:health --notify
@@ -68,8 +70,11 @@ curl -fsS "http://127.0.0.1:<node-port>/revision"
 
 ## P1 运营（health 已含）
 
-- `failed_jobs` > 0 → 严重
-- `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）或超过 2 小时未执行 → 警告
+`redi:health` 的 `issues` / `hints` 各 `code` 含义见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。摘要：
+
+- 生产配置：`APP_DEBUG`、ACME 邮箱 / Staging、`edge_zone`（见 §3 表）
+- `failed_jobs` > 0 → 严重（`queue_failed_jobs`）
+- `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）或超过 2 小时未执行 → 警告（`queue_backlog` / `queue_stale`）
 
 完整路线图见 [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)。多 worker 队列见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)；节点 DB TLS 见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §9。
 

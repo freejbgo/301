@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # 部署脚本共用：若 vars 未指定 tar 且默认路径不存在，则在仓库内尝试构建发布包。
+# 开发机打 tar 前建议先跑 scripts/dev-preflight.sh（见 docs/AUDIT-CENTOS7-PRODUCTION.md §9）。
 # shellcheck shell=bash
 
 redi_ensure_master_tar() {
