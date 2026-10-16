@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\RediDomainCert;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -100,5 +101,22 @@ class RediHealthCommandTest extends TestCase
 
         $this->artisan('redi:health', ['--json' => true])
             ->assertExitCode(1);
+    }
+
+    public function test_health_text_mode_prints_hints_without_failing(): void
+    {
+        \DB::table('redi_nodes')->insert([
+            'enabled' => true,
+            'last_heartbeat_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        config(['queue.default' => 'database', 'cache.default' => 'file']);
+
+        $this->withoutMockingConsoleOutput();
+        $exit = Artisan::call('redi:health');
+        $this->assertSame(0, $exit);
+        $this->assertStringContainsString('配置建议', Artisan::output());
     }
 }

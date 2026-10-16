@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
+use App\Models\RediPlatformDns;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
@@ -17,6 +18,10 @@ class RediHealthReport
     {
         $warnDays = max(1, $warnDays);
         $issues = [];
+
+        foreach (self::platformConfigIssues() as $issue) {
+            $issues[] = $issue;
+        }
 
         $staleNodes = RediNode::query()
             ->enabled()
@@ -139,6 +144,31 @@ class RediHealthReport
      *
      * @return array<int, array{code: string, message: string}>
      */
+    /**
+     * @return array<int, array{level: string, code: string, message: string}>
+     */
+    protected static function platformConfigIssues(): array
+    {
+        if (! Schema::hasTable('redi_platform_dns')) {
+            return [];
+        }
+
+        if (config('app.env') !== 'production') {
+            return [];
+        }
+
+        $platform = RediPlatformDns::instance();
+        if (! $platform->acme_staging) {
+            return [];
+        }
+
+        return [[
+            'level' => 'warning',
+            'code' => 'acme_staging_enabled',
+            'message' => '生产环境仍开启 ACME Staging（后台 DNS 与节点池）；正式证书请关闭「ACME 测试环境」',
+        ]];
+    }
+
     public static function collectHints(): array
     {
         $hints = [];

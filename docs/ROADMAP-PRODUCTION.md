@@ -45,7 +45,7 @@
 
 ## 建议合并与升级顺序
 
-1. 合并 **#75** → 主控/节点按 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) 升级。  
+1. 跟踪 **main** → 主控/节点按 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) 升级。  
 2. 真机跑 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) 验收。  
 3. 配置 Webhook 与监控采集 `redi:health --json`。  
 4. 再排 P2 技术债（与业务节奏一起排期）。
