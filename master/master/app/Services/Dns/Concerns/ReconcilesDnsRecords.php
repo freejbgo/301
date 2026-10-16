@@ -18,7 +18,7 @@ trait ReconcilesDnsRecords
         $desired = [];
         foreach ($desiredIps as $ip) {
             $ip = trim((string) $ip);
-            if ($ip !== '') {
+            if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
                 $desired[strtolower($ip)] = $ip;
             }
         }

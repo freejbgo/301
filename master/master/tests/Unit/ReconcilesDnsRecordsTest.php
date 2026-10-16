@@ -110,6 +110,31 @@ class ReconcilesDnsRecordsTest extends TestCase
         $this->assertSame([], $deleted);
     }
 
+    public function test_reconcile_a_ignores_invalid_ipv4_in_desired(): void
+    {
+        $helper = new class
+        {
+            use ReconcilesDnsRecords;
+
+            public function run(array &$created): void
+            {
+                $this->reconcileARecordValues(
+                    [],
+                    ['not-ip', '5.6.7.8'],
+                    function (string $ip) use (&$created) {
+                        $created[] = $ip;
+                    },
+                    function (string $id) {
+                    }
+                );
+            }
+        };
+
+        $created = [];
+        $helper->run($created);
+        $this->assertSame(['5.6.7.8'], $created);
+    }
+
     public function test_delete_phase_failure_throws_aggregate(): void
     {
         $helper = new class
