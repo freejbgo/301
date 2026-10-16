@@ -50,17 +50,22 @@ class RediNode extends Model
     {
         $ips = [];
         $primary = trim((string) $this->public_ip);
-        if ($primary !== '') {
+        if ($primary !== '' && self::isValidPublicIpv4($primary)) {
             $ips[] = $primary;
         }
         foreach ((array) $this->extra_ips as $ip) {
             $ip = trim((string) $ip);
-            if ($ip !== '' && ! in_array($ip, $ips, true)) {
+            if ($ip !== '' && self::isValidPublicIpv4($ip) && ! in_array($ip, $ips, true)) {
                 $ips[] = $ip;
             }
         }
 
         return $ips;
+    }
+
+    protected static function isValidPublicIpv4(string $ip): bool
+    {
+        return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false;
     }
 
     /**
