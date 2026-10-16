@@ -74,6 +74,7 @@ mysql --defaults-extra-file=/root/.redi-mysql.cnf redi_admin -e \
 
 ```bash
 systemctl is-active firewalld mariadb php-fpm nginx redi-queue
+grep -q '\-\-max-time=3600' /etc/systemd/system/redi-queue.service
 php -r 'echo PHP_VERSION, "\n";'
 mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SELECT COUNT(*) FROM redi_admin.admin_users;"
 mysql --defaults-extra-file=/root/.redi-mysql.cnf -e "SHOW VARIABLES LIKE 'skip_name_resolve';" | grep -qi 'ON'
@@ -92,7 +93,7 @@ sudo firewall-cmd --list-all
 
 | 检查项 | 期望 |
 |--------|------|
-| `firewalld` / `mariadb` / `php-fpm` / `nginx` / `redi-queue` | 均为 `active` |
+| `firewalld` / `mariadb` / `php-fpm` / `nginx` / `redi-queue` | 均为 `active`；`redi-queue` unit 含 `--max-time=3600` |
 | `/etc/cron.d/redi-renew` | **03:10** `redi:renew-certificates`、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`；`cd` 为 **`/opt/301/master`**（勿含 `master/master`）；勿另配 `schedule:run`（`Kernel` 无内置 schedule）。自定义 `MASTER_INSTALL_ROOT` 时把下面 `grep` 中的路径改成 `${MASTER_INSTALL_ROOT}/master` |
 | 告警 Webhook | `.env` 已配置 `REDI_HEALTH_WEBHOOK_URL`（或 `REDI_OPS_WEBHOOK_URL` 作兜底）；`redi:health --notify` 在 webhook 发送成功时退出 **0** |
 | PHP 版本 | **8.0.x**（`deploy-master` 仅接受 8.0.x） |

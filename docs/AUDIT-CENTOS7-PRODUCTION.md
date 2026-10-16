@@ -132,7 +132,11 @@
 
 **2026-10-16 #94 已合并 `main`：** 见 [PR #94](https://github.com/freejbgo/301/pull/94)（prune 单测、#93 合并记录、Cron 日志验收提示）。
 
-**2026-10-16 复核（#95）：** 真机验收补 `redi-queue` `--max-time=3600` grep；`patch-master-cron` 可选 APP 路径与 README；PRODUCTION/DEPLOY-centos7 verify 脚本从仓库根执行；CONSOLE 补 Cron 日志路径。
+**2026-10-16 #95 已合并 `main`：** 见 [PR #95](https://github.com/freejbgo/301/pull/95)（验收 `redi-queue --max-time`、patch-cron 路径、prune 空跑单测）。
+
+**2026-10-16 复核（#96）：** `redi:renew-certificates` 入队后打印 summary（`renew.log` 可读）；批量 `grant-node-mysql` 不再重复 firewalld 提示（`REDI_GRANT_BATCH`）；验收清单对齐 `max-time` grep。
+
+**2026-10-16 复核（#95）：** 真机验收补 `redi-queue` `--max-time=3600` grep；`patch-master-cron` 可选 APP 路径与 README；PRODUCTION/DEPLOY-centos7 verify 脚本从仓库根执行；CONSOLE 补 Cron 日志路径；prune 空库单测；PHPUnit **88**。
 
 **2026-10-16 复核（#94）：** `redi:prune-acme-challenges` 单测（过期/无效挑战 + sync 行）；AUDIT §6/#93 合并记录；PHPUnit **87**。
 
@@ -149,7 +153,7 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **87**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **88**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
@@ -165,7 +169,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#95](https://github.com/freejbgo/301/pull/95)（#94：prune 单测；#93：grant-nodes、运维脚本与 queue unit；#88–#92：Cron/webhook/health、MySQL/firewalld）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#96](https://github.com/freejbgo/301/pull/96)（#95：验收 queue unit；#94：prune 单测；#93：grant-nodes 与运维脚本；#88–#92：Cron/webhook/health）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
@@ -177,6 +181,7 @@
    grep -E 'renew|prune|health' /etc/cron.d/redi-renew
    ! grep -q 'schedule:run' /etc/cron.d/redi-renew
    ! grep -q 'master/master' /etc/cron.d/redi-renew
+   grep -q '\-\-max-time=3600' /etc/systemd/system/redi-queue.service
    ```
    并在 `/opt/301/master/.env` 配置 `REDI_HEALTH_WEBHOOK_URL`（可选 `REDI_OPS_WEBHOOK_URL`），`php artisan config:cache` 后验证 `sudo -u nginx php artisan redi:health --notify`（见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) §4）。
 3. 各节点：升级 **Agent 0.1.3** 的 `redi-multi` 并重启服务。
@@ -213,4 +218,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **87** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **88** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
