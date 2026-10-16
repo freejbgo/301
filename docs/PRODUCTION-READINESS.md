@@ -2,6 +2,9 @@
 
 本文档汇总 **阻塞上线** 与 **验收必做** 项，与 CentOS 7 / Ubuntu 双路径部署文档配合使用。
 
+- **已上线升级（不重装）**：[UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（含 `scripts/patch-master-cron-ops-webhook.sh`）
+- **P0/P1/P2 全表**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)（不仅 P0；PR #74 已含大量 P1 运营能力）
+
 ## 阻塞上线（P0，本仓库已加固）
 
 | 领域 | 要求 |
@@ -61,11 +64,12 @@ curl -fsS "http://127.0.0.1:<node-port>/revision"
 3. **HTTPS**：签发 → deploying → 各节点 ack → `active`；停用域名后证书不再出现在节点列表。
 4. **强制 HTTPS**：仅影响 TLS 层 301；正常跳转仍为 200 + JS（产品行为）。
 
-## 已知非 P0（规划）
+## P1 运营（health 已含）
 
-- Laravel 8 / PHP 版本升级路线
-- MySQL 客户端 TLS
-- NFQUEUE 清理与文档中 ack 状态码历史描述对齐
+- `failed_jobs` > 0 → 严重
+- `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）或超过 2 小时未执行 → 警告
+
+完整路线图见 [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)。
 
 ## 回滚
 

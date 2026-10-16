@@ -7,6 +7,8 @@
 
 CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。**Ubuntu 22.04 / 24.04** 见 [DEPLOY-ubuntu.md](DEPLOY-ubuntu.md) 与 `scripts/ubuntu/deploy-*.sh`。填好的变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md) / [DEPLOY-ubuntu-example.md](DEPLOY-ubuntu-example.md)。真机验收见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 或 [docs/ACCEPTANCE-UBUNTU-DEPLOY.md](docs/ACCEPTANCE-UBUNTU-DEPLOY.md)。
 
+**主控已在跑、只想跟上新能力（Agent 0.1.3、cron Webhook、运营命令等）**：见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md)。能力分级见 [docs/ROADMAP-PRODUCTION.md](docs/ROADMAP-PRODUCTION.md)。
+
 开发阶段 [GitHub Releases](https://github.com/freejbgo/301/releases) 可能暂无包；需部署时在仓库根目录执行 `scripts/build-*-tar.sh`，或发 **`v*` tag** 由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 在通过 Go/PHPUnit（8.4 与 8.0）、`composer audit`、CentOS 7 脚本与容器冒烟后上传 Release（发布前对解压后的主控树再跑 audit + PHPUnit）。
 
 **绿场（无旧数据）** 时数据库以 **一次导入 `redi_admin.sql`** 为准（含节点存储过程），见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。下面是通用步骤；CentOS 7 不要按克隆目录手工装，直接跑脚本。

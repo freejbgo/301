@@ -60,4 +60,6 @@ return [
 
     'ops_webhook_url' => env('REDI_OPS_WEBHOOK_URL', ''),
 
+    'health_queue_pending_threshold' => (int) env('REDI_HEALTH_QUEUE_PENDING_THRESHOLD', 80),
+
 ];

@@ -33,10 +33,12 @@ class HomeController extends Controller
             }
 
             $content->row(function (Row $row) use ($summary) {
-                $row->column(3, Card::make('启用节点', (string) $summary['enabled_nodes']));
-                $row->column(3, Card::make('心跳异常', (string) $summary['stale_nodes']));
-                $row->column(3, Card::make('证书待部署', (string) $summary['pending_deploys']));
-                $row->column(3, Card::make('证书部署失败', (string) $summary['failed_deploys']));
+                $row->column(2, Card::make('启用节点', (string) $summary['enabled_nodes']));
+                $row->column(2, Card::make('心跳异常', (string) $summary['stale_nodes']));
+                $row->column(2, Card::make('证书待部署', (string) $summary['pending_deploys']));
+                $row->column(2, Card::make('证书部署失败', (string) $summary['failed_deploys']));
+                $row->column(2, Card::make('队列积压', (string) $summary['queue_pending']));
+                $row->column(2, Card::make('failed_jobs', (string) $summary['queue_failed']));
             });
 
             $content->row(function (Row $row) use ($issueHtml) {

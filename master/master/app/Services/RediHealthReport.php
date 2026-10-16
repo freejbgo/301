@@ -6,6 +6,7 @@ use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class RediHealthReport
 {
@@ -122,11 +123,69 @@ class RediHealthReport
             ];
         }
 
+        foreach (self::queueIssues() as $issue) {
+            $issues[] = $issue;
+        }
+
         return $issues;
     }
 
     /**
-     * @return array{enabled_nodes: int, stale_nodes: int, pending_deploys: int, failed_deploys: int}
+     * @return array<int, array{level: string, code: string, message: string}>
+     */
+    protected static function queueIssues(): array
+    {
+        $issues = [];
+        $connection = (string) config('queue.default', 'sync');
+        if ($connection === 'sync') {
+            return $issues;
+        }
+
+        if (Schema::hasTable('failed_jobs')) {
+            $failed = (int) \DB::table('failed_jobs')->count();
+            if ($failed > 0) {
+                $issues[] = [
+                    'level' => 'critical',
+                    'code' => 'queue_failed_jobs',
+                    'message' => sprintf('队列有 %d 条 failed_jobs，请执行 php artisan queue:failed 排查', $failed),
+                ];
+            }
+        }
+
+        if (Schema::hasTable('jobs')) {
+            $pending = (int) \DB::table('jobs')->count();
+            $threshold = max(10, (int) config('redi.health_queue_pending_threshold', 80));
+            if ($pending >= $threshold) {
+                $issues[] = [
+                    'level' => 'warning',
+                    'code' => 'queue_backlog',
+                    'message' => sprintf(
+                        '队列积压 %d 条（阈值 %d），请确认 redi-queue / queue:work 在运行',
+                        $pending,
+                        $threshold
+                    ),
+                ];
+            }
+        }
+
+        if ($connection === 'database' && Schema::hasTable('jobs')) {
+            $stale = (int) \DB::table('jobs')
+                ->where('available_at', '<', now()->subHours(2)->timestamp)
+                ->count();
+            if ($stale > 0) {
+                $issues[] = [
+                    'level' => 'warning',
+                    'code' => 'queue_stale',
+                    'message' => sprintf('有 %d 条队列任务超过 2 小时未执行，可能 worker 未运行', $stale),
+                ];
+            }
+        }
+
+        return $issues;
+    }
+
+    /**
+     * @return array{enabled_nodes: int, stale_nodes: int, pending_deploys: int, failed_deploys: int, queue_pending: int, queue_failed: int}
      */
     public static function summary(): array
     {
@@ -139,6 +198,9 @@ class RediHealthReport
             })
             ->count();
 
+        $queuePending = Schema::hasTable('jobs') ? (int) \DB::table('jobs')->count() : 0;
+        $queueFailed = Schema::hasTable('failed_jobs') ? (int) \DB::table('failed_jobs')->count() : 0;
+
         return [
             'enabled_nodes' => $enabled,
             'stale_nodes' => $stale,
@@ -150,6 +212,8 @@ class RediHealthReport
                 ->where('status', 'failed')
                 ->whereHas('node', fn ($q) => $q->where('enabled', true))
                 ->count(),
+            'queue_pending' => $queuePending,
+            'queue_failed' => $queueFailed,
         ];
     }
 

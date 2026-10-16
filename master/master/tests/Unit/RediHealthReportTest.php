@@ -50,6 +50,32 @@ class RediHealthReportTest extends TestCase
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('failed_jobs', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('uuid')->unique();
+            $table->text('connection');
+            $table->text('queue');
+            $table->longText('payload');
+            $table->longText('exception');
+            $table->timestamp('failed_at');
+        });
+    }
+
+    public function test_collect_issues_includes_failed_jobs_when_database_queue(): void
+    {
+        config(['queue.default' => 'database']);
+        \DB::table('failed_jobs')->insert([
+            'uuid' => (string) \Illuminate\Support\Str::uuid(),
+            'connection' => 'database',
+            'queue' => 'default',
+            'payload' => '{}',
+            'exception' => 'test',
+            'failed_at' => now(),
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('queue_failed_jobs', $codes);
     }
 
     public function test_collect_issues_includes_pending_deployments(): void

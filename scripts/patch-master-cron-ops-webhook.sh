@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# 已上线主控：将 /etc/cron.d/redi-renew 升级为带 ops-webhook 失败告警的写法（不重装 deploy-master）。
+# 用法: sudo bash scripts/patch-master-cron-ops-webhook.sh [/opt/301/master/master]
+set -euo pipefail
+
+APP="${1:-/opt/301/master/master}"
+CRON_FILE="/etc/cron.d/redi-renew"
+
+[[ "$(id -u)" -eq 0 ]] || { echo "请用 root 执行" >&2; exit 1; }
+[[ -f "${APP}/artisan" ]] || { echo "找不到 artisan: ${APP}" >&2; exit 1; }
+
+if id www-data &>/dev/null; then
+  CRON_USER="www-data"
+elif id nginx &>/dev/null; then
+  CRON_USER="nginx"
+else
+  echo "未找到 www-data 或 nginx 用户" >&2
+  exit 1
+fi
+
+cat > "$CRON_FILE" <<EOF
+SHELL=/bin/bash
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+10 3 * * * ${CRON_USER} bash -c 'cd ${APP} && /usr/bin/php artisan redi:renew-certificates >> ${APP}/storage/logs/renew.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:renew-certificates >> ${APP}/storage/logs/renew.log 2>&1'
+10 4 * * * ${CRON_USER} bash -c 'cd ${APP} && /usr/bin/php artisan redi:prune-acme-challenges >> ${APP}/storage/logs/prune-acme.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:prune-acme-challenges >> ${APP}/storage/logs/prune-acme.log 2>&1'
+30 8 * * * ${CRON_USER} bash -c 'cd ${APP} && /usr/bin/php artisan redi:health --notify >> ${APP}/storage/logs/health.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:health >> ${APP}/storage/logs/health.log 2>&1'
+EOF
+chmod 644 "$CRON_FILE"
+
+echo "已写入 ${CRON_FILE}（用户 ${CRON_USER}，APP=${APP}）"
+echo "请确认: php artisan redi:health && php artisan list | grep redi:ops-webhook"
