@@ -144,9 +144,13 @@ class NodeAgentController extends Controller
                 }
                 continue;
             }
+            $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
+            if ($host === '') {
+                continue;
+            }
             $payload[] = [
                 'cert_id' => $cert->id,
-                'domain' => HostNameValidator::toCanonicalAscii((string) $cert->domain_name),
+                'domain' => $host,
                 'certificate' => $pem,
                 'private_key' => $key,
                 'force_https' => (bool) optional($cert->domain)->force_https,

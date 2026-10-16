@@ -177,7 +177,11 @@ func pullRedirectRules(client *http.Client, cfg config, registered *bool) error 
 	}
 	m := map[string]bool{}
 	for _, r := range out.Rules {
-		m[r.OriginalURL] = bool(r.ForceHTTPS)
+		host := strings.ToLower(strings.TrimSpace(r.OriginalURL))
+		if host == "" {
+			continue
+		}
+		m[host] = bool(r.ForceHTTPS)
 	}
 	rules.ReplaceForceHTTPS(m)
 	return nil

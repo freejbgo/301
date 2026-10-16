@@ -24,6 +24,10 @@ class RediHealthReport
             $issues[] = $issue;
         }
 
+        foreach (self::nodePoolIssues() as $issue) {
+            $issues[] = $issue;
+        }
+
         $staleNodes = RediNode::query()
             ->enabled()
             ->where(function ($query) {
@@ -219,6 +223,34 @@ class RediHealthReport
         }
 
         return $issues;
+    }
+
+    /**
+     * @return array<int, array{level: string, code: string, message: string}>
+     */
+    protected static function nodePoolIssues(): array
+    {
+        if (! Schema::hasTable('redi_nodes')) {
+            return [];
+        }
+
+        $enabled = (int) RediNode::query()->enabled()->count();
+        if ($enabled === 0) {
+            return [];
+        }
+
+        if (RediNode::enabledPublicIps() !== []) {
+            return [];
+        }
+
+        return [[
+            'level' => 'warning',
+            'code' => 'node_no_public_ip',
+            'message' => sprintf(
+                '有 %d 台启用节点但未配置公网 IP（public_ip / extra_ips），pool A 记录与 A 池 CNAME 预检将无法工作',
+                $enabled
+            ),
+        ]];
     }
 
     public static function collectHints(): array

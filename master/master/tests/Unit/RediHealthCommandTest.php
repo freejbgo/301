@@ -165,6 +165,7 @@ class RediHealthCommandTest extends TestCase
 
         \DB::table('redi_nodes')->insert([
             'enabled' => true,
+            'public_ip' => '1.2.3.4',
             'last_heartbeat_at' => now(),
             'created_at' => now(),
             'updated_at' => now(),
@@ -184,6 +185,7 @@ class RediHealthCommandTest extends TestCase
     {
         \DB::table('redi_nodes')->insert([
             'enabled' => true,
+            'public_ip' => '1.2.3.4',
             'last_heartbeat_at' => now(),
             'created_at' => now(),
             'updated_at' => now(),

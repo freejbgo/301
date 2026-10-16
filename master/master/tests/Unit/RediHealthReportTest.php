@@ -328,6 +328,20 @@ class RediHealthReportTest extends TestCase
         $this->assertContains('edge_zone_missing', $codes);
     }
 
+    public function test_collect_issues_warns_enabled_nodes_without_public_ip(): void
+    {
+        \DB::table('redi_nodes')->insert([
+            'enabled' => true,
+            'public_ip' => null,
+            'name' => 'n1',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('node_no_public_ip', $codes);
+    }
+
     public function test_production_warns_when_dns_api_mode_with_manual_driver(): void
     {
         config(['app.env' => 'production', 'app.debug' => false]);
