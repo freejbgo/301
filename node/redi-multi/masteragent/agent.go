@@ -11,6 +11,7 @@ import (
 	"redi-multi/acme"
 	"redi-multi/certs"
 	"redi-multi/rules"
+	"redi-multi/util/host"
 	"strings"
 	"time"
 
@@ -211,10 +212,14 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 	remoteIDs := make([]int, 0, len(out.Certificates))
 	failed := false
 	for _, row := range out.Certificates {
+		domain := host.CanonicalLookupHost(row.Domain)
+		if domain == "" {
+			continue
+		}
 		remoteIDs = append(remoteIDs, row.CertID)
 		entry := certs.Entry{
 			CertID:      row.CertID,
-			Domain:      row.Domain,
+			Domain:      domain,
 			Certificate: []byte(row.Certificate),
 			PrivateKey:  []byte(row.PrivateKey),
 			ForceHTTPS:  bool(row.ForceHTTPS),

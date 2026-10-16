@@ -8,6 +8,7 @@ use App\Models\RediPlatformDns;
 use App\Models\RediTenantEdge;
 use App\Services\Dns\DnsProviderFactory;
 use App\Services\Dns\DnsProviderInterface;
+use App\Support\HostNameValidator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -29,7 +30,8 @@ class EdgeDnsSyncService
         }
 
         $poolFqdn = $platform->poolFqdn();
-        if ($poolFqdn === '') {
+        $poolCanonical = HostNameValidator::toCanonicalAscii($poolFqdn);
+        if ($poolFqdn === '' || ! HostNameValidator::isValidHostLabel($poolCanonical)) {
             throw new RuntimeException('Pool FQDN 无效');
         }
 
@@ -65,8 +67,9 @@ class EdgeDnsSyncService
         $skipped = 0;
         try {
             foreach ($edges as $edge) {
-                $fqdn = strtolower(rtrim((string) $edge->edge_fqdn, '.'));
-                if ($fqdn === '' || ! Str::endsWith($fqdn, '.'.$zone)) {
+                $fqdn = HostNameValidator::toCanonicalAscii((string) $edge->edge_fqdn);
+                if ($fqdn === '' || ! HostNameValidator::isValidHostLabel($fqdn)
+                    || ! Str::endsWith($fqdn, '.'.$zone)) {
                     if ($fqdn !== '') {
                         $skipped++;
                         Log::warning('EdgeDnsSync: skip tenant edge (FQDN not under edge_zone)', [
@@ -117,8 +120,10 @@ class EdgeDnsSyncService
     protected function eligibleTenantEdges(Collection $edges, string $zone): Collection
     {
         return $edges->filter(function ($edge) use ($zone) {
-            $fqdn = strtolower(rtrim((string) $edge->edge_fqdn, '.'));
-            return $fqdn !== '' && Str::endsWith($fqdn, '.'.$zone);
+            $fqdn = HostNameValidator::toCanonicalAscii((string) $edge->edge_fqdn);
+
+            return $fqdn !== '' && HostNameValidator::isValidHostLabel($fqdn)
+                && Str::endsWith($fqdn, '.'.$zone);
         });
     }
 }
