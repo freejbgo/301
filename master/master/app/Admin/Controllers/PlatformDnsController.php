@@ -24,7 +24,7 @@ class PlatformDnsController extends Controller
         $this->ensureAdministrator();
 
         $platform = RediPlatformDns::instance();
-        $apiMode = $platform->dns_mode === 'api';
+        $apiMode = $platform->isDnsApiMode();
         $tables = EdgeDnsManualReference::tables();
 
         $poolHtml = $tables['pool'] === []
@@ -89,7 +89,7 @@ HTML;
         $this->ensureAdministrator();
 
         $platform = RediPlatformDns::instance();
-        if ($platform->dns_mode !== 'api') {
+        if (! $platform->isDnsApiMode()) {
             return response()->json([
                 'status' => true,
                 'message' => '当前为手动解析模式：请按页面 Pool / 租户参考表在 DNS 服务商自行配置，无需同步。',

@@ -7,6 +7,12 @@ use Illuminate\Support\Facades\Log;
 
 class RediOpsWebhook
 {
+    public static function healthWebhookUrl(): string
+    {
+        return trim((string) config('redi.health_webhook_url', ''));
+    }
+
+    /** Cron 失败等；未配置 ops 时回退 health URL。 */
     public static function webhookUrl(): string
     {
         $ops = trim((string) config('redi.ops_webhook_url', ''));
@@ -14,15 +20,15 @@ class RediOpsWebhook
             return $ops;
         }
 
-        return trim((string) config('redi.health_webhook_url', ''));
+        return self::healthWebhookUrl();
     }
 
     /**
      * @param  array<string, mixed>  $payload
      */
-    public static function post(array $payload): bool
+    public static function post(array $payload, ?string $url = null): bool
     {
-        $url = self::webhookUrl();
+        $url = $url ?? self::webhookUrl();
         if ($url === '') {
             return false;
         }
@@ -31,13 +37,15 @@ class RediOpsWebhook
             $payload['text'] = (string) $payload['message'];
         }
 
+        $logLabel = ($url === self::healthWebhookUrl()) ? 'redi health webhook' : 'redi ops webhook';
+
         try {
             $response = Http::timeout(10)
                 ->acceptJson()
                 ->post($url, $payload);
 
             if (! $response->successful()) {
-                Log::warning('redi ops webhook failed', [
+                Log::warning($logLabel.' failed', [
                     'status' => $response->status(),
                     'body' => $response->body(),
                 ]);
@@ -47,7 +55,7 @@ class RediOpsWebhook
 
             return true;
         } catch (\Throwable $e) {
-            Log::warning('redi ops webhook error: '.$e->getMessage());
+            Log::warning($logLabel.' error: '.$e->getMessage());
 
             return false;
         }

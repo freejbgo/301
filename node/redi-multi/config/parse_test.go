@@ -38,6 +38,15 @@ func TestNormalizeLagranPortNumber(t *testing.T) {
 	}
 }
 
+func TestScalarToBoolString(t *testing.T) {
+	if !scalarToBool("yes", false) {
+		t.Fatal("yes")
+	}
+	if scalarToBool("off", true) {
+		t.Fatal("off")
+	}
+}
+
 func TestJsonBoolDefault(t *testing.T) {
 	if jsonBool(map[string]interface{}{}, "debug", true) != true {
 		t.Fatal("expected default true")

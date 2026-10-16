@@ -33,7 +33,7 @@ class EdgeDnsSyncService
             throw new RuntimeException('Pool FQDN 无效');
         }
 
-        if ($platform->dns_mode !== 'api') {
+        if (! $platform->isDnsApiMode()) {
             throw new RuntimeException('当前为手动解析模式：请在「DNS 与节点池」参考表中到 DNS 服务商自行配置，勿调用 API 同步。');
         }
 

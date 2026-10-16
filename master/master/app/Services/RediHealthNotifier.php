@@ -19,7 +19,7 @@ class RediHealthNotifier
             'checked_at' => now()->toIso8601String(),
             'issues' => $issues,
             'text' => self::formatPlainText($issues),
-        ]);
+        ], RediOpsWebhook::healthWebhookUrl());
     }
 
     /**

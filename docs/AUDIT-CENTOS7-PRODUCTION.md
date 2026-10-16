@@ -59,6 +59,8 @@
 | `acme_email_missing` | warning | 未配置 ACME 联系邮箱 |
 | `acme_staging_enabled` | warning | 生产仍开启 ACME Staging |
 | `edge_zone_missing` | warning | 未配置平台 `edge_zone` |
+| `dns_api_credentials_missing` | warning | DNS API 模式但未保存凭证 |
+| `dns_zone_id_missing` | warning | Cloudflare 驱动未配置 Zone ID |
 | `node_stale` | warning | 启用节点超过 15 分钟无心跳 |
 | `cert_deploy_pending` | warning | 仍有 pending 证书部署 |
 | `cert_deploy_failed` | critical | 节点证书安装 failed |
@@ -77,7 +79,7 @@
 | `queue_database_single_host` | 队列用 database 且与 DB 同机（多 worker 建议 Redis） |
 | `agent_version_gate_off` | 生产下 `REDI_MIN_AGENT_VERSION` 为空 |
 
-采集示例：`php artisan redi:health --json | jq '.summary.health_queue_pending_threshold,.summary.health_queue_stale_hours,.issues,.hints'`
+采集示例：`php artisan redi:health --json | jq '.summary.health_queue_pending_threshold,.summary.health_queue_stale_hours,.summary.health_validating_stuck_hours,.summary.health_renew_validating_stuck_hours,.issues,.hints'`
 
 **上线后建议：** 配置 `REDI_HEALTH_WEBHOOK_URL`（或 ops Webhook），监控采集 `redi:health --json`；真机按 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) 打勾。
 
@@ -142,6 +144,30 @@
 
 **2026-10-16 #99 已合并 `main`：** 见 [PR #99](https://github.com/freejbgo/301/pull/99)（health JSON summary 队列阈值、文档同步）。
 
+**2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
+
+**2026-10-16 复核（#111）：** `redi:health` 生产检查 DNS API 凭证与 Cloudflare Zone ID；ACME 挑战/HTTP-01 全链 punycode；节点路径拒绝反斜杠；PHPUnit **120**。
+
+**2026-10-16 复核（#110）：** `dns_mode` API 大小写归一（`isDnsApiMode`）；CNAME 预检与节点 `redirect-rules` 主机名 punycode 规范化；签发前统一 `AcmeChallengeCleanup`；节点 `sanitizeHost` 在 trim 前拒绝 CRLF；PHPUnit **117**。
+
+**2026-10-16 复核（#109）：** `REDI_ACME_HTTP01_POLL_SECONDS` 可配置轮询；签发失败 `CertificateIssuer` 内清理挑战；DNS 驱动大小写/空白归一；firewalld 脚本校验 daemon 运行；PHPUnit **113**。
+
+**2026-10-16 复核（#108）：** `Http01PropagationWaiter` 单测；`DnsProviderFactory::API_DRIVERS` 与后台保存校验；PHPUnit **111**。
+
+**2026-10-16 复核（#107）：** ACME 签发失败清理挑战、`CertificateIssuer` 无授权报错；`DnsProviderFactory` 未知驱动抛错；lagran `Enabled` 单测；AUDIT 全模块表；PHPUnit **109**。
+
+**2026-10-16 复核（#106）：** `redi:normalize-domain-hosts` 修正无效 `skip_url` 检测并清空（`withoutEvents`）；prune 输出说明；`SafeRelativeRedirect` 拒绝反斜杠路径；PHPUnit **104**。
+
+**2026-10-16 复核（#105）：** 后台运维 `_redirect` 拒绝 `//` 协议相对路径（`SafeRelativeRedirect`）；OPS/PRODUCTION 文档补 summary 字段；PHPUnit **102**。
+
+**2026-10-16 复核（#104）：** health JSON `summary` 含 `health_renew_validating_stuck_hours`；`redi:ops-webhook` 命令单测；`CertificateIssuer` 去掉重复 `assertDomainIssuable`；`masteragent` gofmt；PHPUnit **98**。
+
+**2026-10-16 复核（#103）：** `redi:health --notify` 固定 POST `REDI_HEALTH_WEBHOOK_URL`（与 ops URL 分离）；OPS-MULTI-WORKER jq 示例；`.env.example` 说明；PHPUnit **96**。
+
+**2026-10-16 复核（#102）：** `challenges-synced` 的 `ignored_count` 仅计未就绪域名（空串不计）；health JSON `summary` 含 `health_validating_stuck_hours`；`requeue-failed-deployments` 命令单测；deploy 脚本统一 `redi_is_ipv4`；`scripts/README` 索引 `lagran_ports.py`；PHPUnit **95**。
+
+**2026-10-16 复核（#101）：** §6 复核范围说明（#88–#100）；`redi_sync_node_ips_access` 批量 grant/firewalld 失败时退出并避免误写 `authorized_node_ips`；`deploy-master` 空 `NODE_IPS` 同步不再 `|| true` 掩盖撤销失败；CONSOLE 补 `requeue` 可选参数。
+
 **2026-10-16 复核（#100）：** `redi:health --json` 单测断言 summary 阈值；AUDIT/DEPLOY-centos7 jq 采集示例；PHPUnit **92**。
 
 **2026-10-16 复核（#99）：** `redi:health --json` summary 暴露队列 health 阈值；UPGRADE/OPS/SECURITY/CONSOLE 同步；revoke-node `REDI_GRANT_BATCH` 注释；PHPUnit **91**。
@@ -169,11 +195,27 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **92**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **120**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
 **未发现阻塞商用的 P0 代码缺陷。**
+
+### 全模块复核说明（每轮门禁 + #107 代码向补扫）
+
+| 模块 | 每轮门禁 | #107 代码向处理 / 单测 |
+|------|----------|-------------------------|
+| **CentOS 脚本 / Cron** | `bash -n`、文档 `grep` | #101–#106 已合入栈（NODE_IPS、webhook、normalize 等） |
+| **运营命令** | PHPUnit + CONSOLE | health/renew/prune/ops-webhook/requeue |
+| **节点 API + Agent** | Feature `NodeAgentApiTest` + Go `masteragent` | challenges-synced、revision、证书 ack |
+| **ACME 签发链** | 编译 + Job 队列单测 | `CertificateIssuer` 无授权域名时明确失败；签发失败 Job 与 Issuer 内 `AcmeChallengeCleanup`；`REDI_ACME_HTTP01_POLL_SECONDS`；`parseCertExpiry` / **`Http01PropagationWaiter`** 单测 |
+| **DNS 厂商同步** | `EdgeDnsSyncServiceTest`、厂商 upsert 单测 | `isDnsApiMode()` 大小写归一；`DnsProviderFactory` 未知 `dns_driver` **抛错**；`API_DRIVERS` + 后台校验 |
+| **Go lagran** | `go test ./...` | 新增 `lagran/enabled_test.go`（`REDI_LAGRAN_DISABLED`）；`lagran_ports.py` + 运维脚本 |
+| **后台 Dcat** | 手工扫路由/middleware | #105 `_redirect` 防 `//`；未全量 UI 审计 |
+| **文档** | 与脚本/命令对齐 | AUDIT / DEPLOY / SECURITY / OPS 随 PR 更新 |
+| **刻意不做** | — | Laravel/Dcat 大版本、composer CVE 批量删 vendor、`lagran.go` NFQUEUE 内核逻辑重写 |
+
+每轮「全库」= 上述模块 **全部跑门禁**；代码行级深读按模块逐步加深（#107 起 ACME/DNS/lagran 已纳入表内项，而非仅 Cron）。
 
 ### 已知非阻塞项（P2 排期）
 
@@ -185,7 +227,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#100](https://github.com/freejbgo/301/pull/100)（#99：health summary 阈值；#98：`queue_stale` 可配置；#93–#97：运维/Cron/NODE_IPS）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#101](https://github.com/freejbgo/301/pull/101)（#101：AUDIT 复核范围 + NODE_IPS grant 错误传播；#100：health JSON 单测与 jq 示例）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
@@ -234,4 +276,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **92** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **120** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。

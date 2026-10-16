@@ -44,6 +44,7 @@ class NodeAgentController extends Controller
             ->flip();
         $now = now();
         $synced = [];
+        $ignored = 0;
         foreach ($domains as $raw) {
             $domain = HostNameValidator::toCanonicalAscii((string) $raw);
             if ($domain === '') {
@@ -53,6 +54,7 @@ class NodeAgentController extends Controller
                 return response()->json(['message' => 'invalid domain', 'domain' => (string) $raw], 422);
             }
             if (! $allowed->has($domain)) {
+                $ignored++;
                 continue;
             }
             RediAcmeChallengeNodeSync::updateOrCreate(
@@ -66,7 +68,7 @@ class NodeAgentController extends Controller
             'ok' => true,
             'synced' => $synced,
             'synced_count' => count($synced),
-            'ignored_count' => max(0, count($domains) - count($synced)),
+            'ignored_count' => $ignored,
         ]);
     }
 
@@ -168,7 +170,10 @@ class NodeAgentController extends Controller
             return response()->json(['ok' => true, 'ignored' => true]);
         }
 
-        $error = is_string($error) ? mb_substr($error, 0, 2000) : null;
+        $error = is_string($error) ? mb_substr(trim($error), 0, 2000) : null;
+        if ($error === '') {
+            $error = null;
+        }
 
         if (! $deployService->markNodeAck($cert, $node, $ok, $error)) {
             return response()->json(['message' => 'ack not applied'], 409);
@@ -184,9 +189,12 @@ class NodeAgentController extends Controller
             ->get(['original_url', 'force_https'])
             ->map(function ($row) {
                 return [
-                    'original_url' => $row->original_url,
+                    'original_url' => HostNameValidator::toCanonicalAscii((string) $row->original_url),
                     'force_https' => (bool) $row->force_https,
                 ];
+            })
+            ->filter(function ($row) {
+                return $row['original_url'] !== '';
             })
             ->values();
 

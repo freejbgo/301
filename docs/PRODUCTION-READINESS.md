@@ -14,7 +14,7 @@
 | 证书下发 | 节点 register / 重新启用时 `syncDeploymentsForNode` 补齐 `redi_cert_deployments`；主控空证书列表时节点清空内存证书 |
 | 节点 Agent | 心跳优先于拉取；拉取失败不阻断后续心跳；ack 403/409 不触发重新 register；Agent ≥ `0.1.3`（`REDI_MIN_AGENT_VERSION`） |
 | API 限流 | 节点 API 在认证后按 `node_id` 限流（`throttle:redi-node`） |
-| ACME / 生产配置 | `redi:health` 在生产下检查：`app_debug_enabled`、`acme_email_missing`、`acme_staging_enabled`、`edge_zone_missing` |
+| ACME / 生产配置 | `redi:health` 在生产下检查：`app_debug_enabled`、`acme_email_missing`、`acme_staging_enabled`、`edge_zone_missing`、`dns_api_credentials_missing`、`dns_zone_id_missing` |
 
 ## 部署前
 
@@ -40,7 +40,7 @@ grep -E 'renew|prune|health' /etc/cron.d/redi-renew
 # 运营自检（节点心跳、证书到期；可接监控，非 0 表示有待处理项）
 cd /opt/301/master && php artisan redi:health
 php artisan redi:health --json
-# JSON 含 summary（queue/cache 驱动、health 队列阈值）、hints（多 worker 时请 redis 缓存）、issues（非空则退出码 1）
+# JSON 含 summary（queue/cache 驱动、health/renew validating 与队列阈值）、hints（多 worker 时请 redis 缓存）、issues（非空则退出码 1）
 # issues/hints 各 code 含义见 AUDIT-CENTOS7-PRODUCTION.md §3
 
 # 有问题时通知 Webhook（.env 配置 REDI_HEALTH_WEBHOOK_URL，POST JSON，含 text 摘要）

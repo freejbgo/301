@@ -16,7 +16,7 @@
 3. **关闭 DNS 反查**：主控执行 `scripts/centos7/apply-mysql-skip-name-resolve.sh`。
 4. **主控启用 HTTPS**（`ADMIN_HTTPS=true`，并且 Nginx 上的证书和 `APP_URL` 一致）。
 5. **防火墙** 只开放 22/80/443。节点不必对访客开放 8080。不要执行 `iptables -F`。
-6. **运营监控**：CentOS 由 `/etc/cron.d/redi-renew` 直调 artisan（**03:10** 续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`）；**勿**配置 `php artisan schedule:run`。配置 `REDI_HEALTH_WEBHOOK_URL` 后，Cron 的 `--notify` 在发送成功时退出 0。亦可采集 `redi:health --json`。`issues[].code` / `hints[].code` 见 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) §3；生产须关 `APP_DEBUG` 并配置 ACME 邮箱与 `edge_zone`。
+6. **运营监控**：CentOS 由 `/etc/cron.d/redi-renew` 直调 artisan（**03:10** 续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`）；**勿**配置 `php artisan schedule:run`。配置 `REDI_HEALTH_WEBHOOK_URL` 后，Cron 的 `--notify` 在发送成功时退出 0（health 通知**仅**发往该 URL；`REDI_OPS_WEBHOOK_URL` 用于 Cron 行 `|| redi:ops-webhook` 等运维失败兜底）。亦可采集 `redi:health --json`。`issues[].code` / `hints[].code` 见 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) §3；生产须关 `APP_DEBUG` 并配置 ACME 邮箱与 `edge_zone`。
 
 ## 边缘池与证书（一期）
 
@@ -29,7 +29,7 @@
 | 节点 `ack` | 仅当存在该节点对应的 `redi_cert_deployments` 行且状态可更新时才接受；否则 **409**（避免伪造部署成功） |
 | `challenges-synced` | 非法 Host 返回 **422**；未在 ACME 就绪表中的域名返回 200 且计入 `ignored_count`（节点可区分同步失败与格式错误） |
 | 平台 DNS 表单 | 仅超级管理员可提交（与「DNS 与节点池」页面一致） |
-| DNS API 同步 | 厂商记录 **先增/改、后删**；Pool A 与租户 CNAME 分步执行。租户 `edge_fqdn` 不在平台 zone 下会 **中止**（全部无效时不写厂商；部分无效时 Pool/已写 CNAME 可能已更新）。任一步失败则 **不更新** `dns_synced_at`（需修正后重试） |
+| DNS API 同步 | 厂商记录 **先增/改、后删**；Pool A 与租户 CNAME 分步执行。租户 `edge_fqdn` 不在平台 zone 下会 **中止**（全部无效时不写厂商；部分无效时 Pool/已写 CNAME 可能已更新）。任一步失败则 **不更新** `dns_synced_at`（需修正后重试）。`dns_mode=api` 时未知 `dns_driver` 会 **抛错**（不会静默退回手动模式） |
 | 域名停用 | `status=2` 时清除该域 ACME 挑战与节点 sync 行，减少节点继续暴露 HTTP-01 |
 | Session Cookie | HTTPS 后台请设 `SESSION_SECURE_COOKIE=true`（见 `.env.example`） |
 | 证书存储 | `redi_domain_certs` 中 PEM 经 Laravel `Crypt` 加密；备份库即备份密钥材料 |
@@ -41,7 +41,8 @@
 | 节点 Agent | `REDI_MASTER_URL` 必须 **https://**；可选 `REDI_DB_TLS=1`；Agent **0.1.3+** 分项 revision；默认 `REDI_MIN_AGENT_VERSION=0.1.3`，**全部** `/api/nodes/*` 受版本门（请求 `version` 或库内 `agent_version`）；设 `REDI_MIN_AGENT_VERSION=` 可禁用 |
 | `TRUSTED_PROXIES` / `REDI_ALLOW_TRUST_ALL_PROXIES` | 生产拒绝 `*` 除非 `config('redi.allow_trust_all_proxies')` 为 true（**`php artisan config:cache` 后仍有效**）；Web 与 `queue:work` 启动时均检查 |
 | ACME 维护 | CentOS `/etc/cron.d/redi-renew`：**03:10** `redi:renew-certificates`、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`；`redi:normalize-domain-hosts` 可修正历史 IDN / `skip_url` |
-| `redi:health` 阈值 | `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）、`REDI_HEALTH_QUEUE_STALE_HOURS`（默认 2）；`--json` 的 `summary` 回显当前配置 |
+| `redi:health` 阈值 | `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）、`REDI_HEALTH_QUEUE_STALE_HOURS`（默认 2）、`REDI_HEALTH_VALIDATING_STUCK_HOURS` / `REDI_RENEW_VALIDATING_STUCK_HOURS`；`--json` 的 `summary` 回显当前配置 |
+| 后台运维重定向 | 超管「重试失败部署」等 POST 的 `_redirect` 仅接受站内 `/path`，拒绝 `//` 协议相对外链 |
 | 证书表 | `redi_domain_certs.domain_id` 外键级联删除，避免孤儿证书记录 |
 
 ## 威胁模型（节点与边缘）

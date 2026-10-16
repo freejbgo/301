@@ -178,13 +178,14 @@
 
 ```bash
 php artisan redi:health
-php artisan redi:health --json    # 监控采集；summary 含队列阈值；issues/hints 的 code 见 AUDIT §3
+php artisan redi:health --json    # 监控采集；summary 含队列/validating 阈值；issues/hints 的 code 见 AUDIT §3
+php artisan redi:prune-acme-challenges   # 标准输出含 pruned expired=…, invalid_empty=…, sync_rows=…
 php artisan redi:health --notify  # 有 issues 时 POST webhook（Cron 08:30；发送成功退出 0）
 php artisan redi:renew-certificates --dry-run --days=25   # 续期预演；正式 Cron 跑无 --dry-run，入队后日志含 queued: N cert(s)（见 renew.log）
-php artisan redi:prune-acme-challenges   # Cron 04:10；勿依赖 schedule:run
-php artisan redi:requeue-failed-deployments
-php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修正（见 DEPLOY.md）
+php artisan redi:requeue-failed-deployments   # 可选 --node= / --cert=
+php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修正；无效 skip 会清空并告警（见 DEPLOY.md）
 # php artisan redi:ops-webhook --task=redi:renew-certificates --message="测试"
+# DNS API 同步（超管后台）；dns_driver 拼写错误会在工厂层报错，勿与手动模式混淆
 ```
 
 `issues` 非空时命令退出码为 1，适合告警；`hints` 不影响退出码。CentOS 生产续期/清理/health 仅由 `/etc/cron.d/redi-renew` 触发，验收 `grep` 见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)。Cron 写入 `storage/logs/renew.log`、`prune-acme.log`、`health.log`（排障续期/清理/health 失败）。Webhook 与多 worker 说明见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)、[AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。

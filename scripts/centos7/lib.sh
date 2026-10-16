@@ -109,8 +109,14 @@ redi_sync_node_ips_access() {
     done
 
     for new in ${new_ips[@]+"${new_ips[@]}"}; do
-      bash "${script_dir}/grant-node-mysql.sh" "$new" "$db_pass"
-      bash "${script_dir}/firewalld-allow-mysql-from-node.sh" "$new"
+      if ! bash "${script_dir}/grant-node-mysql.sh" "$new" "$db_pass"; then
+        echo "错误: grant-node-mysql.sh 失败 (${new})" >&2
+        exit 1
+      fi
+      if ! bash "${script_dir}/firewalld-allow-mysql-from-node.sh" "$new"; then
+        echo "错误: firewalld-allow-mysql-from-node.sh 失败 (${new})" >&2
+        exit 1
+      fi
     done
   ); then
     return 1

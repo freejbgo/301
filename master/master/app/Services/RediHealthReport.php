@@ -191,6 +191,25 @@ class RediHealthReport
             ];
         }
 
+        if ($platform->isDnsApiMode()) {
+            $creds = $platform->getApiCredentialsArray();
+            if (trim((string) ($creds['api_key'] ?? '')) === '') {
+                $issues[] = [
+                    'level' => 'warning',
+                    'code' => 'dns_api_credentials_missing',
+                    'message' => 'DNS 为 API 自动模式但未保存 API 凭证，无法同步 pool / 租户 CNAME',
+                ];
+            }
+            $driver = strtolower(trim((string) $platform->dns_driver));
+            if ($driver === 'cloudflare' && trim((string) $platform->dns_zone_id) === '') {
+                $issues[] = [
+                    'level' => 'warning',
+                    'code' => 'dns_zone_id_missing',
+                    'message' => 'Cloudflare 驱动未配置 Zone ID，API 同步将失败',
+                ];
+            }
+        }
+
         return $issues;
     }
 
@@ -325,7 +344,7 @@ class RediHealthReport
     }
 
     /**
-     * @return array{queue_connection: string, cache_driver: string, enabled_nodes: int, stale_nodes: int, pending_deploys: int, failed_deploys: int, queue_pending: int, queue_failed: int, health_queue_pending_threshold: int, health_queue_stale_hours: int}
+     * @return array{queue_connection: string, cache_driver: string, enabled_nodes: int, stale_nodes: int, pending_deploys: int, failed_deploys: int, queue_pending: int, queue_failed: int, health_queue_pending_threshold: int, health_queue_stale_hours: int, health_validating_stuck_hours: int, health_renew_validating_stuck_hours: int}
      */
     public static function summary(): array
     {
@@ -358,6 +377,8 @@ class RediHealthReport
             'queue_failed' => $queueFailed,
             'health_queue_pending_threshold' => max(10, (int) config('redi.health_queue_pending_threshold', 80)),
             'health_queue_stale_hours' => max(1, (int) config('redi.health_queue_stale_hours', 2)),
+            'health_validating_stuck_hours' => max(1, (int) config('redi.health_validating_stuck_hours', 2)),
+            'health_renew_validating_stuck_hours' => max(1, (int) config('redi.renew_validating_stuck_hours', 3)),
         ];
     }
 

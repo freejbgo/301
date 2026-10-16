@@ -5,8 +5,10 @@ namespace App\Jobs;
 use App\Models\RediAdminDomain;
 use App\Models\RediDomainCert;
 use App\Services\Acme\CertificateIssuer;
+use App\Services\AcmeChallengeCleanup;
 use App\Services\CnamePrecheckService;
 use App\Services\TenantEdgeService;
+use App\Support\HostNameValidator;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -94,9 +96,11 @@ class IssueDomainCertificateJob implements ShouldQueue
             return;
         }
 
-        if (! CnamePrecheckService::pointsToEdge($domain->original_url, $edgeFqdn)) {
+        $customerHost = HostNameValidator::toCanonicalAscii((string) $domain->original_url);
+        $edgeHost = HostNameValidator::toCanonicalAscii($edgeFqdn);
+        if (! CnamePrecheckService::pointsToEdge($customerHost, $edgeHost)) {
             $cert->status = RediDomainCert::STATUS_PENDING_DNS;
-            $cert->last_error = 'CNAME 尚未指向 '.$edgeFqdn;
+            $cert->last_error = 'CNAME 尚未指向 '.$edgeHost;
             $cert->save();
 
             return;
@@ -109,6 +113,10 @@ class IssueDomainCertificateJob implements ShouldQueue
         try {
             $issuer->issue($cert);
         } catch (Throwable $e) {
+            AcmeChallengeCleanup::purgeForHosts([
+                $domain->original_url,
+                (string) $cert->domain_name,
+            ]);
             if ($stillValid && in_array($previousStatus, [
                 RediDomainCert::STATUS_ACTIVE,
                 RediDomainCert::STATUS_ISSUED,

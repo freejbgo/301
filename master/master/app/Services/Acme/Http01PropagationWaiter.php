@@ -4,6 +4,7 @@ namespace App\Services\Acme;
 
 use App\Models\RediAcmeChallengeNodeSync;
 use App\Models\RediNode;
+use App\Support\HostNameValidator;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -14,11 +15,15 @@ class Http01PropagationWaiter
      */
     public function wait(string $domain, string $token, string $expectedBody, int $maxSeconds = 120): void
     {
-        $domain = strtolower(trim($domain, '.'));
+        $domain = HostNameValidator::toCanonicalAscii($domain);
+        if ($domain === '' || ! HostNameValidator::isValidHostLabel($domain)) {
+            throw new RuntimeException('HTTP-01 域名无效');
+        }
         $path = '/.well-known/acme-challenge/'.$token;
         $publicUrl = 'http://'.$domain.$path;
         $expectedBody = trim($expectedBody);
-        $deadline = time() + $maxSeconds;
+        $deadline = time() + max(0, $maxSeconds);
+        $pollSeconds = max(1, (int) config('redi.acme_http01_poll_seconds', 3));
 
         while (time() < $deadline) {
             if ($this->anyOnlineNodeSyncedChallenge($domain)) {
@@ -34,7 +39,7 @@ class Http01PropagationWaiter
                 }
             }
 
-            sleep(3);
+            sleep($pollSeconds);
         }
 
         throw new RuntimeException(

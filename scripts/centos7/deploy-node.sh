@@ -60,23 +60,13 @@ reject_text() {
     die "${name} 不要包含空格、引号、反引号、\$、# 或反斜杠"
   fi
 }
-is_ipv4() {
-  local ip="$1" o
-  [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
-  IFS=. read -r a b c d <<< "$ip"
-  for o in "$a" "$b" "$c" "$d"; do
-    [[ "$o" =~ ^[0-9]+$ ]] || return 1
-    ((10#$o <= 255)) || return 1
-  done
-}
-
 reject_text "DB_PASS" "$DB_PASS"
 reject_text "DEFAULT_REDIRECT_URL" "$DEFAULT_REDIRECT_URL"
 reject_text "REDI_MASTER_URL" "$REDI_MASTER_URL"
 reject_text "REDI_NODE_TOKEN" "$REDI_NODE_TOKEN"
 reject_text "NODE_INSTALL_ROOT" "$NODE_INSTALL_ROOT"
-is_ipv4 "$MASTER_IP" || die "MASTER_IP 必须是 IPv4"
-is_ipv4 "$NODE_PUBLIC_IP" || die "NODE_PUBLIC_IP 必须是 IPv4"
+redi_is_ipv4 "$MASTER_IP" || die "MASTER_IP 必须是 IPv4"
+redi_is_ipv4 "$NODE_PUBLIC_IP" || die "NODE_PUBLIC_IP 必须是 IPv4"
 REDI_MASTER_INSECURE="${REDI_MASTER_INSECURE:-}"
 REDI_DB_TLS="${REDI_DB_TLS:-}"
 if [[ "$REDI_MASTER_URL" == https://* ]]; then

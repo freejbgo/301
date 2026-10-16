@@ -5,6 +5,7 @@ namespace App\Admin\Controllers;
 use App\Admin\Concerns\EnsuresAdministrator;
 use App\Http\Controllers\Controller;
 use App\Services\CertificateDeployService;
+use App\Support\SafeRelativeRedirect;
 use Illuminate\Http\Request;
 
 class OpsController extends Controller
@@ -31,7 +32,7 @@ class OpsController extends Controller
         }
 
         $redirect = $request->input('_redirect');
-        if (is_string($redirect) && $redirect !== '' && str_starts_with($redirect, '/')) {
+        if (SafeRelativeRedirect::isSafe(is_string($redirect) ? $redirect : null)) {
             return redirect($redirect);
         }
 

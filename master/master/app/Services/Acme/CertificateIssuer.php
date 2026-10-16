@@ -7,11 +7,11 @@ use App\Models\RediAcmeChallenge;
 use App\Models\RediAdminDomain;
 use App\Models\RediDomainCert;
 use App\Models\RediPlatformDns;
+use App\Services\AcmeChallengeCleanup;
 use App\Services\CertificateDeployService;
 use App\Services\Acme\Http01PropagationWaiter;
 use App\Support\HostNameValidator;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
@@ -45,23 +45,34 @@ class CertificateIssuer
         ]);
 
         $domain = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
-        $this->assertDomainIssuable($cert);
         $cert->status = RediDomainCert::STATUS_VALIDATING;
         $cert->last_error = null;
         $cert->save();
 
+        try {
+            $this->runAcmeIssue($client, $cert, $domain);
+        } catch (\Throwable $e) {
+            AcmeChallengeCleanup::purgeForHosts([$domain]);
+            throw $e;
+        }
+    }
+
+    protected function runAcmeIssue(Client $client, RediDomainCert $cert, string $domain): void
+    {
         $order = $client->createOrder([$domain]);
         $authorizations = $client->authorize($order);
 
+        $authorized = false;
         foreach ($authorizations as $authorization) {
             if (strtolower($authorization->getDomain()) !== $domain) {
                 continue;
             }
+            $authorized = true;
 
             $file = $authorization->getFile();
             $token = basename($file->getFilename());
             $body = $file->getContents();
-            DB::table('redi_acme_challenge_node_sync')->where('domain_name', $domain)->delete();
+            AcmeChallengeCleanup::purgeForHosts([$domain]);
             RediAcmeChallenge::upsertForDomain(
                 $domain,
                 $token,
@@ -72,6 +83,10 @@ class CertificateIssuer
             app(Http01PropagationWaiter::class)->wait($domain, $token, $body);
 
             $client->validate($authorization->getHttpChallenge(), 15);
+        }
+
+        if (! $authorized) {
+            throw new RuntimeException('ACME 未返回域名 '.$domain.' 的 HTTP-01 授权');
         }
 
         if (! $client->isReady($order)) {
