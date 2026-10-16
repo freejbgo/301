@@ -104,6 +104,8 @@
 
 ## 6. 全面复核记录（2026-10）
 
+**2026-10-16 全库复核（#83 后）：** `go test ./...` + PHPUnit **80** + `dev-preflight` 通过；`scripts/` 与 `centos7/` 脚本均有文档或 CI 引用，**无删除**；`master/master/public/vendor/dcat-admin` 为 Dcat 后台静态资源（约 800+ 文件），随 Dcat 升级整块替换，**不在此次精简**。已移除 Laravel 默认 `inspire` 控制台示例；根 `.gitignore` 补充本地日志/PHPUnit 缓存。
+
 | 维度 | 结论 |
 |------|------|
 | 部署脚本 | `deploy-master` / `deploy-node` 仅接受 CentOS 7；Cron 用户 `nginx`；`NODE_IPS` 同步授权与 firewalld 逻辑完整 |
@@ -129,7 +131,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#82](https://github.com/freejbgo/301/pull/82)（`redi:health` 生产配置、`dev-preflight.sh`、§3 问题码表、主控 **`/opt/301/master`** 与 Cron 路径统一）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#83](https://github.com/freejbgo/301/pull/83)（`redi:health`、`dev-preflight.sh`、主控路径与 Cron 文档、全库复核卫生项）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 

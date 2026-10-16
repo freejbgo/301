@@ -20,5 +20,7 @@
 | [docs/OPS-MULTI-WORKER-QUEUE.md](docs/OPS-MULTI-WORKER-QUEUE.md) | 多 worker / Redis 缓存 |
 | [docs/CONSOLE.md](docs/CONSOLE.md) | 控制台操作手册 |
 | [docs/CUSTOMER-CNAME-HTTPS.md](docs/CUSTOMER-CNAME-HTTPS.md) | 交给客户的 CNAME 说明 |
+| [docs/DEVELOPMENT-EDGE-POOL-HTTPS.md](docs/DEVELOPMENT-EDGE-POOL-HTTPS.md) | 边缘池 / 节点 API / 验收 F 项 |
 | [SECURITY.md](SECURITY.md) | 上线前要改的密码和端口 |
+| [scripts/README.md](scripts/README.md) | 发版与 verify 脚本索引 |
 | [scripts/dev-preflight.sh](scripts/dev-preflight.sh) | 开发机发版前自检（对齐 CI 核心步骤，见 AUDIT §9） |
