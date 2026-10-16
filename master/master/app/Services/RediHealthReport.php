@@ -7,6 +7,7 @@ use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use App\Models\RediPlatformDns;
 use App\Services\Dns\DnsProviderFactory;
+use App\Support\HostNameValidator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
@@ -93,6 +94,9 @@ class RediHealthReport
             ->get(['id', 'domain_name', 'expires_at', 'status']);
 
         foreach ($expiredCerts as $cert) {
+            if (! self::certHostIsReportable((string) $cert->domain_name)) {
+                continue;
+            }
             $issues[] = [
                 'level' => 'critical',
                 'code' => 'cert_expired',
@@ -120,6 +124,9 @@ class RediHealthReport
             ->get(['id', 'domain_name', 'expires_at', 'status']);
 
         foreach ($expiringCerts as $cert) {
+            if (! self::certHostIsReportable((string) $cert->domain_name)) {
+                continue;
+            }
             $issues[] = [
                 'level' => 'warning',
                 'code' => 'cert_expiring',
@@ -300,14 +307,18 @@ class RediHealthReport
             ->where('updated_at', '<=', $cutoff)
             ->whereHas('domain', fn ($q) => $q->where('status', 1));
 
-        $total = (int) (clone $base)->count();
+        $reportable = (clone $base)
+            ->orderBy('updated_at')
+            ->get(['domain_name'])
+            ->filter(fn ($row) => self::certHostIsReportable((string) $row->domain_name));
+
+        $total = $reportable->count();
         if ($total === 0) {
             return [];
         }
 
-        $sample = (clone $base)
-            ->orderBy('updated_at')
-            ->limit(20)
+        $sample = $reportable
+            ->take(20)
             ->pluck('domain_name')
             ->all();
 
@@ -424,6 +435,13 @@ class RediHealthReport
             'health_validating_stuck_hours' => max(1, (int) config('redi.health_validating_stuck_hours', 2)),
             'health_renew_validating_stuck_hours' => max(1, (int) config('redi.renew_validating_stuck_hours', 3)),
         ];
+    }
+
+    protected static function certHostIsReportable(string $domainName): bool
+    {
+        $host = HostNameValidator::toCanonicalAscii($domainName);
+
+        return $host !== '' && HostNameValidator::isValidHostLabel($host);
     }
 
     /**

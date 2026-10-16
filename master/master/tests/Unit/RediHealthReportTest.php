@@ -102,6 +102,27 @@ class RediHealthReportTest extends TestCase
         $this->assertSame(5, $summary['health_renew_validating_stuck_hours']);
     }
 
+    public function test_collect_issues_skips_invalid_cert_host_for_expired(): void
+    {
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => "evil.com\r\n",
+            'status' => 'active',
+            'expires_at' => now()->subDay(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertNotContains('cert_expired', $codes);
+    }
+
     public function test_collect_issues_includes_queue_stale_when_database_queue(): void
     {
         config(['queue.default' => 'database']);
