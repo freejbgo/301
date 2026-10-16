@@ -9,7 +9,7 @@ final class OpsDisplaySanitizer
 {
     public static function field(?string $value, string $fallback = '—', int $maxLen = 120): string
     {
-        $text = str_replace(["\r", "\n", "\0"], '', (string) $value);
+        $text = str_replace(["\r", "\n", "\0", "\t"], '', (string) $value);
         $text = trim($text);
         if ($text === '') {
             return $fallback;
@@ -20,7 +20,7 @@ final class OpsDisplaySanitizer
 
     public static function stripControlChars(string $value): string
     {
-        return str_replace(["\r", "\n", "\0"], '', $value);
+        return str_replace(["\r", "\n", "\0", "\t"], '', $value);
     }
 
     public static function logSnippet(?string $value, int $maxLen = 500): string

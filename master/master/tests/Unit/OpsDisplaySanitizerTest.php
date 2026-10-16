@@ -18,6 +18,7 @@ class OpsDisplaySanitizerTest extends TestCase
     public function test_strip_control_chars(): void
     {
         $this->assertSame('ab', OpsDisplaySanitizer::stripControlChars("a\r\nb"));
+        $this->assertSame('ab', OpsDisplaySanitizer::stripControlChars("a\tb"));
     }
 
     public function test_log_snippet_truncates(): void

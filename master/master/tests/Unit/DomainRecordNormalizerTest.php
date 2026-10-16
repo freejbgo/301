@@ -16,6 +16,7 @@ class DomainRecordNormalizerTest extends TestCase
     {
         $this->assertSame('', DomainRecordNormalizer::normalizeOriginalUrl("evil.com\r\n"));
         $this->assertFalse(DomainRecordNormalizer::isValidOriginalHost("evil.com\r\n"));
+        $this->assertSame('', DomainRecordNormalizer::normalizeOriginalUrl("evil\t.com"));
     }
 
     public function test_normalize_original_url_rejects_path(): void

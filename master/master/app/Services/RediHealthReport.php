@@ -149,7 +149,7 @@ class RediHealthReport
             $issues[] = $issue;
         }
 
-        return $issues;
+        return OpsDisplaySanitizer::sanitizeHealthIssues($issues);
     }
 
     /**

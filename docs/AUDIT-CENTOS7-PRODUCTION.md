@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#139）：** `collectIssues` 统一出口净化；TAB 控制字符与主机名/DNS/规范化一致拒绝；EdgeDnsSync 失败日志精简；PHPUnit **173**（assertions 314）。
+
 **2026-10-16 复核（#138）：** 后台首页 health 列表净化；HTTP-01 超时文案；CNAME `last_error` 展示；health hints CLI 净化；PHPUnit **173**。
 
 **2026-10-16 复核（#137）：** 部署 ack `last_error` 二次净化；批量导入错误文案；Go Agent ack error 净化；EdgeDnsSync 日志 zone；PHPUnit **173**（Go masteragent +2）。

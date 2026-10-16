@@ -40,6 +40,7 @@ trait EnsuresValidDnsNames
     {
         return str_contains($value, "\r")
             || str_contains($value, "\n")
-            || str_contains($value, "\0");
+            || str_contains($value, "\0")
+            || str_contains($value, "\t");
     }
 }

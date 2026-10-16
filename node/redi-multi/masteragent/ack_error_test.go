@@ -10,6 +10,9 @@ func TestSanitizeAckErrorStripsControlChars(t *testing.T) {
 	if got != "diskfull" {
 		t.Fatalf("got %q", got)
 	}
+	if sanitizeAckError("a\tb") != "ab" {
+		t.Fatal("tab")
+	}
 }
 
 func TestSanitizeAckErrorTruncates(t *testing.T) {

@@ -9,7 +9,8 @@ class DomainRecordNormalizer
     public static function normalizeOriginalUrl(?string $url): string
     {
         $raw = (string) $url;
-        if ($raw === '' || str_contains($raw, "\r") || str_contains($raw, "\n") || str_contains($raw, "\0")) {
+        if ($raw === '' || str_contains($raw, "\r") || str_contains($raw, "\n") || str_contains($raw, "\0")
+            || str_contains($raw, "\t")) {
             return '';
         }
         $url = trim($raw);
@@ -42,7 +43,8 @@ class DomainRecordNormalizer
     public static function normalizeSkipUrl(?string $url): string
     {
         $raw = (string) $url;
-        if ($raw === '' || str_contains($raw, "\r") || str_contains($raw, "\n") || str_contains($raw, "\0")) {
+        if ($raw === '' || str_contains($raw, "\r") || str_contains($raw, "\n") || str_contains($raw, "\0")
+            || str_contains($raw, "\t")) {
             return '';
         }
         $url = trim($raw);
