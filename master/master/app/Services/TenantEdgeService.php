@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\RediPlatformDns;
 use App\Models\RediTenantEdge;
+use App\Support\HostNameValidator;
 use Illuminate\Support\Str;
 
 class TenantEdgeService
@@ -41,7 +42,7 @@ class TenantEdgeService
     {
         $edge = RediTenantEdge::where('admin_id', $adminId)->first();
         if ($edge && $edge->edge_fqdn) {
-            return $edge->edge_fqdn;
+            return HostNameValidator::toCanonicalAscii((string) $edge->edge_fqdn);
         }
 
         $platform = RediPlatformDns::instance();

@@ -120,7 +120,12 @@ class DnspodDnsProvider implements DnsProviderInterface
     {
         $rows = [];
         $offset = 0;
+        $page = 0;
         do {
+            $page++;
+            if ($page > 100) {
+                throw new RuntimeException('DNSPod 记录分页超过上限，请手工清理重复记录后重试');
+            }
             $res = $this->request('Record.List', [
                 'domain' => $domain,
                 'sub_domain' => $sub === '@' ? '' : $sub,
