@@ -202,7 +202,7 @@
 | **CentOS 脚本 / Cron** | `bash -n`、文档 `grep` | #101–#106 已合入栈（NODE_IPS、webhook、normalize 等） |
 | **运营命令** | PHPUnit + CONSOLE | health/renew/prune/ops-webhook/requeue |
 | **节点 API + Agent** | Feature `NodeAgentApiTest` + Go `masteragent` | challenges-synced、revision、证书 ack |
-| **ACME 签发链** | 编译 + Job 队列单测 | `CertificateIssuer` 无授权域名时明确失败；签发失败 Job 内 `AcmeChallengeCleanup`；`parseCertExpiry` / **`Http01PropagationWaiter`** 单测 |
+| **ACME 签发链** | 编译 + Job 队列单测 | `CertificateIssuer` 无授权域名时明确失败；签发失败 Job 与 Issuer 内 `AcmeChallengeCleanup`；`REDI_ACME_HTTP01_POLL_SECONDS`；`parseCertExpiry` / **`Http01PropagationWaiter`** 单测 |
 | **DNS 厂商同步** | `EdgeDnsSyncServiceTest`、厂商 upsert 单测 | `DnsProviderFactory` 未知 `dns_driver` **抛错**；`API_DRIVERS` 常量 + 后台保存校验 |
 | **Go lagran** | `go test ./...` | 新增 `lagran/enabled_test.go`（`REDI_LAGRAN_DISABLED`）；`lagran_ports.py` + 运维脚本 |
 | **后台 Dcat** | 手工扫路由/middleware | #105 `_redirect` 防 `//`；未全量 UI 审计 |
