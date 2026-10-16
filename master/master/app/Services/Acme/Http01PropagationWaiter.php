@@ -19,6 +19,10 @@ class Http01PropagationWaiter
         if ($domain === '' || ! HostNameValidator::isValidHostLabel($domain)) {
             throw new RuntimeException('HTTP-01 域名无效');
         }
+        $token = trim($token);
+        if ($token === '' || strlen($token) > 128 || ! preg_match('/^[A-Za-z0-9_-]+$/', $token)) {
+            throw new RuntimeException('HTTP-01 token 无效');
+        }
         $path = '/.well-known/acme-challenge/'.$token;
         $publicUrl = 'http://'.$domain.$path;
         $expectedBody = trim($expectedBody);

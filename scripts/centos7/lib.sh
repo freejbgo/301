@@ -69,13 +69,19 @@ redi_sync_node_ips_access() {
   export MYSQL_ROOT_PASSWORD="$mysql_root_pass"
 
   local -a new_ips=()
-  local ip
+  local ip seen
   for ip in $node_ips; do
     [[ -z "$ip" ]] && continue
     redi_is_ipv4 "$ip" || {
       echo "错误: NODE_IPS 里有非法 IPv4: $ip" >&2
       return 1
     }
+    for seen in "${new_ips[@]+"${new_ips[@]}"}"; do
+      if [[ "$seen" == "$ip" ]]; then
+        echo "警告: NODE_IPS 重复 IP ${ip}，已忽略" >&2
+        continue 2
+      fi
+    done
     new_ips+=("$ip")
   done
 

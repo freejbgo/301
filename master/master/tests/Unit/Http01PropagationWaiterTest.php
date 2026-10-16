@@ -83,4 +83,12 @@ class Http01PropagationWaiterTest extends TestCase
 
         app(Http01PropagationWaiter::class)->wait('not a host', 'tok', 'body', 0);
     }
+
+    public function test_wait_rejects_invalid_token(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('token 无效');
+
+        app(Http01PropagationWaiter::class)->wait('valid.example', '../evil', 'body', 0);
+    }
 }
