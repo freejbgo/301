@@ -116,6 +116,12 @@
 
 **2026-10-16 #89 已合并 `main`：** 见 [PR #89](https://github.com/freejbgo/301/pull/89)。
 
+**2026-10-16 复核（#90）：** `grant-node-mysql` / `revoke-node-mysql` 要求 root；`PRODUCTION-READINESS` / `scripts/README` 补 webhook 与 `vars.example` 索引。
+
+**2026-10-16 #90 已合并 `main`：** 见 [PR #90](https://github.com/freejbgo/301/pull/90)。
+
+**2026-10-16 复核（#91）：** AUDIT §7/§8 与 `DEPLOY`/`GREENFIELD` 补全 grant 脚本 sudo 用法。
+
 **2026-10-16 深度复核（#88）：** `deploy-master` / `patch-master-cron` 安装后打印 Cron 验收；`DEPLOY-centos7` §11、`CONSOLE` 运营命令与 `queue_stale` 说明补齐；`scripts/README` 索引 CentOS 辅助脚本；`queue_stale` 单测；`SECURITY` Cron 时段说明；`redi:health --notify` 在 webhook 成功时退出 0、失败时由 `|| ops-webhook` 兜底；`grant-nodes-from-vars` 要求 root。
 
 | 维度 | 结论 |
@@ -143,7 +149,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#89](https://github.com/freejbgo/301/pull/89)（含 #88：`Kernel` schedule 留空、Cron 验收、`redi:health --notify` 退出码、webhook 文档）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#91](https://github.com/freejbgo/301/pull/91)（#88–#90：Cron 验收、`redi:health --notify` 退出码、webhook 文档、MySQL grant 脚本 root）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
@@ -156,6 +162,7 @@
    ! grep -q 'schedule:run' /etc/cron.d/redi-renew
    ! grep -q 'master/master' /etc/cron.d/redi-renew
    ```
+   并在 `/opt/301/master/.env` 配置 `REDI_HEALTH_WEBHOOK_URL`（可选 `REDI_OPS_WEBHOOK_URL`），`php artisan config:cache` 后验证 `sudo -u nginx php artisan redi:health --notify`（见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) §4）。
 3. 各节点：升级 **Agent 0.1.3** 的 `redi-multi` 并重启服务。
 4. 跑 `php artisan redi:health`（会附带打印配置 **hints**）与 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) 中的 curl/DB 校验。
 5. 按 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) 完成真机验收（含第二节点、证书、CNAME 场景见 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)）。

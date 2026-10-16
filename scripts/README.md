@@ -11,7 +11,7 @@
 | [centos7/vars.example.env](centos7/vars.example.env) | 部署变量模板（`vars.env`）；Webhook URL 写在主控 `.env`，见文件内注释 |
 | [centos7/deploy-master.sh](centos7/deploy-master.sh) / [deploy-node.sh](centos7/deploy-node.sh) | CentOS 7 主控/节点一键部署 |
 | [centos7/grant-nodes-from-vars.sh](centos7/grant-nodes-from-vars.sh) | 仅按 `vars.env` 的 `NODE_IPS` 补 MySQL 授权与 firewalld（不重装主控） |
-| [centos7/grant-node-mysql.sh](centos7/grant-node-mysql.sh) / [revoke-node-mysql.sh](centos7/revoke-node-mysql.sh) | 单节点 IP 授权/撤销 |
+| [centos7/grant-node-mysql.sh](centos7/grant-node-mysql.sh) / [revoke-node-mysql.sh](centos7/revoke-node-mysql.sh) | 单节点 IP 授权/撤销（**root** + `MYSQL_ROOT_PASSWORD`） |
 | [centos7/apply-mysql-skip-name-resolve.sh](centos7/apply-mysql-skip-name-resolve.sh) | 关闭 MySQL 反向 DNS 解析（生产建议） |
 | [centos7/run-on-centos7-host.sh](centos7/run-on-centos7-host.sh) | 开发机 Docker/Podman 跑 CentOS 7 容器冒烟 |
 | [centos7/lagran-diagnose.sh](centos7/lagran-diagnose.sh) / [lagran-cleanup-iptables.sh](centos7/lagran-cleanup-iptables.sh) | 节点 lagran 诊断与 iptables 清理 |
