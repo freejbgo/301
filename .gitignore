@@ -2,6 +2,13 @@
 __pycache__/
 *.py[cod]
 
+# PHPUnit / Laravel 本地运行产物
+**/.phpunit.result.cache
+master/master/storage/logs/*.log
+master/master/storage/framework/cache/data/*
+master/master/storage/framework/sessions/*
+master/master/storage/framework/views/*
+
 # 部署时本地密码，勿提交
 scripts/centos7/vars.env
 scripts/centos7/.container-vars.env
