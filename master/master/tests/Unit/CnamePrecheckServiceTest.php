@@ -23,4 +23,9 @@ class CnamePrecheckServiceTest extends TestCase
         $this->assertFalse(CnamePrecheckService::pointsToEdge('1.2.3.4', 'edge.example.com'));
         $this->assertFalse(CnamePrecheckService::pointsToEdge('customer.example.com', '1.2.3.4'));
     }
+
+    public function test_a_record_points_to_pool_rejects_invalid_customer_host(): void
+    {
+        $this->assertFalse(CnamePrecheckService::aRecordPointsToPool('1.2.3.4'));
+    }
 }
