@@ -92,6 +92,15 @@ class RediAdminDomainController extends AdminController
                 } elseif ($cert->last_error) {
                     $label .= '<br><span class="text-danger">'.e($cert->last_error).'</span>';
                 }
+                if ($cert->expires_at) {
+                    $exp = $cert->expires_at;
+                    $label .= '<br><span class="text-muted">到期 '.e($exp->format('Y-m-d')).'</span>';
+                    if ($exp->isPast()) {
+                        $label .= ' <span class="text-danger">已过期</span>';
+                    } elseif ($exp->lte(now()->addDays(14))) {
+                        $label .= ' <span class="text-warning">即将到期</span>';
+                    }
+                }
 
                 return $label;
             });

@@ -22,6 +22,13 @@
 ## 验收命令（真机）
 
 ```bash
+# 运营自检（节点心跳、证书到期；可接监控，非 0 表示有待处理项）
+cd /opt/301/master/master && php artisan redi:health
+php artisan redi:health --json
+
+# 续期预演（cron 实际跑的是 redi:renew-certificates，无 --dry-run）
+php artisan redi:renew-certificates --dry-run --days=25
+
 # 主控
 curl -fsS "https://<master>/api/nodes/revision" -H "Authorization: Bearer <token>"
 

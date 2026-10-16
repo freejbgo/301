@@ -1,0 +1,96 @@
+<?php
+
+namespace Tests\Unit;
+
+use App\Models\RediDomainCert;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Tests\TestCase;
+
+class RediHealthCommandTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['database.default' => 'sqlite']);
+        config(['database.connections.sqlite' => [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]]);
+
+        Schema::create('redi_nodes', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name')->nullable();
+            $table->string('public_ip', 45)->nullable();
+            $table->boolean('enabled')->default(true);
+            $table->timestamp('last_heartbeat_at')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->timestamps();
+        });
+
+        Schema::create('redi_domain_certs', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('domain_id');
+            $table->string('domain_name');
+            $table->string('status')->default('active');
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function test_health_ok_when_no_issues(): void
+    {
+        \DB::table('redi_nodes')->insert([
+            'name' => 'ok',
+            'public_ip' => '1.2.3.4',
+            'enabled' => true,
+            'last_heartbeat_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->artisan('redi:health')->assertExitCode(0);
+    }
+
+    public function test_health_fails_on_stale_node(): void
+    {
+        \DB::table('redi_nodes')->insert([
+            'name' => 'stale',
+            'public_ip' => '1.2.3.4',
+            'enabled' => true,
+            'last_heartbeat_at' => now()->subHour(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->artisan('redi:health')->assertExitCode(1);
+    }
+
+    public function test_health_json_reports_expired_cert(): void
+    {
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'old.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => 'old.example',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+            'expires_at' => now()->subDay(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->artisan('redi:health', ['--json' => true])
+            ->assertExitCode(1);
+    }
+}
