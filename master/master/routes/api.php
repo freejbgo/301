@@ -3,7 +3,7 @@
 use App\Http\Controllers\Api\NodeAgentController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('nodes')->middleware(['redi.node', 'redi.node.version'])->group(function () {
+Route::prefix('nodes')->middleware(['redi.node', 'redi.node.version', 'throttle:redi-node'])->group(function () {
     Route::post('register', [NodeAgentController::class, 'register']);
     Route::get('revision', [NodeAgentController::class, 'revision']);
     Route::post('challenges-synced', [NodeAgentController::class, 'challengesSynced']);

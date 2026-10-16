@@ -19,4 +19,14 @@ class RediCertDeployment extends Model
     protected $casts = [
         'deployed_at' => 'datetime',
     ];
+
+    public function node()
+    {
+        return $this->belongsTo(RediNode::class, 'node_id');
+    }
+
+    public function cert()
+    {
+        return $this->belongsTo(RediDomainCert::class, 'cert_id');
+    }
 }

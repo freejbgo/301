@@ -104,10 +104,10 @@ Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证�
 
 ## 7. 开发机用 CentOS 7 容器做冒烟（可选）
 
-在 Ubuntu 等机器上可用 podman 拉起 **CentOS 7.9.2009** 镜像，校验发布包、yum 源、MariaDB 与 `php artisan migrate`（不替代真实 7.9 虚拟机上的 systemd / firewalld 验收）：
+在**非 CentOS 的开发机**上可用 podman/docker 拉起 **CentOS 7.9.2009** 镜像，校验发布包、yum 源、MariaDB 与 `php artisan migrate`（不替代真实 7.9 虚拟机上的 systemd / firewalld 验收）：
 
 ```bash
-sudo apt-get install -y podman   # 如未安装
+# 安装 podman 后执行（包管理器因宿主机而异）
 sudo bash scripts/centos7/run-on-centos7-host.sh
 ```
 

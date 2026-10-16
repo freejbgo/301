@@ -57,14 +57,22 @@ class RouteServiceProvider extends ServiceProvider
     protected function configureRateLimiting()
     {
         RateLimiter::for('api', function (Request $request) {
-            if ($request->is('api/nodes/certificates')) {
-                return Limit::perMinute(30)->by($request->bearerToken() ?: $request->ip());
-            }
             if ($request->is('api/nodes/*')) {
-                return Limit::perMinute(300)->by($request->bearerToken() ?: $request->ip());
+                return Limit::none();
             }
 
             return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
+        });
+
+        RateLimiter::for('redi-node', function (Request $request) {
+            $node = $request->attributes->get('redi_node');
+            $key = $node ? 'node:'.$node->id : ($request->bearerToken() ?: $request->ip());
+
+            if ($request->is('api/nodes/certificates')) {
+                return Limit::perMinute(30)->by($key);
+            }
+
+            return Limit::perMinute(300)->by($key);
         });
     }
 }

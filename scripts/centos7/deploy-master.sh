@@ -114,8 +114,8 @@ php -r 'if (PHP_VERSION_ID < 80000 || PHP_VERSION_ID >= 80100) { fwrite(STDERR, 
 echo "PHP $(php -r 'echo PHP_VERSION;')"
 
 step "先开防火墙，再启动 MariaDB"
-systemctl enable --now firewalld
-systemctl enable --now mariadb
+redi_svc_enable_now firewalld
+redi_svc_enable_now mariadb
 ok=0
 for _ in $(seq 1 60); do
   if mysqladmin --protocol=socket -u root ping --silent >/dev/null 2>&1 \
@@ -286,8 +286,8 @@ set_ini listen.owner nginx "$www_conf"
 set_ini listen.group nginx "$www_conf"
 set_ini listen.mode 0660 "$www_conf"
 mkdir -p /var/run/php-fpm
-systemctl enable --now php-fpm
-systemctl restart php-fpm
+redi_svc_enable_now php-fpm
+redi_svc_restart php-fpm
 
 if ! grep -q '301-master-managed' /etc/nginx/nginx.conf 2>/dev/null; then
   if [[ ! -f /etc/nginx/nginx.conf.orig.redi ]]; then
@@ -353,8 +353,8 @@ if [[ -f /etc/nginx/conf.d/default.conf ]]; then
   mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.disabled.redi
 fi
 nginx -t
-systemctl enable --now nginx
-systemctl reload nginx
+redi_svc_enable_now nginx
+systemctl reload nginx 2>/dev/null || redi_svc_restart nginx
 
 if [[ "$(getenforce 2>/dev/null || echo Disabled)" != "Disabled" ]]; then
   setsebool -P httpd_can_network_connect 1 || true
@@ -390,16 +390,17 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl daemon-reload
-systemctl enable --now redi-queue
-systemctl restart redi-queue
+redi_svc_daemon_reload
+redi_svc_enable_now redi-queue
+redi_svc_restart redi-queue
 
 # 证书续期/ACME 清理走独立 cron（勿再配 schedule:run，避免与 app/Console/Kernel 重复执行）。
 cat > /etc/cron.d/redi-renew <<EOF
 SHELL=/bin/bash
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
-10 3 * * * nginx cd ${APP} && /usr/bin/php artisan redi:renew-certificates >> ${APP}/storage/logs/renew.log 2>&1
-10 4 * * * nginx cd ${APP} && /usr/bin/php artisan redi:prune-acme-challenges >> ${APP}/storage/logs/prune-acme.log 2>&1
+10 3 * * * nginx bash -c 'cd ${APP} && /usr/bin/php artisan redi:renew-certificates >> ${APP}/storage/logs/renew.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:renew-certificates >> ${APP}/storage/logs/renew.log 2>&1'
+10 4 * * * nginx bash -c 'cd ${APP} && /usr/bin/php artisan redi:prune-acme-challenges >> ${APP}/storage/logs/prune-acme.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:prune-acme-challenges >> ${APP}/storage/logs/prune-acme.log 2>&1'
+30 8 * * * nginx bash -c 'cd ${APP} && /usr/bin/php artisan redi:health --notify >> ${APP}/storage/logs/health.log 2>&1 || /usr/bin/php artisan redi:ops-webhook --task=redi:health >> ${APP}/storage/logs/health.log 2>&1'
 EOF
 chmod 644 /etc/cron.d/redi-renew
 

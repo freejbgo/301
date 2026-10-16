@@ -69,7 +69,7 @@ class NodeAgentApiTest extends TestCase
             $table->unsignedInteger('node_id');
             $table->string('status')->default('pending');
             $table->text('last_error')->nullable();
-            $table->timestamp('acked_at')->nullable();
+            $table->timestamp('deployed_at')->nullable();
             $table->timestamps();
             $table->unique(['cert_id', 'node_id']);
         });
@@ -256,7 +256,7 @@ class NodeAgentApiTest extends TestCase
             ->assertStatus(409);
     }
 
-    public function test_ack_forbidden_without_deployment_row(): void
+    public function test_ack_ignored_without_deployment_row(): void
     {
         [, $token] = $this->createNodeWithToken();
 
@@ -268,7 +268,45 @@ class NodeAgentApiTest extends TestCase
 
         $this->withToken($token)
             ->postJson('/api/nodes/ack', ['cert_id' => $certId, 'ok' => true])
-            ->assertStatus(403);
+            ->assertOk()
+            ->assertJsonPath('ignored', true);
+    }
+
+    public function test_register_backfills_cert_deployments_for_active_certs(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->timestamps();
+        });
+
+        [$node, $token] = $this->createNodeWithToken();
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'reg.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'reg.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/register', ['version' => '0.1.3'])
+            ->assertOk();
+
+        $this->assertDatabaseHas('redi_cert_deployments', [
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+        ]);
     }
 
     public function test_redirect_rules_shape(): void

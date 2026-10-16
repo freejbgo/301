@@ -64,6 +64,14 @@ class DomainBatchCreatorTest extends TestCase
             $table->timestamps();
         });
 
+        Schema::create('redi_nodes', function (Blueprint $table) {
+            $table->increments('id');
+            $table->boolean('enabled')->default(true);
+            $table->string('public_ip', 45)->nullable();
+            $table->text('extra_ips')->nullable();
+            $table->timestamps();
+        });
+
         \DB::table('redi_platform_dns')->insert([
             'id' => 1,
             'edge_zone' => 'edge.test',
@@ -124,7 +132,7 @@ class DomainBatchCreatorTest extends TestCase
             10,
             'tenant-a',
             1,
-            1,
+            2,
             "foo.com,https://example.com\n",
             null
         );
@@ -133,5 +141,24 @@ class DomainBatchCreatorTest extends TestCase
         $row = \DB::table('redi_admin_domain')->where('original_url', 'foo.com')->first();
         $this->assertNotNull($row);
         $this->assertSame(10, (int) $row->admin_id);
+        $this->assertSame(2, (int) $row->status);
+    }
+
+    public function test_batch_enable_requires_dns_pointing(): void
+    {
+        config(['redi.require_dns_pointing_to_enable' => true]);
+
+        $creator = new DomainBatchCreator();
+        $result = $creator->createFromTextLines(
+            10,
+            'tenant-a',
+            1,
+            1,
+            "foo.com,https://example.com\n",
+            null
+        );
+
+        $this->assertSame(0, $result['imported']);
+        $this->assertStringContainsString('启用前须 CNAME', $result['errors'][0] ?? '');
     }
 }

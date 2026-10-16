@@ -2,9 +2,11 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin\Actions\Grid\RequeueNodeFailedCerts;
 use App\Admin\Actions\Grid\RotateNodeToken;
 use App\Admin\Concerns\EnsuresAdministrator;
 use App\Models\RediNode;
+use App\Services\RediHealthReport;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Http\Controllers\AdminController;
@@ -32,21 +34,69 @@ class RediNodeController extends AdminController
     {
         $this->ensureAdministrator();
 
-        return Grid::make(new RediNode(), function (Grid $grid) {
+        $deployByNode = RediHealthReport::deploymentCountsByNode()->keyBy('node_id');
+
+        return Grid::make(new RediNode(), function (Grid $grid) use ($deployByNode) {
             $grid->column('id')->sortable();
             $grid->column('name', '名称');
             $grid->column('public_ip', '公网 IP')->display(function () {
                 return implode('<br>', array_map('e', $this->publicIps()));
             });
             $grid->column('enabled', '启用')->switch();
-            $grid->column('last_heartbeat_at', '最后心跳');
+            $grid->column('last_heartbeat_at', '最后心跳')->display(function ($value) {
+                if (! $this->enabled) {
+                    return $value ? e((string) $value) : '—';
+                }
+                if (! $value) {
+                    return '<span class="text-danger">从未</span>';
+                }
+                $at = \Illuminate\Support\Carbon::parse($value);
+                $label = e($at->format('Y-m-d H:i'));
+                if ($at->gte(now()->subMinutes(15))) {
+                    return $label.' <span class="text-success">在线</span>';
+                }
+
+                return $label.' <span class="text-warning">离线</span>';
+            });
+            $grid->column('cert_deploy', '证书部署')->display(function () use ($deployByNode) {
+                $row = $deployByNode->get($this->id);
+                if (! $row) {
+                    return '—';
+                }
+                $pending = (int) ($row->pending_count ?? 0);
+                $failed = (int) ($row->failed_count ?? 0);
+                if ($pending === 0 && $failed === 0) {
+                    return '<span class="text-success">正常</span>';
+                }
+                $parts = [];
+                if ($pending > 0) {
+                    $parts[] = '<span class="text-warning">待部署 '.$pending.'</span>';
+                }
+                if ($failed > 0) {
+                    $parts[] = '<span class="text-danger">失败 '.$failed.'</span>';
+                }
+
+                return implode('<br>', $parts);
+            });
             $grid->column('agent_version', 'Agent 版本')->display(function ($version) {
                 return e((string) $version);
             });
             $grid->column('updated_at', '更新时间');
 
+            $grid->tools(function (Grid\Tools $tools) {
+                $requeueUrl = admin_url('ops/requeue-failed-deployments');
+                $token = csrf_token();
+                $tools->append(
+                    '<form method="post" action="'.e($requeueUrl).'" style="display:inline-block;margin-right:6px" onsubmit="return confirm(\'将全部 failed 证书部署改回 pending？\');">'
+                    .'<input type="hidden" name="_token" value="'.e($token).'">'
+                    .'<input type="hidden" name="_redirect" value="'.e(admin_url('nodes')).'">'
+                    .'<button type="submit" class="btn btn-warning btn-sm">重试全部失败部署</button></form>'
+                );
+            });
+
             $grid->disableViewButton();
             $grid->actions(function ($actions) {
+                $actions->append(new RequeueNodeFailedCerts());
                 $actions->append(new RotateNodeToken());
             });
         });

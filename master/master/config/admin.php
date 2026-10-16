@@ -71,7 +71,12 @@ return [
 
         'namespace' => 'App\\Admin\\Controllers',
 
-        'middleware' => ['web', 'admin', \App\Http\Middleware\RejectDefaultAdminPassword::class],
+        'middleware' => [
+            'web',
+            'admin',
+            \App\Http\Middleware\RequireAdminSessionForDcatApi::class,
+            \App\Http\Middleware\RejectDefaultAdminPassword::class,
+        ],
 
         'enable_session_middleware' => false,
     ],

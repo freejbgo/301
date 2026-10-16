@@ -13,6 +13,7 @@ use Dcat\Admin\Admin;
 use Dcat\Admin\Layout\Content;
 use App\Admin\Actions\Modal\BatchDomainModal;
 use App\Models\RediDomainCert;
+use App\Services\DomainDnsPointingGuard;
 use App\Services\DomainOriginalUrlGuard;
 use App\Services\DomainRecordNormalizer;
 use App\Services\CnamePrecheckService;
@@ -20,7 +21,11 @@ use App\Services\TenantEdgeService;
 use App\Support\AdminTenantContext;
 use App\Admin\Actions\Grid\ApplyCertificate;
 use App\Admin\Actions\Grid\BatchApplyCertificate;
+use App\Admin\Actions\Grid\BatchRedeployCertificate;
+use App\Admin\Actions\Grid\RedeployCertificate;
 use App\Jobs\IssueDomainCertificateJob;
+use App\Services\DomainListCsvExporter;
+use Illuminate\Http\Request;
 use App\Models\RediAcmeChallenge;
 use App\Models\RediAcmeChallengeNodeSync;
 use Illuminate\Validation\ValidationException;
@@ -31,6 +36,11 @@ class RediAdminDomainController extends AdminController
     public function title()
     {
         return '域名管理';
+    }
+
+    public function exportCsv(Request $request)
+    {
+        return DomainListCsvExporter::streamedResponse($request);
     }
 
     /**
@@ -44,21 +54,43 @@ class RediAdminDomainController extends AdminController
             
             $grid->tools(function (Grid\Tools $tools) {
                 $tools->append(new BatchDomainModal());
+                $exportQuery = http_build_query(array_filter(
+                    request()->only(['group_id', 'original_url', 'skip_url', 'status', 'cert_filter']),
+                    function ($v) {
+                        return $v !== null && $v !== '';
+                    }
+                ));
+                $exportUrl = admin_url('domain/export'.($exportQuery !== '' ? '?'.$exportQuery : ''));
+                $tools->append(
+                    '<a href="'.e($exportUrl).'" class="btn btn-default btn-sm" style="margin-left:6px"><i class="feather icon-download"></i> 导出 CSV</a>'
+                );
             });
 
             $grid->batchActions(function ($batch) {
                 $batch->add(new BatchApplyCertificate());
+                $batch->add(new BatchRedeployCertificate());
             });
 
             $grid->actions(function (Grid\Displayers\Actions $actions) {
                 $actions->append(new ApplyCertificate());
+                $cert = $this->certificate;
+                if ($cert && in_array($cert->status, [
+                    \App\Models\RediDomainCert::STATUS_ISSUED,
+                    \App\Models\RediDomainCert::STATUS_DEPLOYING,
+                    \App\Models\RediDomainCert::STATUS_ACTIVE,
+                    \App\Models\RediDomainCert::STATUS_FAILED,
+                ], true)) {
+                    $actions->append(new RedeployCertificate());
+                }
             });
             
             $grid->model()->with(['group', 'certificate']);
 
             $grid->column('id')->sortable();
             $grid->column('group_id', '分组名称')->display(function () {
-                return $this->group?->name ?? '（分组不存在）';
+                $name = $this->group?->name;
+
+                return $name !== null && $name !== '' ? e($name) : '（分组不存在）';
             });
             $grid->column('original_url', '原始域名');
             $grid->column('cname_target', 'CNAME 目标')->display(function () {
@@ -88,6 +120,15 @@ class RediAdminDomainController extends AdminController
                     $label .= '<br><span class="text-danger">证书密文无法解密（检查 APP_KEY 是否变更）</span>';
                 } elseif ($cert->last_error) {
                     $label .= '<br><span class="text-danger">'.e($cert->last_error).'</span>';
+                }
+                if ($cert->expires_at) {
+                    $exp = $cert->expires_at;
+                    $label .= '<br><span class="text-muted">到期 '.e($exp->format('Y-m-d')).'</span>';
+                    if ($exp->isPast()) {
+                        $label .= ' <span class="text-danger">已过期</span>';
+                    } elseif ($exp->lte(now()->addDays(14))) {
+                        $label .= ' <span class="text-warning">即将到期</span>';
+                    }
                 }
 
                 return $label;
@@ -126,6 +167,16 @@ JS
                 $filter->like('original_url', '原始域名')->width(4);
                 $filter->like('skip_url', '跳转地址')->width(4);
                 $filter->equal('status', '状态')->select([1 => '启用', 2 => '停用'])->width(3);
+
+                $filter->where('cert_filter', function ($query) {
+                    \App\Models\RediAdminDomain::applyCertificateListFilter($query, $this->input);
+                }, '证书')->select([
+                    '' => '全部',
+                    'needs_attention' => '待处理',
+                    'active' => '已生效',
+                    'expiring' => '14 天内到期',
+                    'none' => '未申请',
+                ])->width(3);
 
             });
         });
@@ -196,7 +247,8 @@ JS
             }
             $form->text('original_url', '原始域名')->help('客户主域名，如 foo.com（全平台唯一，供边缘节点按 Host 查询）');
             $form->text('skip_url', '跳转链接');
-            $form->radio('status', '状态')->options([1=>'启用', 2=>'停用'])->default(1);
+            $form->radio('status', '状态')->options([1=>'启用', 2=>'停用'])->default(2)
+                ->help('启用前须将域名 CNAME 到接入目标（或 A 到节点公网 IP）；平台管理员可跳过校验');
             $form->switch('force_https', '强制 HTTPS')->help('证书状态为「已生效」后再打开。开启后节点对 HTTP 请求 301 到 HTTPS');
             if ($form->isCreating() && ! AdminTenantContext::isPlatformAdministrator()) {
                 $form->hidden('admin_id')->value(Admin::user()->id);
@@ -295,6 +347,11 @@ JS
                             'force_https' => '证书尚未生效，不能开启强制 HTTPS。请先申请证书并等到状态为「已生效」。',
                         ]);
                     }
+                }
+
+                $newStatus = (int) ($request['status'] ?? 2);
+                if ($newStatus === 1) {
+                    DomainDnsPointingGuard::assertCanEnable($ownerAdminId, $originalUrl);
                 }
 
                 TenantEdgeService::ensureForAdmin($ownerAdminId);

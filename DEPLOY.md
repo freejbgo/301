@@ -5,7 +5,9 @@
 
 按这个顺序做：先主控和数据库，再节点，最后到后台把 DNS、节点和域名配好。控制台里每一步点哪里，见 [docs/CONSOLE.md](docs/CONSOLE.md)。
 
-CentOS 7 用两个全自动脚本，见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。**Ubuntu 22.04 / 24.04** 见 [DEPLOY-ubuntu.md](DEPLOY-ubuntu.md) 与 `scripts/ubuntu/deploy-*.sh`。填好的变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md) / [DEPLOY-ubuntu-example.md](DEPLOY-ubuntu-example.md)。真机验收见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 或 [docs/ACCEPTANCE-UBUNTU-DEPLOY.md](docs/ACCEPTANCE-UBUNTU-DEPLOY.md)。
+**生产仅支持 CentOS 7.9（7.x）**：两个全自动脚本见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。真机验收见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)；能力复核见 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md)。
+
+**主控已在跑、只想跟上新能力（Agent 0.1.3、cron Webhook、运营命令等）**：见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md)。能力分级见 [docs/ROADMAP-PRODUCTION.md](docs/ROADMAP-PRODUCTION.md)。
 
 开发阶段 [GitHub Releases](https://github.com/freejbgo/301/releases) 可能暂无包；需部署时在仓库根目录执行 `scripts/build-*-tar.sh`，或发 **`v*` tag** 由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 在通过 Go/PHPUnit（8.4 与 8.0）、`composer audit`、CentOS 7 脚本与容器冒烟后上传 Release（发布前对解压后的主控树再跑 audit + PHPUnit）。
 
@@ -89,7 +91,7 @@ php artisan storage:link
 chown -R nginx:nginx storage bootstrap/cache
 ```
 
-`chown` 的用户按网站运行用户改。Debian/Ubuntu 常见是 `www-data`，CentOS 的 Nginx 常见是 `nginx`。
+`chown` 的用户按网站运行用户改。CentOS 上 Nginx 常见为 `nginx`。
 
 从仓库手动安装时，网站根目录是 `master/master/public`。CentOS 7 脚本使用发布包，网站根目录是 `/opt/301/master/public`。Nginx 将请求交给 `index.php`。PHP-FPM 的监听地址以 `/etc/php-fpm.d/www.conf`（或发行版对应文件）里的 `listen` 为准，不要猜 sock 路径。
 
@@ -99,7 +101,7 @@ chown -R nginx:nginx storage bootstrap/cache
 php artisan queue:work --sleep=3 --timeout=320 --tries=100
 ```
 
-生产环境用 systemd，示例是 `scripts/systemd/redi-queue.service.example`。CentOS 上把其中的 `User=www-data` 改成 `nginx`，并改对 `WorkingDirectory`。
+生产环境用 systemd，示例是 `scripts/systemd/redi-queue.service.example`（默认 `User=nginx`）。请改对 `WorkingDirectory` 与 PHP-FPM 用户一致。
 
 证书续期每天一次：
 
@@ -180,8 +182,8 @@ mysql -h 主控IP -u redi_node -p redi_admin -e "CALL redi_node_bump_skip('__smo
 
 - 至少一台节点 **启用** 且 **15 分钟内有心跳**；长期故障的节点请先禁用，避免阻塞（主控只需任一台在线节点同步 HTTP-01 挑战即可）。
 - 多机跑 `queue:work` 时 `CACHE_DRIVER=redis`（共享 ACME 锁）。
-- 节点 `REDI_MASTER_URL` 生产必须为 **https://**（lab 可 `REDI_MASTER_INSECURE=1` + `http://`）；Agent **0.1.2+** 与主控分项 revision 匹配。证书 `ack` 在无对应部署行时返回 **409**。
-- 默认已启用 `REDI_MIN_AGENT_VERSION=0.1.2`（全部节点 API）；旧节点须升级 `redi-multi` 或临时设 `REDI_MIN_AGENT_VERSION=` 禁用。
+- 节点 `REDI_MASTER_URL` 生产必须为 **https://**（lab 可 `REDI_MASTER_INSECURE=1` + `http://`）；Agent **0.1.3+** 与主控分项 revision 匹配。证书 `ack` 在无对应部署行时返回 **200**（`ignored: true`，幂等）。
+- 默认已启用 `REDI_MIN_AGENT_VERSION=0.1.3`（全部节点 API）；旧节点须升级 `redi-multi` 或临时设 `REDI_MIN_AGENT_VERSION=` 禁用。
 - `php artisan config:cache` 前请确认 `.env` 中 `REDI_ALLOW_TRUST_ALL_PROXIES`、`REDI_MIN_AGENT_VERSION` 等已写入（它们进入 `config/redi.php`，缓存后仍生效）。
 - 每日 `redi:prune-acme-challenges`（CentOS `deploy-master` 用 `/etc/cron.d/redi-renew` **04:10** 直接调 artisan；**勿**再配 `schedule:run`，避免与 `app/Console/Kernel.php` 重复）。若有历史 Unicode 域名可执行 `php artisan redi:normalize-domain-hosts --dry-run` 再正式跑。
 - 更新主控代码后执行 `php artisan migrate --force`（仅当仓库有新迁移）。节点库账号为 **`redi_node`** 时重跑 `grant-node-mysql.sh`（仅 `EXECUTE` 该过程）。

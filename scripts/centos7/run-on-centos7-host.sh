@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 在 Ubuntu 等宿主机上用 podman 启动 CentOS 7 容器并跑 container-integration-test.sh。
+# 在开发机上用 podman 启动 CentOS 7 容器并跑 container-integration-test.sh（非生产部署路径）。
 # 使用 --network host，避免部分环境下 podman 桥接网无外网导致 yum 失败。
 # 用法: sudo bash scripts/centos7/run-on-centos7-host.sh
 set -euo pipefail
@@ -10,7 +10,7 @@ C7=redi-c7-smoke
 IMAGE=quay.io/centos/centos:7.9.2009
 
 if ! command -v podman >/dev/null; then
-  echo "需要 podman。Ubuntu: sudo apt-get install -y podman"
+  echo "需要 podman（例如: yum install -y podman 或宿主机发行版对应包管理器）"
   exit 1
 fi
 

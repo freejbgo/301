@@ -121,7 +121,7 @@ redi_sync_node_ips_access() {
 redi_sync_master_env() {
   local env_file="$1"
   export MASTER_URL DB_PASS ADMIN_HTTPS
-  export REDI_MIN_AGENT_VERSION="${REDI_MIN_AGENT_VERSION:-0.1.2}"
+  export REDI_MIN_AGENT_VERSION="${REDI_MIN_AGENT_VERSION:-0.1.3}"
   export REDI_ALLOW_TRUST_ALL_PROXIES="${REDI_ALLOW_TRUST_ALL_PROXIES:-false}"
   php -r '
     $p = $argv[1];
@@ -166,6 +166,37 @@ PY
   fi
   if grep -qE '"enabled"[[:space:]]*:[[:space:]]*false' "$cfg" 2>/dev/null; then
     sed -i -E 's/("enabled"[[:space:]]*:[[:space:]]*)false/\1true/' "$cfg" || return 1
+  fi
+}
+
+redi_systemd_usable() {
+  command -v systemctl >/dev/null 2>&1 || return 1
+  [[ -d /run/systemd/system ]] || return 1
+  systemctl list-units --type=service --no-legend --no-pager >/dev/null 2>&1 || return 1
+  return 0
+}
+
+redi_svc_enable_now() {
+  local unit="$1"
+  if redi_systemd_usable; then
+    systemctl enable --now "$unit"
+  else
+    echo "警告: systemd 不可用，跳过 systemctl enable --now ${unit}" >&2
+  fi
+}
+
+redi_svc_restart() {
+  local unit="$1"
+  if redi_systemd_usable; then
+    systemctl restart "$unit"
+  else
+    echo "警告: systemd 不可用，跳过 systemctl restart ${unit}" >&2
+  fi
+}
+
+redi_svc_daemon_reload() {
+  if redi_systemd_usable; then
+    systemctl daemon-reload
   fi
 }
 

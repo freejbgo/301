@@ -12,7 +12,7 @@ return [
     |
     */
 
-    'min_agent_version' => env('REDI_MIN_AGENT_VERSION', '0.1.2'),
+    'min_agent_version' => env('REDI_MIN_AGENT_VERSION', '0.1.3'),
 
     /*
     |--------------------------------------------------------------------------
@@ -33,5 +33,33 @@ return [
     'known_default_admin_passwords' => [
         'Redi301@Install2026',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | 启用域名前须解析指向平台（CNAME 到租户 edge 或 A 到启用节点公网 IP）
+    |--------------------------------------------------------------------------
+    */
+
+    'require_dns_pointing_to_enable' => env('REDI_REQUIRE_DNS_POINTING_TO_ENABLE', true),
+
+    'dns_precheck_allow_a_to_pool' => env('REDI_DNS_PRECHECK_ALLOW_A_TO_POOL', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | redi:health --notify Webhook（JSON POST，含 text 纯文摘要）
+    |--------------------------------------------------------------------------
+    */
+
+    'health_webhook_url' => env('REDI_HEALTH_WEBHOOK_URL', ''),
+
+    /*
+    |--------------------------------------------------------------------------
+    | 运维 Webhook（cron 失败等）；未配置时回退到 REDI_HEALTH_WEBHOOK_URL
+    |--------------------------------------------------------------------------
+    */
+
+    'ops_webhook_url' => env('REDI_OPS_WEBHOOK_URL', ''),
+
+    'health_queue_pending_threshold' => (int) env('REDI_HEALTH_QUEUE_PENDING_THRESHOLD', 80),
 
 ];

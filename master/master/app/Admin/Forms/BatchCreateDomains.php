@@ -28,7 +28,7 @@ class BatchCreateDomains extends Form
             (int) $group->admin_id,
             (string) $group->admin_name,
             $groupId,
-            (int) ($input['status'] ?? 1),
+            (int) ($input['status'] ?? 2),
             (string) ($input['lines'] ?? ''),
             $input['default_skip_url'] ?? null
         );
@@ -58,7 +58,8 @@ class BatchCreateDomains extends Form
         $max = DomainBatchCreator::MAX_LINES_PER_BATCH;
 
         $this->select('group_id', '分组')->options($groupList)->required();
-        $this->radio('status', '状态')->options([1 => '启用', 2 => '停用'])->default(1);
+        $this->radio('status', '状态')->options([1 => '启用', 2 => '停用'])->default(2)
+            ->help('批量「启用」时，每行域名须已解析指向平台');
         $this->text('default_skip_url', '统一跳转地址')
             ->help('方式一：填写此项后，下面每行可只写原始域名，全部跳到同一地址。');
 
