@@ -77,6 +77,8 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health --json   # 监控用
 cd /opt/301/master && sudo -u nginx php artisan list | grep redi:
 ```
 
+`08:30` 的 `redi:health --notify`：在配置 `REDI_HEALTH_WEBHOOK_URL` 且能发出通知时，即使有 issues 也 **退出 0**（避免与 health webhook 重复触发 `|| redi:ops-webhook`）；未配置 URL 且有 issues 时退出 1，由 `|| redi:ops-webhook` 兜底。手工巡检仍用无 `--notify` 的 `redi:health` / `--json`（有 issues 时退出 1）。
+
 ## 5. 运营验收
 
 见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) 与 [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)。

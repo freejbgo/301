@@ -110,6 +110,10 @@
 
 **2026-10-16 复核（#87）：** Cron 文档统一「勿 `schedule:run`」；`UPGRADE` / 验收清单补强 `grep renew|prune|health` 与 `schedule:run` 负向检查。
 
+**2026-10-16 #88 已合并 `main`：** 见 [PR #88](https://github.com/freejbgo/301/pull/88)。
+
+**2026-10-16 复核（#89）：** webhook 配置说明补入 `vars.example`、验收表、deploy 结束提示；`--json --notify` 单测。
+
 **2026-10-16 深度复核（#88）：** `deploy-master` / `patch-master-cron` 安装后打印 Cron 验收；`DEPLOY-centos7` §11、`CONSOLE` 运营命令与 `queue_stale` 说明补齐；`scripts/README` 索引 CentOS 辅助脚本；`queue_stale` 单测；`SECURITY` Cron 时段说明；`redi:health --notify` 在 webhook 成功时退出 0、失败时由 `|| ops-webhook` 兜底；`grant-nodes-from-vars` 要求 root。
 
 | 维度 | 结论 |
@@ -121,7 +125,7 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **84**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **85**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
@@ -137,7 +141,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#88](https://github.com/freejbgo/301/pull/88)（深度审计、`Kernel` schedule 留空、Cron 文档/脚本/验收 grep 统一）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#89](https://github.com/freejbgo/301/pull/89)（含 #88：`Kernel` schedule 留空、Cron 验收、`redi:health --notify` 退出码、webhook 文档）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
@@ -184,4 +188,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **84** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **85** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
