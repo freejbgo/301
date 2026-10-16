@@ -46,6 +46,42 @@ class CertificateDeployService
         }
     }
 
+    /**
+     * 将失败部署行重新标为 pending，并推动证书回到 deploying。
+     */
+    public function requeueFailedDeployments(?int $nodeId = null, ?int $certId = null): int
+    {
+        $query = RediCertDeployment::query()->where('status', 'failed');
+        if ($nodeId !== null) {
+            $query->where('node_id', $nodeId);
+        }
+        if ($certId !== null) {
+            $query->where('cert_id', $certId);
+        }
+
+        $certIds = (clone $query)->distinct()->pluck('cert_id');
+
+        $count = $query->update([
+            'status' => 'pending',
+            'last_error' => null,
+            'deployed_at' => null,
+        ]);
+
+        foreach ($certIds as $cid) {
+            $cert = RediDomainCert::find($cid);
+            if (! $cert) {
+                continue;
+            }
+            $cert->status = RediDomainCert::STATUS_DEPLOYING;
+            $cert->last_error = $count > 0
+                ? '已重新排队失败节点的证书部署，等待节点拉取'
+                : $cert->last_error;
+            $cert->save();
+        }
+
+        return $count;
+    }
+
     public function queueDeploy(RediDomainCert $cert): void
     {
         $cert->status = RediDomainCert::STATUS_DEPLOYING;

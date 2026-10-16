@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin\Actions\Grid\RequeueNodeFailedCerts;
 use App\Admin\Actions\Grid\RotateNodeToken;
 use App\Admin\Concerns\EnsuresAdministrator;
 use App\Models\RediNode;
@@ -84,6 +85,7 @@ class RediNodeController extends AdminController
 
             $grid->disableViewButton();
             $grid->actions(function ($actions) {
+                $actions->append(new RequeueNodeFailedCerts());
                 $actions->append(new RotateNodeToken());
             });
         });

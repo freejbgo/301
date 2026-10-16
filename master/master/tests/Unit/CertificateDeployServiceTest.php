@@ -43,6 +43,7 @@ class CertificateDeployServiceTest extends TestCase
             $table->text('certificate')->nullable();
             $table->text('private_key')->nullable();
             $table->string('status')->default('active');
+            $table->text('last_error')->nullable();
             $table->timestamps();
         });
 
@@ -84,6 +85,40 @@ class CertificateDeployServiceTest extends TestCase
             'node_id' => $node->id,
             'status' => 'pending',
         ]);
+    }
+
+    public function test_requeue_failed_deployments_resets_status(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_FAILED,
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $cert->id,
+            'node_id' => $node->id,
+            'status' => 'failed',
+            'last_error' => 'pem error',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $count = app(CertificateDeployService::class)->requeueFailedDeployments((int) $node->id, null);
+        $this->assertSame(1, $count);
+        $this->assertDatabaseHas('redi_cert_deployments', [
+            'cert_id' => $cert->id,
+            'node_id' => $node->id,
+            'status' => 'pending',
+        ]);
+        $cert->refresh();
+        $this->assertSame(RediDomainCert::STATUS_DEPLOYING, $cert->status);
     }
 
     public function test_mark_node_ack_is_idempotent_when_already_ok(): void

@@ -42,6 +42,11 @@ curl -fsS "http://127.0.0.1:<node-port>/revision"
 ./scripts/verify-redi-db-deploy-path.sh
 ```
 
+## 后台操作（运营）
+
+- **节点管理** →「重试失败证书」：仅超级管理员，将该节点 `failed` 部署行改回 `pending`。
+- **域名管理** →「重新下发证书」：向全部启用节点重新 `queueDeploy`（租户仅自己的域名）。
+
 ## 全功能场景
 
 1. **多租户域名**：不同 `admin_id` 域名互不可见；CNAME 预检与跳转规则下发。

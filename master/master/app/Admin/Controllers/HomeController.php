@@ -4,6 +4,8 @@ namespace App\Admin\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Services\RediHealthReport;
+use App\Services\TenantOpsSummary;
+use App\Support\AdminTenantContext;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Layout\Content;
 use Dcat\Admin\Layout\Row;
@@ -40,8 +42,26 @@ class HomeController extends Controller
             $content->row(function (Row $row) use ($issueHtml) {
                 $row->column(12, Card::make('运营自检（最近 7 天证书预警）', $issueHtml));
             });
-        } else {
-            $content->description('尊贵的客户，欢迎使用 301 跳转系统。');
+        } elseif ($user) {
+            $stats = TenantOpsSummary::forAdmin(AdminTenantContext::sessionAdminId());
+            $tips = '<ul class="mb-0">'
+                .'<li>启用域名：'.(int) $stats['domains_enabled'].'，停用：'.(int) $stats['domains_disabled'].'</li>'
+                .'<li>证书已生效：'.(int) $stats['certs_active'].'</li>'
+                .'<li>证书待处理（解析/签发/部署等）：'.(int) $stats['certs_needs_attention'].'</li>'
+                .'<li>14 天内到期：'.(int) $stats['certs_expiring_soon'].'</li>'
+                .'</ul>'
+                .'<p class="text-muted mt-2 mb-0">请先完成 CNAME/A 解析，再在「域名管理」中启用域名并申请证书。</p>';
+
+            $content->row(function (Row $row) use ($stats) {
+                $row->column(3, Card::make('启用域名', (string) $stats['domains_enabled']));
+                $row->column(3, Card::make('证书已生效', (string) $stats['certs_active']));
+                $row->column(3, Card::make('证书待处理', (string) $stats['certs_needs_attention']));
+                $row->column(3, Card::make('即将到期', (string) $stats['certs_expiring_soon']));
+            });
+
+            $content->row(function (Row $row) use ($tips) {
+                $row->column(12, Card::make('我的业务概览', $tips));
+            });
         }
 
         return $content;

@@ -21,6 +21,7 @@ use App\Services\TenantEdgeService;
 use App\Support\AdminTenantContext;
 use App\Admin\Actions\Grid\ApplyCertificate;
 use App\Admin\Actions\Grid\BatchApplyCertificate;
+use App\Admin\Actions\Grid\RedeployCertificate;
 use App\Jobs\IssueDomainCertificateJob;
 use App\Models\RediAcmeChallenge;
 use App\Models\RediAcmeChallengeNodeSync;
@@ -53,6 +54,15 @@ class RediAdminDomainController extends AdminController
 
             $grid->actions(function (Grid\Displayers\Actions $actions) {
                 $actions->append(new ApplyCertificate());
+                $cert = $this->certificate;
+                if ($cert && in_array($cert->status, [
+                    \App\Models\RediDomainCert::STATUS_ISSUED,
+                    \App\Models\RediDomainCert::STATUS_DEPLOYING,
+                    \App\Models\RediDomainCert::STATUS_ACTIVE,
+                    \App\Models\RediDomainCert::STATUS_FAILED,
+                ], true)) {
+                    $actions->append(new RedeployCertificate());
+                }
             });
             
             $grid->model()->with(['group', 'certificate']);
