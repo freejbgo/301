@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"os"
 	"redi-multi/acme"
 	"redi-multi/certs"
 	"redi-multi/rules"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"

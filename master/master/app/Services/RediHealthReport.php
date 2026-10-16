@@ -325,7 +325,7 @@ class RediHealthReport
     }
 
     /**
-     * @return array{queue_connection: string, cache_driver: string, enabled_nodes: int, stale_nodes: int, pending_deploys: int, failed_deploys: int, queue_pending: int, queue_failed: int, health_queue_pending_threshold: int, health_queue_stale_hours: int, health_validating_stuck_hours: int}
+     * @return array{queue_connection: string, cache_driver: string, enabled_nodes: int, stale_nodes: int, pending_deploys: int, failed_deploys: int, queue_pending: int, queue_failed: int, health_queue_pending_threshold: int, health_queue_stale_hours: int, health_validating_stuck_hours: int, health_renew_validating_stuck_hours: int}
      */
     public static function summary(): array
     {
@@ -359,6 +359,7 @@ class RediHealthReport
             'health_queue_pending_threshold' => max(10, (int) config('redi.health_queue_pending_threshold', 80)),
             'health_queue_stale_hours' => max(1, (int) config('redi.health_queue_stale_hours', 2)),
             'health_validating_stuck_hours' => max(1, (int) config('redi.health_validating_stuck_hours', 2)),
+            'health_renew_validating_stuck_hours' => max(1, (int) config('redi.renew_validating_stuck_hours', 3)),
         ];
     }
 

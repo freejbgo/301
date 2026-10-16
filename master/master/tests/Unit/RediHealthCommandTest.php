@@ -160,6 +160,7 @@ class RediHealthCommandTest extends TestCase
             'redi.health_queue_pending_threshold' => 77,
             'redi.health_queue_stale_hours' => 5,
             'redi.health_validating_stuck_hours' => 6,
+            'redi.renew_validating_stuck_hours' => 7,
         ]);
 
         \DB::table('redi_nodes')->insert([
@@ -176,6 +177,7 @@ class RediHealthCommandTest extends TestCase
         $this->assertSame(77, $payload['summary']['health_queue_pending_threshold']);
         $this->assertSame(5, $payload['summary']['health_queue_stale_hours']);
         $this->assertSame(6, $payload['summary']['health_validating_stuck_hours']);
+        $this->assertSame(7, $payload['summary']['health_renew_validating_stuck_hours']);
     }
 
     public function test_health_text_mode_prints_hints_without_failing(): void

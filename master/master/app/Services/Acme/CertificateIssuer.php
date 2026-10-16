@@ -45,7 +45,6 @@ class CertificateIssuer
         ]);
 
         $domain = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
-        $this->assertDomainIssuable($cert);
         $cert->status = RediDomainCert::STATUS_VALIDATING;
         $cert->last_error = null;
         $cert->save();
