@@ -29,8 +29,10 @@ class DnsProviderFactory
                 return new DnspodIntlDnsProvider($platform);
             case 'dns_com':
                 return new DnsComDnsProvider($platform);
-            default:
+            case 'manual':
                 return new ManualDnsProvider();
+            default:
+                throw new \InvalidArgumentException('未知 DNS API 驱动: '.$driver);
         }
     }
 }

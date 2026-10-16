@@ -52,10 +52,12 @@ class CertificateIssuer
         $order = $client->createOrder([$domain]);
         $authorizations = $client->authorize($order);
 
+        $authorized = false;
         foreach ($authorizations as $authorization) {
             if (strtolower($authorization->getDomain()) !== $domain) {
                 continue;
             }
+            $authorized = true;
 
             $file = $authorization->getFile();
             $token = basename($file->getFilename());
@@ -71,6 +73,10 @@ class CertificateIssuer
             app(Http01PropagationWaiter::class)->wait($domain, $token, $body);
 
             $client->validate($authorization->getHttpChallenge(), 15);
+        }
+
+        if (! $authorized) {
+            throw new RuntimeException('ACME 未返回域名 '.$domain.' 的 HTTP-01 授权');
         }
 
         if (! $client->isReady($order)) {

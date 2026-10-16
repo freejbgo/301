@@ -144,6 +144,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#107）：** ACME 签发失败清理挑战、`CertificateIssuer` 无授权报错；`DnsProviderFactory` 未知驱动抛错；lagran `Enabled` 单测；AUDIT 全模块表；PHPUnit **109**。
+
 **2026-10-16 复核（#106）：** `redi:normalize-domain-hosts` 修正无效 `skip_url` 检测并清空（`withoutEvents`）；prune 输出说明；`SafeRelativeRedirect` 拒绝反斜杠路径；PHPUnit **104**。
 
 **2026-10-16 复核（#105）：** 后台运维 `_redirect` 拒绝 `//` 协议相对路径（`SafeRelativeRedirect`）；OPS/PRODUCTION 文档补 summary 字段；PHPUnit **102**。
@@ -183,25 +185,27 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **104**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **109**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
 **未发现阻塞商用的 P0 代码缺陷。**
 
-### 复核范围说明（#88–#100 深度扫仓）
+### 全模块复核说明（每轮门禁 + #107 代码向补扫）
 
-| 类别 | 已扫内容 |
-|------|----------|
-| **运维 / 脚本** | `scripts/centos7/*`、`patch-master-cron`、NODE_IPS 授权与 firewalld、`grant-nodes-from-vars`、queue systemd、`lagran_*` 诊断脚本；用法提示与验收 `grep` |
-| **运营命令** | `redi:health`（含 `--json`/`--notify`、阈值 env）、`renew`/`prune`/`ops-webhook`、Cron 与 `storage/logs/*.log` |
-| **文档** | DEPLOY / DEPLOY-centos7 / UPGRADE / ACCEPTANCE / CONSOLE / SECURITY / OPS-MULTI-WORKER 与脚本行为对齐 |
-| **门禁** | `dev-preflight`（Go + PHPUnit **104** + bash -n + 存储过程）；与 `ci.yml` / `release.yml` 核心步骤一致 |
-| **PHP（以单测为扫仓锚点）** | 节点 API、证书部署状态机、DNS 启用/预检、Agent 版本门、health/renew/prune/webhook、部分 DNS 厂商与租户相关 Service（见 `master/master/tests/`） |
-| **Go `node/redi-multi`** | CI 全包 `go test ./...`；host/redirect/certs/api/masteragent 等目录有单测；lagran 以配置与运维脚本为主 |
-| **未专项改代码** | `CertificateIssuer` / ACME 全链路重构、Dcat 后台 UI 全量、Laravel/composer 大版本与 CVE 批量修复、`public/vendor/dcat-admin` 删减 |
+| 模块 | 每轮门禁 | #107 代码向处理 / 单测 |
+|------|----------|-------------------------|
+| **CentOS 脚本 / Cron** | `bash -n`、文档 `grep` | #101–#106 已合入栈（NODE_IPS、webhook、normalize 等） |
+| **运营命令** | PHPUnit + CONSOLE | health/renew/prune/ops-webhook/requeue |
+| **节点 API + Agent** | Feature `NodeAgentApiTest` + Go `masteragent` | challenges-synced、revision、证书 ack |
+| **ACME 签发链** | 编译 + Job 队列单测 | `CertificateIssuer` 无授权域名时明确失败；签发失败 Job 内 `AcmeChallengeCleanup`；`parseCertExpiry` 单测 |
+| **DNS 厂商同步** | `EdgeDnsSyncServiceTest`、厂商 upsert 单测 | `DnsProviderFactory` 未知 `dns_driver` **抛错**（不再误落手动模式） |
+| **Go lagran** | `go test ./...` | 新增 `lagran/enabled_test.go`（`REDI_LAGRAN_DISABLED`）；`lagran_ports.py` + 运维脚本 |
+| **后台 Dcat** | 手工扫路由/middleware | #105 `_redirect` 防 `//`；未全量 UI 审计 |
+| **文档** | 与脚本/命令对齐 | AUDIT / DEPLOY / SECURITY / OPS 随 PR 更新 |
+| **刻意不做** | — | Laravel/Dcat 大版本、composer CVE 批量删 vendor、`lagran.go` NFQUEUE 内核逻辑重写 |
 
-下一轮若指定 **ACME 签发**、**节点 API** 或 **后台权限** 可单独做代码向深度扫。
+每轮「全库」= 上述模块 **全部跑门禁**；代码行级深读按模块逐步加深（#107 起 ACME/DNS/lagran 已纳入表内项，而非仅 Cron）。
 
 ### 已知非阻塞项（P2 排期）
 
@@ -262,4 +266,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **104** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。
+PHPUnit 当前 **109** 条 Feature/Unit；以 `phpunit` 退出码为准。若 Actions 未跑完即失败，以上命令在开发机通过即可视为脚本/单测门禁满足。

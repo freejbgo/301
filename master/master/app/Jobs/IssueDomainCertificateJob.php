@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\RediAdminDomain;
 use App\Models\RediDomainCert;
 use App\Services\Acme\CertificateIssuer;
+use App\Services\AcmeChallengeCleanup;
 use App\Services\CnamePrecheckService;
 use App\Services\TenantEdgeService;
 use Illuminate\Bus\Queueable;
@@ -109,6 +110,10 @@ class IssueDomainCertificateJob implements ShouldQueue
         try {
             $issuer->issue($cert);
         } catch (Throwable $e) {
+            AcmeChallengeCleanup::purgeForHosts([
+                $domain->original_url,
+                (string) $cert->domain_name,
+            ]);
             if ($stillValid && in_array($previousStatus, [
                 RediDomainCert::STATUS_ACTIVE,
                 RediDomainCert::STATUS_ISSUED,
