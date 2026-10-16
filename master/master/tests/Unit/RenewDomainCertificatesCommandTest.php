@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Jobs\IssueDomainCertificateJob;
 use App\Models\RediDomainCert;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -58,8 +59,8 @@ class RenewDomainCertificatesCommandTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        $this->artisan('redi:renew-certificates', ['--days' => 25])
-            ->assertExitCode(0);
+        $this->assertSame(0, Artisan::call('redi:renew-certificates', ['--days' => 25]));
+        $this->assertStringContainsString('queued: 1 cert(s)', Artisan::output());
 
         Bus::assertDispatched(IssueDomainCertificateJob::class, function (IssueDomainCertificateJob $job) use ($domainId) {
             return $job->domainId === $domainId;

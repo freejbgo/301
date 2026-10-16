@@ -50,4 +50,6 @@ else
   exit 1
 fi
 echo "已撤销 redi_node / redi_admin @'${NODE_IP}'"
-echo "若需同步撤销 firewalld: sudo bash scripts/centos7/firewalld-revoke-mysql-from-node.sh ${NODE_IP}"
+if [[ -z "${REDI_GRANT_BATCH:-}" ]]; then
+  echo "若需同步撤销 firewalld: sudo bash scripts/centos7/firewalld-revoke-mysql-from-node.sh ${NODE_IP}"
+fi
