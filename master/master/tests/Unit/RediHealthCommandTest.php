@@ -154,6 +154,28 @@ class RediHealthCommandTest extends TestCase
         $this->artisan('redi:health', ['--notify' => true])->assertExitCode(1);
     }
 
+    public function test_health_json_includes_queue_thresholds_in_summary(): void
+    {
+        config([
+            'redi.health_queue_pending_threshold' => 77,
+            'redi.health_queue_stale_hours' => 5,
+        ]);
+
+        \DB::table('redi_nodes')->insert([
+            'enabled' => true,
+            'last_heartbeat_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $exit = Artisan::call('redi:health', ['--json' => true]);
+        $this->assertSame(0, $exit);
+        $payload = json_decode(Artisan::output(), true);
+        $this->assertIsArray($payload);
+        $this->assertSame(77, $payload['summary']['health_queue_pending_threshold']);
+        $this->assertSame(5, $payload['summary']['health_queue_stale_hours']);
+    }
+
     public function test_health_text_mode_prints_hints_without_failing(): void
     {
         \DB::table('redi_nodes')->insert([
