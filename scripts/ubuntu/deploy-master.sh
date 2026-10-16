@@ -289,6 +289,7 @@ SHELL=/bin/bash
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 10 3 * * * ${WEB_USER} cd ${APP} && /usr/bin/php artisan redi:renew-certificates >> ${APP}/storage/logs/renew.log 2>&1
 10 4 * * * ${WEB_USER} cd ${APP} && /usr/bin/php artisan redi:prune-acme-challenges >> ${APP}/storage/logs/prune-acme.log 2>&1
+30 8 * * * ${WEB_USER} cd ${APP} && /usr/bin/php artisan redi:health --notify >> ${APP}/storage/logs/health.log 2>&1
 EOF
 chmod 644 /etc/cron.d/redi-renew
 

@@ -28,6 +28,14 @@ class RediHealthCommandTest extends TestCase
             $table->timestamps();
         });
 
+        Schema::create('redi_cert_deployments', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->unsignedInteger('cert_id');
+            $table->unsignedInteger('node_id');
+            $table->string('status')->default('pending');
+            $table->timestamps();
+        });
+
         Schema::create('redi_admin_domain', function (Blueprint $table) {
             $table->increments('id');
             $table->string('original_url');

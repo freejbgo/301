@@ -44,4 +44,12 @@ return [
 
     'dns_precheck_allow_a_to_pool' => env('REDI_DNS_PRECHECK_ALLOW_A_TO_POOL', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | redi:health --notify Webhook（JSON POST，含 text 纯文摘要）
+    |--------------------------------------------------------------------------
+    */
+
+    'health_webhook_url' => env('REDI_HEALTH_WEBHOOK_URL', ''),
+
 ];
