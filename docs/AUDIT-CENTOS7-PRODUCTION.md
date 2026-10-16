@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-16 复核（#134）：** webhook 失败日志截断；POST payload issues 净化；证书 health 文案域名展示加固；prune 去重 domain 列表；PHPUnit **171**。
+
 **2026-10-16 复核（#133）：** 抽取 `OpsDisplaySanitizer` 统一运营输出净化；EdgeDnsSync 日志用规范化 FQDN；ops/health webhook 文案去控制字符；PHPUnit **169**。
 
 **2026-10-16 复核（#132）：** health 节点展示字段去控制字符；`redi:health` 终端截断 issue 文案；DNS `requireDnsFqdn` 拒绝控制字符；renew 跳过日志不落原始域名；PHPUnit **165**。

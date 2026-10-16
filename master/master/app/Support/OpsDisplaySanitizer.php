@@ -22,4 +22,14 @@ final class OpsDisplaySanitizer
     {
         return str_replace(["\r", "\n", "\0"], '', $value);
     }
+
+    public static function logSnippet(?string $value, int $maxLen = 500): string
+    {
+        $text = trim(self::stripControlChars((string) $value));
+        if ($text === '') {
+            return '';
+        }
+
+        return mb_strlen($text) > $maxLen ? mb_substr($text, 0, $maxLen).'…' : $text;
+    }
 }

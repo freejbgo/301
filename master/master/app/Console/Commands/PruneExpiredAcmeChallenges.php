@@ -16,7 +16,9 @@ class PruneExpiredAcmeChallenges extends Command
     {
         $expiredDomains = RediAcmeChallenge::query()
             ->where('expires_at', '<=', now())
-            ->pluck('domain_name');
+            ->pluck('domain_name')
+            ->unique()
+            ->values();
 
         $deletedChallenges = RediAcmeChallenge::query()
             ->where('expires_at', '<=', now())
@@ -35,7 +37,9 @@ class PruneExpiredAcmeChallenges extends Command
                 $q->whereNull('token')->orWhere('token', '=', '')
                     ->orWhereNull('response_body')->orWhere('response_body', '=', '');
             })
-            ->pluck('domain_name');
+            ->pluck('domain_name')
+            ->unique()
+            ->values();
 
         $deletedInvalid = RediAcmeChallenge::query()
             ->where('expires_at', '>', now())

@@ -19,4 +19,10 @@ class OpsDisplaySanitizerTest extends TestCase
     {
         $this->assertSame('ab', OpsDisplaySanitizer::stripControlChars("a\r\nb"));
     }
+
+    public function test_log_snippet_truncates(): void
+    {
+        $this->assertSame('ab', OpsDisplaySanitizer::logSnippet("a\r\nb", 10));
+        $this->assertSame(501, mb_strlen(OpsDisplaySanitizer::logSnippet(str_repeat('z', 600), 500)));
+    }
 }
