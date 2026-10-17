@@ -93,6 +93,29 @@ class NodeAgentRevisionServiceTest extends TestCase
         $this->assertSame($a['challenges_revision'], $b['challenges_revision']);
     }
 
+    public function test_challenges_revision_ignores_token_with_control_chars(): void
+    {
+        RediAcmeChallenge::create([
+            'domain_name' => 'bad.example',
+            'token' => "ok-token\n",
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+        RediAcmeChallenge::create([
+            'domain_name' => 'good.example',
+            'token' => 't',
+            'response_body' => 'b',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $svc = new NodeAgentRevisionService();
+        $a = $svc->build();
+        RediAcmeChallenge::where('domain_name', 'bad.example')->delete();
+        $b = $svc->build();
+
+        $this->assertSame($a['challenges_revision'], $b['challenges_revision']);
+    }
+
     public function test_rules_revision_ignores_invalid_hosts(): void
     {
         \DB::table('redi_admin_domain')->insert([

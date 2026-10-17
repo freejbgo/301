@@ -83,6 +83,26 @@ class PruneExpiredAcmeChallengesTest extends TestCase
         $this->assertDatabaseMissing('redi_acme_challenge_node_sync', ['domain_name' => 'empty.example']);
     }
 
+    public function test_prune_removes_challenge_with_control_chars_in_token(): void
+    {
+        RediAcmeChallenge::create([
+            'domain_name' => 'bad.example',
+            'token' => "ok-token\n",
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+        RediAcmeChallengeNodeSync::create([
+            'node_id' => 4,
+            'domain_name' => 'bad.example',
+            'synced_at' => now(),
+        ]);
+
+        $this->artisan('redi:prune-acme-challenges')->assertExitCode(0);
+
+        $this->assertDatabaseMissing('redi_acme_challenges', ['domain_name' => 'bad.example']);
+        $this->assertDatabaseMissing('redi_acme_challenge_node_sync', ['domain_name' => 'bad.example']);
+    }
+
     public function test_prune_removes_malformed_response_body_and_sync_rows(): void
     {
         RediAcmeChallenge::create([
