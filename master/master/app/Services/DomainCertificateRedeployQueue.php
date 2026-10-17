@@ -39,8 +39,7 @@ class DomainCertificateRedeployQueue
             $cert = $domain->certificate;
             if (! $cert
                 || ! in_array($cert->status, $deployableStatuses, true)
-                || ! $cert->getCertificatePem()
-                || ! $cert->getPrivateKeyPem()) {
+                || ! CertificateDeployService::certIsEligibleForDeployQueue($cert)) {
                 $skipped++;
                 continue;
             }

@@ -60,6 +60,20 @@ class RediAdminDomainModelTest extends TestCase
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('redi_nodes', function (Blueprint $table) {
+            $table->increments('id');
+            $table->boolean('enabled')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('redi_cert_deployments', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->unsignedInteger('cert_id');
+            $table->unsignedInteger('node_id');
+            $table->string('status')->default('pending');
+            $table->timestamps();
+        });
     }
 
     public function test_certificate_list_filter_none(): void
@@ -153,5 +167,41 @@ class RediAdminDomainModelTest extends TestCase
 
         $this->assertSame(0, \DB::table('redi_acme_challenges')->count());
         $this->assertSame(0, \DB::table('redi_acme_challenge_node_sync')->count());
+    }
+
+    public function test_disabling_domain_clears_cert_deployments(): void
+    {
+        $domain = RediAdminDomain::create([
+            'group_id' => 1,
+            'admin_id' => 1,
+            'original_url' => 'off.example',
+            'skip_url' => 'https://dest.example/',
+            'status' => 1,
+        ]);
+
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domain->id,
+            'domain_name' => 'off.example',
+            'status' => RediDomainCert::STATUS_DEPLOYING,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $nodeId = \DB::table('redi_nodes')->insertGetId([
+            'enabled' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $nodeId,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $domain->status = 2;
+        $domain->save();
+
+        $this->assertSame(0, \DB::table('redi_cert_deployments')->count());
     }
 }

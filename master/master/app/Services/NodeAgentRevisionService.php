@@ -54,7 +54,7 @@ class NodeAgentRevisionService
                 DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($row);
             })
             ->filter(function ($row) {
-                return DomainRecordNormalizer::certMatchesAdminDomain($row);
+                return CertificateDeployService::certIsNodePullable($row);
             })
             ->map(function ($row) {
                 $row->domain_name = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
