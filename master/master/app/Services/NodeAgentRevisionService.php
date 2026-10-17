@@ -23,9 +23,7 @@ class NodeAgentRevisionService
                 return $row;
             })
             ->filter(function ($row) {
-                return $row->domain_name !== ''
-                    && HostNameValidator::isValidHostLabel($row->domain_name)
-                    && AcmeChallengeQuery::http01ContentValid($row->token, $row->response_body);
+                return AcmeChallengeQuery::nodeReadyRow($row->domain_name, $row->token, $row->response_body);
             })
             ->values();
 
