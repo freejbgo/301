@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\NodeAgentInputFields;
 use Illuminate\Foundation\Http\Middleware\TrimStrings as Middleware;
 use Illuminate\Support\Str;
 
@@ -16,11 +17,7 @@ class TrimStrings extends Middleware
         'current_password',
         'password',
         'password_confirmation',
-        // 节点 API：须在服务端检测控制字符，不可被全局 trim 掉。
-        'domains',
-        'domains.*',
-        'version',
-        'error',
+        ...NodeAgentInputFields::MIDDLEWARE_EXCEPT,
     ];
 
     protected function transform($key, $value)
