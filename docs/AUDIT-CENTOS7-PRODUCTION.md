@@ -223,6 +223,10 @@
 
 **2026-10-17 #222 已合并 `main`：** 见 [PR #222](https://github.com/freejbgo/301/pull/222)。
 
+**2026-10-17 #223 已合并 `main`：** 见 [PR #223](https://github.com/freejbgo/301/pull/223)。
+
+**2026-10-17 复核（#224）：** `realign` 增加 `$persist`；`NodeAgentRevisionService` 仅内存对齐，避免每 5s revision 写库+reconcile；PHPUnit **272**（**512** assertions）。
+
 **2026-10-17 复核（#223）：** `refuseQueueDeploy` 复用 `afterCertMaterialOrHostChange`；PHPUnit **271**（**511** assertions）。
 
 **2026-10-17 复核（#222）：** `afterCertMaterialOrHostChange` 统一 prune+reconcile；realign 漂移修正走同一路径；PHPUnit **271**（**511** assertions）。
