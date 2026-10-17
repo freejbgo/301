@@ -186,6 +186,23 @@ class CertificateDeployService
     /**
      * 证书已不可被节点拉取时，删除 pending/failed 部署行（保留 ok，便于审计）。
      */
+    /**
+     * 按当前部署行与可拉取条件回写证书 status / last_error（供模型钩子与运维路径调用）。
+     */
+    public function reconcileCertDeployStatus(RediDomainCert $cert): void
+    {
+        if (! Schema::hasTable('redi_cert_deployments')) {
+            return;
+        }
+
+        if (! RediCertDeployment::query()->where('cert_id', $cert->id)->exists()) {
+            return;
+        }
+
+        $cert->loadMissing('domain');
+        $this->refreshCertStatusFromDeployments($cert);
+    }
+
     public function pruneNonPullableDeployments(RediDomainCert $cert): int
     {
         if (! Schema::hasTable('redi_cert_deployments')) {

@@ -12,6 +12,15 @@
 | [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) | 已上线环境增量升级 |
 | [../scripts/dev-preflight.sh](../scripts/dev-preflight.sh) | 开发机发版前自检（§9） |
 
+### 运维 Agent「继续」约定（2026-10-17）
+
+用户说 **「继续」** 时按序执行：
+
+1. **复核**当前草稿 PR 与当日已合并链路（逻辑、测试、文档一致性）；有问题先在同一迭代修完。
+2. **合并**草稿 PR 进 `main` 并 **删除** 远程特性分支。
+3. **全库深度扫**（PHP/Go/脚本/文档），优先修容易出错的边界（证书部署、ACME、DNS、节点 Agent）。
+4. 跑 `bash scripts/dev-preflight.sh`，更新本文档进度，再开下一号草稿 PR。
+
 ---
 
 ## 1. 部署与运维面（CentOS only）
@@ -190,7 +199,9 @@
 
 **2026-10-17 #218 已合并 `main`：** 见 [PR #218](https://github.com/freejbgo/301/pull/218)。
 
-**2026-10-17 复核（#219）：** `refreshCertStatusFromDeployments` 仅在 `certIsNodePullable` 时标为 active；PHPUnit **270**（**509** assertions）。
+**2026-10-17 复核（#211–#219 合并前抽检）：** 证书部署链路一致；补 `reconcileCertDeployStatus`（PEM/主机名变更后自动回写 status，避免残留 active）；约定「继续」流程见上文。
+
+**2026-10-17 复核（#219）：** `refreshCertStatusFromDeployments` 仅在 `certIsNodePullable` 时标为 active；`reconcileCertDeployStatus`；PHPUnit **271**（**511** assertions）。
 
 **2026-10-17 复核（#218）：** `markNodeAck` 部署行未变时仍 `refreshCertStatusFromDeployments`（重复 ack 可从 deploying→active）；PHPUnit **269**（**507** assertions）。
 
@@ -585,4 +596,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **270** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **271** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。

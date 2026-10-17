@@ -46,7 +46,9 @@ class RediAdminDomain extends Model
                 $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
                 if ($cert) {
                     $cert->setRelation('domain', $domain);
-                    app(CertificateDeployService::class)->pruneNonPullableDeployments($cert);
+                    $service = app(CertificateDeployService::class);
+                    $service->pruneNonPullableDeployments($cert);
+                    $service->reconcileCertDeployStatus($cert->fresh()->load('domain'));
                 }
             }
 

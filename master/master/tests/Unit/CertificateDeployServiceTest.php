@@ -640,6 +640,40 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertSame(0, CertificateDeployService::countActionableDeployments('pending'));
     }
 
+    public function test_cert_save_without_pem_reconciles_active_status_down(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+        ]);
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $cert->id,
+            'node_id' => $node->id,
+            'status' => 'ok',
+            'deployed_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $cert->certificate = null;
+        $cert->private_key = null;
+        $cert->save();
+
+        $this->assertSame(RediDomainCert::STATUS_ISSUED, $cert->fresh()->status);
+        $this->assertStringContainsString('不可下发', (string) $cert->fresh()->last_error);
+    }
+
     public function test_cert_save_without_pem_prunes_pending_deployments(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
