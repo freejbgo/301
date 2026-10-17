@@ -178,6 +178,10 @@
 
 **2026-10-17 #212 已合并 `main`：** 见 [PR #212](https://github.com/freejbgo/301/pull/212)。
 
+**2026-10-17 #213 已合并 `main`：** 见 [PR #213](https://github.com/freejbgo/301/pull/213)。
+
+**2026-10-17 复核（#214）：** 域名停用：凡停用前仍有部署行（含 failed 等）均写入 `DISABLE_DEPLOY_CANCEL_MSG`；PHPUnit **266**（**503** assertions）。
+
 **2026-10-17 复核（#213）：** 域名停用时对「已签发但仍有待部署行」的证书写入 `DISABLE_DEPLOY_CANCEL_MSG`；PHPUnit **265**（**501** assertions）。
 
 **2026-10-17 复核（#212）：** `handleDomainReenabledFromDisabled` 集中 2→1 部署逻辑；`DISABLE_DEPLOY_CANCEL_MSG` 公开；Agent 空证书列表注释；PHPUnit **264**（**499** assertions）。

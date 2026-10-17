@@ -82,7 +82,7 @@ class RediAdminDomain extends Model
                     $cert->status = RediDomainCert::STATUS_ISSUED;
                     $cert->last_error = self::DISABLE_DEPLOY_CANCEL_MSG;
                     $cert->save();
-                } elseif ($hadDeployments && $cert->status === RediDomainCert::STATUS_ISSUED) {
+                } elseif ($hadDeployments) {
                     $cert->last_error = self::DISABLE_DEPLOY_CANCEL_MSG;
                     $cert->save();
                 }
