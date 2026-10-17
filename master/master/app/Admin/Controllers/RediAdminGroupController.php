@@ -14,6 +14,7 @@ use Dcat\Admin\Admin;
 use Dcat\Admin\Layout\Content;
 use App\Admin\Forms\UrlSetByGroup;
 use Dcat\Admin\Widgets\Modal;
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Validation\ValidationException;
 
 class RediAdminGroupController extends AdminController
@@ -32,9 +33,13 @@ class RediAdminGroupController extends AdminController
     {
         return Grid::make(new RediAdminGroup(), function (Grid $grid) {
             $grid->column('id')->sortable();
-            $grid->column('name');
+            $grid->column('name')->display(function ($value) {
+                return e(OpsDisplaySanitizer::field($value, '—', 120));
+            });
             if (AdminTenantContext::isPlatformAdministrator()) {
-                $grid->column('admin_name', '所属账号');
+                $grid->column('admin_name', '所属账号')->display(function ($value) {
+                    return e(OpsDisplaySanitizer::field($value, '—', 120));
+                });
             }
             $grid->column('status', '状态')->using([1 => "启用", 2 => "停用"]);
             $grid->column('created_at');

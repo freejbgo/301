@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-17 复核（#157）：** `domain.Encoded.Decode` 拒控制字符；Agent 主控错误响应日志 `LogSnippet`；后台节点/分组/域名列表名称类列 `field()`；PHPUnit **197**（Go +1）。
+
 **2026-10-17 复核（#156）：** Go `host.StripControlChars` / `LogSnippet`；Agent ack 错误复用；Echo JS 响应统一 `Content-Type`；redirect `remoteIP` 净化；后台域名列表 `original_url`/`skip_url` 展示 `field()`；PHPUnit **197**（Go +2）。
 
 **2026-10-17 复核（#155）：** Go `host.SanitizeClientIP` 统一 `/c.js`、`/api.js` 限流键与 `cip` 字段（拒控制字符）；PHPUnit **197**（Go +2）。

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"redi-multi/util/host"
 )
 
 type Decoded struct {
@@ -28,6 +30,9 @@ const maxEncodedParts = 256
 
 func (d *Encoded) Decode() string {
 	domainEncode := d.Content
+	if host.ContainsControlChars(domainEncode) {
+		return ""
+	}
 	if len(domainEncode) > maxEncodedDomainLen {
 		return ""
 	}

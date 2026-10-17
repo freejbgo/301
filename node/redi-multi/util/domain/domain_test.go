@@ -2,6 +2,12 @@ package domain
 
 import "testing"
 
+func TestEncodedDecodeRejectsControlChars(t *testing.T) {
+	if (&Encoded{Content: "49,50\n"}).Decode() != "" {
+		t.Fatal("expected empty for control chars in encoded domain")
+	}
+}
+
 func TestEncodedDecodeRejectsGarbage(t *testing.T) {
 	d := Encoded{Content: "foo,bar,999999999999"}
 	if d.Decode() != "" {
