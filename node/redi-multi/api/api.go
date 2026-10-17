@@ -115,7 +115,7 @@ func handleApiJs(c echo.Context) error {
 }
 
 func allowApiJsDomainRate(ip, encodedDomain string) bool {
-	if len(encodedDomain) > 4096 {
+	if len(encodedDomain) > 4096 || host.ContainsControlChars(encodedDomain) {
 		return false
 	}
 	key := ip + "|" + strings.TrimSpace(encodedDomain)

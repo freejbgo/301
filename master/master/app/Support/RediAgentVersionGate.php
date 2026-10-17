@@ -18,6 +18,18 @@ class RediAgentVersionGate
         return $version === '' ? null : $version;
     }
 
+    /**
+     * @param  array<string, mixed>  $input
+     */
+    public static function resolveFromInput(array $input, ?string $storedVersion = null): ?string
+    {
+        if (array_key_exists('version', $input)) {
+            return self::sanitize($input['version']);
+        }
+
+        return $storedVersion !== null ? self::sanitize($storedVersion) : null;
+    }
+
     public static function rejectResponse(?string $version): ?JsonResponse
     {
         $min = trim((string) config('redi.min_agent_version', ''));
