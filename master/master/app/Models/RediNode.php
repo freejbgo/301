@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -11,6 +12,23 @@ class RediNode extends Model
 {
     protected static function booted(): void
     {
+        static::saving(function (RediNode $node) {
+            if (! $node->isDirty('note')) {
+                return;
+            }
+            $note = OpsDisplaySanitizer::stripControlChars((string) $node->note);
+            $note = trim($note);
+            if ($note === '') {
+                $node->note = null;
+
+                return;
+            }
+            if (mb_strlen($note) > 2000) {
+                $note = mb_substr($note, 0, 2000);
+            }
+            $node->note = $note;
+        });
+
         static::saved(function (RediNode $node) {
             if (! $node->enabled || ! $node->wasChanged('enabled')) {
                 return;

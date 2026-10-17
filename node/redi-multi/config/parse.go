@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"redi-multi/util/host"
 )
 
 func jsonBool(payload map[string]interface{}, key string, defaultVal bool) bool {
@@ -85,6 +87,20 @@ func applyEnvOverrides() {
 func mergeLagranPortsFromListeners() {
 	existing := lagranPortFromMap()
 	Lagran["port"] = MergeListenerPorts(existing, Addr, TlsAddr)
+}
+
+func validateLoadedListenConfig() {
+	validateNoControlChars("addr", Addr)
+	validateNoControlChars("tls_addr", TlsAddr)
+	validateNoControlChars("api_listen", ApiListen)
+	validateNoControlChars("server_ip", ServerIp)
+	validateNoControlChars("default_redirect_url", DefaultRedirectUrl)
+}
+
+func validateNoControlChars(label, value string) {
+	if host.ContainsControlChars(value) {
+		log.Fatalf("config: %s contains invalid control characters", label)
+	}
 }
 
 func logStartupSummary() {

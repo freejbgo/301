@@ -49,6 +49,7 @@ func Init() {
 	normalizeLagranMap()
 
 	applyEnvOverrides()
+	validateLoadedListenConfig()
 	mergeLagranPortsFromListeners()
 	logStartupSummary()
 }
