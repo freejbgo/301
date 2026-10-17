@@ -23,7 +23,7 @@ class NodeAgentRevisionService
                 return $row;
             })
             ->filter(function ($row) {
-                return AcmeChallengeQuery::nodeReadyRow($row->domain_name, $row->token, $row->response_body);
+                return AcmeChallengeQuery::nodePublishableRow($row->domain_name, $row->token, $row->response_body);
             })
             ->values();
 

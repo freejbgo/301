@@ -59,7 +59,7 @@ class PruneExpiredAcmeChallenges extends Command
         $malformedDomains = AcmeChallengeQuery::ready()
             ->get(['domain_name', 'token', 'response_body'])
             ->filter(function ($row) {
-                return ! AcmeChallengeQuery::nodeReadyRow($row->domain_name, $row->token, $row->response_body);
+                return ! AcmeChallengeQuery::nodePublishableRow($row->domain_name, $row->token, $row->response_body);
             })
             ->pluck('domain_name')
             ->unique()
