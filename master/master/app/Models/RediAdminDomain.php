@@ -50,9 +50,15 @@ class RediAdminDomain extends Model
 
             if ($newStatus === 1) {
                 $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
-                if ($cert && $cert->last_error === self::DISABLE_DEPLOY_CANCEL_MSG) {
-                    $cert->last_error = null;
-                    $cert->save();
+                if ($cert) {
+                    $cert->setRelation('domain', $domain);
+                    if ($cert->last_error === self::DISABLE_DEPLOY_CANCEL_MSG) {
+                        $cert->last_error = null;
+                        $cert->save();
+                    }
+                    if (CertificateDeployService::certIsEligibleForDeployQueue($cert)) {
+                        app(CertificateDeployService::class)->queueDeploy($cert);
+                    }
                 }
 
                 return;
