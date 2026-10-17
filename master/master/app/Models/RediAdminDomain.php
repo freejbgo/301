@@ -42,6 +42,14 @@ class RediAdminDomain extends Model
         });
 
         static::saved(function (self $domain) {
+            if ($domain->wasChanged('original_url')) {
+                $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
+                if ($cert) {
+                    $cert->setRelation('domain', $domain);
+                    app(CertificateDeployService::class)->pruneNonPullableDeployments($cert);
+                }
+            }
+
             if (! $domain->wasChanged('status')) {
                 return;
             }

@@ -237,19 +237,30 @@ class CertificateDeployService
             );
         }
 
+        $this->pruneStaleDeploymentsForNode($node);
+
+        self::forgetActionableDeploymentMetrics();
+    }
+
+    public function pruneStaleDeploymentsForNode(RediNode $node): void
+    {
+        $pruned = false;
         RediCertDeployment::query()
             ->where('node_id', $node->id)
             ->whereIn('status', ['pending', 'failed'])
             ->with(['cert.domain'])
             ->get()
-            ->each(function (RediCertDeployment $deployment) {
+            ->each(function (RediCertDeployment $deployment) use (&$pruned) {
                 $cert = $deployment->cert;
                 if (! $cert || ! self::certIsNodePullable($cert)) {
                     $deployment->delete();
+                    $pruned = true;
                 }
             });
 
-        self::forgetActionableDeploymentMetrics();
+        if ($pruned) {
+            self::forgetActionableDeploymentMetrics();
+        }
     }
 
     /**
