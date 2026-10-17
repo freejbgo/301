@@ -10,18 +10,28 @@ class RediOpsWebhook
 {
     public static function healthWebhookUrl(): string
     {
-        return trim((string) config('redi.health_webhook_url', ''));
+        return self::configWebhookUrl('health_webhook_url');
     }
 
     /** Cron 失败等；未配置 ops 时回退 health URL。 */
     public static function webhookUrl(): string
     {
-        $ops = trim((string) config('redi.ops_webhook_url', ''));
+        $ops = self::configWebhookUrl('ops_webhook_url');
         if ($ops !== '') {
             return $ops;
         }
 
         return self::healthWebhookUrl();
+    }
+
+    protected static function configWebhookUrl(string $configKey): string
+    {
+        $raw = (string) config('redi.'.$configKey, '');
+        if ($raw === '' || $raw !== trim($raw) || OpsDisplaySanitizer::containsControlChars($raw)) {
+            return '';
+        }
+
+        return trim($raw);
     }
 
     /**
