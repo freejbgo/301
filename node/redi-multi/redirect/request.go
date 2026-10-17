@@ -5,6 +5,8 @@ import (
 	"io"
 	"net"
 	"strings"
+
+	hostutil "redi-multi/util/host"
 )
 
 const maxRequestLineLen = 8192
@@ -25,6 +27,9 @@ func readRequest(conn net.Conn) (*httpRequest, error) {
 	}
 	parts := strings.Split(strings.TrimSpace(line), " ")
 	if len(parts) < 2 {
+		return nil, io.ErrUnexpectedEOF
+	}
+	if hostutil.ContainsControlChars(parts[0]) || hostutil.ContainsControlChars(parts[1]) {
 		return nil, io.ErrUnexpectedEOF
 	}
 	req := &httpRequest{Method: parts[0], Path: parts[1]}

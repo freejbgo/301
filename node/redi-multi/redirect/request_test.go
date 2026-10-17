@@ -1,6 +1,25 @@
 package redirect
 
-import "testing"
+import (
+	"net"
+	"testing"
+)
+
+func TestReadRequestRejectsControlCharsInRequestLine(t *testing.T) {
+	server, client := net.Pipe()
+	defer server.Close()
+	defer client.Close()
+	done := make(chan error, 1)
+	go func() {
+		_, err := readRequest(server)
+		done <- err
+	}()
+	_, _ = client.Write([]byte("GET /c.js\x00 HTTP/1.1\r\nHost: example.com\r\n\r\n"))
+	err := <-done
+	if err == nil {
+		t.Fatal("expected error for control chars in request line")
+	}
+}
 
 func TestHostWithoutPort(t *testing.T) {
 	cases := map[string]string{
