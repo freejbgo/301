@@ -15,10 +15,10 @@ class AcmeChallengeCleanup
     {
         $hosts = [];
         foreach ($domainNames as $raw) {
-            $host = HostNameValidator::toCanonicalAscii((string) $raw);
-            if ($host !== '' && HostNameValidator::isValidHostLabel($host)) {
-                $hosts[$host] = true;
+            if (! HostNameValidator::isNodePublishableHost((string) $raw)) {
+                continue;
             }
+            $hosts[HostNameValidator::toCanonicalAscii((string) $raw)] = true;
         }
         if ($hosts === []) {
             return;

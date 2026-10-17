@@ -73,6 +73,26 @@ class IssueDomainCertificateJob implements ShouldQueue
             return;
         }
 
+        if (! HostNameValidator::isNodePublishableHost((string) $domain->original_url)) {
+            $canonicalHost = HostNameValidator::toCanonicalAscii((string) $domain->original_url);
+
+            $cert = RediDomainCert::firstOrCreate(
+                ['domain_id' => $domain->id],
+                [
+                    'domain_name' => $canonicalHost,
+                    'status' => RediDomainCert::STATUS_NONE,
+                ]
+            );
+
+            $cert->domain_name = $canonicalHost;
+            $cert->admin_id = (int) $domain->admin_id;
+            $cert->status = RediDomainCert::STATUS_FAILED;
+            $cert->last_error = '域名主机名无效，无法签发证书';
+            $cert->save();
+
+            return;
+        }
+
         $canonicalHost = HostNameValidator::toCanonicalAscii((string) $domain->original_url);
 
         $cert = RediDomainCert::firstOrCreate(
@@ -87,14 +107,6 @@ class IssueDomainCertificateJob implements ShouldQueue
         $cert->admin_id = (int) $domain->admin_id;
         $cert->save();
 
-        if ($canonicalHost === '' || ! HostNameValidator::isValidHostLabel($canonicalHost)) {
-            $cert->status = RediDomainCert::STATUS_FAILED;
-            $cert->last_error = '域名主机名无效，无法签发证书';
-            $cert->save();
-
-            return;
-        }
-
         TenantEdgeService::ensureForAdmin((int) $domain->admin_id);
         $edge = \App\Models\RediTenantEdge::where('admin_id', $domain->admin_id)->first();
         $edgeFqdn = $edge ? $edge->edge_fqdn : '';
@@ -108,14 +120,15 @@ class IssueDomainCertificateJob implements ShouldQueue
         }
 
         $customerHost = $canonicalHost;
-        $edgeHost = HostNameValidator::toCanonicalAscii($edgeFqdn);
-        if ($edgeHost === '' || ! HostNameValidator::isValidHostLabel($edgeHost)) {
+        if (! HostNameValidator::isNodePublishableHost($edgeFqdn)) {
             $cert->status = RediDomainCert::STATUS_PENDING_DNS;
             $cert->last_error = '租户 edge 主机名无效，请检查平台主域名与租户 token';
             $cert->save();
 
             return;
         }
+
+        $edgeHost = HostNameValidator::toCanonicalAscii($edgeFqdn);
 
         if (! CnamePrecheckService::pointsToEdge($customerHost, $edgeHost)) {
             $cert->status = RediDomainCert::STATUS_PENDING_DNS;
