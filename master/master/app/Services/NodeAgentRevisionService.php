@@ -6,6 +6,7 @@ use App\Models\RediDomainCert;
 use App\Support\HostNameValidator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class NodeAgentRevisionService
 {
@@ -32,7 +33,7 @@ class NodeAgentRevisionService
             ->filter()
             ->values();
 
-        $certs = RediDomainCert::query()
+        $certsQuery = RediDomainCert::query()
             ->where(function ($query) {
                 $query->whereIn('status', [
                     RediDomainCert::STATUS_ISSUED,
@@ -46,7 +47,13 @@ class NodeAgentRevisionService
             })
             ->whereHas('domain', function ($query) {
                 $query->where('status', 1);
-            })
+            });
+
+        if (Schema::hasTable('redi_cert_deployments')) {
+            $certsQuery->whereHas('deployments');
+        }
+
+        $certs = $certsQuery
             ->with('domain')
             ->orderBy('id')
             ->get(['id', 'domain_id', 'domain_name', 'updated_at'])

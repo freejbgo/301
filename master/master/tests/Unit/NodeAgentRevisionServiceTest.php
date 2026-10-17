@@ -48,6 +48,14 @@ class NodeAgentRevisionServiceTest extends TestCase
             $table->text('private_key')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('redi_cert_deployments', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->unsignedInteger('cert_id');
+            $table->unsignedInteger('node_id');
+            $table->string('status')->default('pending');
+            $table->timestamps();
+        });
     }
 
     public function test_challenges_revision_ignores_empty_token_rows(): void
@@ -136,10 +144,66 @@ class NodeAgentRevisionServiceTest extends TestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => 1,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         (new NodeAgentRevisionService())->build();
 
         $this->assertSame('stale.example', RediDomainCert::query()->find($certId)->domain_name);
+    }
+
+    public function test_certificates_revision_ignores_pullable_certs_without_deployment_rows(): void
+    {
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => 'assigned.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $assignedId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => 1,
+            'domain_name' => 'assigned.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $assignedId,
+            'node_id' => 1,
+            'status' => 'ok',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $svc = new NodeAgentRevisionService();
+        $a = $svc->build();
+
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => 'unassigned.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => 2,
+            'domain_name' => 'unassigned.example',
+            'status' => 'issued',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $b = $svc->build();
+
+        $this->assertSame($a['certificates_revision'], $b['certificates_revision']);
     }
 
     public function test_certificates_revision_ignores_control_char_domain_names(): void
