@@ -203,6 +203,14 @@ class CertificateDeployService
         $this->refreshCertStatusFromDeployments($cert);
     }
 
+    /** PEM / 主机名 / 域名绑定变更后：清理不可拉取部署行并回写证书状态。 */
+    public function afterCertMaterialOrHostChange(RediDomainCert $cert): void
+    {
+        $cert->loadMissing('domain');
+        $this->pruneNonPullableDeployments($cert);
+        $this->reconcileCertDeployStatus($cert->fresh()->load('domain'));
+    }
+
     public function pruneNonPullableDeployments(RediDomainCert $cert): int
     {
         if (! Schema::hasTable('redi_cert_deployments')) {

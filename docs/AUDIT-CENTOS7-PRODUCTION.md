@@ -219,6 +219,10 @@
 
 **2026-10-17 #220 已合并 `main`：** 见 [PR #220](https://github.com/freejbgo/301/pull/220)（#145–#220 复核纪要；`refuseQueueDeploy` reconcile）。
 
+**2026-10-17 #221 已合并 `main`：** 见 [PR #221](https://github.com/freejbgo/301/pull/221)。
+
+**2026-10-17 复核（#222）：** `afterCertMaterialOrHostChange` 统一 prune+reconcile；realign 漂移修正走同一路径；PHPUnit **271**（**511** assertions）。
+
 **2026-10-17 复核（#221）：** `realignCertDomainNameFromAdminDomain` 使用 `saveQuietly` + 显式 reconcile；PHPUnit **271**（**511** assertions）。
 
 **2026-10-17 复核（#220）：** `refuseQueueDeploy` 在写入跳过原因前先 reconcile，避免残留 active；SECURITY 证书队列说明；PHPUnit **271**（**511** assertions）。

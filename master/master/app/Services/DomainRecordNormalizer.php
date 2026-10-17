@@ -71,7 +71,7 @@ class DomainRecordNormalizer
             $cert->domain_name = $canonical;
             $cert->saveQuietly();
             if (Schema::hasTable('redi_cert_deployments')) {
-                app(CertificateDeployService::class)->reconcileCertDeployStatus($cert->fresh()->load('domain'));
+                app(CertificateDeployService::class)->afterCertMaterialOrHostChange($cert->fresh()->load('domain'));
             }
         }
 
