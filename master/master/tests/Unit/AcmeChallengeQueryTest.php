@@ -19,6 +19,14 @@ class AcmeChallengeQueryTest extends TestCase
         $this->assertFalse(AcmeChallengeQuery::http01ContentValid('ok-token', '   '));
     }
 
+    public function test_node_publishable_row_rejects_control_chars_in_any_field(): void
+    {
+        $this->assertFalse(AcmeChallengeQuery::nodePublishableRow("bad\x00.example", 'ok-token', 'body'));
+        $this->assertFalse(AcmeChallengeQuery::nodePublishableRow('good.example', "tok\n", 'body'));
+        $this->assertFalse(AcmeChallengeQuery::nodePublishableRow('good.example', 'ok-token', "body\n"));
+        $this->assertTrue(AcmeChallengeQuery::nodePublishableRow('good.example', 'ok-token', 'body'));
+    }
+
     public function test_node_ready_row_requires_valid_host_and_content(): void
     {
         $this->assertTrue(AcmeChallengeQuery::nodeReadyRow('good.example', 'ok-token', 'body'));

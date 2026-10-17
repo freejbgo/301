@@ -249,6 +249,24 @@ class NodeAgentApiTest extends TestCase
         $this->assertNotContains('trail.example', $names);
     }
 
+    public function test_challenges_synced_ignores_domain_when_challenge_token_has_control_chars(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'valid.example',
+            'token' => "ok-token\n",
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/challenges-synced', ['domains' => ['valid.example']])
+            ->assertOk()
+            ->assertJsonPath('synced_count', 0)
+            ->assertJsonPath('ignored_count', 1);
+    }
+
     public function test_challenges_synced_ignores_malformed_response_body(): void
     {
         [, $token] = $this->createNodeWithToken();
