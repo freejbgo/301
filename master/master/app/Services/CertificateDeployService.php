@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
-use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
 use Illuminate\Support\Facades\DB;
 
@@ -225,7 +224,7 @@ class CertificateDeployService
             })
             ->get()
             ->filter(function (RediDomainCert $cert) {
-                return HostNameValidator::isNodePublishableHost((string) $cert->domain_name);
+                return DomainRecordNormalizer::certMatchesAdminDomain($cert);
             });
     }
 }

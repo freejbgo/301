@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Jobs\IssueDomainCertificateJob;
 use App\Models\RediDomainCert;
+use App\Services\DomainRecordNormalizer;
 use App\Support\HostNameValidator;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +26,7 @@ class RenewDomainCertificatesCommand extends Command
         $validatingStuckHours = max(1, (int) config('redi.renew_validating_stuck_hours', 3));
 
         $certs = RediDomainCert::query()
+            ->with('domain')
             ->renewalDue($deadline, $validatingStuckHours)
             ->whereHas('domain', function ($query) {
                 $query->where('status', 1);
@@ -35,15 +37,32 @@ class RenewDomainCertificatesCommand extends Command
         $queued = 0;
         $i = 0;
         foreach ($certs as $cert) {
-            if (! HostNameValidator::isNodePublishableHost((string) $cert->domain_name)) {
-                Log::warning('redi:renew-certificates skip invalid domain_name', [
+            $canonical = DomainRecordNormalizer::originalUrlIfValid(
+                (string) optional($cert->domain)->original_url ?? ''
+            );
+            if ($canonical === '') {
+                Log::warning('redi:renew-certificates skip invalid domain original_url', [
                     'cert_id' => $cert->id,
+                    'domain_id' => $cert->domain_id,
                 ]);
                 $this->warn('跳过非法域名 cert #'.$cert->id);
                 continue;
             }
 
-            $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
+            $certHost = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
+            if ($certHost !== $canonical) {
+                if (! $dryRun) {
+                    $cert->domain_name = $canonical;
+                    $cert->save();
+                }
+                Log::info('redi:renew-certificates realigned cert domain_name', [
+                    'cert_id' => $cert->id,
+                    'from' => $certHost,
+                    'to' => $canonical,
+                ]);
+            }
+
+            $host = $canonical;
 
             if ($dryRun) {
                 $this->line(sprintf(

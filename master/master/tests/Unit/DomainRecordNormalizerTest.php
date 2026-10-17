@@ -43,6 +43,20 @@ class DomainRecordNormalizerTest extends TestCase
         $this->assertFalse(DomainRecordNormalizer::isAllowedRedirectUrl('https://evil@trusted.example/'));
     }
 
+    public function test_cert_matches_admin_domain(): void
+    {
+        $domain = new \App\Models\RediAdminDomain();
+        $domain->original_url = 'good.example';
+
+        $cert = new \App\Models\RediDomainCert();
+        $cert->setRelation('domain', $domain);
+        $cert->domain_name = 'good.example';
+        $this->assertTrue(DomainRecordNormalizer::certMatchesAdminDomain($cert));
+
+        $cert->domain_name = 'other.example';
+        $this->assertFalse(DomainRecordNormalizer::certMatchesAdminDomain($cert));
+    }
+
     public function test_original_url_hash_is_stable(): void
     {
         $hash = DomainRecordNormalizer::originalUrlHash('https://Example.com/');

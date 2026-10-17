@@ -149,6 +149,10 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-17 #186 已合并 `main`：** 见 [PR #186](https://github.com/freejbgo/301/pull/186)。
+
+**2026-10-17 复核（#187）：** `certMatchesAdminDomain` 防证书行与域名漂移误下发；续期前自动对齐 `domain_name`；节点规则用 `originalUrlIfValid` 兼容遗留 URL；PHPUnit **232**（**430** assertions）。
+
 **2026-10-17 #185 已合并 `main`：** 见 [PR #185](https://github.com/freejbgo/301/pull/185)。
 
 **2026-10-17 复核（#186）：** 后台/批量/CSV/模型保存全面改用 `originalUrlIfValid`；签发 Job 先算可发布主机名；`CertificateIssuer` 签发前校验 cert 行主机名。

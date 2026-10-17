@@ -157,6 +157,36 @@ class RenewDomainCertificatesCommandTest extends TestCase
         Bus::assertNothingDispatched();
     }
 
+    public function test_renew_realigns_stale_cert_domain_name_before_queue(): void
+    {
+        Bus::fake();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'aligned.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => 'stale.example',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+            'expires_at' => now()->addDays(10),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertSame(0, Artisan::call('redi:renew-certificates', ['--days' => 25]));
+
+        $this->assertSame(
+            'aligned.example',
+            RediDomainCert::query()->where('domain_id', $domainId)->value('domain_name')
+        );
+
+        Bus::assertDispatched(IssueDomainCertificateJob::class);
+    }
+
     public function test_renew_queues_stuck_validating_cert(): void
     {
         Bus::fake();
