@@ -11,6 +11,34 @@ func ContainsControlChars(s string) bool {
 	return strings.ContainsAny(s, "\r\n\x00\t")
 }
 
+// StripControlChars 移除 ContainsControlChars 所检测的字符。
+func StripControlChars(s string) string {
+	if !ContainsControlChars(s) {
+		return s
+	}
+	return strings.Map(func(r rune) rune {
+		switch r {
+		case '\r', '\n', '\x00', '\t':
+			return -1
+		default:
+			return r
+		}
+	}, s)
+}
+
+// LogSnippet 与主控 OpsDisplaySanitizer::logSnippet 对齐（去控制字符、trim、限长）。
+func LogSnippet(s string, maxLen int) string {
+	if maxLen <= 0 {
+		return ""
+	}
+	text := strings.TrimSpace(StripControlChars(s))
+	if len(text) > maxLen {
+		return text[:maxLen]
+	}
+
+	return text
+}
+
 // SanitizeUserAgent 与主控 redirect 路径一致：拒控制字符、trim、最长 512。
 func SanitizeUserAgent(ua string) string {
 	if ContainsControlChars(ua) {

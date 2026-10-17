@@ -8,6 +8,7 @@ import (
 	"redi-multi/api"
 	"redi-multi/certs"
 	"redi-multi/rules"
+	hostutil "redi-multi/util/host"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -111,9 +112,10 @@ func writeRedirect(conn net.Conn, code int, location string) {
 }
 
 func remoteIP(conn net.Conn) string {
-	host, _, err := net.SplitHostPort(conn.RemoteAddr().String())
+	raw := conn.RemoteAddr().String()
+	h, _, err := net.SplitHostPort(raw)
 	if err != nil {
-		return conn.RemoteAddr().String()
+		return hostutil.SanitizeClientIP(raw)
 	}
-	return host
+	return hostutil.SanitizeClientIP(h)
 }

@@ -45,10 +45,15 @@ func Start() {
 	e.Logger.Fatal(e.Start(listen))
 }
 
+func setJSResponseHeaders(c echo.Context) {
+	c.Response().Header().Set("Content-Type", "application/javascript; charset=utf-8")
+}
+
 func rateLimitMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ip := c.RealIP()
 		if !allowRate(ip) {
+			setJSResponseHeaders(c)
 			return c.String(http.StatusTooManyRequests, "// rate limit")
 		}
 		return next(c)
@@ -104,21 +109,22 @@ func pruneRateMap(cutoff time.Time) {
 }
 
 func handleCjs(c echo.Context) error {
-	c.Response().Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	setJSResponseHeaders(c)
 	return c.String(http.StatusOK, cjsSource(host.SanitizeClientIP(c.RealIP()), host.SanitizeUserAgent(c.Request().UserAgent())))
 }
 
 func handleApiJs(c echo.Context) error {
 	encoded := c.QueryParam("d")
 	if !apiJsQueryValid(encoded) {
-		c.Response().Header().Set("Content-Type", "application/javascript; charset=utf-8")
+		setJSResponseHeaders(c)
 		return c.String(http.StatusBadRequest, "// invalid")
 	}
 	if !allowApiJsDomainRate(c.RealIP(), encoded) {
+		setJSResponseHeaders(c)
 		return c.String(http.StatusTooManyRequests, "// rate limit")
 	}
 	body, code := apiJsSource(encoded)
-	c.Response().Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	setJSResponseHeaders(c)
 	return c.String(code, body)
 }
 

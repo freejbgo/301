@@ -93,7 +93,9 @@ class RediAdminDomainController extends AdminController
 
                 return $name !== null && $name !== '' ? e($name) : '（分组不存在）';
             });
-            $grid->column('original_url', '原始域名');
+            $grid->column('original_url', '原始域名')->display(function ($value) {
+                return e(OpsDisplaySanitizer::field($value, '—', 253));
+            });
             $grid->column('cname_target', 'CNAME 目标')->display(function () {
                 $target = TenantEdgeService::cnameTargetForAdmin((int) $this->admin_id);
                 if ($target === '' || strncmp($target, '（', 3) === 0) {
@@ -110,7 +112,9 @@ class RediAdminDomainController extends AdminController
 
                 return $ok ? '已指向' : '未检测到';
             });
-            $grid->column('skip_url', '跳转地址');
+            $grid->column('skip_url', '跳转地址')->display(function ($value) {
+                return e(OpsDisplaySanitizer::field($value, '—', 500));
+            });
             $grid->column('cert_status', '证书')->display(function () {
                 $cert = $this->certificate;
                 if (! $cert) {
