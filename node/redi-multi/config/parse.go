@@ -41,7 +41,11 @@ func jsonStringOptional(payload map[string]interface{}, key string, defaultVal s
 func jsonStringValue(v interface{}, key string) string {
 	switch t := v.(type) {
 	case string:
-		return strings.TrimSpace(t)
+		s := strings.TrimSpace(t)
+		if host.ContainsControlChars(s) {
+			log.Fatalf("config.json: %q contains invalid control characters", key)
+		}
+		return s
 	default:
 		log.Fatalf("config.json: %q must be a string", key)
 		return ""

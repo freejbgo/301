@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToAdminTenant;
+use App\Support\OpsDisplaySanitizer;
 use Dcat\Admin\Traits\HasDateTimeFormatter;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
@@ -26,6 +27,23 @@ class RediAdminGroup extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (RediAdminGroup $group) {
+            if (! $group->isDirty('name')) {
+                return;
+            }
+            $name = OpsDisplaySanitizer::stripControlChars((string) $group->name);
+            $name = trim($name);
+            if ($name === '') {
+                throw ValidationException::withMessages([
+                    'name' => '分组名称不能为空',
+                ]);
+            }
+            if (mb_strlen($name) > 120) {
+                $name = mb_substr($name, 0, 120);
+            }
+            $group->name = $name;
+        });
+
         static::deleting(function (RediAdminGroup $group) {
             $count = RediAdminDomain::query()
                 ->where('group_id', $group->id)

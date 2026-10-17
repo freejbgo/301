@@ -17,4 +17,11 @@ class AuthenticateRediNodeTest extends TestCase
             ->getJson('/api/nodes/revision')
             ->assertStatus(401);
     }
+
+    public function test_node_api_returns_401_when_bearer_contains_control_chars(): void
+    {
+        $this->withToken("1.plain\n")
+            ->getJson('/api/nodes/revision')
+            ->assertStatus(401);
+    }
 }

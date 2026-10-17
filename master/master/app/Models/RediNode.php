@@ -13,6 +13,14 @@ class RediNode extends Model
     protected static function booted(): void
     {
         static::saving(function (RediNode $node) {
+            if ($node->isDirty('name')) {
+                $name = OpsDisplaySanitizer::stripControlChars((string) $node->name);
+                $name = trim($name);
+                if (mb_strlen($name) > 120) {
+                    $name = mb_substr($name, 0, 120);
+                }
+                $node->name = $name;
+            }
             if (! $node->isDirty('note')) {
                 return;
             }
