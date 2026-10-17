@@ -598,6 +598,37 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertSame(0, CertificateDeployService::countActionableDeployments('pending'));
     }
 
+    public function test_handle_domain_reenabled_from_disabled_queues_eligible_cert(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_ISSUED,
+            'last_error' => \App\Models\RediAdminDomain::DISABLE_DEPLOY_CANCEL_MSG,
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $domain = \App\Models\RediAdminDomain::query()->find($domainId);
+
+        app(CertificateDeployService::class)->handleDomainReenabledFromDisabled($domain);
+
+        $this->assertNull(RediDomainCert::query()->find($certId)->last_error);
+        $this->assertDatabaseHas('redi_cert_deployments', [
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+        ]);
+    }
+
     public function test_disabling_node_deletes_its_cert_deployments(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);

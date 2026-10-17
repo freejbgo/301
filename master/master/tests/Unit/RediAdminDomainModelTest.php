@@ -227,7 +227,7 @@ class RediAdminDomainModelTest extends TestCase
             'domain_id' => $domain->id,
             'domain_name' => 'back.example',
             'status' => RediDomainCert::STATUS_ISSUED,
-            'last_error' => '域名已停用，已取消节点证书部署排队',
+            'last_error' => RediAdminDomain::DISABLE_DEPLOY_CANCEL_MSG,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

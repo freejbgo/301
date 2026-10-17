@@ -15,7 +15,7 @@ class RediAdminDomain extends Model
     use BelongsToAdminTenant;
     use HasDateTimeFormatter;
 
-    private const DISABLE_DEPLOY_CANCEL_MSG = '域名已停用，已取消节点证书部署排队';
+    public const DISABLE_DEPLOY_CANCEL_MSG = '域名已停用，已取消节点证书部署排队';
 
     protected static function booted(): void
     {
@@ -49,17 +49,8 @@ class RediAdminDomain extends Model
             $newStatus = (int) $domain->status;
 
             if ($newStatus === 1) {
-                $reenabledFromDisabled = (int) $domain->getOriginal('status') === 2;
-                $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
-                if ($cert && $reenabledFromDisabled) {
-                    $cert->setRelation('domain', $domain);
-                    if ($cert->last_error === self::DISABLE_DEPLOY_CANCEL_MSG) {
-                        $cert->last_error = null;
-                        $cert->save();
-                    }
-                    if (CertificateDeployService::certIsEligibleForDeployQueue($cert)) {
-                        app(CertificateDeployService::class)->queueDeploy($cert);
-                    }
+                if ((int) $domain->getOriginal('status') === 2) {
+                    app(CertificateDeployService::class)->handleDomainReenabledFromDisabled($domain);
                 }
 
                 return;
