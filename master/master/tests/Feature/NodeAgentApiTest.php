@@ -428,6 +428,49 @@ class NodeAgentApiTest extends TestCase
         );
     }
 
+    public function test_ack_rejects_non_string_error_with_422(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->timestamps();
+        });
+
+        [$node, $token] = $this->createNodeWithToken();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'valid.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'valid.example',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/ack', [
+                'cert_id' => $certId,
+                'ok' => false,
+                'error' => ['detail' => 'boom'],
+            ])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'invalid error');
+    }
+
     public function test_ack_rejects_trailing_newline_in_error_with_422(): void
     {
         Schema::create('redi_admin_domain', function (Blueprint $table) {

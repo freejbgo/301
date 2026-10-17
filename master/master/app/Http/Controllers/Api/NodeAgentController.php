@@ -212,6 +212,10 @@ class NodeAgentController extends Controller
         $ok = $request->boolean('ok', true);
         $error = $request->input('error');
 
+        if ($request->has('error') && $error !== null && ! is_string($error)) {
+            return response()->json(['message' => 'invalid error'], 422);
+        }
+
         if ($certId < 1) {
             return response()->json(['message' => 'invalid cert_id'], 422);
         }
