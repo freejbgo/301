@@ -73,10 +73,11 @@ class CertificateDeployService
         }
 
         foreach ($certIds as $cid) {
-            $cert = RediDomainCert::find($cid);
+            $cert = RediDomainCert::query()->with('domain')->find($cid);
             if (! $cert) {
                 continue;
             }
+            DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
             $cert->status = RediDomainCert::STATUS_DEPLOYING;
             $cert->last_error = '已重新排队失败节点的证书部署，等待节点拉取';
             $cert->save();
@@ -128,6 +129,7 @@ class CertificateDeployService
                 return false;
             }
             $cert->loadMissing('domain');
+            DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
 
             $deployment = RediCertDeployment::where('cert_id', $cert->id)
                 ->where('node_id', $node->id)
