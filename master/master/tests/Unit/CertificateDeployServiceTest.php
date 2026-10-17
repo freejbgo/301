@@ -397,4 +397,28 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertStringContainsString('跳过部署', (string) $cert->fresh()->last_error);
         $this->assertSame('issued', $cert->fresh()->status);
     }
+
+    public function test_cert_is_node_pullable_requires_pem_domain_match_and_status(): void
+    {
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_DEPLOYING,
+        ]);
+        $this->assertFalse(CertificateDeployService::certIsNodePullable($cert));
+
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
+        $this->assertTrue(CertificateDeployService::certIsNodePullable($cert->fresh()));
+
+        \DB::table('redi_admin_domain')->where('id', $domainId)->update(['status' => 0]);
+        $this->assertFalse(CertificateDeployService::certIsNodePullable($cert->fresh()));
+    }
 }

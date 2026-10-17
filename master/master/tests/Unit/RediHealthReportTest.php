@@ -48,6 +48,8 @@ class RediHealthReportTest extends TestCase
             $table->unsignedInteger('domain_id');
             $table->string('domain_name');
             $table->string('status')->default('active');
+            $table->text('certificate')->nullable();
+            $table->text('private_key')->nullable();
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });
@@ -239,8 +241,22 @@ class RediHealthReportTest extends TestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'pull.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = \App\Models\RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'pull.example',
+            'status' => 'deploying',
+        ]);
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
         \DB::table('redi_cert_deployments')->insert([
-            'cert_id' => 1,
+            'cert_id' => $cert->id,
             'node_id' => $nodeId,
             'status' => 'pending',
             'created_at' => now(),
@@ -251,6 +267,38 @@ class RediHealthReportTest extends TestCase
         $codes = array_column($issues, 'code');
 
         $this->assertContains('cert_deploy_pending', $codes);
+    }
+
+    public function test_collect_issues_ignores_pending_when_cert_not_node_pullable(): void
+    {
+        $nodeId = \DB::table('redi_nodes')->insertGetId([
+            'enabled' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'disabled.example',
+            'status' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'disabled.example',
+            'status' => 'deploying',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $nodeId,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertNotContains('cert_deploy_pending', $codes);
     }
 
     public function test_collect_hints_warns_file_cache_with_database_queue(): void
