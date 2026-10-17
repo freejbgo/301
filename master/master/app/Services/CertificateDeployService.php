@@ -225,6 +225,9 @@ class CertificateDeployService
             })
             ->get()
             ->filter(function (RediDomainCert $cert) {
+                if (OpsDisplaySanitizer::containsControlChars((string) $cert->domain_name)) {
+                    return false;
+                }
                 $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
 
                 return $host !== '' && HostNameValidator::isValidHostLabel($host);

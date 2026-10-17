@@ -18,6 +18,9 @@ class NodeAgentRevisionService
         $challenges = AcmeChallengeQuery::ready()
             ->orderBy('id')
             ->get(['domain_name', 'token', 'response_body', 'updated_at'])
+            ->filter(function ($row) {
+                return ! OpsDisplaySanitizer::containsControlChars((string) $row->domain_name);
+            })
             ->map(function ($row) {
                 $row->domain_name = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
 
