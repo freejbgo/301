@@ -267,6 +267,16 @@ class NodeAgentApiTest extends TestCase
             ->assertJsonPath('domain', 'sync.example');
     }
 
+    public function test_challenges_synced_rejects_trailing_newline_in_domain_with_422(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/challenges-synced', ['domains' => ['valid.example'."\n"]])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'invalid domain');
+    }
+
     public function test_challenges_synced_rejects_invalid_host_with_422(): void
     {
         [, $token] = $this->createNodeWithToken();
@@ -364,6 +374,49 @@ class NodeAgentApiTest extends TestCase
         $this->withToken($token)
             ->postJson('/api/nodes/ack', ['cert_id' => $certId, 'ok' => true])
             ->assertStatus(409);
+    }
+
+    public function test_ack_rejects_trailing_newline_in_error_with_422(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->timestamps();
+        });
+
+        [$node, $token] = $this->createNodeWithToken();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'valid.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'valid.example',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/ack', [
+                'cert_id' => $certId,
+                'ok' => false,
+                'error' => 'disk full'."\n",
+            ])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'invalid error');
     }
 
     public function test_ack_rejects_control_chars_in_error_with_422(): void
