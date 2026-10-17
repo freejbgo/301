@@ -239,7 +239,7 @@
 
 **2026-10-17 #230 已合并 `main`：** 见 [PR #230](https://github.com/freejbgo/301/pull/230)。
 
-**2026-10-17 复核（#231）：** `queueDeploy` 结束后 `reconcileCertDeployStatus`；无启用节点时清理僵尸部署行单测；PHPUnit **277**（**528** assertions）。
+**2026-10-17 复核（#231）：** `queueDeploy` 结束后 `reconcileCertDeployStatus`；无启用节点时清理僵尸部署行单测；PHPUnit **277**（**527** assertions）。
 
 **2026-10-17 复核（#230）：** 无部署行时 `active` 亦 reconcile 为 `issued`；多节点停用单节点仍保留 active 单测；PHPUnit **276**（**523** assertions）。
 
