@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\RediAdminDomain;
 use App\Models\RediDomainCert;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
@@ -58,6 +59,8 @@ class RediAdminDomainModelTest extends TestCase
             $table->string('domain_name');
             $table->string('status')->default('none');
             $table->text('last_error')->nullable();
+            $table->text('certificate')->nullable();
+            $table->text('private_key')->nullable();
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });
@@ -73,6 +76,8 @@ class RediAdminDomainModelTest extends TestCase
             $table->unsignedInteger('cert_id');
             $table->unsignedInteger('node_id');
             $table->string('status')->default('pending');
+            $table->text('last_error')->nullable();
+            $table->timestamp('deployed_at')->nullable();
             $table->timestamps();
         });
     }
@@ -231,5 +236,40 @@ class RediAdminDomainModelTest extends TestCase
         $domain->save();
 
         $this->assertNull(RediDomainCert::query()->find($certId)->last_error);
+    }
+
+    public function test_reenabling_domain_queues_deploy_when_cert_is_eligible(): void
+    {
+        \DB::table('redi_nodes')->insert([
+            'enabled' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $domain = RediAdminDomain::create([
+            'group_id' => 1,
+            'admin_id' => 1,
+            'original_url' => 'back.example',
+            'skip_url' => 'https://dest.example/',
+            'status' => 2,
+        ]);
+
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domain->id,
+            'domain_name' => 'back.example',
+            'status' => RediDomainCert::STATUS_ISSUED,
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $domain->status = 1;
+        $domain->save();
+
+        $this->assertDatabaseHas('redi_cert_deployments', [
+            'cert_id' => $certId,
+            'status' => 'pending',
+        ]);
     }
 }
