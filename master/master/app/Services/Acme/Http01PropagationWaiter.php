@@ -43,7 +43,10 @@ class Http01PropagationWaiter
                     $response = Http::timeout(8)
                         ->withHeaders(['User-Agent' => 'redi-master-acme-probe/1.0'])
                         ->get($publicUrl);
-                    if ($response->successful() && trim($response->body()) === $expectedBody) {
+                    $probeBody = $response->body();
+                    if ($response->successful()
+                        && AcmeChallengeQuery::http01ContentValid($token, $probeBody)
+                        && trim($probeBody) === $expectedBody) {
                         return;
                     }
                 } catch (\Throwable $e) {

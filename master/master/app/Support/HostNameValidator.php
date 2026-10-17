@@ -9,7 +9,7 @@ class HostNameValidator
      */
     public static function isValidHostLabel(string $host): bool
     {
-        if (self::containsControlChars($host)) {
+        if (OpsDisplaySanitizer::containsControlChars($host)) {
             return false;
         }
         $host = strtolower(trim($host, '.'));
@@ -44,7 +44,7 @@ class HostNameValidator
      */
     public static function toCanonicalAscii(string $host): string
     {
-        if (self::containsControlChars($host)) {
+        if (OpsDisplaySanitizer::containsControlChars($host)) {
             return '';
         }
         $host = strtolower(trim($host, '.'));
@@ -60,13 +60,5 @@ class HostNameValidator
         }
 
         return $host;
-    }
-
-    protected static function containsControlChars(string $value): bool
-    {
-        return str_contains($value, "\r")
-            || str_contains($value, "\n")
-            || str_contains($value, "\0")
-            || str_contains($value, "\t");
     }
 }

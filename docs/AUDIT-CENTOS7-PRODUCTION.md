@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-17 复核（#146）：** Go `Http01ResponseBodyValid` 在 trim 前拒控制字符；HTTP-01 公网探测校验响应体；`HostNameValidator` 复用 `OpsDisplaySanitizer`；`redi:health` CLI 文案 `field()`；PHPUnit **186**（+1）。
+
 **2026-10-17 复核（#145）：** HTTP-01 waiter / `CertificateIssuer` 统一 `http01ContentValid`；后台 health issue 展示截断；Go `ValidChallengeToken` + Agent 校验 token；PHPUnit **185**（+2）。
 
 **2026-10-16 复核（#144）：** `AcmeChallengeQuery::nodeReadyRow` 集中节点挑战校验；`http01ContentValid` 在 trim 前检测控制字符（避免尾部换行绕过）；Go Agent 拉取挑战跳过控制字符响应体；后台证书 `last_error` 展示净化；PHPUnit **183**（+2）。
@@ -266,7 +268,7 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **185**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **186**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
@@ -347,4 +349,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **185** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **186** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。

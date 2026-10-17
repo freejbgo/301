@@ -59,6 +59,19 @@ func TestReplaceAllSkipsInvalidDomain(t *testing.T) {
 	}
 }
 
+func TestReplaceAllSkipsTrailingNewlineInResponseBody(t *testing.T) {
+	ReplaceAll([]Item{{
+		DomainName:   "example.com",
+		Token:        "tok123",
+		ResponseBody: "body\n",
+	}})
+
+	_, ok := ResponseForPath("example.com", "/.well-known/acme-challenge/tok123")
+	if ok {
+		t.Fatal("trailing newline in response body must not be stored")
+	}
+}
+
 func TestResponseForPathRejectsMalformedToken(t *testing.T) {
 	ReplaceAll([]Item{{
 		DomainName:   "example.com",
