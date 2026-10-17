@@ -253,4 +253,31 @@ class CertificateDeployServiceTest extends TestCase
 
         $this->assertDatabaseCount('redi_cert_deployments', 0);
     }
+
+    public function test_queue_deploy_skips_when_cert_does_not_match_admin_domain(): void
+    {
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'not a valid host!!!',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'orphan.example',
+            'status' => 'issued',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+
+        $cert = RediDomainCert::query()->find($certId);
+        app(CertificateDeployService::class)->queueDeploy($cert);
+
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
+        $this->assertStringContainsString('跳过部署', (string) $cert->fresh()->last_error);
+        $this->assertSame('issued', $cert->fresh()->status);
+    }
 }

@@ -96,7 +96,29 @@ class AcmeChallengeCleanupTest extends TestCase
         $this->assertDatabaseMissing('redi_acme_challenge_node_sync', ['domain_name' => 'https://acme.example/']);
     }
 
-    public function test_purge_skips_invalid_host_labels(): void
+    public function test_purge_matches_exact_unpublishable_stored_name(): void
+    {
+        RediAcmeChallenge::create([
+            'domain_name' => '1.2.3.4',
+            'token' => 't',
+            'response_body' => 'b',
+            'expires_at' => now()->addHour(),
+        ]);
+        \DB::table('redi_acme_challenge_node_sync')->insert([
+            'node_id' => 1,
+            'domain_name' => '1.2.3.4',
+            'synced_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        AcmeChallengeCleanup::purgeForHosts(['1.2.3.4']);
+
+        $this->assertDatabaseMissing('redi_acme_challenges', ['domain_name' => '1.2.3.4']);
+        $this->assertDatabaseMissing('redi_acme_challenge_node_sync', ['domain_name' => '1.2.3.4']);
+    }
+
+    public function test_purge_skips_when_no_canonical_or_exact_match(): void
     {
         RediAcmeChallenge::create([
             'domain_name' => '1.2.3.4',
@@ -105,7 +127,7 @@ class AcmeChallengeCleanupTest extends TestCase
             'expires_at' => now()->addHour(),
         ]);
 
-        AcmeChallengeCleanup::purgeForHosts(['1.2.3.4']);
+        AcmeChallengeCleanup::purgeForHosts(['not-a-valid-host!!!']);
 
         $this->assertDatabaseHas('redi_acme_challenges', ['domain_name' => '1.2.3.4']);
     }

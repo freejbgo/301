@@ -74,9 +74,14 @@ class Http01PropagationWaiter
         }
 
         return RediAcmeChallengeNodeSync::query()
-            ->where('domain_name', $domain)
             ->whereIn('node_id', $ids)
             ->where('synced_at', '>=', now()->subMinutes(3))
-            ->exists();
+            ->get(['domain_name'])
+            ->contains(function ($row) use ($domain) {
+                $stored = (string) $row->domain_name;
+
+                return $stored === $domain
+                    || DomainRecordNormalizer::acmeHostKey($stored) === $domain;
+            });
     }
 }
