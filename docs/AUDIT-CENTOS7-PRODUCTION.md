@@ -186,6 +186,10 @@
 
 **2026-10-17 #216 已合并 `main`：** 见 [PR #216](https://github.com/freejbgo/301/pull/216)。
 
+**2026-10-17 #217 已合并 `main`：** 见 [PR #217](https://github.com/freejbgo/301/pull/217)。
+
+**2026-10-17 复核（#218）：** `markNodeAck` 部署行未变时仍 `refreshCertStatusFromDeployments`（重复 ack 可从 deploying→active）；PHPUnit **269**（**507** assertions）。
+
 **2026-10-17 复核（#217）：** 证书 `domain_name`/PEM 变更与解密失败时 `pruneNonPullableDeployments`（不因 `status` 变更误删 failed 行）；PHPUnit **269**（**506** assertions）。
 
 **2026-10-17 复核（#216）：** 域名 `original_url` 变更触发 `pruneNonPullableDeployments`；节点 `GET /certificates` 前 `pruneStaleDeploymentsForNode`；PHPUnit **268**（**505** assertions）。

@@ -271,6 +271,9 @@ class CertificateDeployServiceTest extends TestCase
             'domain_name' => 'edge.example',
             'status' => RediDomainCert::STATUS_DEPLOYING,
         ]);
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
         \DB::table('redi_cert_deployments')->insert([
             'cert_id' => $cert->id,
             'node_id' => $node->id,
@@ -282,6 +285,7 @@ class CertificateDeployServiceTest extends TestCase
 
         $svc = app(CertificateDeployService::class);
         $this->assertTrue($svc->markNodeAck($cert, $node, true));
+        $this->assertSame(RediDomainCert::STATUS_ACTIVE, $cert->fresh()->status);
     }
 
     public function test_sync_realigns_control_char_cert_domain_name_from_domain(): void

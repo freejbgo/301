@@ -423,66 +423,16 @@ class CertificateDeployService
             }
 
             $targetStatus = $ok ? 'ok' : 'failed';
-            if ($deployment->status === $targetStatus) {
-                return true;
+            if ($deployment->status !== $targetStatus) {
+                $deployment->status = $targetStatus;
+                $deployment->last_error = $error !== null
+                    ? OpsDisplaySanitizer::logSnippet($error, 2000)
+                    : null;
+                $deployment->deployed_at = $ok ? now() : null;
+                $deployment->save();
             }
 
-            $deployment->status = $targetStatus;
-            $deployment->last_error = $error !== null
-                ? OpsDisplaySanitizer::logSnippet($error, 2000)
-                : null;
-            $deployment->deployed_at = $ok ? now() : null;
-            $deployment->save();
-
-            $liveNodeIds = RediNode::enabled()
-                ->where('last_heartbeat_at', '>=', now()->subMinutes(15))
-                ->pluck('id');
-
-            $livePending = RediCertDeployment::where('cert_id', $cert->id)
-                ->where('status', 'pending')
-                ->whereIn('node_id', $liveNodeIds)
-                ->exists();
-
-            $domainActive = $cert->domain && (int) $cert->domain->status === 1;
-
-            if ($livePending) {
-                $cert->status = RediDomainCert::STATUS_DEPLOYING;
-                if (! $domainActive && $cert->domain) {
-                    $cert->last_error = '域名已停用：等待剩余在线节点响应，不会标记为「已生效」';
-                }
-                $cert->save();
-
-                return true;
-            }
-
-            $failedCount = RediCertDeployment::where('cert_id', $cert->id)
-                ->where('status', 'failed')
-                ->count();
-            $okCount = RediCertDeployment::where('cert_id', $cert->id)
-                ->where('status', 'ok')
-                ->count();
-
-            if ($okCount === 0 && $failedCount > 0) {
-                $cert->status = RediDomainCert::STATUS_FAILED;
-                $cert->last_error = '全部已响应节点安装失败';
-            } elseif ($okCount > 0) {
-                if ($domainActive) {
-                    $cert->status = RediDomainCert::STATUS_ACTIVE;
-                    $cert->last_error = $failedCount > 0 ? '部分节点安装失败，其余节点仍保留该证书' : null;
-                } else {
-                    $cert->status = RediDomainCert::STATUS_ISSUED;
-                    $cert->last_error = '域名已停用：节点已安装证书，但不会标记为「已生效」';
-                }
-            } else {
-                $cert->status = RediDomainCert::STATUS_DEPLOYING;
-                $pendingAny = RediCertDeployment::where('cert_id', $cert->id)
-                    ->where('status', 'pending')
-                    ->exists();
-                $cert->last_error = $pendingAny
-                    ? '等待在线节点安装证书（15 分钟内无心跳的节点不阻塞状态）'
-                    : '等待节点拉取证书';
-            }
-            $cert->save();
+            $this->refreshCertStatusFromDeployments($cert);
 
             return true;
         });
@@ -490,6 +440,61 @@ class CertificateDeployService
         self::forgetActionableDeploymentMetrics();
 
         return $applied;
+    }
+
+    protected function refreshCertStatusFromDeployments(RediDomainCert $cert): void
+    {
+        $cert->loadMissing('domain');
+
+        $liveNodeIds = RediNode::enabled()
+            ->where('last_heartbeat_at', '>=', now()->subMinutes(15))
+            ->pluck('id');
+
+        $livePending = RediCertDeployment::where('cert_id', $cert->id)
+            ->where('status', 'pending')
+            ->whereIn('node_id', $liveNodeIds)
+            ->exists();
+
+        $domainActive = $cert->domain && (int) $cert->domain->status === 1;
+
+        if ($livePending) {
+            $cert->status = RediDomainCert::STATUS_DEPLOYING;
+            if (! $domainActive && $cert->domain) {
+                $cert->last_error = '域名已停用：等待剩余在线节点响应，不会标记为「已生效」';
+            }
+            $cert->save();
+
+            return;
+        }
+
+        $failedCount = RediCertDeployment::where('cert_id', $cert->id)
+            ->where('status', 'failed')
+            ->count();
+        $okCount = RediCertDeployment::where('cert_id', $cert->id)
+            ->where('status', 'ok')
+            ->count();
+
+        if ($okCount === 0 && $failedCount > 0) {
+            $cert->status = RediDomainCert::STATUS_FAILED;
+            $cert->last_error = '全部已响应节点安装失败';
+        } elseif ($okCount > 0) {
+            if ($domainActive) {
+                $cert->status = RediDomainCert::STATUS_ACTIVE;
+                $cert->last_error = $failedCount > 0 ? '部分节点安装失败，其余节点仍保留该证书' : null;
+            } else {
+                $cert->status = RediDomainCert::STATUS_ISSUED;
+                $cert->last_error = '域名已停用：节点已安装证书，但不会标记为「已生效」';
+            }
+        } else {
+            $cert->status = RediDomainCert::STATUS_DEPLOYING;
+            $pendingAny = RediCertDeployment::where('cert_id', $cert->id)
+                ->where('status', 'pending')
+                ->exists();
+            $cert->last_error = $pendingAny
+                ? '等待在线节点安装证书（15 分钟内无心跳的节点不阻塞状态）'
+                : '等待节点拉取证书';
+        }
+        $cert->save();
     }
 
     protected function refuseQueueDeploy(RediDomainCert $cert, string $message): bool
