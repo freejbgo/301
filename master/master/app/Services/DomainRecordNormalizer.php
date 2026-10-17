@@ -39,6 +39,18 @@ class DomainRecordNormalizer
         return self::originalUrlIfValid($url) !== '';
     }
 
+    /** 证书行 domain_name 是否与启用域名的规范化 original_url 一致（防漂移误下发/误续期）。 */
+    public static function certMatchesAdminDomain(\App\Models\RediDomainCert $cert): bool
+    {
+        $canonical = self::originalUrlIfValid((string) optional($cert->domain)->original_url ?? '');
+        if ($canonical === '') {
+            return false;
+        }
+        $certHost = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
+
+        return $certHost !== '' && $certHost === $canonical;
+    }
+
     public static function originalUrlHash(string $normalizedOriginalUrl): string
     {
         $normalizedOriginalUrl = self::normalizeOriginalUrl($normalizedOriginalUrl);

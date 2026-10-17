@@ -9,6 +9,7 @@ use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use App\Services\AcmeChallengeQuery;
 use App\Services\CertificateDeployService;
+use App\Services\DomainRecordNormalizer;
 use App\Services\NodeAgentRevisionService;
 use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
@@ -188,7 +189,7 @@ class NodeAgentController extends Controller
 
         $payload = [];
         foreach ($certs as $cert) {
-            if (! HostNameValidator::isNodePublishableHost((string) $cert->domain_name)) {
+            if (! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
                 continue;
             }
             $pem = $cert->getCertificatePem();
@@ -269,15 +270,18 @@ class NodeAgentController extends Controller
         $rows = DB::table('redi_admin_domain')
             ->where('status', 1)
             ->get(['original_url', 'force_https'])
-            ->filter(function ($row) {
-                return HostNameValidator::isNodePublishableHost((string) $row->original_url);
-            })
             ->map(function ($row) {
+                $host = DomainRecordNormalizer::originalUrlIfValid((string) $row->original_url);
+                if ($host === '') {
+                    return null;
+                }
+
                 return [
-                    'original_url' => HostNameValidator::toCanonicalAscii((string) $row->original_url),
+                    'original_url' => $host,
                     'force_https' => (bool) $row->force_https,
                 ];
             })
+            ->filter()
             ->values();
 
         return response()->json(['rules' => $rows]);

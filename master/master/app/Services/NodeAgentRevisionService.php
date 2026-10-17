@@ -42,10 +42,11 @@ class NodeAgentRevisionService
             ->whereHas('domain', function ($query) {
                 $query->where('status', 1);
             })
+            ->with('domain')
             ->orderBy('id')
-            ->get(['id', 'domain_name', 'updated_at'])
+            ->get(['id', 'domain_id', 'domain_name', 'updated_at'])
             ->filter(function ($row) {
-                return HostNameValidator::isNodePublishableHost((string) $row->domain_name);
+                return DomainRecordNormalizer::certMatchesAdminDomain($row);
             })
             ->map(function ($row) {
                 $row->domain_name = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
@@ -58,14 +59,16 @@ class NodeAgentRevisionService
             ->where('status', 1)
             ->orderBy('id')
             ->get(['id', 'original_url', 'force_https', 'updated_at'])
-            ->filter(function ($row) {
-                return HostNameValidator::isNodePublishableHost((string) $row->original_url);
-            })
             ->map(function ($row) {
-                $row->original_url = HostNameValidator::toCanonicalAscii((string) $row->original_url);
+                $host = DomainRecordNormalizer::originalUrlIfValid((string) $row->original_url);
+                if ($host === '') {
+                    return null;
+                }
+                $row->original_url = $host;
 
                 return $row;
             })
+            ->filter()
             ->values();
 
         $challengesRevision = $this->hashPayload($challenges);
