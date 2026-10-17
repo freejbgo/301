@@ -44,6 +44,8 @@ class NodeAgentController extends Controller
             ->get(['domain_name', 'token', 'response_body'])
             ->filter(function ($row) {
                 return ! OpsDisplaySanitizer::containsControlChars((string) $row->domain_name)
+                    && ! OpsDisplaySanitizer::containsControlChars((string) $row->token)
+                    && ! OpsDisplaySanitizer::containsControlChars((string) $row->response_body)
                     && AcmeChallengeQuery::nodeReadyRow($row->domain_name, $row->token, $row->response_body);
             })
             ->mapWithKeys(function ($row) {
@@ -139,7 +141,9 @@ class NodeAgentController extends Controller
         $rows = AcmeChallengeQuery::ready()
             ->get(['domain_name', 'token', 'response_body'])
             ->filter(function ($row) {
-                return ! OpsDisplaySanitizer::containsControlChars((string) $row->domain_name);
+                return ! OpsDisplaySanitizer::containsControlChars((string) $row->domain_name)
+                    && ! OpsDisplaySanitizer::containsControlChars((string) $row->token)
+                    && ! OpsDisplaySanitizer::containsControlChars((string) $row->response_body);
             })
             ->map(function ($row) {
                 return [

@@ -184,6 +184,30 @@ class NodeAgentApiTest extends TestCase
         $this->assertNotContains('bad.example', $names);
     }
 
+    public function test_acme_challenges_omits_control_chars_in_token(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'bad.example',
+            'token' => "ok-token\n",
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+        RediAcmeChallenge::create([
+            'domain_name' => 'good.example',
+            'token' => 'ok-token',
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $response = $this->withToken($token)->getJson('/api/nodes/acme-challenges');
+        $response->assertOk();
+        $names = array_column($response->json('challenges'), 'domain_name');
+        $this->assertContains('good.example', $names);
+        $this->assertNotContains('bad.example', $names);
+    }
+
     public function test_acme_challenges_omits_control_chars_in_response_body(): void
     {
         [, $token] = $this->createNodeWithToken();
