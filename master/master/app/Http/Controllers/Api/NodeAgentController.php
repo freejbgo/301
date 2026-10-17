@@ -47,7 +47,10 @@ class NodeAgentController extends Controller
                 return AcmeChallengeQuery::nodePublishableRow($row->domain_name, $row->token, $row->response_body);
             })
             ->mapWithKeys(function ($row) {
-                $domain = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
+                $domain = DomainRecordNormalizer::acmeHostKey((string) $row->domain_name);
+                if ($domain === '') {
+                    return [];
+                }
 
                 return [$domain => true];
             });
@@ -72,7 +75,7 @@ class NodeAgentController extends Controller
                     'domain' => OpsDisplaySanitizer::field($raw, '', 253),
                 ], 422);
             }
-            $domain = DomainRecordNormalizer::originalUrlIfValid($raw);
+            $domain = DomainRecordNormalizer::acmeHostKey($raw);
             if ($domain === '') {
                 if (trim($raw) === '') {
                     continue;
@@ -143,12 +146,18 @@ class NodeAgentController extends Controller
                 return AcmeChallengeQuery::nodePublishableRow($row->domain_name, $row->token, $row->response_body);
             })
             ->map(function ($row) {
+                $domain = DomainRecordNormalizer::acmeHostKey((string) $row->domain_name);
+                if ($domain === '') {
+                    return null;
+                }
+
                 return [
-                    'domain_name' => HostNameValidator::toCanonicalAscii((string) $row->domain_name),
+                    'domain_name' => $domain,
                     'token' => $row->token,
                     'response_body' => $row->response_body,
                 ];
             })
+            ->filter()
             ->filter(function ($row) {
                 return AcmeChallengeQuery::nodePublishableRow(
                     $row['domain_name'] ?? null,

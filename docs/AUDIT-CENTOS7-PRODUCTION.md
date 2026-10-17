@@ -150,6 +150,10 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-17 #191 已合并 `main`：** 见 [PR #191](https://github.com/freejbgo/301/pull/191)。
+
+**2026-10-17 复核（#192）：** `DomainRecordNormalizer::acmeHostKey` 统一 ACME 白名单/下发/ revision / HTTP-01 等待；删域名 canonical 清挑战；PHPUnit **239**（**444** assertions）。
+
 **2026-10-17 #190 已合并 `main`：** 见 [PR #190](https://github.com/freejbgo/301/pull/190)。
 
 **2026-10-17 复核（#191）：** `challenges-synced` / ACME 清理用 `originalUrlIfValid`；停用域名 canonical 清挑战；后台保存证书行 `realign`；PHPUnit **238**（**442** assertions）。

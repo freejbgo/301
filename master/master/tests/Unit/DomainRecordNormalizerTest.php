@@ -43,6 +43,12 @@ class DomainRecordNormalizerTest extends TestCase
         $this->assertFalse(DomainRecordNormalizer::isAllowedRedirectUrl('https://evil@trusted.example/'));
     }
 
+    public function test_acme_host_key_accepts_scheme(): void
+    {
+        $this->assertSame('foo.com', DomainRecordNormalizer::acmeHostKey('https://foo.com/'));
+        $this->assertSame('', DomainRecordNormalizer::acmeHostKey('not a host!!!'));
+    }
+
     public function test_cert_matches_admin_domain(): void
     {
         $domain = new \App\Models\RediAdminDomain();
