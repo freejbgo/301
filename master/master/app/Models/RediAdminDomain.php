@@ -42,11 +42,14 @@ class RediAdminDomain extends Model
             if (! $domain->wasChanged('status') || (int) $domain->status !== 2) {
                 return;
             }
-            $hosts = array_filter([
-                $domain->original_url,
-                $domain->getOriginal('original_url'),
-            ]);
-            AcmeChallengeCleanup::purgeForHosts($hosts);
+            $hosts = [];
+            foreach ([$domain->original_url, $domain->getOriginal('original_url')] as $raw) {
+                $host = AcmeChallengeCleanup::canonicalPurgeHost((string) $raw);
+                if ($host !== '') {
+                    $hosts[$host] = true;
+                }
+            }
+            AcmeChallengeCleanup::purgeForHosts(array_keys($hosts));
         });
 
         static::deleting(function (self $domain) {

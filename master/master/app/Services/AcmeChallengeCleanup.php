@@ -15,10 +15,11 @@ class AcmeChallengeCleanup
     {
         $hosts = [];
         foreach ($domainNames as $raw) {
-            if (! HostNameValidator::isNodePublishableHost((string) $raw)) {
+            $host = self::canonicalPurgeHost((string) $raw);
+            if ($host === '') {
                 continue;
             }
-            $hosts[HostNameValidator::toCanonicalAscii((string) $raw)] = true;
+            $hosts[$host] = true;
         }
         if ($hosts === []) {
             return;
@@ -27,5 +28,20 @@ class AcmeChallengeCleanup
         $list = array_keys($hosts);
         RediAcmeChallenge::query()->whereIn('domain_name', $list)->delete();
         RediAcmeChallengeNodeSync::query()->whereIn('domain_name', $list)->delete();
+    }
+
+    /** 停用/删域名时清理挑战：兼容带 scheme 的遗留 original_url。 */
+    public static function canonicalPurgeHost(string $raw): string
+    {
+        $host = DomainRecordNormalizer::originalUrlIfValid($raw);
+        if ($host !== '') {
+            return $host;
+        }
+        $normalized = DomainRecordNormalizer::normalizeOriginalUrl($raw);
+        if ($normalized !== '' && HostNameValidator::isValidHostLabel($normalized)) {
+            return $normalized;
+        }
+
+        return '';
     }
 }

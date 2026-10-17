@@ -72,7 +72,8 @@ class NodeAgentController extends Controller
                     'domain' => OpsDisplaySanitizer::field($raw, '', 253),
                 ], 422);
             }
-            if (! HostNameValidator::isNodePublishableHost($raw)) {
+            $domain = DomainRecordNormalizer::originalUrlIfValid($raw);
+            if ($domain === '') {
                 if (trim($raw) === '') {
                     continue;
                 }
@@ -82,7 +83,6 @@ class NodeAgentController extends Controller
                     'domain' => OpsDisplaySanitizer::field($raw, '', 253),
                 ], 422);
             }
-            $domain = HostNameValidator::toCanonicalAscii($raw);
             if (! $allowed->has($domain)) {
                 $ignored++;
                 continue;
