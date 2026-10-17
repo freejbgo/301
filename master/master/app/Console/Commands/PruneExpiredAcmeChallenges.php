@@ -47,21 +47,19 @@ class PruneExpiredAcmeChallenges extends Command
 
         $purgeSyncHosts = array_merge($purgeSyncHosts, $invalidDomains->all());
 
-        $malformedDomains = AcmeChallengeQuery::ready()
-            ->get(['domain_name', 'token', 'response_body'])
+        $malformedRows = AcmeChallengeQuery::ready()
+            ->get(['id', 'domain_name', 'token', 'response_body'])
             ->filter(function ($row) {
                 return ! AcmeChallengeQuery::nodePublishableRow($row->domain_name, $row->token, $row->response_body);
             })
-            ->pluck('domain_name')
-            ->unique()
             ->values();
 
         $deletedMalformed = 0;
-        if ($malformedDomains->isNotEmpty()) {
+        if ($malformedRows->isNotEmpty()) {
             $deletedMalformed = RediAcmeChallenge::query()
-                ->whereIn('domain_name', $malformedDomains->all())
+                ->whereIn('id', $malformedRows->pluck('id')->all())
                 ->delete();
-            $purgeSyncHosts = array_merge($purgeSyncHosts, $malformedDomains->all());
+            $purgeSyncHosts = array_merge($purgeSyncHosts, $malformedRows->pluck('domain_name')->all());
         }
 
         if ($purgeSyncHosts !== []) {

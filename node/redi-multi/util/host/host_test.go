@@ -21,6 +21,15 @@ func TestCanonicalLookupHostPlain(t *testing.T) {
 	}
 }
 
+func TestAcmeHostKeyStripsScheme(t *testing.T) {
+	if AcmeHostKey("https://Foo.COM/") != "foo.com" {
+		t.Fatal("expected scheme stripped host key")
+	}
+	if AcmeHostKey("not a host!!!") != "" {
+		t.Fatal("expected empty for invalid host")
+	}
+}
+
 func TestCanonicalLookupHostRejectsCRLF(t *testing.T) {
 	if CanonicalLookupHost("evil.com\r\n") != "" {
 		t.Fatal("expected empty for CRLF host")

@@ -13,6 +13,7 @@ use App\Services\CertificateDeployService;
 use App\Services\Acme\Http01PropagationWaiter;
 use App\Support\AcmeHttp01Token;
 use App\Services\DomainRecordNormalizer;
+use App\Support\HostNameValidator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 use League\Flysystem\Adapter\Local;
@@ -73,7 +74,8 @@ class CertificateIssuer
 
         $authorized = false;
         foreach ($authorizations as $authorization) {
-            if (strtolower($authorization->getDomain()) !== $domain) {
+            $authDomain = HostNameValidator::toCanonicalAscii(strtolower($authorization->getDomain()));
+            if ($authDomain === '' || $authDomain !== $domain) {
                 continue;
             }
             $authorized = true;
@@ -128,7 +130,8 @@ class CertificateIssuer
             throw new RuntimeException('域名已停用，已中止证书签发');
         }
         $cert->setRelation('domain', $domain);
-        if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)) {
+        if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)
+            || ! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
             throw new RuntimeException('域名主机名无效，无法签发证书');
         }
     }
