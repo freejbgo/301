@@ -40,10 +40,6 @@ class RedeployCertificate extends RowAction
             return $this->response()->error('尚未申请证书');
         }
 
-        if (! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem()) {
-            return $this->response()->error('证书密文不可用，请先重新申请证书');
-        }
-
         if (! in_array($cert->status, [
             RediDomainCert::STATUS_ISSUED,
             RediDomainCert::STATUS_DEPLOYING,
@@ -51,6 +47,11 @@ class RedeployCertificate extends RowAction
             RediDomainCert::STATUS_FAILED,
         ], true)) {
             return $this->response()->error('当前证书状态不支持重新下发：'.$cert->statusLabel());
+        }
+
+        $cert->loadMissing('domain');
+        if (! CertificateDeployService::certIsEligibleForDeployQueue($cert)) {
+            return $this->response()->error('证书不可下发（域名不一致、材料不可用或域名未启用）');
         }
 
         if (! $deployService->queueDeploy($cert)) {

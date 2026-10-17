@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToAdminTenant;
 use App\Services\AcmeChallengeCleanup;
+use App\Services\CertificateDeployService;
 use App\Services\DomainRecordNormalizer;
 use Illuminate\Validation\ValidationException;
 use Dcat\Admin\Traits\HasDateTimeFormatter;
@@ -56,6 +57,7 @@ class RediAdminDomain extends Model
             $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
             if ($cert) {
                 RediCertDeployment::where('cert_id', $cert->id)->delete();
+                CertificateDeployService::forgetActionableDeploymentMetrics();
             }
         });
 
@@ -63,6 +65,7 @@ class RediAdminDomain extends Model
             $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
             if ($cert) {
                 RediCertDeployment::where('cert_id', $cert->id)->delete();
+                CertificateDeployService::forgetActionableDeploymentMetrics();
                 $cert->delete();
             }
             $purgeHosts = array_values(array_filter([

@@ -597,4 +597,16 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertSame(0, CertificateDeployService::countActionableDeployments('failed'));
         $this->assertSame(0, CertificateDeployService::countActionableDeployments('pending'));
     }
+
+    public function test_forget_actionable_deployment_metrics_clears_request_cache(): void
+    {
+        $ref = new \ReflectionClass(CertificateDeployService::class);
+        $prop = $ref->getProperty('actionableDeploymentStatusCounts');
+        $prop->setAccessible(true);
+        $prop->setValue(null, ['pending' => 99, 'failed' => 1]);
+
+        CertificateDeployService::forgetActionableDeploymentMetrics();
+
+        $this->assertNull($prop->getValue());
+    }
 }

@@ -110,6 +110,11 @@ class CertificateDeployService
         return $cert->domain && (int) $cert->domain->status === 1;
     }
 
+    public static function forgetActionableDeploymentMetrics(): void
+    {
+        self::$actionableDeploymentStatusCounts = null;
+    }
+
     protected static function hydrateActionableDeploymentStatusCounts(): void
     {
         if (! app()->runningUnitTests() && self::$actionableDeploymentStatusCounts !== null) {
@@ -190,6 +195,8 @@ class CertificateDeployService
                 ]
             );
         }
+
+        self::forgetActionableDeploymentMetrics();
     }
 
     /**
@@ -244,6 +251,8 @@ class CertificateDeployService
             $cert->last_error = '已重新排队失败节点的证书部署，等待节点拉取';
             $cert->save();
         }
+
+        self::forgetActionableDeploymentMetrics();
 
         return $count;
     }
@@ -302,12 +311,14 @@ class CertificateDeployService
             $cert->save();
         }
 
+        self::forgetActionableDeploymentMetrics();
+
         return true;
     }
 
     public function markNodeAck(RediDomainCert $cert, RediNode $node, bool $ok, ?string $error = null): bool
     {
-        return DB::transaction(function () use ($cert, $node, $ok, $error) {
+        $applied = DB::transaction(function () use ($cert, $node, $ok, $error) {
             $node = RediNode::query()->whereKey($node->id)->lockForUpdate()->first();
             if (! $node || ! $node->enabled) {
                 return false;
@@ -411,6 +422,10 @@ class CertificateDeployService
 
             return true;
         });
+
+        self::forgetActionableDeploymentMetrics();
+
+        return $applied;
     }
 
     /**

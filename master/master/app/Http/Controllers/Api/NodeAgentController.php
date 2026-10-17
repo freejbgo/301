@@ -172,6 +172,7 @@ class NodeAgentController extends Controller
 
     public function certificates(Request $request)
     {
+        // 空列表会使 Agent 清空内存证书：仅返回本节点仍有部署行且可拉取的证（含 status=ok，便于节点重启后恢复）。
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
 
