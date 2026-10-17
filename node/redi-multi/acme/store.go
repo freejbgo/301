@@ -23,7 +23,7 @@ var (
 	byDomain   = map[string]challenge{}
 )
 
-func validChallengeToken(token string) bool {
+func ValidChallengeToken(token string) bool {
 	if token == "" || len(token) > 128 {
 		return false
 	}
@@ -44,7 +44,7 @@ func ReplaceAll(items []Item) {
 		d := host.CanonicalLookupHost(it.DomainName)
 		t := strings.TrimSpace(it.Token)
 		resp := strings.TrimSpace(it.ResponseBody)
-		if d == "" || !validChallengeToken(t) || resp == "" || strings.ContainsAny(resp, "\r\n\x00\t") {
+		if d == "" || !ValidChallengeToken(t) || resp == "" || strings.ContainsAny(resp, "\r\n\x00\t") {
 			continue
 		}
 		byDomain[d] = challenge{token: t, response: resp}
@@ -64,7 +64,7 @@ func ResponseForPath(hostName, path string) (body string, ok bool) {
 	}
 	token := strings.TrimPrefix(path, prefix)
 	token = strings.Trim(token, "/")
-	if !validChallengeToken(token) {
+	if !ValidChallengeToken(token) {
 		return "", false
 	}
 	mu.RLock()

@@ -8,6 +8,7 @@ use App\Models\RediAdminDomain;
 use App\Models\RediDomainCert;
 use App\Models\RediPlatformDns;
 use App\Services\AcmeChallengeCleanup;
+use App\Services\AcmeChallengeQuery;
 use App\Services\CertificateDeployService;
 use App\Services\Acme\Http01PropagationWaiter;
 use App\Support\AcmeHttp01Token;
@@ -76,8 +77,8 @@ class CertificateIssuer
             $file = $authorization->getFile();
             $token = AcmeHttp01Token::normalize(basename($file->getFilename()));
             $body = trim($file->getContents());
-            if ($body === '') {
-                throw new RuntimeException('ACME HTTP-01 响应体为空');
+            if (! AcmeChallengeQuery::http01ContentValid($token, $body)) {
+                throw new RuntimeException('ACME HTTP-01 响应体无效');
             }
             AcmeChallengeCleanup::purgeForHosts([$domain]);
             RediAcmeChallenge::upsertForDomain(

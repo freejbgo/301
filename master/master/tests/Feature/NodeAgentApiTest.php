@@ -184,6 +184,23 @@ class NodeAgentApiTest extends TestCase
         $this->assertNotContains('bad.example', $names);
     }
 
+    public function test_acme_challenges_omits_trailing_newline_in_response_body(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'trail.example',
+            'token' => 'ok-token',
+            'response_body' => "body\n",
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $response = $this->withToken($token)->getJson('/api/nodes/acme-challenges');
+        $response->assertOk();
+        $names = array_column($response->json('challenges'), 'domain_name');
+        $this->assertNotContains('trail.example', $names);
+    }
+
     public function test_challenges_synced_ignores_malformed_response_body(): void
     {
         [, $token] = $this->createNodeWithToken();
