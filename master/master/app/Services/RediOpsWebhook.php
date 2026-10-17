@@ -26,7 +26,11 @@ class RediOpsWebhook
 
     protected static function configWebhookUrl(string $configKey): string
     {
-        $raw = (string) config('redi.'.$configKey, '');
+        return self::normalizeWebhookUrl((string) config('redi.'.$configKey, ''));
+    }
+
+    public static function normalizeWebhookUrl(string $raw): string
+    {
         if ($raw === '' || $raw !== trim($raw) || OpsDisplaySanitizer::containsControlChars($raw)) {
             return '';
         }
@@ -39,7 +43,7 @@ class RediOpsWebhook
      */
     public static function post(array $payload, ?string $url = null): bool
     {
-        $url = $url ?? self::webhookUrl();
+        $url = $url !== null ? self::normalizeWebhookUrl($url) : self::webhookUrl();
         if ($url === '') {
             return false;
         }

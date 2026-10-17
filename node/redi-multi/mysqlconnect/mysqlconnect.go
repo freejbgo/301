@@ -30,6 +30,9 @@ func envOr(key, fallback string) string {
 
 func appendTlsToDSN(dsn string, tlsMode string) (string, error) {
 	tlsMode = strings.TrimSpace(tlsMode)
+	if host.ContainsControlChars(tlsMode) {
+		return "", fmt.Errorf("mysql: REDI_DB_TLS contains invalid control characters")
+	}
 	if tlsMode == "" {
 		return dsn, nil
 	}

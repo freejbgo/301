@@ -42,6 +42,10 @@ func Start() {
 	if listen == "" {
 		listen = "127.0.0.1:8080"
 	}
+	listen = strings.TrimSpace(listen)
+	if host.ContainsControlChars(listen) {
+		e.Logger.Fatal("invalid REDI_API_LISTEN: control characters")
+	}
 	e.Logger.Fatal(e.Start(listen))
 }
 

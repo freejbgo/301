@@ -69,6 +69,15 @@ class RediOpsWebhookTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_post_rejects_explicit_url_with_control_chars(): void
+    {
+        Http::fake();
+
+        $this->assertFalse(RediOpsWebhook::post(['ok' => true], "https://hooks.example/h\n"));
+
+        Http::assertNothingSent();
+    }
+
     public function test_post_sanitizes_issue_messages_in_payload(): void
     {
         config(['redi.health_webhook_url' => 'https://hooks.example/health']);
