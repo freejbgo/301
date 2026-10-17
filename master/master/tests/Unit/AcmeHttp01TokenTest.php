@@ -18,4 +18,16 @@ class AcmeHttp01TokenTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         AcmeHttp01Token::normalize('../evil');
     }
+
+    public function test_is_valid_rejects_control_chars_before_trim(): void
+    {
+        $this->assertFalse(AcmeHttp01Token::isValid("ok\n"));
+    }
+
+    public function test_normalize_rejects_control_chars_before_trim(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        AcmeHttp01Token::normalize("ok\n");
+    }
 }

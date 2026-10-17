@@ -24,11 +24,19 @@ var (
 )
 
 func Http01ResponseBodyValid(raw string) bool {
-	if strings.ContainsAny(raw, "\r\n\x00\t") {
+	if host.ContainsControlChars(raw) {
 		return false
 	}
 
 	return strings.TrimSpace(raw) != ""
+}
+
+func Http01TokenValid(raw string) bool {
+	if host.ContainsControlChars(raw) {
+		return false
+	}
+
+	return ValidChallengeToken(strings.TrimSpace(raw))
 }
 
 func ValidChallengeToken(token string) bool {
@@ -50,13 +58,10 @@ func ReplaceAll(items []Item) {
 	byDomain = map[string]challenge{}
 	for _, it := range items {
 		d := host.CanonicalLookupHost(it.DomainName)
-		if d == "" || strings.ContainsAny(it.Token, "\r\n\x00\t") {
+		if d == "" || !Http01TokenValid(it.Token) || !Http01ResponseBodyValid(it.ResponseBody) {
 			continue
 		}
 		t := strings.TrimSpace(it.Token)
-		if !ValidChallengeToken(t) || !Http01ResponseBodyValid(it.ResponseBody) {
-			continue
-		}
 		resp := strings.TrimSpace(it.ResponseBody)
 		byDomain[d] = challenge{token: t, response: resp}
 	}
@@ -75,11 +80,12 @@ func ResponseForPath(hostName, path string) (body string, ok bool) {
 	}
 	token := strings.TrimPrefix(path, prefix)
 	token = strings.Trim(token, "/")
-	if !ValidChallengeToken(token) {
+	if !Http01TokenValid(token) {
 		return "", false
 	}
+	t := strings.TrimSpace(token)
 	mu.RLock()
-	if ch, found := byDomain[hostName]; found && ch.token == token {
+	if ch, found := byDomain[hostName]; found && ch.token == t {
 		mu.RUnlock()
 		return ch.response, true
 	}

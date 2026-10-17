@@ -59,6 +59,12 @@ func TestReplaceAllSkipsInvalidDomain(t *testing.T) {
 	}
 }
 
+func TestHttp01TokenValidRejectsTrailingNewline(t *testing.T) {
+	if Http01TokenValid("ok-token\n") {
+		t.Fatal("trailing newline token must be invalid")
+	}
+}
+
 func TestReplaceAllSkipsTrailingNewlineInResponseBody(t *testing.T) {
 	ReplaceAll([]Item{{
 		DomainName:   "example.com",

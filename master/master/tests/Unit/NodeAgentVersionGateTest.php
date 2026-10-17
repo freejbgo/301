@@ -24,6 +24,11 @@ class NodeAgentVersionGateTest extends TestCase
         $this->assertSame(426, RediAgentVersionGate::rejectResponse(null)->getStatusCode());
     }
 
+    public function test_sanitize_returns_null_for_control_chars(): void
+    {
+        $this->assertNull(RediAgentVersionGate::sanitize("0.1.3\n"));
+    }
+
     public function test_rejects_version_below_min(): void
     {
         config(['redi.min_agent_version' => '0.1.2']);
