@@ -51,7 +51,7 @@ class NodeAgentRevisionService
             ->orderBy('id')
             ->get(['id', 'domain_id', 'domain_name', 'updated_at'])
             ->each(function ($row) {
-                DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($row);
+                DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($row, false);
             })
             ->filter(function ($row) {
                 return CertificateDeployService::certIsNodePullable($row);

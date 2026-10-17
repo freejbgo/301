@@ -59,7 +59,7 @@ class DomainRecordNormalizer
     /**
      * 将证书 domain_name 对齐到关联域名的 originalUrlIfValid；域名无效时返回 false。
      */
-    public static function realignCertDomainNameFromAdminDomain(RediDomainCert $cert): bool
+    public static function realignCertDomainNameFromAdminDomain(RediDomainCert $cert, bool $persist = true): bool
     {
         $cert->loadMissing('domain');
         $canonical = self::originalUrlIfValid((string) optional($cert->domain)->original_url ?? '');
@@ -69,9 +69,11 @@ class DomainRecordNormalizer
         $certHost = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
         if ($certHost !== $canonical) {
             $cert->domain_name = $canonical;
-            $cert->saveQuietly();
-            if (Schema::hasTable('redi_cert_deployments')) {
-                app(CertificateDeployService::class)->afterCertMaterialOrHostChange($cert->fresh()->load('domain'));
+            if ($persist) {
+                $cert->saveQuietly();
+                if (Schema::hasTable('redi_cert_deployments')) {
+                    app(CertificateDeployService::class)->afterCertMaterialOrHostChange($cert->fresh()->load('domain'));
+                }
             }
         }
 

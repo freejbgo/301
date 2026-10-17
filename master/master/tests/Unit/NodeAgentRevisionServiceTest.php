@@ -3,8 +3,10 @@
 namespace Tests\Unit;
 
 use App\Models\RediAcmeChallenge;
+use App\Models\RediDomainCert;
 use App\Services\NodeAgentRevisionService;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -43,6 +45,7 @@ class NodeAgentRevisionServiceTest extends TestCase
             $table->string('domain_name');
             $table->string('status')->default('active');
             $table->text('certificate')->nullable();
+            $table->text('private_key')->nullable();
             $table->timestamps();
         });
     }
@@ -114,6 +117,29 @@ class NodeAgentRevisionServiceTest extends TestCase
         $b = $svc->build();
 
         $this->assertSame($a['challenges_revision'], $b['challenges_revision']);
+    }
+
+    public function test_certificates_revision_does_not_persist_domain_name_realign(): void
+    {
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => 'good.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => 1,
+            'domain_name' => 'stale.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        (new NodeAgentRevisionService())->build();
+
+        $this->assertSame('stale.example', RediDomainCert::query()->find($certId)->domain_name);
     }
 
     public function test_certificates_revision_ignores_control_char_domain_names(): void
