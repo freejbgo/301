@@ -150,6 +150,10 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-17 #197 已合并 `main`：** 见 [PR #197](https://github.com/freejbgo/301/pull/197)（#187–#196 收敛复核文档 + Go HTTP-01 Host 对齐）。
+
+**2026-10-17 复核（#198）：** `requeueFailedDeployments` 仅重试可下发且域名一致的证书；Agent 拉取 redirect/证书用 `AcmeHostKey`；PHPUnit **246**（**460** assertions）。
+
 **2026-10-17 #196 已合并 `main`：** 见 [PR #196](https://github.com/freejbgo/301/pull/196)。
 
 **2026-10-17 合并后集中复核（#197）：** 见下方 §「#187–#196 主机名/ACME 收敛复核」；Go `ResponseForPath` 与 store 同用 `AcmeHostKey`；门禁全绿。
@@ -401,7 +405,7 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **245**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **246**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
@@ -413,7 +417,7 @@
 
 | 复核项 | 方法 | 结论 |
 |--------|------|------|
-| 全量门禁 | `bash scripts/dev-preflight.sh`（Go + PHPUnit 245 + 脚本/SQL） | 通过 |
+| 全量门禁 | `bash scripts/dev-preflight.sh`（Go + PHPUnit 246 + 脚本/SQL） | 通过 |
 | 证书下发面 | `realign` + `certMatchesAdminDomain` 在节点 API、revision、deploy 队列、health | 路径一致；非法/漂移域名 **不下发、不 ack 成功** |
 | ACME 面 | `acmeHostKey` / `purgeForHosts`（含遗留 scheme 与精确键） | 主控与节点 Go `AcmeHostKey` 对齐；HTTP-01 等待认可遗留 sync 键 |
 | 行为变化（预期） | 后台域名无效时续期/部署/ack 会 **拒绝或跳过** 而非带错主机名继续 | 单测覆盖 `queueDeploy`、`markNodeAck`、`IssueDomainCertificateJob` 清理 |
@@ -497,4 +501,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **245** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **246** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。

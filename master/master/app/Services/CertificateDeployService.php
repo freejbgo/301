@@ -61,23 +61,40 @@ class CertificateDeployService
         }
 
         $certIds = (clone $query)->distinct()->pluck('cert_id');
+        $eligibleCertIds = [];
+        foreach ($certIds as $cid) {
+            $cert = RediDomainCert::query()->with('domain')->find($cid);
+            if (! $cert || ! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem()) {
+                continue;
+            }
+            if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)
+                || ! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
+                continue;
+            }
+            $eligibleCertIds[] = (int) $cid;
+        }
 
-        $count = $query->update([
-            'status' => 'pending',
-            'last_error' => null,
-            'deployed_at' => null,
-        ]);
+        if ($eligibleCertIds === []) {
+            return 0;
+        }
+
+        $count = (clone $query)
+            ->whereIn('cert_id', $eligibleCertIds)
+            ->update([
+                'status' => 'pending',
+                'last_error' => null,
+                'deployed_at' => null,
+            ]);
 
         if ($count === 0) {
             return 0;
         }
 
-        foreach ($certIds as $cid) {
+        foreach ($eligibleCertIds as $cid) {
             $cert = RediDomainCert::query()->with('domain')->find($cid);
             if (! $cert) {
                 continue;
             }
-            DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
             $cert->status = RediDomainCert::STATUS_DEPLOYING;
             $cert->last_error = '已重新排队失败节点的证书部署，等待节点拉取';
             $cert->save();

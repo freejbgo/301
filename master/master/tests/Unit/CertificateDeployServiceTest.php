@@ -130,6 +130,9 @@ class CertificateDeployServiceTest extends TestCase
             'domain_name' => 'stale.example',
             'status' => RediDomainCert::STATUS_FAILED,
         ]);
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
         \DB::table('redi_cert_deployments')->insert([
             'cert_id' => $cert->id,
             'node_id' => $node->id,
@@ -158,6 +161,9 @@ class CertificateDeployServiceTest extends TestCase
             'domain_name' => 'edge.example',
             'status' => RediDomainCert::STATUS_FAILED,
         ]);
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
         \DB::table('redi_cert_deployments')->insert([
             'cert_id' => $cert->id,
             'node_id' => $node->id,
@@ -290,6 +296,43 @@ class CertificateDeployServiceTest extends TestCase
         app(CertificateDeployService::class)->syncDeploymentsForNode($node);
 
         $this->assertDatabaseCount('redi_cert_deployments', 0);
+    }
+
+    public function test_requeue_failed_deployments_skips_invalid_admin_domain(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'not a valid host!!!',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'orphan.example',
+            'status' => RediDomainCert::STATUS_FAILED,
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'failed',
+            'last_error' => 'pem error',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $count = app(CertificateDeployService::class)->requeueFailedDeployments((int) $node->id, null);
+
+        $this->assertSame(0, $count);
+        $this->assertDatabaseHas('redi_cert_deployments', [
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'failed',
+        ]);
     }
 
     public function test_queue_deploy_skips_when_cert_does_not_match_admin_domain(): void

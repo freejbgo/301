@@ -39,6 +39,8 @@ class RequeueFailedDeploymentsCommandTest extends TestCase
             $table->unsignedInteger('domain_id');
             $table->string('domain_name');
             $table->string('status')->default('active');
+            $table->text('certificate')->nullable();
+            $table->text('private_key')->nullable();
             $table->text('last_error')->nullable();
             $table->timestamps();
         });
@@ -86,6 +88,8 @@ class RequeueFailedDeploymentsCommandTest extends TestCase
             'domain_id' => $domainId,
             'domain_name' => 'edge.example',
             'status' => RediDomainCert::STATUS_FAILED,
+            'certificate' => \Illuminate\Support\Facades\Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => \Illuminate\Support\Facades\Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

@@ -194,7 +194,7 @@ func pullRedirectRules(client *http.Client, cfg config, registered *bool) error 
 		if host.ContainsControlChars(r.OriginalURL) {
 			continue
 		}
-		label := host.CanonicalLookupHost(r.OriginalURL)
+		label := host.AcmeHostKey(r.OriginalURL)
 		if label == "" {
 			continue
 		}
@@ -228,7 +228,7 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 		if host.ContainsControlChars(row.Domain) {
 			continue
 		}
-		domain := host.CanonicalLookupHost(row.Domain)
+		domain := host.AcmeHostKey(row.Domain)
 		if domain == "" {
 			continue
 		}
