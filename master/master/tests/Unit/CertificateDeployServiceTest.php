@@ -533,7 +533,14 @@ class CertificateDeployServiceTest extends TestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-        RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $nodeId = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4'])->id;
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $nodeId,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $cert = RediDomainCert::query()->find($certId);
         $queued = app(CertificateDeployService::class)->queueDeploy($cert);

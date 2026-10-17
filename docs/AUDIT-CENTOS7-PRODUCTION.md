@@ -180,6 +180,10 @@
 
 **2026-10-17 #213 已合并 `main`：** 见 [PR #213](https://github.com/freejbgo/301/pull/213)。
 
+**2026-10-17 #214 已合并 `main`：** 见 [PR #214](https://github.com/freejbgo/301/pull/214)。
+
+**2026-10-17 复核（#215）：** `pruneNonPullableDeployments`：`queueDeploy` 拒绝与节点 `syncDeployments` 时清除不可拉取证书的 pending/failed 行；PHPUnit **266**（**503** assertions）。
+
 **2026-10-17 复核（#214）：** 域名停用：凡停用前仍有部署行（含 failed 等）均写入 `DISABLE_DEPLOY_CANCEL_MSG`；PHPUnit **266**（**503** assertions）。
 
 **2026-10-17 复核（#213）：** 域名停用时对「已签发但仍有待部署行」的证书写入 `DISABLE_DEPLOY_CANCEL_MSG`；PHPUnit **265**（**501** assertions）。
