@@ -379,10 +379,15 @@ JS
 
                 RediDomainCert::query()
                     ->where('domain_id', $domain->id)
-                    ->update([
-                        'domain_name' => $domain->original_url,
-                        'admin_id' => $domain->admin_id,
-                    ]);
+                    ->get()
+                    ->each(function (RediDomainCert $cert) use ($domain) {
+                        $cert->setRelation('domain', $domain);
+                        DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+                        if ((int) $cert->admin_id !== (int) $domain->admin_id) {
+                            $cert->admin_id = (int) $domain->admin_id;
+                            $cert->save();
+                        }
+                    });
 
                 if (! $form->isEditing()) {
                     return;

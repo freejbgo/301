@@ -136,6 +136,28 @@ class NodeAgentApiTest extends TestCase
         $this->assertTrue($node->last_heartbeat_at->greaterThan(now()->subMinutes(5)));
     }
 
+    public function test_challenges_synced_accepts_domain_with_scheme(): void
+    {
+        [$node, $token] = $this->createNodeWithToken();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'valid.example',
+            'token' => 'tok',
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/challenges-synced', ['domains' => ['https://valid.example/']])
+            ->assertOk()
+            ->assertJsonPath('synced_count', 1);
+
+        $this->assertDatabaseHas('redi_acme_challenge_node_sync', [
+            'node_id' => $node->id,
+            'domain_name' => 'valid.example',
+        ]);
+    }
+
     public function test_acme_challenges_omits_empty_token_rows(): void
     {
         [, $token] = $this->createNodeWithToken();
