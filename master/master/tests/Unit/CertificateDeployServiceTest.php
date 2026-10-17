@@ -801,6 +801,50 @@ class CertificateDeployServiceTest extends TestCase
         $node->save();
 
         $this->assertDatabaseCount('redi_cert_deployments', 0);
+        $fresh = RediDomainCert::query()->find($certId);
+        $this->assertSame(RediDomainCert::STATUS_ISSUED, $fresh->status);
+        $this->assertSame(
+            CertificateDeployService::NODE_DISABLED_DEPLOY_CLEAR_MSG,
+            $fresh->last_error
+        );
+    }
+
+    public function test_disabling_node_reconciles_active_cert_when_last_ok_row_removed(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'ok',
+            'deployed_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $node->enabled = false;
+        $node->save();
+
+        $fresh = RediDomainCert::query()->find($certId);
+        $this->assertSame(RediDomainCert::STATUS_ISSUED, $fresh->status);
+        $this->assertSame(
+            CertificateDeployService::NODE_DISABLED_DEPLOY_CLEAR_MSG,
+            $fresh->last_error
+        );
     }
 
     public function test_forget_actionable_deployment_metrics_clears_request_cache(): void

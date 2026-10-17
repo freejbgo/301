@@ -218,17 +218,72 @@ class CertificateDeployService
         if (! RediCertDeployment::query()->where('cert_id', $cert->id)->exists()) {
             if ($cert->status === RediDomainCert::STATUS_DEPLOYING
                 && ! self::certIsNodePullable($cert)) {
-                $cert->status = RediDomainCert::STATUS_ISSUED;
-                if (Schema::hasColumn($cert->getTable(), 'last_error')) {
-                    $cert->last_error = '证书当前不可下发，请检查 PEM 或域名一致性';
-                }
-                $cert->save();
+                $this->reconcileCertWithNoDeploymentRows(
+                    $cert,
+                    '证书当前不可下发，请检查 PEM 或域名一致性'
+                );
             }
 
             return;
         }
 
         $this->refreshCertStatusFromDeployments($cert);
+    }
+
+    public const NODE_DISABLED_DEPLOY_CLEAR_MSG = '节点已停用，相关部署记录已清除';
+
+    /**
+     * 节点 `enabled=false`：删除该节点部署行并回写受影响证书状态。
+     */
+    public function handleNodeDisabled(RediNode $node): void
+    {
+        if (! Schema::hasTable('redi_cert_deployments')) {
+            return;
+        }
+
+        $certIds = RediCertDeployment::query()
+            ->where('node_id', $node->id)
+            ->distinct()
+            ->pluck('cert_id');
+
+        if ($certIds->isEmpty()) {
+            return;
+        }
+
+        RediCertDeployment::where('node_id', $node->id)->delete();
+        self::forgetActionableDeploymentMetrics();
+
+        foreach ($certIds as $certId) {
+            $cert = RediDomainCert::query()->with('domain')->find($certId);
+            if (! $cert) {
+                continue;
+            }
+            if (! RediCertDeployment::query()->where('cert_id', $cert->id)->exists()) {
+                $this->reconcileCertWithNoDeploymentRows($cert, self::NODE_DISABLED_DEPLOY_CLEAR_MSG);
+
+                continue;
+            }
+            $this->reconcileCertDeployStatus($cert);
+        }
+    }
+
+    /**
+     * 证书已无任何部署行时，将 active/deploying 降为 issued（不触碰尚无部署行的 pullable deploying 入队前状态）。
+     */
+    protected function reconcileCertWithNoDeploymentRows(RediDomainCert $cert, ?string $lastError = null): void
+    {
+        if (! in_array($cert->status, [
+            RediDomainCert::STATUS_ACTIVE,
+            RediDomainCert::STATUS_DEPLOYING,
+        ], true)) {
+            return;
+        }
+
+        $cert->status = RediDomainCert::STATUS_ISSUED;
+        if ($lastError !== null && Schema::hasColumn($cert->getTable(), 'last_error')) {
+            $cert->last_error = $lastError;
+        }
+        $cert->save();
     }
 
     /** PEM / 主机名 / 域名绑定变更后：清理不可拉取部署行并回写证书状态。 */
