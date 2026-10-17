@@ -809,6 +809,74 @@ class CertificateDeployServiceTest extends TestCase
         );
     }
 
+    public function test_reconcile_demotes_active_cert_with_no_deployment_rows(): void
+    {
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+        ]);
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
+
+        app(CertificateDeployService::class)->reconcileCertDeployStatus($cert->fresh());
+
+        $this->assertSame(RediDomainCert::STATUS_ISSUED, $cert->fresh()->status);
+    }
+
+    public function test_disabling_one_node_keeps_active_cert_when_other_node_still_ok(): void
+    {
+        $nodeA = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $nodeB = RediNode::query()->create(['enabled' => true, 'public_ip' => '5.6.7.8']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            [
+                'cert_id' => $certId,
+                'node_id' => $nodeA->id,
+                'status' => 'ok',
+                'deployed_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cert_id' => $certId,
+                'node_id' => $nodeB->id,
+                'status' => 'ok',
+                'deployed_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        $nodeA->enabled = false;
+        $nodeA->save();
+
+        $fresh = RediDomainCert::query()->find($certId);
+        $this->assertSame(RediDomainCert::STATUS_ACTIVE, $fresh->status);
+        $this->assertDatabaseCount('redi_cert_deployments', 1);
+    }
+
     public function test_disabling_node_reconciles_active_cert_when_last_ok_row_removed(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
