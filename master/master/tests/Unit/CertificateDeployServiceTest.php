@@ -333,6 +333,69 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertDatabaseCount('redi_cert_deployments', 0);
     }
 
+    public function test_requeue_failed_deployments_skips_disabled_domain(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_FAILED,
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'failed',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $count = app(CertificateDeployService::class)->requeueFailedDeployments((int) $node->id, null);
+
+        $this->assertSame(0, $count);
+        $this->assertDatabaseHas('redi_cert_deployments', ['status' => 'failed']);
+    }
+
+    public function test_requeue_failed_deployments_skips_disabled_node(): void
+    {
+        $node = RediNode::query()->create(['enabled' => false, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_FAILED,
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'failed',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $count = app(CertificateDeployService::class)->requeueFailedDeployments((int) $node->id, null);
+
+        $this->assertSame(0, $count);
+    }
+
     public function test_requeue_failed_deployments_skips_invalid_admin_domain(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
