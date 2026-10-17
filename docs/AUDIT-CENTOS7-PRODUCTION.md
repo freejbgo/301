@@ -253,6 +253,10 @@
 
 **2026-10-17 #237 已合并 `main`：** 见 [PR #237](https://github.com/freejbgo/301/pull/237)。
 
+**2026-10-17 #238 已合并 `main`：** 见 [PR #238](https://github.com/freejbgo/301/pull/238)。
+
+**2026-10-17 复核（#239）：** ACME `assertDomainIssuable` 与后台改域名后证书行复用 `freshCertWithPersistedRealign`；PHPUnit **283**（**538** assertions）。
+
 **2026-10-17 复核（#238）：** `queueDeploy` / `redi:renew-certificates` 复用 `freshCertWithPersistedRealign`；PHPUnit **283**（**538** assertions）。
 
 **2026-10-17 复核（#237）：** `freshCertWithPersistedRealign` 统一 sync/拉证落库对齐；health 漂移先只读 realign 再按需落库；PHPUnit **282**（**535** assertions）。

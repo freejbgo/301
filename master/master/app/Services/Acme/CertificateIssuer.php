@@ -132,10 +132,12 @@ class CertificateIssuer
             throw new RuntimeException('域名已停用，已中止证书签发');
         }
         $cert->setRelation('domain', $domain);
-        if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)
-            || ! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
+        $fresh = CertificateDeployService::freshCertWithPersistedRealign($cert);
+        if (! $fresh || ! DomainRecordNormalizer::certMatchesAdminDomain($fresh)) {
             throw new RuntimeException('域名主机名无效，无法签发证书');
         }
+        $cert->refresh();
+        $cert->loadMissing('domain');
     }
 
     protected function parseCertExpiry(string $pemBundle): ?Carbon
