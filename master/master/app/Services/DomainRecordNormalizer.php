@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\RediDomainCert;
 use App\Support\HostNameValidator;
+use Illuminate\Support\Facades\Schema;
 use App\Support\OpsDisplaySanitizer;
 
 class DomainRecordNormalizer
@@ -68,7 +69,10 @@ class DomainRecordNormalizer
         $certHost = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
         if ($certHost !== $canonical) {
             $cert->domain_name = $canonical;
-            $cert->save();
+            $cert->saveQuietly();
+            if (Schema::hasTable('redi_cert_deployments')) {
+                app(CertificateDeployService::class)->reconcileCertDeployStatus($cert->fresh()->load('domain'));
+            }
         }
 
         return true;
