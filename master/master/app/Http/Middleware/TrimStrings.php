@@ -15,8 +15,10 @@ class TrimStrings extends Middleware
         'current_password',
         'password',
         'password_confirmation',
-        // 节点 challenges-synced 须在服务端检测控制字符，不可被全局 trim 掉。
+        // 节点 API：须在服务端检测控制字符，不可被全局 trim 掉。
         'domains',
         'domains.*',
+        'version',
+        'error',
     ];
 }

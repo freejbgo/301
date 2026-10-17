@@ -218,6 +218,13 @@ class NodeAgentController extends Controller
             return response()->json(['ok' => true, 'ignored' => true]);
         }
 
+        if (is_string($error) && OpsDisplaySanitizer::containsControlChars($error)) {
+            return response()->json([
+                'message' => 'invalid error',
+                'error' => OpsDisplaySanitizer::field($error, '', 500),
+            ], 422);
+        }
+
         $error = is_string($error) ? OpsDisplaySanitizer::logSnippet($error, 2000) : null;
         if ($error === '') {
             $error = null;

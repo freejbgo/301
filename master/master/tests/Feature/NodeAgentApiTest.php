@@ -353,7 +353,7 @@ class NodeAgentApiTest extends TestCase
             ->assertStatus(409);
     }
 
-    public function test_ack_strips_control_chars_from_error(): void
+    public function test_ack_rejects_control_chars_in_error_with_422(): void
     {
         Schema::create('redi_admin_domain', function (Blueprint $table) {
             $table->increments('id');
@@ -392,12 +392,8 @@ class NodeAgentApiTest extends TestCase
                 'ok' => false,
                 'error' => "disk\r\nfull",
             ])
-            ->assertOk();
-
-        $this->assertSame(
-            'diskfull',
-            \DB::table('redi_cert_deployments')->where('cert_id', $certId)->value('last_error')
-        );
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'invalid error');
     }
 
     public function test_ack_ignored_without_deployment_row(): void
@@ -472,6 +468,16 @@ class NodeAgentApiTest extends TestCase
 
         $node->refresh();
         $this->assertSame('0.1.3', $node->agent_version);
+    }
+
+    public function test_heartbeat_rejects_version_with_control_chars_with_426(): void
+    {
+        config(['redi.min_agent_version' => '0.1.2']);
+        [, $token] = $this->createNodeWithToken();
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/heartbeat', ['version' => '0.1.3'."\0"])
+            ->assertStatus(426);
     }
 
     public function test_heartbeat_preserves_agent_version_when_version_key_absent(): void
