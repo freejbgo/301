@@ -7,6 +7,7 @@ use App\Admin\Actions\Grid\RotateNodeToken;
 use App\Admin\Concerns\EnsuresAdministrator;
 use App\Models\RediNode;
 use App\Services\RediHealthReport;
+use App\Support\OpsDisplaySanitizer;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Http\Controllers\AdminController;
@@ -79,7 +80,7 @@ class RediNodeController extends AdminController
                 return implode('<br>', $parts);
             });
             $grid->column('agent_version', 'Agent 版本')->display(function ($version) {
-                return e((string) $version);
+                return e(OpsDisplaySanitizer::field($version, '—', 32));
             });
             $grid->column('updated_at', '更新时间');
 

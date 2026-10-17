@@ -22,9 +22,8 @@ class NodeAgentController extends Controller
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
-        $version = RediAgentVersionGate::sanitize($request->input('version'));
+        $this->persistAgentVersionIfPresent($request, $node);
         $node->last_heartbeat_at = now();
-        $node->agent_version = $version;
         $node->save();
 
         $deployService->syncDeploymentsForNode($node);
@@ -91,12 +90,23 @@ class NodeAgentController extends Controller
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
-        $version = RediAgentVersionGate::sanitize($request->input('version'));
+        $this->persistAgentVersionIfPresent($request, $node);
         $node->last_heartbeat_at = now();
-        $node->agent_version = $version;
         $node->save();
 
         return response()->json(['ok' => true]);
+    }
+
+    protected function persistAgentVersionIfPresent(Request $request, RediNode $node): void
+    {
+        $input = $request->all();
+        if (! array_key_exists('version', $input)) {
+            return;
+        }
+        $version = RediAgentVersionGate::sanitize($input['version']);
+        if ($version !== null) {
+            $node->agent_version = $version;
+        }
     }
 
     public function acmeChallenges()
