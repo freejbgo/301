@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Jobs\IssueDomainCertificateJob;
 use App\Models\RediDomainCert;
+use App\Services\CertificateDeployService;
 use App\Services\DomainRecordNormalizer;
 use App\Support\HostNameValidator;
 use Illuminate\Console\Command;
@@ -46,7 +47,8 @@ class RenewDomainCertificatesCommand extends Command
                     continue;
                 }
             } else {
-                if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)) {
+                $fresh = CertificateDeployService::freshCertWithPersistedRealign($cert);
+                if (! $fresh || ! DomainRecordNormalizer::certMatchesAdminDomain($fresh)) {
                     Log::warning('redi:renew-certificates skip invalid domain original_url', [
                         'cert_id' => $cert->id,
                         'domain_id' => $cert->domain_id,
@@ -54,6 +56,7 @@ class RenewDomainCertificatesCommand extends Command
                     $this->warn('跳过非法域名 cert #'.$cert->id);
                     continue;
                 }
+                $cert = $fresh;
                 $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
             }
 
