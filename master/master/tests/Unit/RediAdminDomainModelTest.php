@@ -272,4 +272,33 @@ class RediAdminDomainModelTest extends TestCase
             'status' => 'pending',
         ]);
     }
+
+    public function test_new_enabled_domain_does_not_auto_queue_deploy_without_disable_transition(): void
+    {
+        \DB::table('redi_nodes')->insert([
+            'enabled' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $domain = RediAdminDomain::create([
+            'group_id' => 1,
+            'admin_id' => 1,
+            'original_url' => 'new.example',
+            'skip_url' => 'https://dest.example/',
+            'status' => 1,
+        ]);
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domain->id,
+            'domain_name' => 'new.example',
+            'status' => RediDomainCert::STATUS_ISSUED,
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
+    }
 }

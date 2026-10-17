@@ -49,8 +49,9 @@ class RediAdminDomain extends Model
             $newStatus = (int) $domain->status;
 
             if ($newStatus === 1) {
+                $reenabledFromDisabled = (int) $domain->getOriginal('status') === 2;
                 $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
-                if ($cert) {
+                if ($cert && $reenabledFromDisabled) {
                     $cert->setRelation('domain', $domain);
                     if ($cert->last_error === self::DISABLE_DEPLOY_CANCEL_MSG) {
                         $cert->last_error = null;
