@@ -74,7 +74,11 @@ class IssueDomainCertificateJob implements ShouldQueue
             return;
         }
 
-        $canonicalHost = DomainRecordNormalizer::normalizeOriginalUrl((string) $domain->original_url);
+        $publishableHost = DomainRecordNormalizer::originalUrlIfValid((string) $domain->original_url);
+        $canonicalHost = $publishableHost !== ''
+            ? $publishableHost
+            : DomainRecordNormalizer::normalizeOriginalUrl((string) $domain->original_url);
+
         $cert = RediDomainCert::firstOrCreate(
             ['domain_id' => $domain->id],
             [
@@ -85,7 +89,6 @@ class IssueDomainCertificateJob implements ShouldQueue
         $cert->domain_name = $canonicalHost;
         $cert->admin_id = (int) $domain->admin_id;
 
-        $publishableHost = DomainRecordNormalizer::originalUrlIfValid((string) $domain->original_url);
         if ($publishableHost === '') {
             $cert->status = RediDomainCert::STATUS_FAILED;
             $cert->last_error = '域名主机名无效，无法签发证书';
