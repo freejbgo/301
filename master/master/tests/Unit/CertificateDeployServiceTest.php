@@ -718,7 +718,8 @@ class CertificateDeployServiceTest extends TestCase
         $certId = \DB::table('redi_domain_certs')->insertGetId([
             'domain_id' => $domainId,
             'domain_name' => 'edge.example',
-            'status' => RediDomainCert::STATUS_ISSUED,
+            'status' => RediDomainCert::STATUS_DEPLOYING,
+            'last_error' => '等待节点拉取证书',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -733,6 +734,10 @@ class CertificateDeployServiceTest extends TestCase
         app(CertificateDeployService::class)->pruneStaleDeploymentsForNode($node);
 
         $this->assertDatabaseCount('redi_cert_deployments', 0);
+        $this->assertSame(
+            RediDomainCert::STATUS_ISSUED,
+            RediDomainCert::query()->find($certId)->status
+        );
     }
 
     public function test_handle_domain_reenabled_from_disabled_queues_eligible_cert(): void

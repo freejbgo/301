@@ -843,7 +843,8 @@ class NodeAgentApiTest extends TestCase
         $certId = \DB::table('redi_domain_certs')->insertGetId([
             'domain_id' => $domainId,
             'domain_name' => 'edge.example',
-            'status' => 'issued',
+            'status' => 'deploying',
+            'last_error' => '等待节点拉取证书',
             'certificate' => null,
             'private_key' => null,
             'created_at' => now(),
@@ -860,6 +861,10 @@ class NodeAgentApiTest extends TestCase
         $this->withToken($token)->postJson('/api/nodes/heartbeat', [])->assertOk();
 
         $this->assertDatabaseCount('redi_cert_deployments', 0);
+        $this->assertSame(
+            'issued',
+            (string) \DB::table('redi_domain_certs')->where('id', $certId)->value('status')
+        );
     }
 
     public function test_redirect_rules_shape(): void
