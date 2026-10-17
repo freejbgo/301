@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\RediAcmeChallenge;
 use App\Support\AcmeHttp01Token;
-use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -34,8 +33,9 @@ class AcmeChallengeQuery
 
     public static function nodeReadyRow(?string $domainName, ?string $token, ?string $responseBody): bool
     {
-        return HostNameValidator::isNodePublishableHost((string) $domainName)
-            && self::http01ContentValid($token, $responseBody);
+        $host = DomainRecordNormalizer::acmeHostKey((string) $domainName);
+
+        return $host !== '' && self::http01ContentValid($token, $responseBody);
     }
 
     /** 节点 API 可下发的挑战行（含控制字符显式拒绝，与 acme-challenges / challenges-synced 一致）。 */

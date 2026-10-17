@@ -110,7 +110,7 @@ class CertificateIssuer
         $cert->status = RediDomainCert::STATUS_ISSUED;
         $cert->save();
 
-        RediAcmeChallenge::where('domain_name', $domain)->delete();
+        AcmeChallengeCleanup::purgeForHosts([$domain]);
 
         app(CertificateDeployService::class)->queueDeploy($cert);
     }
