@@ -45,6 +45,9 @@ class NodeAgentRevisionService
             ->with('domain')
             ->orderBy('id')
             ->get(['id', 'domain_id', 'domain_name', 'updated_at'])
+            ->each(function ($row) {
+                DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($row);
+            })
             ->filter(function ($row) {
                 return DomainRecordNormalizer::certMatchesAdminDomain($row);
             })

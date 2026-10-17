@@ -454,11 +454,6 @@ class RediHealthReport
         ];
     }
 
-    protected static function certHostIsReportable(string $domainName): bool
-    {
-        return HostNameValidator::isNodePublishableHost($domainName);
-    }
-
     protected static function certCanonicalHost(RediDomainCert $cert): string
     {
         $cert->loadMissing('domain');

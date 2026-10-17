@@ -870,7 +870,7 @@ class NodeAgentApiTest extends TestCase
         $this->assertSame('good.example', $rules[0]['original_url']);
     }
 
-    public function test_certificates_omit_control_char_domain_names(): void
+    public function test_certificates_realigns_control_char_domain_name_from_domain(): void
     {
         Schema::create('redi_admin_domain', function (Blueprint $table) {
             $table->increments('id');
@@ -888,9 +888,9 @@ class NodeAgentApiTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        $goodId = \DB::table('redi_domain_certs')->insertGetId([
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
             'domain_id' => $domainId,
-            'domain_name' => 'cert.example',
+            'domain_name' => "evil\x00.example",
             'status' => 'active',
             'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
             'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
@@ -898,26 +898,61 @@ class NodeAgentApiTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        $badId = \DB::table('redi_domain_certs')->insertGetId([
-            'domain_id' => $domainId,
-            'domain_name' => "evil\x00.example",
-            'status' => 'active',
-            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest2\n-----END CERTIFICATE-----"),
-            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest2\n-----END PRIVATE KEY-----"),
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
-
-        \DB::table('redi_cert_deployments')->insert([
-            ['cert_id' => $goodId, 'node_id' => $node->id, 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()],
-            ['cert_id' => $badId, 'node_id' => $node->id, 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         $response = $this->withToken($token)->getJson('/api/nodes/certificates');
         $response->assertOk();
         $ids = array_column($response->json('certificates'), 'cert_id');
-        $this->assertContains($goodId, $ids);
-        $this->assertNotContains($badId, $ids);
+        $this->assertContains($certId, $ids);
+        $this->assertSame('cert.example', \DB::table('redi_domain_certs')->where('id', $certId)->value('domain_name'));
+    }
+
+    public function test_certificates_omit_when_domain_original_url_invalid(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->timestamps();
+        });
+
+        [$node, $token] = $this->createNodeWithToken();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => '1.2.3.4',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => '1.2.3.4',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->withToken($token)->getJson('/api/nodes/certificates');
+        $response->assertOk();
+        $ids = array_column($response->json('certificates'), 'cert_id');
+        $this->assertNotContains($certId, $ids);
     }
 
     public function test_redirect_rules_omit_invalid_hosts(): void
