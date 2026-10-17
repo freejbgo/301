@@ -150,6 +150,10 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-17 #196 已合并 `main`：** 见 [PR #196](https://github.com/freejbgo/301/pull/196)。
+
+**2026-10-17 合并后集中复核（#197）：** 见下方 §「#187–#196 主机名/ACME 收敛复核」；Go `ResponseForPath` 与 store 同用 `AcmeHostKey`；门禁全绿。
+
 **2026-10-17 #195 已合并 `main`：** 见 [PR #195](https://github.com/freejbgo/301/pull/195)。
 
 **2026-10-17 复核（#196）：** ACME 授权域名 punycode 对齐；节点 `ack` 拒绝域名漂移；停用/删域名 purge 传原始 URL；prune 畸形行按 id 删；Go `AcmeHostKey`；PHPUnit **245**（**458** assertions）。
@@ -397,11 +401,26 @@
 | DNS 启用 | `DomainDnsPointingGuard` + 批量创建默认停用 |
 | 运营命令 | `redi:health`、`renew`、`ops-webhook`、`requeue-failed-deployments` 与文档一致 |
 | 文档链接 | 已无指向已删 Ubuntu 路径的引用 |
-| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **230**；`bash -n` + `lagran_ports.py` + procedure 校验 |
+| 自动化测试 | 本地：Go 全包测试通过；PHPUnit **245**；`bash -n` + `lagran_ports.py` + procedure 校验 |
 | lagran 运维 | `lagran_ports.py`、diagnose、cleanup 脚本 |
 | GitHub Actions | `ci.yml` 的 `centos7-scripts` 已跑 `verify-redi-db-deploy-path.sh`（需 Docker）；PR/推送若因 Runner/账单整 job 失败，请按 §9 本地复现 |
 
 **未发现阻塞商用的 P0 代码缺陷。**
+
+### #187–#196 主机名 / ACME / 证书收敛 — 合并后复核（#197）
+
+多轮 PR **不是**「修完又坏」的循环，而是同一类生产隐患（`original_url` / 证书 `domain_name` / ACME 挑战键 / 节点 sync 行 **不一致**）分步收紧：每轮改动面小、带单测，便于回滚与审查。
+
+| 复核项 | 方法 | 结论 |
+|--------|------|------|
+| 全量门禁 | `bash scripts/dev-preflight.sh`（Go + PHPUnit 245 + 脚本/SQL） | 通过 |
+| 证书下发面 | `realign` + `certMatchesAdminDomain` 在节点 API、revision、deploy 队列、health | 路径一致；非法/漂移域名 **不下发、不 ack 成功** |
+| ACME 面 | `acmeHostKey` / `purgeForHosts`（含遗留 scheme 与精确键） | 主控与节点 Go `AcmeHostKey` 对齐；HTTP-01 等待认可遗留 sync 键 |
+| 行为变化（预期） | 后台域名无效时续期/部署/ack 会 **拒绝或跳过** 而非带错主机名继续 | 单测覆盖 `queueDeploy`、`markNodeAck`、`IssueDomainCertificateJob` 清理 |
+| 仍建议真机验证 | 双节点、改 `original_url`、续期、停用域名 | `php artisan redi:health`；关注 `cert_domain_name_drift`、pending 部署 |
+| 已知 P2 | `purgeForHosts` 全表扫描挑战/sync（表很小） | 规模极大时再优化 |
+
+**回归风险判断：** 当前自动化未暴露逻辑冲突；剩余风险主要在 **真实 ACME / 公网 HTTP-01 / 多节点时序**，需按 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) 抽测，而非继续堆小 PR。
 
 ### 全模块复核说明（每轮门禁 + #107 代码向补扫）
 

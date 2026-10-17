@@ -2,6 +2,19 @@ package acme
 
 import "testing"
 
+func TestResponseForPathNormalizesRequestHost(t *testing.T) {
+	ReplaceAll([]Item{{
+		DomainName:   "example.com",
+		Token:        "tok123",
+		ResponseBody: "challenge-body",
+	}})
+
+	body, ok := ResponseForPath("https://Example.COM/", "/.well-known/acme-challenge/tok123")
+	if !ok || body != "challenge-body" {
+		t.Fatalf("expected challenge when request Host uses scheme/case, got ok=%v body=%q", ok, body)
+	}
+}
+
 func TestResponseForPathRequiresHostAndToken(t *testing.T) {
 	ReplaceAll([]Item{{
 		DomainName:   "example.com",
