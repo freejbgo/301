@@ -55,8 +55,7 @@ class RediNode extends Model
             }
 
             if (! $node->enabled) {
-                RediCertDeployment::where('node_id', $node->id)->delete();
-                CertificateDeployService::forgetActionableDeploymentMetrics();
+                app(CertificateDeployService::class)->handleNodeDisabled($node);
 
                 return;
             }
