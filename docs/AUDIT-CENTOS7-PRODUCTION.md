@@ -12,6 +12,22 @@
 | [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) | 已上线环境增量升级 |
 | [../scripts/dev-preflight.sh](../scripts/dev-preflight.sh) | 开发机发版前自检（§9） |
 
+### PR #145–#220 复核纪要（2026-10-17，北京日）
+
+| 项 | 结论 |
+|----|------|
+| 范围 | **76** 个 PR（#145–#219 已合并 `main`，#220 草稿）；相对 #144 合并点约 **98** 文件、+4326/-425 行 |
+| 门禁 | `bash scripts/dev-preflight.sh`：**271** tests / **511** assertions；Go 测试通过 |
+| A. 节点 API / Agent（#145–#174, #198–#200） | ack 校验、控制字符过滤、`redirect-rules` / challenges 出站域名校验；与 Go `AcmeHostKey` 对齐 |
+| B. ACME / 主机名（#175–#197） | `acmeHostKey`、`nodePublishableRow`、`originalUrlIfValid` 收敛；purge 先增后删与 legacy 键兼容 |
+| C. 证书漂移与 realign（#187–#190） | `realignCertDomainNameFromAdminDomain` 在拉取/健康/续期路径落库；**注意**：`certIsNodePullable()` 内 realign 会 `save()`，属有副作用读路径 |
+| D. 可执行部署指标（#201–#206） | `certIsNodePullable` / `countActionableDeployments` 消除僵尸 pending；指标缓存 `forgetActionableDeploymentMetrics` |
+| E. 域名/节点生命周期（#205–#214） | 停用清部署行 + `DISABLE_DEPLOY_CANCEL_MSG`；2→1 自动 `queueDeploy`；节点 `enabled=false` 删部署行 |
+| F. 部署行清理与状态机（#215–#219） | `pruneNonPullableDeployments`、`pruneStaleDeploymentsForNode`、`refreshCertStatusFromDeployments`、`reconcileCertDeployStatus` |
+| 已修缺口（#219 合并） | PEM/主机名变更后仍显示 **active** → 模型钩子 + reconcile |
+| 待合并（#220） | `refuseQueueDeploy` 先 reconcile 再写跳过文案 |
+| 后续观察（非阻塞） | ① `realign` 在事务内 `save()` 会触发证书 `saved` 钩子，路径深时可能双次 reconcile（当前测试未暴露错误）② 无心跳节点 pending 不阻塞 active（#218 设计如此）③ 单测库常无 `redi_cert_deployments` 表，已用 `Schema::hasTable` 守卫 |
+
 ### 运维 Agent「继续」约定（2026-10-17）
 
 用户说 **「继续」** 时按序执行：
@@ -198,6 +214,10 @@
 **2026-10-17 #217 已合并 `main`：** 见 [PR #217](https://github.com/freejbgo/301/pull/217)。
 
 **2026-10-17 #218 已合并 `main`：** 见 [PR #218](https://github.com/freejbgo/301/pull/218)。
+
+**2026-10-17 #219 已合并 `main`：** 见 [PR #219](https://github.com/freejbgo/301/pull/219)（含 #211–#219 抽检与 `reconcileCertDeployStatus`）。
+
+**2026-10-17 复核（#220）：** `refuseQueueDeploy` 在写入跳过原因前先 reconcile，避免残留 active；SECURITY 证书队列说明；PHPUnit **271**（**511** assertions）。
 
 **2026-10-17 复核（#211–#219 合并前抽检）：** 证书部署链路一致；补 `reconcileCertDeployStatus`（PEM/主机名变更后自动回写 status，避免残留 active）；约定「继续」流程见上文。
 
