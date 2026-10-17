@@ -469,7 +469,17 @@ class RediHealthReport
                 if (self::certCanonicalHost($cert) === '') {
                     return;
                 }
-                DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+                $recordedHost = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
+                DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert, false);
+                if (DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
+                    $alignedHost = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
+                    if ($recordedHost !== $alignedHost) {
+                        DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert->fresh()->load('domain'));
+                    }
+
+                    return;
+                }
+                DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert->fresh()->load('domain'));
                 if (DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
                     return;
                 }
