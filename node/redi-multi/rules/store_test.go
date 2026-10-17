@@ -43,3 +43,10 @@ func TestReplaceForceHTTPSSkipsTrailingNewlineHost(t *testing.T) {
 		t.Fatal("trailing newline host must not be stored")
 	}
 }
+
+func TestForceHTTPSRejectsLookupWithControlChars(t *testing.T) {
+	ReplaceForceHTTPS(map[string]bool{"good.example": true})
+	if ForceHTTPS("good.example\n") {
+		t.Fatal("lookup host with trailing newline must not match")
+	}
+}

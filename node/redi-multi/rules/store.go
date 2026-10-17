@@ -3,6 +3,8 @@ package rules
 import (
 	"strings"
 	"sync"
+
+	hostutil "redi-multi/util/host"
 )
 
 var (
@@ -14,7 +16,7 @@ func ReplaceForceHTTPS(items map[string]bool) {
 	mu.Lock()
 	forceHTTPS = map[string]bool{}
 	for host, v := range items {
-		if strings.ContainsAny(host, "\r\n\x00\t") {
+		if hostutil.ContainsControlChars(host) {
 			continue
 		}
 		h := strings.ToLower(strings.TrimSpace(host))
@@ -27,6 +29,9 @@ func ReplaceForceHTTPS(items map[string]bool) {
 }
 
 func ForceHTTPS(host string) bool {
+	if hostutil.ContainsControlChars(host) {
+		return false
+	}
 	host = strings.ToLower(strings.TrimSpace(host))
 	mu.RLock()
 	v, ok := forceHTTPS[host]

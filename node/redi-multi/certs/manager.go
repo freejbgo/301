@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+
+	hostutil "redi-multi/util/host"
 )
 
 type Entry struct {
@@ -61,7 +63,7 @@ func SyncFromMaster(valid []Entry, remoteIDs []int) {
 
 func upsertIntoMaps(hostMap map[string]Entry, idMap map[int]Entry, list []Entry) {
 	for _, e := range list {
-		if strings.ContainsAny(e.Domain, "\r\n\x00\t") {
+		if hostutil.ContainsControlChars(e.Domain) {
 			continue
 		}
 		d := strings.ToLower(strings.TrimSpace(e.Domain))
@@ -74,6 +76,9 @@ func upsertIntoMaps(hostMap map[string]Entry, idMap map[int]Entry, list []Entry)
 }
 
 func ForceHTTPS(host string) bool {
+	if hostutil.ContainsControlChars(host) {
+		return false
+	}
 	host = strings.ToLower(strings.TrimSpace(host))
 	mu.RLock()
 	e, ok := entries[host]
@@ -82,6 +87,9 @@ func ForceHTTPS(host string) bool {
 }
 
 func GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
+	if hello == nil || hostutil.ContainsControlChars(hello.ServerName) {
+		return nil, fmt.Errorf("no certificate for invalid host")
+	}
 	host := strings.ToLower(strings.TrimSpace(hello.ServerName))
 	mu.RLock()
 	e, ok := entries[host]
@@ -102,7 +110,7 @@ func InstallEntry(e Entry) error {
 		return err
 	}
 	mu.Lock()
-	if strings.ContainsAny(e.Domain, "\r\n\x00\t") {
+	if hostutil.ContainsControlChars(e.Domain) {
 		mu.Unlock()
 		return fmt.Errorf("invalid domain")
 	}

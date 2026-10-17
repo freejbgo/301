@@ -81,13 +81,11 @@ class RediOpsWebhook
 
     public static function notifyTaskFailure(string $task, string $message = ''): bool
     {
-        $task = mb_substr(trim($task), 0, 120);
-        if ($task === '') {
-            $task = 'redi:ops';
+        $task = OpsDisplaySanitizer::field($task, 'redi:ops', 120);
+        $message = OpsDisplaySanitizer::field($message, '', 4000);
+        if ($message === '' || $message === '—') {
+            $message = "定时任务失败：{$task}";
         }
-        $message = OpsDisplaySanitizer::stripControlChars(trim($message));
-        $message = $message !== '' ? $message : "定时任务失败：{$task}";
-        $message = mb_substr($message, 0, 4000);
 
         return self::post([
             'source' => 'redi-cron',
