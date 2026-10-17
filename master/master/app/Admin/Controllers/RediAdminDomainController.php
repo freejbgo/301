@@ -91,7 +91,7 @@ class RediAdminDomainController extends AdminController
             $grid->column('group_id', '分组名称')->display(function () {
                 $name = $this->group?->name;
 
-                return $name !== null && $name !== '' ? e($name) : '（分组不存在）';
+                return e(OpsDisplaySanitizer::field($name, '（分组不存在）', 120));
             });
             $grid->column('original_url', '原始域名')->display(function ($value) {
                 return e(OpsDisplaySanitizer::field($value, '—', 253));
@@ -101,7 +101,9 @@ class RediAdminDomainController extends AdminController
                 if ($target === '' || strncmp($target, '（', 3) === 0) {
                     return $target;
                 }
-                return e($target).' <a href="javascript:;" class="redi-copy-cname" data-copy="'.e($target).'">复制</a>';
+                $safe = OpsDisplaySanitizer::field($target, '', 253);
+
+                return e($safe).' <a href="javascript:;" class="redi-copy-cname" data-copy="'.e($safe).'">复制</a>';
             });
             $grid->column('cname_ok', '解析预检')->display(function () {
                 $edgeFqdn = TenantEdgeService::cnameTargetForAdmin((int) $this->admin_id);
