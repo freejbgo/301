@@ -24,8 +24,40 @@ class AcmeChallengeCleanup
         }
 
         $list = array_keys($hosts);
-        RediAcmeChallenge::query()->whereIn('domain_name', $list)->delete();
-        RediAcmeChallengeNodeSync::query()->whereIn('domain_name', $list)->delete();
+
+        $challengeIds = RediAcmeChallenge::query()
+            ->get(['id', 'domain_name'])
+            ->filter(function ($row) use ($list) {
+                $stored = (string) $row->domain_name;
+                if (in_array($stored, $list, true)) {
+                    return true;
+                }
+                $key = DomainRecordNormalizer::acmeHostKey($stored);
+
+                return $key !== '' && in_array($key, $list, true);
+            })
+            ->pluck('id')
+            ->all();
+        if ($challengeIds !== []) {
+            RediAcmeChallenge::query()->whereIn('id', $challengeIds)->delete();
+        }
+
+        $syncIds = RediAcmeChallengeNodeSync::query()
+            ->get(['id', 'domain_name'])
+            ->filter(function ($row) use ($list) {
+                $stored = (string) $row->domain_name;
+                if (in_array($stored, $list, true)) {
+                    return true;
+                }
+                $key = DomainRecordNormalizer::acmeHostKey($stored);
+
+                return $key !== '' && in_array($key, $list, true);
+            })
+            ->pluck('id')
+            ->all();
+        if ($syncIds !== []) {
+            RediAcmeChallengeNodeSync::query()->whereIn('id', $syncIds)->delete();
+        }
     }
 
     /** 停用/删域名时清理挑战：兼容带 scheme 的遗留 original_url。 */

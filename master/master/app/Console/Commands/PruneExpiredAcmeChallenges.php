@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\RediAcmeChallenge;
-use App\Models\RediAcmeChallengeNodeSync;
+use App\Services\AcmeChallengeCleanup;
 use App\Services\AcmeChallengeQuery;
 use Illuminate\Console\Command;
 
@@ -25,12 +25,7 @@ class PruneExpiredAcmeChallenges extends Command
             ->where('expires_at', '<=', now())
             ->delete();
 
-        $deletedSync = 0;
-        if ($expiredDomains->isNotEmpty()) {
-            $deletedSync = RediAcmeChallengeNodeSync::query()
-                ->whereIn('domain_name', $expiredDomains->all())
-                ->delete();
-        }
+        $purgeSyncHosts = $expiredDomains->all();
 
         $invalidDomains = RediAcmeChallenge::query()
             ->where('expires_at', '>', now())
@@ -50,11 +45,7 @@ class PruneExpiredAcmeChallenges extends Command
             })
             ->delete();
 
-        if ($invalidDomains->isNotEmpty()) {
-            $deletedSync += (int) RediAcmeChallengeNodeSync::query()
-                ->whereIn('domain_name', $invalidDomains->all())
-                ->delete();
-        }
+        $purgeSyncHosts = array_merge($purgeSyncHosts, $invalidDomains->all());
 
         $malformedDomains = AcmeChallengeQuery::ready()
             ->get(['domain_name', 'token', 'response_body'])
@@ -70,12 +61,14 @@ class PruneExpiredAcmeChallenges extends Command
             $deletedMalformed = RediAcmeChallenge::query()
                 ->whereIn('domain_name', $malformedDomains->all())
                 ->delete();
-            $deletedSync += (int) RediAcmeChallengeNodeSync::query()
-                ->whereIn('domain_name', $malformedDomains->all())
-                ->delete();
+            $purgeSyncHosts = array_merge($purgeSyncHosts, $malformedDomains->all());
         }
 
-        $this->info("pruned expired={$deletedChallenges}, invalid_empty={$deletedInvalid}, malformed={$deletedMalformed}, sync_rows={$deletedSync}");
+        if ($purgeSyncHosts !== []) {
+            AcmeChallengeCleanup::purgeForHosts($purgeSyncHosts);
+        }
+
+        $this->info("pruned expired={$deletedChallenges}, invalid_empty={$deletedInvalid}, malformed={$deletedMalformed}");
 
         return self::SUCCESS;
     }

@@ -74,6 +74,28 @@ class AcmeChallengeCleanupTest extends TestCase
         $this->assertDatabaseMissing('redi_acme_challenges', ['domain_name' => 'acme.example']);
     }
 
+    public function test_purge_matches_legacy_scheme_stored_domain_name(): void
+    {
+        RediAcmeChallenge::create([
+            'domain_name' => 'https://acme.example/',
+            'token' => 't',
+            'response_body' => 'b',
+            'expires_at' => now()->addHour(),
+        ]);
+        \DB::table('redi_acme_challenge_node_sync')->insert([
+            'node_id' => 1,
+            'domain_name' => 'https://acme.example/',
+            'synced_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        AcmeChallengeCleanup::purgeForHosts(['acme.example']);
+
+        $this->assertDatabaseMissing('redi_acme_challenges', ['domain_name' => 'https://acme.example/']);
+        $this->assertDatabaseMissing('redi_acme_challenge_node_sync', ['domain_name' => 'https://acme.example/']);
+    }
+
     public function test_purge_skips_invalid_host_labels(): void
     {
         RediAcmeChallenge::create([

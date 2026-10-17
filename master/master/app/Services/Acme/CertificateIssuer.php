@@ -13,7 +13,6 @@ use App\Services\CertificateDeployService;
 use App\Services\Acme\Http01PropagationWaiter;
 use App\Support\AcmeHttp01Token;
 use App\Services\DomainRecordNormalizer;
-use App\Support\HostNameValidator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 use League\Flysystem\Adapter\Local;
@@ -47,9 +46,13 @@ class CertificateIssuer
             'mode' => $platform->acme_staging ? Client::MODE_STAGING : Client::MODE_LIVE,
         ]);
 
-        $domain = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
-        if ($domain === '' || ! HostNameValidator::isValidHostLabel($domain)) {
+        $domain = DomainRecordNormalizer::acmeHostKey((string) $cert->domain_name);
+        if ($domain === '') {
             throw new RuntimeException('域名主机名无效，无法签发证书');
+        }
+        if ($cert->domain_name !== $domain) {
+            $cert->domain_name = $domain;
+            $cert->save();
         }
         $cert->status = RediDomainCert::STATUS_VALIDATING;
         $cert->last_error = null;

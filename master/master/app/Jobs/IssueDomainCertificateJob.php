@@ -138,7 +138,11 @@ class IssueDomainCertificateJob implements ShouldQueue
         try {
             $issuer->issue($cert);
         } catch (Throwable $e) {
-            AcmeChallengeCleanup::purgeForHosts([$customerHost, (string) $cert->domain_name]);
+            AcmeChallengeCleanup::purgeForHosts([
+                (string) $domain->original_url,
+                $customerHost,
+                (string) $cert->domain_name,
+            ]);
             if ($stillValid && in_array($previousStatus, [
                 RediDomainCert::STATUS_ACTIVE,
                 RediDomainCert::STATUS_ISSUED,
