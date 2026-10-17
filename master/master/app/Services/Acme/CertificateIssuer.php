@@ -12,6 +12,7 @@ use App\Services\AcmeChallengeQuery;
 use App\Services\CertificateDeployService;
 use App\Services\Acme\Http01PropagationWaiter;
 use App\Support\AcmeHttp01Token;
+use App\Services\DomainRecordNormalizer;
 use App\Support\HostNameValidator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
@@ -123,10 +124,10 @@ class CertificateIssuer
         if ((int) $domain->status !== 1) {
             throw new RuntimeException('域名已停用，已中止证书签发');
         }
-        if (! HostNameValidator::isNodePublishableHost((string) $domain->original_url)) {
+        $canonical = DomainRecordNormalizer::originalUrlIfValid((string) $domain->original_url);
+        if ($canonical === '') {
             throw new RuntimeException('域名主机名无效，无法签发证书');
         }
-        $canonical = HostNameValidator::toCanonicalAscii((string) $domain->original_url);
         if (HostNameValidator::toCanonicalAscii((string) $cert->domain_name) !== $canonical) {
             $cert->domain_name = $canonical;
             $cert->save();

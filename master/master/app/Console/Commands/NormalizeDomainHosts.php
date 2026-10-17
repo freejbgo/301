@@ -19,11 +19,11 @@ class NormalizeDomainHosts extends Command
 
         RediAdminDomain::query()->orderBy('id')->chunk(200, function ($rows) use ($dry, &$updated) {
             foreach ($rows as $domain) {
-                if (! DomainRecordNormalizer::isValidOriginalHost($domain->original_url)) {
+                $canonical = DomainRecordNormalizer::originalUrlIfValid($domain->original_url);
+                if ($canonical === '') {
                     $this->warn("跳过 id={$domain->id} 非法 original_url");
                     continue;
                 }
-                $canonical = DomainRecordNormalizer::normalizeOriginalUrl($domain->original_url);
                 $skip = DomainRecordNormalizer::normalizeSkipUrl($domain->skip_url);
                 $dirty = $canonical !== $domain->original_url
                     || $skip !== (string) $domain->skip_url;
