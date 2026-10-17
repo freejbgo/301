@@ -222,6 +222,41 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertSame(RediDomainCert::STATUS_FAILED, $cert->fresh()->status);
     }
 
+    public function test_mark_node_ack_rejects_ok_when_domain_disabled(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 2,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_DEPLOYING,
+        ]);
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $cert->id,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $svc = app(CertificateDeployService::class);
+        $this->assertTrue($svc->markNodeAck($cert, $node, true));
+
+        $this->assertDatabaseHas('redi_cert_deployments', [
+            'cert_id' => $cert->id,
+            'node_id' => $node->id,
+            'status' => 'failed',
+        ]);
+    }
+
     public function test_mark_node_ack_is_idempotent_when_already_ok(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
