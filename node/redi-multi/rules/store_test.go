@@ -30,3 +30,16 @@ func TestReplaceForceHTTPSSkipsMalformedHost(t *testing.T) {
 		t.Fatal("malformed host must not be stored")
 	}
 }
+
+func TestReplaceForceHTTPSSkipsTrailingNewlineHost(t *testing.T) {
+	ReplaceForceHTTPS(map[string]bool{
+		"good.example":      true,
+		"trail.example\n": true,
+	})
+	if !ForceHTTPS("good.example") {
+		t.Fatal("expected good.example")
+	}
+	if ForceHTTPS("trail.example") {
+		t.Fatal("trailing newline host must not be stored")
+	}
+}

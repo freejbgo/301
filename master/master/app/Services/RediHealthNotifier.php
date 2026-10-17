@@ -41,8 +41,7 @@ class RediHealthNotifier
         }
         foreach ($issues as $row) {
             $tag = $row['level'] === 'critical' ? '严重' : '注意';
-            $msg = OpsDisplaySanitizer::stripControlChars((string) ($row['message'] ?? ''));
-            $lines[] = '['.$tag.'] '.mb_substr($msg, 0, 500);
+            $lines[] = '['.$tag.'] '.OpsDisplaySanitizer::field($row['message'] ?? '', '—', 500);
         }
 
         $text = implode("\n", $lines);

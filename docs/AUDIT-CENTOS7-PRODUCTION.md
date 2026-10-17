@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-17 复核（#147）：** Go rules/certs/redirect 在 trim 前拒控制字符；DNS/域名规范化复用 `OpsDisplaySanitizer`；health webhook 纯文本 `field()`；PHPUnit **186**（Go +3）。
+
 **2026-10-17 复核（#146）：** Go `Http01ResponseBodyValid` 在 trim 前拒控制字符；HTTP-01 公网探测校验响应体；`HostNameValidator` 复用 `OpsDisplaySanitizer`；`redi:health` CLI 文案 `field()`；PHPUnit **186**（+1）。
 
 **2026-10-17 复核（#145）：** HTTP-01 waiter / `CertificateIssuer` 统一 `http01ContentValid`；后台 health issue 展示截断；Go `ValidChallengeToken` + Agent 校验 token；PHPUnit **185**（+2）。

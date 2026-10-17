@@ -3,14 +3,14 @@
 namespace App\Services;
 
 use App\Support\HostNameValidator;
+use App\Support\OpsDisplaySanitizer;
 
 class DomainRecordNormalizer
 {
     public static function normalizeOriginalUrl(?string $url): string
     {
         $raw = (string) $url;
-        if ($raw === '' || str_contains($raw, "\r") || str_contains($raw, "\n") || str_contains($raw, "\0")
-            || str_contains($raw, "\t")) {
+        if ($raw === '' || OpsDisplaySanitizer::containsControlChars($raw)) {
             return '';
         }
         $url = trim($raw);
@@ -43,8 +43,7 @@ class DomainRecordNormalizer
     public static function normalizeSkipUrl(?string $url): string
     {
         $raw = (string) $url;
-        if ($raw === '' || str_contains($raw, "\r") || str_contains($raw, "\n") || str_contains($raw, "\0")
-            || str_contains($raw, "\t")) {
+        if ($raw === '' || OpsDisplaySanitizer::containsControlChars($raw)) {
             return '';
         }
         $url = trim($raw);

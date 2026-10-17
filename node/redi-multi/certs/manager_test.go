@@ -31,6 +31,19 @@ func TestReplaceAllSkipsMalformedDomain(t *testing.T) {
 	mu.RUnlock()
 }
 
+func TestReplaceAllSkipsTrailingNewlineDomain(t *testing.T) {
+	ReplaceAll([]Entry{
+		{CertID: 1, Domain: "good.test", Certificate: []byte("c"), PrivateKey: []byte("k")},
+		{CertID: 2, Domain: "bad.test\n", Certificate: []byte("c"), PrivateKey: []byte("k")},
+	})
+	mu.RLock()
+	if len(entries) != 1 {
+		mu.RUnlock()
+		t.Fatalf("expected 1 entry, got %d", len(entries))
+	}
+	mu.RUnlock()
+}
+
 func TestSyncFromMasterDropsRetiredIDs(t *testing.T) {
 	ReplaceAll([]Entry{
 		{CertID: 1, Domain: "a.test", Certificate: []byte("c"), PrivateKey: []byte("k")},
