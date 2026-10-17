@@ -103,7 +103,7 @@ class CertificateDeployService
         return $count;
     }
 
-    public function queueDeploy(RediDomainCert $cert): void
+    public function queueDeploy(RediDomainCert $cert): bool
     {
         $cert->loadMissing('domain');
         if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)
@@ -111,7 +111,7 @@ class CertificateDeployService
             $cert->last_error = '域名主机名无效或与证书不一致，已跳过部署排队';
             $cert->save();
 
-            return;
+            return false;
         }
 
         $cert->status = RediDomainCert::STATUS_DEPLOYING;
@@ -142,6 +142,8 @@ class CertificateDeployService
             $cert->last_error = '无启用节点，证书已签发但尚未部署到边缘';
             $cert->save();
         }
+
+        return true;
     }
 
     public function markNodeAck(RediDomainCert $cert, RediNode $node, bool $ok, ?string $error = null): bool
@@ -157,6 +159,12 @@ class CertificateDeployService
                 $ok = false;
                 if ($error === null || $error === '') {
                     $error = '证书域名与后台域名不一致，已拒绝确认';
+                }
+            }
+            if ($ok && (! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem())) {
+                $ok = false;
+                if ($error === null || $error === '') {
+                    $error = '主控证书材料不可用，已拒绝确认';
                 }
             }
 

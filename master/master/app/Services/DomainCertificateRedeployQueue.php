@@ -45,8 +45,11 @@ class DomainCertificateRedeployQueue
                 continue;
             }
 
-            $deployService->queueDeploy($cert);
-            $queued++;
+            if ($deployService->queueDeploy($cert)) {
+                $queued++;
+            } else {
+                $skipped++;
+            }
         }
 
         return ['queued' => $queued, 'skipped' => $skipped];

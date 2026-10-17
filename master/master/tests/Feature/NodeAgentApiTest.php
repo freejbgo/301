@@ -516,6 +516,8 @@ class NodeAgentApiTest extends TestCase
             'domain_id' => $domainId,
             'domain_name' => 'valid.example',
             'status' => 'deploying',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

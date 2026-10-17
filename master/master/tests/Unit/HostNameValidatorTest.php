@@ -30,6 +30,7 @@ class HostNameValidatorTest extends TestCase
     public function test_is_node_publishable_host(): void
     {
         $this->assertTrue(HostNameValidator::isNodePublishableHost('good.example'));
+        $this->assertTrue(HostNameValidator::isNodePublishableHost('https://good.example/'));
         $this->assertFalse(HostNameValidator::isNodePublishableHost("evil\x00.example"));
         $this->assertFalse(HostNameValidator::isNodePublishableHost('1.2.3.4'));
     }

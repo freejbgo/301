@@ -355,8 +355,9 @@ class CertificateDeployServiceTest extends TestCase
         RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
 
         $cert = RediDomainCert::query()->find($certId);
-        app(CertificateDeployService::class)->queueDeploy($cert);
+        $queued = app(CertificateDeployService::class)->queueDeploy($cert);
 
+        $this->assertFalse($queued);
         $this->assertDatabaseCount('redi_cert_deployments', 0);
         $this->assertStringContainsString('跳过部署', (string) $cert->fresh()->last_error);
         $this->assertSame('issued', $cert->fresh()->status);
