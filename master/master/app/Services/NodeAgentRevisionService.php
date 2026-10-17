@@ -56,7 +56,7 @@ class NodeAgentRevisionService
         $certs = $certsQuery
             ->with('domain')
             ->orderBy('id')
-            ->get(['id', 'domain_id', 'domain_name', 'updated_at'])
+            ->get(['id', 'domain_id', 'domain_name', 'status', 'certificate', 'private_key', 'updated_at'])
             ->each(function ($row) {
                 DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($row, false);
             })
@@ -64,9 +64,12 @@ class NodeAgentRevisionService
                 return CertificateDeployService::certIsNodePullable($row);
             })
             ->map(function ($row) {
-                $row->domain_name = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
-
-                return $row;
+                return (object) [
+                    'id' => (int) $row->id,
+                    'domain_id' => (int) $row->domain_id,
+                    'domain_name' => HostNameValidator::toCanonicalAscii((string) $row->domain_name),
+                    'updated_at' => $row->updated_at,
+                ];
             })
             ->values();
 

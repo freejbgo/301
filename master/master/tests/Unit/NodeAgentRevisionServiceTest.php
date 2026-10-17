@@ -157,6 +157,40 @@ class NodeAgentRevisionServiceTest extends TestCase
         $this->assertSame('stale.example', RediDomainCert::query()->find($certId)->domain_name);
     }
 
+    public function test_certificates_revision_changes_when_deployment_row_added(): void
+    {
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => 'assigned.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => 1,
+            'domain_name' => 'assigned.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $svc = new NodeAgentRevisionService();
+        $before = $svc->build()['certificates_revision'];
+
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => 1,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $after = $svc->build()['certificates_revision'];
+
+        $this->assertNotSame($before, $after);
+    }
+
     public function test_certificates_revision_ignores_pullable_certs_without_deployment_rows(): void
     {
         \DB::table('redi_admin_domain')->insert([
