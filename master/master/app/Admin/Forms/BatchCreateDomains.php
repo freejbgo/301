@@ -4,6 +4,7 @@ namespace App\Admin\Forms;
 
 use App\Services\DomainBatchCreator;
 use App\Support\AdminTenantContext;
+use App\Support\OpsDisplaySanitizer;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Widgets\Form;
 use Illuminate\Support\Facades\DB;
@@ -33,9 +34,18 @@ class BatchCreateDomains extends Form
             $input['default_skip_url'] ?? null
         );
 
+        $formatErrors = function (array $errors, int $limit): string {
+            $lines = array_map(
+                fn (string $line) => OpsDisplaySanitizer::field($line, '—', 500),
+                array_slice($errors, 0, $limit)
+            );
+
+            return implode("\n", $lines);
+        };
+
         if ($result['imported'] === 0 && $result['skipped'] === 0) {
             $message = $result['errors'] !== []
-                ? implode("\n", array_slice($result['errors'], 0, 15))
+                ? $formatErrors($result['errors'], 15)
                 : '未新增任何域名';
 
             return $this->response()->error($message);
@@ -43,7 +53,7 @@ class BatchCreateDomains extends Form
 
         $summary = "新增 {$result['imported']} 条，跳过重复 {$result['skipped']} 条。";
         if ($result['errors'] !== []) {
-            $summary .= "\n部分行未写入：\n".implode("\n", array_slice($result['errors'], 0, 10));
+            $summary .= "\n部分行未写入：\n".$formatErrors($result['errors'], 10);
         }
 
         return $this->response()->success($summary)->refresh();

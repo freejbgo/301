@@ -73,6 +73,9 @@ func ResponseForPath(hostName, path string) (body string, ok bool) {
 	if hostName == "" {
 		return "", false
 	}
+	if host.ContainsControlChars(path) {
+		return "", false
+	}
 	path = strings.TrimSpace(path)
 	const prefix = "/.well-known/acme-challenge/"
 	if !strings.HasPrefix(path, prefix) {

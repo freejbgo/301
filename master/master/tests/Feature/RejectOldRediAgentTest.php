@@ -63,4 +63,5 @@ class RejectOldRediAgentTest extends TestCase
             ->postJson('/api/nodes/heartbeat', ['version' => '0.1.2'])
             ->assertOk();
     }
+
 }
