@@ -42,6 +42,24 @@ func TestCanonicalLookupHostRejectsTab(t *testing.T) {
 	}
 }
 
+func TestStripControlChars(t *testing.T) {
+	if StripControlChars("a\r\nb") != "ab" {
+		t.Fatal("expected strip")
+	}
+	if StripControlChars("plain") != "plain" {
+		t.Fatal("expected unchanged")
+	}
+}
+
+func TestLogSnippet(t *testing.T) {
+	if LogSnippet("a\r\nb", 10) != "ab" {
+		t.Fatal("expected trimmed snippet")
+	}
+	if len(LogSnippet(strings.Repeat("z", 600), 500)) != 500 {
+		t.Fatal("expected truncate")
+	}
+}
+
 func TestSanitizeClientIP(t *testing.T) {
 	if SanitizeClientIP("203.0.113.1\n") != "" {
 		t.Fatal("expected empty for CRLF in IP")
