@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\RediHealthReport;
 use App\Services\TenantOpsSummary;
 use App\Support\AdminTenantContext;
+use App\Support\OpsDisplaySanitizer;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Layout\Content;
 use Dcat\Admin\Layout\Row;
@@ -25,7 +26,7 @@ class HomeController extends Controller
                 ? '<p class="text-success mb-0">redi:health 当前无待处理项。</p>'
                 : '<ul class="mb-0">'.implode('', array_map(function ($row) {
                     $class = $row['level'] === 'critical' ? 'text-danger' : 'text-warning';
-                    return '<li class="'.e($class).'">'.e($row['message']).'</li>';
+                    return '<li class="'.e($class).'">'.e(OpsDisplaySanitizer::field($row['message'] ?? '', '—', 300)).'</li>';
                 }, array_slice($issues, 0, 8))).'</ul>';
 
             if (count($issues) > 8) {

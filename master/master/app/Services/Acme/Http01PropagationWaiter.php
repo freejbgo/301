@@ -4,6 +4,7 @@ namespace App\Services\Acme;
 
 use App\Models\RediAcmeChallengeNodeSync;
 use App\Models\RediNode;
+use App\Services\AcmeChallengeQuery;
 use App\Support\AcmeHttp01Token;
 use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
@@ -29,10 +30,10 @@ class Http01PropagationWaiter
         }
         $path = '/.well-known/acme-challenge/'.$token;
         $publicUrl = 'http://'.$domain.$path;
-        $expectedBody = trim($expectedBody);
-        if ($expectedBody === '' || OpsDisplaySanitizer::containsControlChars($expectedBody)) {
+        if (! AcmeChallengeQuery::http01ContentValid($token, $expectedBody)) {
             throw new RuntimeException('HTTP-01 响应体无效');
         }
+        $expectedBody = trim($expectedBody);
         $deadline = time() + max(0, $maxSeconds);
         $pollSeconds = max(1, (int) config('redi.acme_http01_poll_seconds', 3));
 
