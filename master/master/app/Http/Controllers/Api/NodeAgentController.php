@@ -202,7 +202,6 @@ class NodeAgentController extends Controller
         $payload = [];
         foreach ($certs as $cert) {
             if (! CertificateDeployService::certIsNodePullable($cert)) {
-                DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
                 if (DomainRecordNormalizer::certMatchesAdminDomain($cert)
                     && ($cert->certificate || $cert->private_key)
                     && (! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem())) {
