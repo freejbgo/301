@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\RediAdminDomain;
 use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
@@ -163,6 +164,24 @@ class CertificateDeployService
     /**
      * 新启用或新注册的节点：为所有应下发的证书补齐 pending 部署行（不重置已 ok 的行）。
      */
+    public function handleDomainReenabledFromDisabled(RediAdminDomain $domain): void
+    {
+        $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
+        if (! $cert) {
+            return;
+        }
+
+        $cert->setRelation('domain', $domain);
+        if ($cert->last_error === RediAdminDomain::DISABLE_DEPLOY_CANCEL_MSG) {
+            $cert->last_error = null;
+            $cert->save();
+        }
+
+        if (self::certIsEligibleForDeployQueue($cert)) {
+            $this->queueDeploy($cert);
+        }
+    }
+
     public function syncDeploymentsForNode(RediNode $node): void
     {
         if (! $node->enabled) {

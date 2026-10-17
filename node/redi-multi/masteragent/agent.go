@@ -218,6 +218,7 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 		return err
 	}
 	if len(out.Certificates) == 0 {
+		// Master returned no pullable assigned certs; drop in-memory TLS material (see NodeAgentController certificates).
 		certs.ReplaceAll(nil)
 		return nil
 	}
