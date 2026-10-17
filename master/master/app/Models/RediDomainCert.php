@@ -154,6 +154,12 @@ class RediDomainCert extends Model
         }
     }
 
+    /** 节点 `certificates_revision`：密文 PEM 指纹（不含明文，避免哈希泄露证书内容）。 */
+    public function credentialCiphertextFingerprint(): string
+    {
+        return sha1((string) $this->certificate."\0".(string) $this->private_key);
+    }
+
     public function statusLabel(): string
     {
         return [
