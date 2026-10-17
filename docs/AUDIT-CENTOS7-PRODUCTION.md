@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-17 复核（#166）：** API/节点限流 IP 键拒控制字符；ACME `writePlain` 响应体 `StripControlChars`；PHPUnit **205**（Go +1）。
+
 **2026-10-17 复核（#165）：** `challenges-synced` 422 回显 `field()`；`extra_ips` 保存净化；redirect `Location` 头防控制字符；PHPUnit **205**（+1，Go +1）。
 
 **2026-10-17 复核（#164）：** redirect 仅接受 **GET**；`RediNode.public_ip` 保存净化；节点 API 限流键忽略含控制字符的 Bearer；PHPUnit **204**（+1，Go +1）。
