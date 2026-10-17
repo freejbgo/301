@@ -149,6 +149,9 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 	items := make([]acme.Item, 0, len(out.Challenges))
 	domains := make([]string, 0, len(out.Challenges))
 	for _, c := range out.Challenges {
+		if host.ContainsControlChars(c.DomainName) || host.ContainsControlChars(c.Token) || host.ContainsControlChars(c.ResponseBody) {
+			continue
+		}
 		domain := host.CanonicalLookupHost(c.DomainName)
 		if domain == "" {
 			continue
@@ -163,9 +166,6 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 			Token:        token,
 			ResponseBody: resp,
 		})
-		if host.ContainsControlChars(domain) {
-			continue
-		}
 		domains = append(domains, domain)
 	}
 	acme.ReplaceAll(items)
