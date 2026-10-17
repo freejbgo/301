@@ -216,7 +216,9 @@ class CertificateDeployService
         $cert->loadMissing('domain');
 
         if (! RediCertDeployment::query()->where('cert_id', $cert->id)->exists()) {
-            if ($cert->status === RediDomainCert::STATUS_DEPLOYING
+            if ($cert->status === RediDomainCert::STATUS_ACTIVE) {
+                $this->reconcileCertWithNoDeploymentRows($cert, null);
+            } elseif ($cert->status === RediDomainCert::STATUS_DEPLOYING
                 && ! self::certIsNodePullable($cert)) {
                 $this->reconcileCertWithNoDeploymentRows(
                     $cert,
