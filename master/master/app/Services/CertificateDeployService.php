@@ -672,7 +672,7 @@ class CertificateDeployService
             })
             ->get()
             ->each(function (RediDomainCert $cert) {
-                DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+                DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert, false);
             })
             ->filter(function (RediDomainCert $cert) {
                 return DomainRecordNormalizer::certMatchesAdminDomain($cert);
