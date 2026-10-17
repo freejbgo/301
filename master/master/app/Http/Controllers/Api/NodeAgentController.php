@@ -35,7 +35,11 @@ class NodeAgentController extends Controller
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
-        $domains = array_slice((array) $request->input('domains', []), 0, 200);
+        $rawDomains = $request->input('domains', []);
+        if (! is_array($rawDomains)) {
+            return response()->json(['message' => 'invalid domains'], 422);
+        }
+        $domains = array_slice($rawDomains, 0, 200);
         $allowed = AcmeChallengeQuery::ready()
             ->get(['domain_name', 'token', 'response_body'])
             ->filter(function ($row) {
@@ -208,7 +212,7 @@ class NodeAgentController extends Controller
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
-        $certId = (int) $request->input('cert_id');
+        $certId = filter_var($request->input('cert_id'), FILTER_VALIDATE_INT);
         $ok = $request->boolean('ok', true);
         $error = $request->input('error');
 
@@ -216,8 +220,12 @@ class NodeAgentController extends Controller
             return response()->json(['message' => 'invalid error'], 422);
         }
 
-        if ($certId < 1) {
+        if ($certId === false || $certId < 1) {
             return response()->json(['message' => 'invalid cert_id'], 422);
+        }
+
+        if ($ok) {
+            $error = null;
         }
 
         $cert = RediDomainCert::find($certId);
