@@ -163,6 +163,9 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 			Token:        token,
 			ResponseBody: resp,
 		})
+		if host.ContainsControlChars(domain) {
+			continue
+		}
 		domains = append(domains, domain)
 	}
 	acme.ReplaceAll(items)

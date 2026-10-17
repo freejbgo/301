@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Foundation\Http\Middleware\TrimStrings as Middleware;
+use Illuminate\Support\Str;
 
 class TrimStrings extends Middleware
 {
@@ -21,4 +22,15 @@ class TrimStrings extends Middleware
         'version',
         'error',
     ];
+
+    protected function transform($key, $value)
+    {
+        foreach ($this->except as $except) {
+            if (Str::is($except, $key)) {
+                return $value;
+            }
+        }
+
+        return is_string($value) ? trim($value) : $value;
+    }
 }
