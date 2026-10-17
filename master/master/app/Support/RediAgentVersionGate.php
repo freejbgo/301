@@ -8,7 +8,11 @@ class RediAgentVersionGate
 {
     public static function sanitize(?string $value): ?string
     {
-        $version = preg_replace('/[^\w.\-]/', '', (string) $value);
+        $raw = (string) $value;
+        if (OpsDisplaySanitizer::containsControlChars($raw)) {
+            return null;
+        }
+        $version = preg_replace('/[^\w.\-]/', '', $raw);
         $version = substr($version, 0, 32);
 
         return $version === '' ? null : $version;

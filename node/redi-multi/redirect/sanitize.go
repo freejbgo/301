@@ -7,7 +7,7 @@ import (
 )
 
 func sanitizeHost(host string) string {
-	if strings.ContainsAny(host, "\r\n\x00\t") {
+	if hostutil.ContainsControlChars(host) {
 		return ""
 	}
 	host = strings.ToLower(strings.TrimSpace(host))
@@ -28,7 +28,7 @@ func sanitizeHost(host string) string {
 }
 
 func sanitizeRequestPath(path string) string {
-	if strings.ContainsAny(path, "\r\n\x00\t") {
+	if hostutil.ContainsControlChars(path) {
 		return "/"
 	}
 	path = strings.TrimSpace(path)
@@ -48,14 +48,14 @@ func sanitizeRequestPath(path string) string {
 }
 
 func sanitizeLocationURL(location string) string {
-	if strings.ContainsAny(location, "\r\n\x00\t") {
+	if hostutil.ContainsControlChars(location) {
 		return "/"
 	}
 	return location
 }
 
 func sanitizeRawQuery(raw string) string {
-	if strings.ContainsAny(raw, "\r\n\x00\t") {
+	if hostutil.ContainsControlChars(raw) {
 		return ""
 	}
 	raw = strings.TrimSpace(raw)
