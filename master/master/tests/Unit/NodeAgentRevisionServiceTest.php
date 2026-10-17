@@ -116,6 +116,67 @@ class NodeAgentRevisionServiceTest extends TestCase
         $this->assertSame($a['challenges_revision'], $b['challenges_revision']);
     }
 
+    public function test_certificates_revision_ignores_control_char_domain_names(): void
+    {
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => 'good.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => 1,
+            'domain_name' => 'good.example',
+            'status' => 'active',
+            'certificate' => 'x',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $svc = new NodeAgentRevisionService();
+        $a = $svc->build();
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => 1,
+            'domain_name' => "evil\x00.example",
+            'status' => 'active',
+            'certificate' => 'y',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $b = $svc->build();
+
+        $this->assertSame($a['certificates_revision'], $b['certificates_revision']);
+    }
+
+    public function test_rules_revision_ignores_control_char_original_urls(): void
+    {
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => 'good.example',
+            'status' => 1,
+            'force_https' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $svc = new NodeAgentRevisionService();
+        $a = $svc->build();
+
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => "bad\x00.example",
+            'status' => 1,
+            'force_https' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $b = $svc->build();
+
+        $this->assertSame($a['rules_revision'], $b['rules_revision']);
+    }
+
     public function test_rules_revision_ignores_invalid_hosts(): void
     {
         \DB::table('redi_admin_domain')->insert([

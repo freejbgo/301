@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\RediDomainCert;
 use App\Support\HostNameValidator;
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -44,6 +45,9 @@ class NodeAgentRevisionService
             })
             ->orderBy('id')
             ->get(['id', 'domain_name', 'updated_at'])
+            ->filter(function ($row) {
+                return ! OpsDisplaySanitizer::containsControlChars((string) $row->domain_name);
+            })
             ->map(function ($row) {
                 $row->domain_name = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
 
@@ -58,6 +62,9 @@ class NodeAgentRevisionService
             ->where('status', 1)
             ->orderBy('id')
             ->get(['id', 'original_url', 'force_https', 'updated_at'])
+            ->filter(function ($row) {
+                return ! OpsDisplaySanitizer::containsControlChars((string) $row->original_url);
+            })
             ->map(function ($row) {
                 $row->original_url = HostNameValidator::toCanonicalAscii((string) $row->original_url);
 
