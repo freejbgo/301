@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\RediDomainCert;
 use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
 
@@ -39,8 +40,27 @@ class DomainRecordNormalizer
         return self::originalUrlIfValid($url) !== '';
     }
 
+    /**
+     * 将证书 domain_name 对齐到关联域名的 originalUrlIfValid；域名无效时返回 false。
+     */
+    public static function realignCertDomainNameFromAdminDomain(RediDomainCert $cert): bool
+    {
+        $cert->loadMissing('domain');
+        $canonical = self::originalUrlIfValid((string) optional($cert->domain)->original_url ?? '');
+        if ($canonical === '') {
+            return false;
+        }
+        $certHost = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
+        if ($certHost !== $canonical) {
+            $cert->domain_name = $canonical;
+            $cert->save();
+        }
+
+        return true;
+    }
+
     /** 证书行 domain_name 是否与启用域名的规范化 original_url 一致（防漂移误下发/误续期）。 */
-    public static function certMatchesAdminDomain(\App\Models\RediDomainCert $cert): bool
+    public static function certMatchesAdminDomain(RediDomainCert $cert): bool
     {
         $canonical = self::originalUrlIfValid((string) optional($cert->domain)->original_url ?? '');
         if ($canonical === '') {

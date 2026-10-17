@@ -37,32 +37,25 @@ class RenewDomainCertificatesCommand extends Command
         $queued = 0;
         $i = 0;
         foreach ($certs as $cert) {
-            $canonical = DomainRecordNormalizer::originalUrlIfValid(
-                (string) optional($cert->domain)->original_url ?? ''
-            );
-            if ($canonical === '') {
-                Log::warning('redi:renew-certificates skip invalid domain original_url', [
-                    'cert_id' => $cert->id,
-                    'domain_id' => $cert->domain_id,
-                ]);
-                $this->warn('跳过非法域名 cert #'.$cert->id);
-                continue;
-            }
-
-            $certHost = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
-            if ($certHost !== $canonical) {
-                if (! $dryRun) {
-                    $cert->domain_name = $canonical;
-                    $cert->save();
+            if ($dryRun) {
+                $host = DomainRecordNormalizer::originalUrlIfValid(
+                    (string) optional($cert->domain)->original_url ?? ''
+                );
+                if ($host === '') {
+                    $this->warn('跳过非法域名 cert #'.$cert->id);
+                    continue;
                 }
-                Log::info('redi:renew-certificates realigned cert domain_name', [
-                    'cert_id' => $cert->id,
-                    'from' => $certHost,
-                    'to' => $canonical,
-                ]);
+            } else {
+                if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)) {
+                    Log::warning('redi:renew-certificates skip invalid domain original_url', [
+                        'cert_id' => $cert->id,
+                        'domain_id' => $cert->domain_id,
+                    ]);
+                    $this->warn('跳过非法域名 cert #'.$cert->id);
+                    continue;
+                }
+                $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
             }
-
-            $host = $canonical;
 
             if ($dryRun) {
                 $this->line(sprintf(

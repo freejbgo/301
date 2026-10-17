@@ -87,6 +87,9 @@ class CertificateDeployService
 
     public function queueDeploy(RediDomainCert $cert): void
     {
+        $cert->loadMissing('domain');
+        DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+
         $cert->status = RediDomainCert::STATUS_DEPLOYING;
         $cert->save();
 
@@ -223,6 +226,9 @@ class CertificateDeployService
                 });
             })
             ->get()
+            ->each(function (RediDomainCert $cert) {
+                DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+            })
             ->filter(function (RediDomainCert $cert) {
                 return DomainRecordNormalizer::certMatchesAdminDomain($cert);
             });

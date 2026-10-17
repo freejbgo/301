@@ -59,6 +59,35 @@ class CertificateDeployServiceTest extends TestCase
         });
     }
 
+    public function test_sync_deployments_realigns_stale_cert_domain_name(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'stale.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        app(CertificateDeployService::class)->syncDeploymentsForNode($node);
+
+        $this->assertSame('edge.example', RediDomainCert::query()->find($certId)->domain_name);
+        $this->assertDatabaseHas('redi_cert_deployments', [
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+        ]);
+    }
+
     public function test_sync_deployments_for_node_creates_pending_rows(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
@@ -148,7 +177,7 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertTrue($svc->markNodeAck($cert, $node, true));
     }
 
-    public function test_sync_skips_certs_with_control_char_domain_name(): void
+    public function test_sync_realigns_control_char_cert_domain_name_from_domain(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
         $domainId = \DB::table('redi_admin_domain')->insertGetId([
@@ -157,7 +186,7 @@ class CertificateDeployServiceTest extends TestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-        \DB::table('redi_domain_certs')->insert([
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
             'domain_id' => $domainId,
             'domain_name' => "evil\x00.example",
             'status' => 'active',
@@ -169,7 +198,8 @@ class CertificateDeployServiceTest extends TestCase
 
         app(CertificateDeployService::class)->syncDeploymentsForNode($node);
 
-        $this->assertDatabaseCount('redi_cert_deployments', 0);
+        $this->assertSame('edge.example', RediDomainCert::query()->find($certId)->domain_name);
+        $this->assertDatabaseCount('redi_cert_deployments', 1);
     }
 
     public function test_sync_skips_certs_with_invalid_domain_name(): void
