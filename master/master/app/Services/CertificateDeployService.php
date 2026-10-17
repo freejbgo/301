@@ -499,6 +499,8 @@ class CertificateDeployService
 
         self::forgetActionableDeploymentMetrics();
 
+        $this->reconcileCertDeployStatus($cert->fresh()->load('domain'));
+
         return true;
     }
 
