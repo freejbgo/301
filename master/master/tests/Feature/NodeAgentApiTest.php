@@ -823,6 +823,45 @@ class NodeAgentApiTest extends TestCase
         $this->assertSame('0.1.3', $node->agent_version);
     }
 
+    public function test_heartbeat_prunes_non_pullable_pending_deployment(): void
+    {
+        [$node, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->timestamps();
+        });
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => 'issued',
+            'certificate' => null,
+            'private_key' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withToken($token)->postJson('/api/nodes/heartbeat', [])->assertOk();
+
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
+    }
+
     public function test_redirect_rules_shape(): void
     {
         [, $token] = $this->createNodeWithToken();
