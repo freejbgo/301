@@ -50,6 +50,12 @@ class NodeAgentController extends Controller
         $synced = [];
         $ignored = 0;
         foreach ($domains as $raw) {
+            if (OpsDisplaySanitizer::containsControlChars((string) $raw)) {
+                return response()->json([
+                    'message' => 'invalid domain',
+                    'domain' => OpsDisplaySanitizer::field((string) $raw, '', 253),
+                ], 422);
+            }
             $domain = HostNameValidator::toCanonicalAscii((string) $raw);
             if ($domain === '') {
                 continue;

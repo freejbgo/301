@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Http\Middleware\TrustProxies as Middleware;
 use Illuminate\Http\Request;
 
@@ -22,7 +23,10 @@ class TrustProxies extends Middleware
         } elseif ($raw === '' || $raw === null) {
             $this->proxies = null;
         } else {
-            $this->proxies = array_values(array_filter(array_map('trim', explode(',', (string) $raw))));
+            $parts = array_map('trim', explode(',', (string) $raw));
+            $this->proxies = array_values(array_filter($parts, function (string $proxy): bool {
+                return $proxy !== '' && ! OpsDisplaySanitizer::containsControlChars($proxy);
+            }));
         }
     }
 
