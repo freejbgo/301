@@ -6,6 +6,7 @@ use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use App\Support\OpsDisplaySanitizer;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class CertificateDeployService
@@ -32,24 +33,109 @@ class CertificateDeployService
         return $cert->getCertificatePem() && $cert->getPrivateKeyPem();
     }
 
+    /** @var array{pending: int, failed: int}|null */
+    protected static $actionableDeploymentStatusCounts = null;
+
     /**
      * `redi:health` / JSON summary：仅统计边缘仍能拉取证书的部署行。
      */
     public static function countActionableDeployments(string $status): int
     {
-        return RediCertDeployment::query()
-            ->where('status', $status)
+        if (! in_array($status, ['pending', 'failed'], true)) {
+            return 0;
+        }
+
+        self::hydrateActionableDeploymentStatusCounts();
+
+        return (int) (self::$actionableDeploymentStatusCounts[$status] ?? 0);
+    }
+
+    /**
+     * @return Collection<int, object{node_id: int, pending_count: int, failed_count: int}>
+     */
+    public static function deploymentCountsByNode(): Collection
+    {
+        $pendingByNode = [];
+        $failedByNode = [];
+
+        RediCertDeployment::query()
+            ->whereIn('status', ['pending', 'failed'])
             ->whereHas('node', function ($query) {
                 $query->where('enabled', true);
             })
             ->with(['cert.domain'])
-            ->get()
-            ->filter(function (RediCertDeployment $deployment) {
+            ->get(['id', 'node_id', 'status', 'cert_id'])
+            ->each(function (RediCertDeployment $deployment) use (&$pendingByNode, &$failedByNode) {
                 $cert = $deployment->cert;
+                if (! $cert || ! self::certIsNodePullable($cert)) {
+                    return;
+                }
 
-                return $cert && self::certIsNodePullable($cert);
+                $nodeId = (int) $deployment->node_id;
+                if ($deployment->status === 'failed') {
+                    $failedByNode[$nodeId] = ($failedByNode[$nodeId] ?? 0) + 1;
+
+                    return;
+                }
+
+                $pendingByNode[$nodeId] = ($pendingByNode[$nodeId] ?? 0) + 1;
+            });
+
+        $nodeIds = array_unique(array_merge(array_keys($pendingByNode), array_keys($failedByNode)));
+
+        return collect($nodeIds)->map(function (int $nodeId) use ($pendingByNode, $failedByNode) {
+            return (object) [
+                'node_id' => $nodeId,
+                'pending_count' => $pendingByNode[$nodeId] ?? 0,
+                'failed_count' => $failedByNode[$nodeId] ?? 0,
+            ];
+        });
+    }
+
+    /**
+     * 与 `queueDeploy` 入队前校验一致（不检查证书 status，便于 failed 行重试）。
+     */
+    public static function certIsEligibleForDeployQueue(RediDomainCert $cert): bool
+    {
+        $cert->loadMissing('domain');
+        if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)
+            || ! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
+            return false;
+        }
+
+        if (! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem()) {
+            return false;
+        }
+
+        return $cert->domain && (int) $cert->domain->status === 1;
+    }
+
+    protected static function hydrateActionableDeploymentStatusCounts(): void
+    {
+        if (! app()->runningUnitTests() && self::$actionableDeploymentStatusCounts !== null) {
+            return;
+        }
+
+        $counts = ['pending' => 0, 'failed' => 0];
+        RediCertDeployment::query()
+            ->whereIn('status', ['pending', 'failed'])
+            ->whereHas('node', function ($query) {
+                $query->where('enabled', true);
             })
-            ->count();
+            ->with(['cert.domain'])
+            ->get(['id', 'status', 'cert_id'])
+            ->each(function (RediCertDeployment $deployment) use (&$counts) {
+                $cert = $deployment->cert;
+                if (! $cert || ! self::certIsNodePullable($cert)) {
+                    return;
+                }
+
+                if (isset($counts[$deployment->status])) {
+                    $counts[$deployment->status]++;
+                }
+            });
+
+        self::$actionableDeploymentStatusCounts = $counts;
     }
 
     protected static function certStatusAllowsNodePull(RediDomainCert $cert): bool
@@ -79,7 +165,7 @@ class CertificateDeployService
         }
 
         foreach ($this->deployableCertsForNodes() as $cert) {
-            if (! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem()) {
+            if (! self::certIsNodePullable($cert)) {
                 continue;
             }
 
@@ -111,7 +197,11 @@ class CertificateDeployService
      */
     public function requeueFailedDeployments(?int $nodeId = null, ?int $certId = null): int
     {
-        $query = RediCertDeployment::query()->where('status', 'failed');
+        $query = RediCertDeployment::query()
+            ->where('status', 'failed')
+            ->whereHas('node', function ($nodeQuery) {
+                $nodeQuery->where('enabled', true);
+            });
         if ($nodeId !== null) {
             $query->where('node_id', $nodeId);
         }
@@ -123,11 +213,7 @@ class CertificateDeployService
         $eligibleCertIds = [];
         foreach ($certIds as $cid) {
             $cert = RediDomainCert::query()->with('domain')->find($cid);
-            if (! $cert || ! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem()) {
-                continue;
-            }
-            if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)
-                || ! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
+            if (! $cert || ! self::certIsEligibleForDeployQueue($cert)) {
                 continue;
             }
             $eligibleCertIds[] = (int) $cid;
