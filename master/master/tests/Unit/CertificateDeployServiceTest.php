@@ -491,6 +491,39 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertSame(RediDomainCert::STATUS_ISSUED, $cert->fresh()->status);
     }
 
+    public function test_queue_deploy_with_no_enabled_nodes_clears_stale_deployment_rows(): void
+    {
+        $node = RediNode::query()->create(['enabled' => false, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_ISSUED,
+        ]);
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $cert->id,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $queued = app(CertificateDeployService::class)->queueDeploy($cert->fresh());
+
+        $this->assertTrue($queued);
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
+        $this->assertSame(RediDomainCert::STATUS_DEPLOYING, $cert->fresh()->status);
+        $this->assertStringContainsString('无启用节点', (string) $cert->fresh()->last_error);
+    }
+
     public function test_queue_deploy_skips_when_domain_disabled(): void
     {
         $domainId = \DB::table('redi_admin_domain')->insertGetId([
