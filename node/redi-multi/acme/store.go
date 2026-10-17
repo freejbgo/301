@@ -69,7 +69,7 @@ func ReplaceAll(items []Item) {
 }
 
 func ResponseForPath(hostName, path string) (body string, ok bool) {
-	hostName = host.CanonicalLookupHost(hostName)
+	hostName = host.AcmeHostKey(hostName)
 	if hostName == "" {
 		return "", false
 	}
