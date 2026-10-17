@@ -117,7 +117,9 @@ class CertificateIssuer
 
         AcmeChallengeCleanup::purgeForHosts([$domain]);
 
-        app(CertificateDeployService::class)->queueDeploy($cert);
+        if (! app(CertificateDeployService::class)->queueDeploy($cert)) {
+            $cert->refresh();
+        }
     }
 
     protected function assertDomainIssuable(RediDomainCert $cert): void

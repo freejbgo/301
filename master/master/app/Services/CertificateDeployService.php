@@ -167,6 +167,12 @@ class CertificateDeployService
                     $error = '主控证书材料不可用，已拒绝确认';
                 }
             }
+            if ($ok && (! $cert->domain || (int) $cert->domain->status !== 1)) {
+                $ok = false;
+                if ($error === null || $error === '') {
+                    $error = '域名已停用或已删除，已拒绝确认';
+                }
+            }
 
             $deployment = RediCertDeployment::where('cert_id', $cert->id)
                 ->where('node_id', $node->id)

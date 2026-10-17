@@ -92,6 +92,39 @@ class DomainCertificateRedeployQueueTest extends TestCase
         $this->assertDatabaseHas('redi_cert_deployments', ['status' => 'pending']);
     }
 
+    public function test_redeploy_skips_when_cert_domain_drift(): void
+    {
+        \DB::table('redi_nodes')->insert([
+            'enabled' => true,
+            'public_ip' => '1.2.3.4',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'admin_id' => 10,
+            'status' => 1,
+            'original_url' => 'not a valid host!!!',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => 'ok.example',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $result = DomainCertificateRedeployQueue::redeployOwned([$domainId], 10, false);
+        $this->assertSame(0, $result['queued']);
+        $this->assertSame(1, $result['skipped']);
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
+    }
+
     public function test_redeploy_skips_other_tenant(): void
     {
         $domainId = \DB::table('redi_admin_domain')->insertGetId([
