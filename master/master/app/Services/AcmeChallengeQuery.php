@@ -40,4 +40,16 @@ class AcmeChallengeQuery
             && HostNameValidator::isValidHostLabel($domain)
             && self::http01ContentValid($token, $responseBody);
     }
+
+    /** 节点 API 可下发的挑战行（含控制字符显式拒绝，与 acme-challenges / challenges-synced 一致）。 */
+    public static function nodePublishableRow(?string $domainName, ?string $token, ?string $responseBody): bool
+    {
+        foreach ([$domainName, $token, $responseBody] as $part) {
+            if (OpsDisplaySanitizer::containsControlChars((string) $part)) {
+                return false;
+            }
+        }
+
+        return self::nodeReadyRow($domainName, $token, $responseBody);
+    }
 }

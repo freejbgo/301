@@ -194,11 +194,11 @@ func pullRedirectRules(client *http.Client, cfg config, registered *bool) error 
 		if host.ContainsControlChars(r.OriginalURL) {
 			continue
 		}
-		host := host.CanonicalLookupHost(r.OriginalURL)
-		if host == "" {
+		label := host.CanonicalLookupHost(r.OriginalURL)
+		if label == "" {
 			continue
 		}
-		m[host] = bool(r.ForceHTTPS)
+		m[label] = bool(r.ForceHTTPS)
 	}
 	rules.ReplaceForceHTTPS(m)
 	return nil
