@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-17 复核（#153）：** Go `host.SanitizeUserAgent` 统一 Echo `/c.js` 与 redirect 路径；`persistAgentVersionIfPresent` 复用 `resolveFromInput`；PHPUnit **197**（Go +2）。
+
 **2026-10-17 复核（#152）：** `RediAgentVersionGate::resolveFromInput` 统一版本解析；register 无 version 保留版本；redirect User-Agent / api.js 域名限流拒控制字符；PHPUnit **197**（+4）。
 
 **2026-10-17 复核（#151）：** 节点 register/heartbeat 仅在 body 含有效 `version` 时更新 `agent_version`；空 version 拒 426；redirect 请求 Host 走 `sanitizeHost`；后台节点版本展示 `field()`；PHPUnit **193**（+2）。
