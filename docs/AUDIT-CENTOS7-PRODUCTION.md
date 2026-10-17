@@ -245,7 +245,7 @@
 
 **2026-10-17 #233 已合并 `main`：** 见 [PR #233](https://github.com/freejbgo/301/pull/233)。
 
-**2026-10-17 复核（#234）：** `deployableCertsForNodes` 列表阶段仅内存 realign；Feature 测 revision 忽略无部署行证书；PHPUnit **280**（**532** assertions）。
+**2026-10-17 复核（#234）：** `deployableCertsForNodes` 列表阶段仅内存 realign；Feature 测 revision 忽略无部署行证书；PHPUnit **280**（**531** assertions）。
 
 **2026-10-17 复核（#233）：** `certificates_revision` 仅含已有部署行的可拉取证书，减少 Agent 空转；PHPUnit **279**（**530** assertions）。
 
