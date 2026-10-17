@@ -116,6 +116,34 @@ class CertificateDeployServiceTest extends TestCase
         ]);
     }
 
+    public function test_requeue_failed_deployments_realigns_cert_domain_name(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'stale.example',
+            'status' => RediDomainCert::STATUS_FAILED,
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $cert->id,
+            'node_id' => $node->id,
+            'status' => 'failed',
+            'last_error' => 'pem error',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        app(CertificateDeployService::class)->requeueFailedDeployments((int) $node->id, null);
+
+        $this->assertSame('edge.example', $cert->fresh()->domain_name);
+    }
+
     public function test_requeue_failed_deployments_resets_status(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);

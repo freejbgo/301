@@ -495,11 +495,17 @@ class RediHealthReport
                 if ($certHost === $canonical) {
                     return;
                 }
+                if (DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)) {
+                    $certHost = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
+                    if ($certHost === $canonical) {
+                        return;
+                    }
+                }
                 $issues[] = [
                     'level' => 'warning',
                     'code' => 'cert_domain_name_drift',
                     'message' => sprintf(
-                        '证书 #%d domain_name 与域名不一致：记录 %s，应为 %s（续期/部署可能已自动纠正）',
+                        '证书 #%d domain_name 与域名不一致且未能自动对齐：记录 %s，应为 %s',
                         $cert->id,
                         OpsDisplaySanitizer::field($cert->domain_name, (string) $cert->domain_name, 253),
                         OpsDisplaySanitizer::field($canonical, $canonical, 253)

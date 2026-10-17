@@ -103,7 +103,7 @@ class RediHealthReportTest extends TestCase
         $this->assertSame(5, $summary['health_renew_validating_stuck_hours']);
     }
 
-    public function test_collect_issues_reports_cert_domain_name_drift(): void
+    public function test_collect_issues_heals_cert_domain_name_drift(): void
     {
         $domainId = \DB::table('redi_admin_domain')->insertGetId([
             'original_url' => 'canonical.example',
@@ -122,7 +122,11 @@ class RediHealthReportTest extends TestCase
         ]);
 
         $codes = array_column(RediHealthReport::collectIssues(7), 'code');
-        $this->assertContains('cert_domain_name_drift', $codes);
+        $this->assertNotContains('cert_domain_name_drift', $codes);
+        $this->assertSame(
+            'canonical.example',
+            \DB::table('redi_domain_certs')->where('domain_id', $domainId)->value('domain_name')
+        );
     }
 
     public function test_collect_issues_skips_invalid_cert_host_for_expired(): void
