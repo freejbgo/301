@@ -482,20 +482,14 @@ class RediHealthReport
             ->orderBy('id')
             ->get(['id', 'domain_id', 'domain_name', 'status'])
             ->each(function (RediDomainCert $cert) use (&$issues) {
+                if (self::certCanonicalHost($cert) === '') {
+                    return;
+                }
+                DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+                if (DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
+                    return;
+                }
                 $canonical = self::certCanonicalHost($cert);
-                if ($canonical === '') {
-                    return;
-                }
-                $certHost = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
-                if ($certHost === $canonical) {
-                    return;
-                }
-                if (DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)) {
-                    $certHost = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
-                    if ($certHost === $canonical) {
-                        return;
-                    }
-                }
                 $issues[] = [
                     'level' => 'warning',
                     'code' => 'cert_domain_name_drift',

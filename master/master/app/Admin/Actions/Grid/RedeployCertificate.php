@@ -49,7 +49,9 @@ class RedeployCertificate extends RowAction
             return $this->response()->error('当前证书状态不支持重新下发：'.$cert->statusLabel());
         }
 
-        $deployService->queueDeploy($cert);
+        if (! $deployService->queueDeploy($cert)) {
+            return $this->response()->error((string) ($cert->fresh()->last_error ?: '无法排队证书部署'));
+        }
 
         return $this->response()->success('已向全部启用节点重新排队证书部署')->refresh();
     }
