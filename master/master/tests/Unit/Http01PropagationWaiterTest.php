@@ -108,6 +108,37 @@ class Http01PropagationWaiterTest extends TestCase
         app(Http01PropagationWaiter::class)->wait('valid.example', 'tok', "bo\r\ndy", 0);
     }
 
+    public function test_wait_does_not_accept_probe_with_trailing_newline(): void
+    {
+        $domain = 'probe-newline.example';
+        $token = 'ok-token';
+        $body = 'challenge-body';
+
+        \DB::table('redi_nodes')->insert([
+            'enabled' => true,
+            'last_heartbeat_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_acme_challenge_node_sync')->insert([
+            'node_id' => 1,
+            'domain_name' => $domain,
+            'synced_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Http::fake([
+            'http://'.$domain.'/.well-known/acme-challenge/'.$token => Http::response($body."\n", 200),
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('HTTP-01 未在');
+
+        app(Http01PropagationWaiter::class)->wait($domain, $token, $body, 0);
+    }
+
     public function test_wait_rejects_trailing_newline_in_response_body(): void
     {
         $this->expectException(\RuntimeException::class);
