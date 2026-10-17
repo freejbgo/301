@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use App\Services\AcmeChallengeCleanup;
 use App\Services\AcmeChallengeQuery;
+use App\Services\DomainRecordNormalizer;
 use App\Support\AcmeHttp01Token;
-use App\Support\HostNameValidator;
 use Illuminate\Database\Eloquent\Model;
 
 class RediAcmeChallenge extends Model
@@ -24,16 +25,18 @@ class RediAcmeChallenge extends Model
 
     public static function upsertForDomain(string $domainName, string $token, string $responseBody, \DateTimeInterface $expiresAt): self
     {
-        if (! HostNameValidator::isNodePublishableHost($domainName)) {
+        $domainName = DomainRecordNormalizer::acmeHostKey($domainName);
+        if ($domainName === '') {
             throw new \InvalidArgumentException('ACME 挑战域名无效');
         }
-        $domainName = HostNameValidator::toCanonicalAscii($domainName);
 
         $token = AcmeHttp01Token::normalize($token);
         if (! AcmeChallengeQuery::http01ContentValid($token, $responseBody)) {
             throw new \InvalidArgumentException('ACME 挑战响应体无效');
         }
         $responseBody = trim($responseBody);
+
+        AcmeChallengeCleanup::purgeForHosts([$domainName]);
 
         return static::updateOrCreate(
             ['domain_name' => $domainName],
