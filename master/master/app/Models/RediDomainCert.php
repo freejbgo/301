@@ -17,7 +17,9 @@ class RediDomainCert extends Model
             }
 
             $cert->loadMissing('domain');
-            app(CertificateDeployService::class)->pruneNonPullableDeployments($cert);
+            $service = app(CertificateDeployService::class);
+            $service->pruneNonPullableDeployments($cert);
+            $service->reconcileCertDeployStatus($cert->fresh()->load('domain'));
         });
     }
 
@@ -133,7 +135,9 @@ class RediDomainCert extends Model
         $this->saveQuietly();
         Log::warning('redi_domain_cert credential decrypt failed', ['cert_id' => $this->id]);
         $this->loadMissing('domain');
-        app(CertificateDeployService::class)->pruneNonPullableDeployments($this);
+        $service = app(CertificateDeployService::class);
+        $service->pruneNonPullableDeployments($this);
+        $service->reconcileCertDeployStatus($this->fresh()->load('domain'));
     }
 
     public function setPrivateKeyPem(string $pem): void
