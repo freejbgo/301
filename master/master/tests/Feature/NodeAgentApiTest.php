@@ -244,6 +244,16 @@ class NodeAgentApiTest extends TestCase
         $response->assertJsonPath('ignored_count', 1);
     }
 
+    public function test_challenges_synced_rejects_non_array_domains_with_422(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/challenges-synced', ['domains' => 'not-an-array'])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'invalid domains');
+    }
+
     public function test_challenges_synced_ignores_non_string_domain_entries(): void
     {
         [, $token] = $this->createNodeWithToken();
@@ -374,6 +384,64 @@ class NodeAgentApiTest extends TestCase
         $this->withToken($token)
             ->postJson('/api/nodes/ack', ['cert_id' => $certId, 'ok' => true])
             ->assertStatus(409);
+    }
+
+    public function test_ack_rejects_malformed_cert_id_with_422(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/ack', ['cert_id' => '123abc', 'ok' => true])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'invalid cert_id');
+    }
+
+    public function test_ack_success_ignores_error_field(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->timestamps();
+        });
+
+        [$node, $token] = $this->createNodeWithToken();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'valid.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'valid.example',
+            'status' => 'deploying',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'last_error' => 'old failure',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/ack', [
+                'cert_id' => $certId,
+                'ok' => true,
+                'error' => 'should not be stored',
+            ])
+            ->assertOk();
+
+        $row = \DB::table('redi_cert_deployments')->where('cert_id', $certId)->first();
+        $this->assertSame('ok', $row->status);
+        $this->assertNull($row->last_error);
     }
 
     public function test_ack_treats_string_false_as_failure(): void
