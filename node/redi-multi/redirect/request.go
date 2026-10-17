@@ -25,11 +25,12 @@ func readRequest(conn net.Conn) (*httpRequest, error) {
 	if err != nil {
 		return nil, err
 	}
-	parts := strings.Split(strings.TrimSpace(line), " ")
-	if len(parts) < 2 {
+	trimmed := strings.TrimSpace(line)
+	if hostutil.ContainsControlChars(trimmed) {
 		return nil, io.ErrUnexpectedEOF
 	}
-	if hostutil.ContainsControlChars(parts[0]) || hostutil.ContainsControlChars(parts[1]) {
+	parts := strings.Split(trimmed, " ")
+	if len(parts) < 2 {
 		return nil, io.ErrUnexpectedEOF
 	}
 	req := &httpRequest{Method: parts[0], Path: parts[1]}

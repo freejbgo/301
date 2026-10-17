@@ -27,6 +27,13 @@ class RediNodePublicIpsTest extends TestCase
         $this->assertSame(['1.2.3.4', '5.6.7.8'], $node->publicIps());
     }
 
+    public function test_parse_extra_ips_strips_control_chars_from_tokens(): void
+    {
+        $ips = RediNode::parseExtraIps("1.2.3.4\t5.6.7.8");
+
+        $this->assertSame(['1.2.3.4', '5.6.7.8'], $ips);
+    }
+
     public function test_filter_valid_ipv4_list_dedupes_and_drops_invalid(): void
     {
         $this->assertSame(

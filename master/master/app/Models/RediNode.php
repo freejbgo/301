@@ -21,20 +21,18 @@ class RediNode extends Model
                 }
                 $node->name = $name;
             }
-            if (! $node->isDirty('note')) {
-                return;
+            if ($node->isDirty('note')) {
+                $note = OpsDisplaySanitizer::stripControlChars((string) $node->note);
+                $note = trim($note);
+                if ($note === '') {
+                    $node->note = null;
+                } else {
+                    if (mb_strlen($note) > 2000) {
+                        $note = mb_substr($note, 0, 2000);
+                    }
+                    $node->note = $note;
+                }
             }
-            $note = OpsDisplaySanitizer::stripControlChars((string) $node->note);
-            $note = trim($note);
-            if ($note === '') {
-                $node->note = null;
-
-                return;
-            }
-            if (mb_strlen($note) > 2000) {
-                $note = mb_substr($note, 0, 2000);
-            }
-            $node->note = $note;
         });
 
         static::saved(function (RediNode $node) {
@@ -139,7 +137,7 @@ class RediNode extends Model
         }
         $ips = [];
         foreach (preg_split('/\s+/', $raw) as $ip) {
-            $ip = trim($ip);
+            $ip = trim(OpsDisplaySanitizer::stripControlChars(trim($ip)));
             if ($ip === '' || in_array($ip, $ips, true)) {
                 continue;
             }
