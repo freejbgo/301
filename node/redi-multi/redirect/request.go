@@ -33,6 +33,9 @@ func readRequest(conn net.Conn) (*httpRequest, error) {
 	if len(parts) < 2 {
 		return nil, io.ErrUnexpectedEOF
 	}
+	if strings.ToUpper(parts[0]) != "GET" {
+		return nil, io.ErrUnexpectedEOF
+	}
 	req := &httpRequest{Method: parts[0], Path: parts[1]}
 	for n := 0; n < maxHeaderLines; n++ {
 		h, err := readLimitedLine(reader, maxRequestLineLen)

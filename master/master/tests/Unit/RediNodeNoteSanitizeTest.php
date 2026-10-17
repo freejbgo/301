@@ -40,6 +40,16 @@ class RediNodeNoteSanitizeTest extends TestCase
         $this->assertSame('opsnote', $node->fresh()->note);
     }
 
+    public function test_public_ip_strips_control_chars_on_save(): void
+    {
+        $node = RediNode::query()->create([
+            'name' => 'edge-2',
+            'public_ip' => "203.0.113.12\n",
+        ]);
+
+        $this->assertSame('203.0.113.12', $node->fresh()->public_ip);
+    }
+
     public function test_name_strips_control_chars_on_save(): void
     {
         $node = RediNode::query()->create([

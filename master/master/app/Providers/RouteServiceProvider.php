@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\OpsDisplaySanitizer;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
@@ -66,7 +67,11 @@ class RouteServiceProvider extends ServiceProvider
 
         RateLimiter::for('redi-node', function (Request $request) {
             $node = $request->attributes->get('redi_node');
-            $key = $node ? 'node:'.$node->id : ($request->bearerToken() ?: $request->ip());
+            $token = $request->bearerToken();
+            if ($token !== null && OpsDisplaySanitizer::containsControlChars($token)) {
+                $token = null;
+            }
+            $key = $node ? 'node:'.$node->id : ($token ?: $request->ip());
 
             if ($request->is('api/nodes/certificates')) {
                 return Limit::perMinute(30)->by($key);
