@@ -205,9 +205,6 @@ class CertificateDeployService
     }
 
     /**
-     * 证书已不可被节点拉取时，删除 pending/failed 部署行（保留 ok，便于审计）。
-     */
-    /**
      * 按当前部署行与可拉取条件回写证书 status / last_error（供模型钩子与运维路径调用）。
      */
     public function reconcileCertDeployStatus(RediDomainCert $cert): void
@@ -216,11 +213,21 @@ class CertificateDeployService
             return;
         }
 
+        $cert->loadMissing('domain');
+
         if (! RediCertDeployment::query()->where('cert_id', $cert->id)->exists()) {
+            if ($cert->status === RediDomainCert::STATUS_DEPLOYING
+                && ! self::certIsNodePullable($cert)) {
+                $cert->status = RediDomainCert::STATUS_ISSUED;
+                if (Schema::hasColumn($cert->getTable(), 'last_error')) {
+                    $cert->last_error = '证书当前不可下发，请检查 PEM 或域名一致性';
+                }
+                $cert->save();
+            }
+
             return;
         }
 
-        $cert->loadMissing('domain');
         $this->refreshCertStatusFromDeployments($cert);
     }
 
@@ -232,6 +239,7 @@ class CertificateDeployService
         $this->reconcileCertDeployStatus($cert->fresh()->load('domain'));
     }
 
+    /** 证书已不可被节点拉取时，删除 pending/failed 部署行（保留 ok，便于审计）。 */
     public function pruneNonPullableDeployments(RediDomainCert $cert): int
     {
         if (! Schema::hasTable('redi_cert_deployments')) {
@@ -301,14 +309,18 @@ class CertificateDeployService
 
         $pruned = false;
         $pullableByCertId = [];
+        $touchedCertIds = [];
         RediCertDeployment::query()
             ->where('node_id', $node->id)
             ->whereIn('status', ['pending', 'failed'])
             ->with(['cert.domain'])
             ->get()
-            ->each(function (RediCertDeployment $deployment) use (&$pruned, &$pullableByCertId) {
+            ->each(function (RediCertDeployment $deployment) use (&$pruned, &$pullableByCertId, &$touchedCertIds) {
                 $cert = $deployment->cert;
                 if (! $cert || ! self::certIsNodePullableMemo($pullableByCertId, $cert)) {
+                    if ($cert) {
+                        $touchedCertIds[(int) $cert->id] = true;
+                    }
                     $deployment->delete();
                     $pruned = true;
                 }
@@ -316,6 +328,12 @@ class CertificateDeployService
 
         if ($pruned) {
             self::forgetActionableDeploymentMetrics();
+            foreach (array_keys($touchedCertIds) as $certId) {
+                $cert = RediDomainCert::query()->with('domain')->find($certId);
+                if ($cert) {
+                    $this->reconcileCertDeployStatus($cert);
+                }
+            }
         }
     }
 

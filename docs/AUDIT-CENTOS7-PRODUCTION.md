@@ -231,6 +231,10 @@
 
 **2026-10-17 #226 已合并 `main`：** 见 [PR #226](https://github.com/freejbgo/301/pull/226)。
 
+**2026-10-17 #227 已合并 `main`：** 见 [PR #227](https://github.com/freejbgo/301/pull/227)。
+
+**2026-10-17 复核（#228）：** `pruneStaleDeploymentsForNode` 后 `reconcileCertDeployStatus`；无部署行时 `deploying` 降为 `issued`；PHPUnit **273**（**516** assertions）。
+
 **2026-10-17 复核（#227）：** Feature 测 `heartbeat` 清理不可拉取 pending；SECURITY 节点心跳说明；PHPUnit **273**（**514** assertions）。
 
 **2026-10-17 复核（#226）：** `certIsNodePullableMemo` DRY；节点 `heartbeat` 亦 `pruneStaleDeploymentsForNode`；PHPUnit **272**（**512** assertions）。
