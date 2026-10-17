@@ -152,7 +152,7 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 		if host.ContainsControlChars(c.DomainName) || host.ContainsControlChars(c.Token) || host.ContainsControlChars(c.ResponseBody) {
 			continue
 		}
-		domain := host.CanonicalLookupHost(c.DomainName)
+		domain := host.AcmeHostKey(c.DomainName)
 		if domain == "" {
 			continue
 		}

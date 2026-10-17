@@ -136,6 +136,12 @@ class CertificateDeployService
             }
             $cert->loadMissing('domain');
             DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+            if ($ok && ! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
+                $ok = false;
+                if ($error === null || $error === '') {
+                    $error = '证书域名与后台域名不一致，已拒绝确认';
+                }
+            }
 
             $deployment = RediCertDeployment::where('cert_id', $cert->id)
                 ->where('node_id', $node->id)

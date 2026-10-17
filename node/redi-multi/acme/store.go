@@ -57,7 +57,7 @@ func ReplaceAll(items []Item) {
 	mu.Lock()
 	byDomain = map[string]challenge{}
 	for _, it := range items {
-		d := host.CanonicalLookupHost(it.DomainName)
+		d := host.AcmeHostKey(it.DomainName)
 		if d == "" || !Http01TokenValid(it.Token) || !Http01ResponseBodyValid(it.ResponseBody) {
 			continue
 		}

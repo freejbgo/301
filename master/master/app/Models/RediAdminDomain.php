@@ -42,14 +42,16 @@ class RediAdminDomain extends Model
             if (! $domain->wasChanged('status') || (int) $domain->status !== 2) {
                 return;
             }
-            $hosts = [];
+            $purgeHosts = [];
             foreach ([$domain->original_url, $domain->getOriginal('original_url')] as $raw) {
-                $host = AcmeChallengeCleanup::canonicalPurgeHost((string) $raw);
-                if ($host !== '') {
-                    $hosts[$host] = true;
+                $raw = (string) $raw;
+                if ($raw !== '') {
+                    $purgeHosts[] = $raw;
                 }
             }
-            AcmeChallengeCleanup::purgeForHosts(array_keys($hosts));
+            if ($purgeHosts !== []) {
+                AcmeChallengeCleanup::purgeForHosts($purgeHosts);
+            }
         });
 
         static::deleting(function (self $domain) {
@@ -58,9 +60,12 @@ class RediAdminDomain extends Model
                 RediCertDeployment::where('cert_id', $cert->id)->delete();
                 $cert->delete();
             }
-            $host = AcmeChallengeCleanup::canonicalPurgeHost((string) $domain->original_url);
-            if ($host !== '') {
-                AcmeChallengeCleanup::purgeForHosts([$host]);
+            $purgeHosts = array_values(array_filter([
+                (string) $domain->original_url,
+                (string) $domain->getOriginal('original_url'),
+            ], static fn (string $raw): bool => $raw !== ''));
+            if ($purgeHosts !== []) {
+                AcmeChallengeCleanup::purgeForHosts($purgeHosts);
             }
         });
     }

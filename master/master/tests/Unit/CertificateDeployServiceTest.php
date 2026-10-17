@@ -178,6 +178,44 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertSame(RediDomainCert::STATUS_DEPLOYING, $cert->status);
     }
 
+    public function test_mark_node_ack_rejects_ok_when_admin_domain_invalid(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'not a valid host!!!',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'orphan.example',
+            'status' => RediDomainCert::STATUS_DEPLOYING,
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $cert->id,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $svc = app(CertificateDeployService::class);
+        $this->assertTrue($svc->markNodeAck($cert, $node, true));
+
+        $this->assertDatabaseHas('redi_cert_deployments', [
+            'cert_id' => $cert->id,
+            'node_id' => $node->id,
+            'status' => 'failed',
+        ]);
+        $deploymentError = (string) \DB::table('redi_cert_deployments')
+            ->where('cert_id', $cert->id)
+            ->where('node_id', $node->id)
+            ->value('last_error');
+        $this->assertStringContainsString('不一致', $deploymentError);
+        $this->assertSame(RediDomainCert::STATUS_FAILED, $cert->fresh()->status);
+    }
+
     public function test_mark_node_ack_is_idempotent_when_already_ok(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
