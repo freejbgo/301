@@ -59,6 +59,7 @@ class CertificateDeployService
     {
         $pendingByNode = [];
         $failedByNode = [];
+        $pullableByCertId = [];
 
         RediCertDeployment::query()
             ->whereIn('status', ['pending', 'failed'])
@@ -67,9 +68,16 @@ class CertificateDeployService
             })
             ->with(['cert.domain'])
             ->get(['id', 'node_id', 'status', 'cert_id'])
-            ->each(function (RediCertDeployment $deployment) use (&$pendingByNode, &$failedByNode) {
+            ->each(function (RediCertDeployment $deployment) use (&$pendingByNode, &$failedByNode, &$pullableByCertId) {
                 $cert = $deployment->cert;
-                if (! $cert || ! self::certIsNodePullable($cert)) {
+                if (! $cert) {
+                    return;
+                }
+                $certId = (int) $cert->id;
+                if (! array_key_exists($certId, $pullableByCertId)) {
+                    $pullableByCertId[$certId] = self::certIsNodePullable($cert);
+                }
+                if (! $pullableByCertId[$certId]) {
                     return;
                 }
 
@@ -124,6 +132,7 @@ class CertificateDeployService
         }
 
         $counts = ['pending' => 0, 'failed' => 0];
+        $pullableByCertId = [];
         RediCertDeployment::query()
             ->whereIn('status', ['pending', 'failed'])
             ->whereHas('node', function ($query) {
@@ -131,9 +140,16 @@ class CertificateDeployService
             })
             ->with(['cert.domain'])
             ->get(['id', 'status', 'cert_id'])
-            ->each(function (RediCertDeployment $deployment) use (&$counts) {
+            ->each(function (RediCertDeployment $deployment) use (&$counts, &$pullableByCertId) {
                 $cert = $deployment->cert;
-                if (! $cert || ! self::certIsNodePullable($cert)) {
+                if (! $cert) {
+                    return;
+                }
+                $certId = (int) $cert->id;
+                if (! array_key_exists($certId, $pullableByCertId)) {
+                    $pullableByCertId[$certId] = self::certIsNodePullable($cert);
+                }
+                if (! $pullableByCertId[$certId]) {
                     return;
                 }
 
