@@ -73,12 +73,16 @@ class RediAdminDomain extends Model
 
             $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
             if ($cert) {
+                $hadDeployments = RediCertDeployment::where('cert_id', $cert->id)->exists();
                 RediCertDeployment::where('cert_id', $cert->id)->delete();
                 if (in_array($cert->status, [
                     RediDomainCert::STATUS_ACTIVE,
                     RediDomainCert::STATUS_DEPLOYING,
                 ], true)) {
                     $cert->status = RediDomainCert::STATUS_ISSUED;
+                    $cert->last_error = self::DISABLE_DEPLOY_CANCEL_MSG;
+                    $cert->save();
+                } elseif ($hadDeployments && $cert->status === RediDomainCert::STATUS_ISSUED) {
                     $cert->last_error = self::DISABLE_DEPLOY_CANCEL_MSG;
                     $cert->save();
                 }

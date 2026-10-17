@@ -176,7 +176,11 @@
 
 **2026-10-17 #211 已合并 `main`：** 见 [PR #211](https://github.com/freejbgo/301/pull/211)。
 
-**2026-10-17 复核（#212）：** `handleDomainReenabledFromDisabled` 集中 2→1 部署逻辑；`DISABLE_DEPLOY_CANCEL_MSG` 公开；Agent 空证书列表注释；PHPUnit **264**（**500** assertions）。
+**2026-10-17 #212 已合并 `main`：** 见 [PR #212](https://github.com/freejbgo/301/pull/212)。
+
+**2026-10-17 复核（#213）：** 域名停用时对「已签发但仍有待部署行」的证书写入 `DISABLE_DEPLOY_CANCEL_MSG`；PHPUnit **265**（**501** assertions）。
+
+**2026-10-17 复核（#212）：** `handleDomainReenabledFromDisabled` 集中 2→1 部署逻辑；`DISABLE_DEPLOY_CANCEL_MSG` 公开；Agent 空证书列表注释；PHPUnit **264**（**499** assertions）。
 
 **2026-10-17 复核（#211）：** 仅 `status` 2→1 时自动 `queueDeploy`，避免新建即启用误排队；PHPUnit **263**（**497** assertions）。
 
@@ -557,4 +561,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **264** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **265** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。

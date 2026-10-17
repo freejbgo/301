@@ -213,6 +213,44 @@ class RediAdminDomainModelTest extends TestCase
         $this->assertStringContainsString('域名已停用', (string) RediDomainCert::query()->find($certId)->last_error);
     }
 
+    public function test_disabling_domain_sets_cancel_hint_on_issued_cert_with_pending_deployments(): void
+    {
+        $domain = RediAdminDomain::create([
+            'group_id' => 1,
+            'admin_id' => 1,
+            'original_url' => 'issued-off.example',
+            'skip_url' => 'https://dest.example/',
+            'status' => 1,
+        ]);
+
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domain->id,
+            'domain_name' => 'issued-off.example',
+            'status' => RediDomainCert::STATUS_ISSUED,
+            'last_error' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $nodeId = \DB::table('redi_nodes')->insertGetId([
+            'enabled' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $nodeId,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $domain->status = 2;
+        $domain->save();
+
+        $this->assertSame(RediAdminDomain::DISABLE_DEPLOY_CANCEL_MSG, RediDomainCert::query()->find($certId)->last_error);
+        $this->assertSame(RediDomainCert::STATUS_ISSUED, RediDomainCert::query()->find($certId)->status);
+    }
+
     public function test_reenabling_domain_clears_disable_deploy_cancel_message(): void
     {
         $domain = RediAdminDomain::create([
