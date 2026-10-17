@@ -35,6 +35,19 @@ class CertificateDeployService
         return $cert->getCertificatePem() && $cert->getPrivateKeyPem();
     }
 
+    /**
+     * @param  array<int, bool>  $memo
+     */
+    protected static function certIsNodePullableMemo(array &$memo, RediDomainCert $cert): bool
+    {
+        $certId = (int) $cert->id;
+        if (! array_key_exists($certId, $memo)) {
+            $memo[$certId] = self::certIsNodePullable($cert);
+        }
+
+        return $memo[$certId];
+    }
+
     /** @var array{pending: int, failed: int}|null */
     protected static $actionableDeploymentStatusCounts = null;
 
@@ -73,11 +86,7 @@ class CertificateDeployService
                 if (! $cert) {
                     return;
                 }
-                $certId = (int) $cert->id;
-                if (! array_key_exists($certId, $pullableByCertId)) {
-                    $pullableByCertId[$certId] = self::certIsNodePullable($cert);
-                }
-                if (! $pullableByCertId[$certId]) {
+                if (! self::certIsNodePullableMemo($pullableByCertId, $cert)) {
                     return;
                 }
 
@@ -145,11 +154,7 @@ class CertificateDeployService
                 if (! $cert) {
                     return;
                 }
-                $certId = (int) $cert->id;
-                if (! array_key_exists($certId, $pullableByCertId)) {
-                    $pullableByCertId[$certId] = self::certIsNodePullable($cert);
-                }
-                if (! $pullableByCertId[$certId]) {
+                if (! self::certIsNodePullableMemo($pullableByCertId, $cert)) {
                     return;
                 }
 
@@ -295,14 +300,15 @@ class CertificateDeployService
         }
 
         $pruned = false;
+        $pullableByCertId = [];
         RediCertDeployment::query()
             ->where('node_id', $node->id)
             ->whereIn('status', ['pending', 'failed'])
             ->with(['cert.domain'])
             ->get()
-            ->each(function (RediCertDeployment $deployment) use (&$pruned) {
+            ->each(function (RediCertDeployment $deployment) use (&$pruned, &$pullableByCertId) {
                 $cert = $deployment->cert;
-                if (! $cert || ! self::certIsNodePullable($cert)) {
+                if (! $cert || ! self::certIsNodePullableMemo($pullableByCertId, $cert)) {
                     $deployment->delete();
                     $pruned = true;
                 }

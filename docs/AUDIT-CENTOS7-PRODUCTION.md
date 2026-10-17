@@ -227,6 +227,10 @@
 
 **2026-10-17 #224 已合并 `main`：** 见 [PR #224](https://github.com/freejbgo/301/pull/224)。
 
+**2026-10-17 #225 已合并 `main`：** 见 [PR #225](https://github.com/freejbgo/301/pull/225)。
+
+**2026-10-17 复核（#226）：** `certIsNodePullableMemo` DRY；节点 `heartbeat` 亦 `pruneStaleDeploymentsForNode`；PHPUnit **272**（**512** assertions）。
+
 **2026-10-17 复核（#225）：** health 部署计数按 `cert_id` 缓存 `certIsNodePullable`；节点证书 API 去掉重复 realign；PHPUnit **272**（**512** assertions）。
 
 **2026-10-17 复核（#224）：** `realign` 增加 `$persist`；`NodeAgentRevisionService` 仅内存对齐，避免每 5s revision 写库+reconcile；PHPUnit **272**（**512** assertions）。

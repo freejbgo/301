@@ -115,13 +115,15 @@ class NodeAgentController extends Controller
         return response()->json($revisions->build());
     }
 
-    public function heartbeat(Request $request)
+    public function heartbeat(Request $request, CertificateDeployService $deployService)
     {
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
         $this->persistAgentVersionIfPresent($request, $node);
         $node->last_heartbeat_at = now();
         $node->save();
+
+        $deployService->pruneStaleDeploymentsForNode($node);
 
         return response()->json(['ok' => true]);
     }
