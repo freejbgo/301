@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Support\AdminTenantContext;
-use App\Support\HostNameValidator;
-
 class DomainDnsPointingGuard
 {
     public static function mustPointToEdgeBeforeEnable(): bool
@@ -14,10 +12,10 @@ class DomainDnsPointingGuard
 
     public static function pointsToTenantEdge(int $adminId, string $originalUrl): bool
     {
-        $originalUrl = DomainRecordNormalizer::normalizeOriginalUrl($originalUrl);
-        if ($originalUrl === '' || ! HostNameValidator::isValidHostLabel($originalUrl)) {
+        if (! DomainRecordNormalizer::isValidOriginalHost($originalUrl)) {
             return false;
         }
+        $originalUrl = DomainRecordNormalizer::normalizeOriginalUrl($originalUrl);
 
         TenantEdgeService::ensureForAdmin($adminId);
         $edgeFqdn = TenantEdgeService::cnameTargetForAdmin($adminId);

@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToAdminTenant;
 use App\Services\AcmeChallengeCleanup;
 use App\Services\DomainRecordNormalizer;
-use App\Support\HostNameValidator;
 use Illuminate\Validation\ValidationException;
 use Dcat\Admin\Traits\HasDateTimeFormatter;
 use Illuminate\Database\Eloquent\Model;
@@ -18,17 +17,15 @@ class RediAdminDomain extends Model
     protected static function booted(): void
     {
         static::saving(function (self $domain) {
+            if (! DomainRecordNormalizer::isValidOriginalHost($domain->original_url)) {
+                $norm = DomainRecordNormalizer::normalizeOriginalUrl($domain->original_url);
+                throw ValidationException::withMessages([
+                    'original_url' => $norm === ''
+                        ? '原始域名不能为空或含路径'
+                        : '原始域名格式无效',
+                ]);
+            }
             $norm = DomainRecordNormalizer::normalizeOriginalUrl($domain->original_url);
-            if ($norm === '') {
-                throw ValidationException::withMessages([
-                    'original_url' => '原始域名不能为空或含路径',
-                ]);
-            }
-            if (! HostNameValidator::isValidHostLabel($norm)) {
-                throw ValidationException::withMessages([
-                    'original_url' => '原始域名格式无效',
-                ]);
-            }
             $domain->original_url = $norm;
             $domain->original_url_hash = DomainRecordNormalizer::originalUrlHash($norm);
 
