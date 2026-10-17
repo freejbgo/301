@@ -479,8 +479,13 @@ class CertificateDeployService
             $cert->last_error = '全部已响应节点安装失败';
         } elseif ($okCount > 0) {
             if ($domainActive) {
-                $cert->status = RediDomainCert::STATUS_ACTIVE;
-                $cert->last_error = $failedCount > 0 ? '部分节点安装失败，其余节点仍保留该证书' : null;
+                if (self::certIsNodePullable($cert)) {
+                    $cert->status = RediDomainCert::STATUS_ACTIVE;
+                    $cert->last_error = $failedCount > 0 ? '部分节点安装失败，其余节点仍保留该证书' : null;
+                } else {
+                    $cert->status = RediDomainCert::STATUS_ISSUED;
+                    $cert->last_error = '节点已确认安装但证书当前不可下发，请检查 PEM 或域名一致性';
+                }
             } else {
                 $cert->status = RediDomainCert::STATUS_ISSUED;
                 $cert->last_error = '域名已停用：节点已安装证书，但不会标记为「已生效」';

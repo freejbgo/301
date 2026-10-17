@@ -188,6 +188,10 @@
 
 **2026-10-17 #217 已合并 `main`：** 见 [PR #217](https://github.com/freejbgo/301/pull/217)。
 
+**2026-10-17 #218 已合并 `main`：** 见 [PR #218](https://github.com/freejbgo/301/pull/218)。
+
+**2026-10-17 复核（#219）：** `refreshCertStatusFromDeployments` 仅在 `certIsNodePullable` 时标为 active；PHPUnit **270**（**509** assertions）。
+
 **2026-10-17 复核（#218）：** `markNodeAck` 部署行未变时仍 `refreshCertStatusFromDeployments`（重复 ack 可从 deploying→active）；PHPUnit **269**（**507** assertions）。
 
 **2026-10-17 复核（#217）：** 证书 `domain_name`/PEM 变更与解密失败时 `pruneNonPullableDeployments`（不因 `status` 变更误删 failed 行）；PHPUnit **269**（**506** assertions）。
@@ -581,4 +585,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **269** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **270** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
