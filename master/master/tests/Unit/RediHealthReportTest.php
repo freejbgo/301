@@ -38,6 +38,7 @@ class RediHealthReportTest extends TestCase
 
         Schema::create('redi_admin_domain', function (Blueprint $table) {
             $table->increments('id');
+            $table->string('original_url')->nullable();
             $table->unsignedTinyInteger('status')->default(1);
             $table->timestamps();
         });
@@ -102,9 +103,32 @@ class RediHealthReportTest extends TestCase
         $this->assertSame(5, $summary['health_renew_validating_stuck_hours']);
     }
 
+    public function test_collect_issues_reports_cert_domain_name_drift(): void
+    {
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'canonical.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => 'stale.example',
+            'status' => 'active',
+            'expires_at' => now()->addMonth(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertContains('cert_domain_name_drift', $codes);
+    }
+
     public function test_collect_issues_skips_invalid_cert_host_for_expired(): void
     {
         $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => "evil.com\r\n",
             'status' => 1,
             'created_at' => now(),
             'updated_at' => now(),
@@ -247,6 +271,7 @@ class RediHealthReportTest extends TestCase
         config(['redi.health_validating_stuck_hours' => 2]);
 
         $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'stuck.example',
             'status' => 1,
             'created_at' => now(),
             'updated_at' => now(),
@@ -270,6 +295,7 @@ class RediHealthReportTest extends TestCase
         config(['redi.health_validating_stuck_hours' => 1]);
         for ($i = 0; $i < 3; $i++) {
             $domainId = \DB::table('redi_admin_domain')->insertGetId([
+                'original_url' => "stuck{$i}.example",
                 'status' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),

@@ -82,6 +82,10 @@ class RediHealthReport
             ];
         }
 
+        foreach (self::certDomainNameDriftIssues() as $issue) {
+            $issues[] = $issue;
+        }
+
         $expiredCerts = RediDomainCert::query()
             ->whereHas('domain', fn ($q) => $q->where('status', 1))
             ->whereIn('status', [
@@ -92,10 +96,12 @@ class RediHealthReport
             ->whereNotNull('expires_at')
             ->where('expires_at', '<', now())
             ->orderBy('expires_at')
-            ->get(['id', 'domain_name', 'expires_at', 'status']);
+            ->with('domain')
+            ->get(['id', 'domain_id', 'domain_name', 'expires_at', 'status']);
 
         foreach ($expiredCerts as $cert) {
-            if (! self::certHostIsReportable((string) $cert->domain_name)) {
+            $host = self::certCanonicalHost($cert);
+            if ($host === '') {
                 continue;
             }
             $issues[] = [
@@ -103,7 +109,7 @@ class RediHealthReport
                 'code' => 'cert_expired',
                 'message' => sprintf(
                     '证书已过期：%s（%s，状态 %s）',
-                    OpsDisplaySanitizer::field($cert->domain_name, (string) $cert->domain_name, 253),
+                    OpsDisplaySanitizer::field($host, $host, 253),
                     $cert->expires_at->format('Y-m-d'),
                     $cert->status
                 ),
@@ -122,10 +128,12 @@ class RediHealthReport
             ->where('expires_at', '>=', now())
             ->where('expires_at', '<=', now()->addDays($warnDays))
             ->orderBy('expires_at')
-            ->get(['id', 'domain_name', 'expires_at', 'status']);
+            ->with('domain')
+            ->get(['id', 'domain_id', 'domain_name', 'expires_at', 'status']);
 
         foreach ($expiringCerts as $cert) {
-            if (! self::certHostIsReportable((string) $cert->domain_name)) {
+            $host = self::certCanonicalHost($cert);
+            if ($host === '') {
                 continue;
             }
             $issues[] = [
@@ -134,7 +142,7 @@ class RediHealthReport
                 'message' => sprintf(
                     '证书将在 %d 天内到期：%s（%s，状态 %s）',
                     $warnDays,
-                    OpsDisplaySanitizer::field($cert->domain_name, (string) $cert->domain_name, 253),
+                    OpsDisplaySanitizer::field($host, $host, 253),
                     $cert->expires_at->format('Y-m-d'),
                     $cert->status
                 ),
@@ -313,9 +321,10 @@ class RediHealthReport
             ->whereHas('domain', fn ($q) => $q->where('status', 1));
 
         $reportable = (clone $base)
+            ->with('domain')
             ->orderBy('updated_at')
-            ->get(['domain_name'])
-            ->filter(fn ($row) => self::certHostIsReportable((string) $row->domain_name));
+            ->get(['id', 'domain_id', 'domain_name', 'updated_at'])
+            ->filter(fn (RediDomainCert $row) => self::certCanonicalHost($row) !== '');
 
         $total = $reportable->count();
         if ($total === 0) {
@@ -324,7 +333,7 @@ class RediHealthReport
 
         $sample = $reportable
             ->take(20)
-            ->pluck('domain_name')
+            ->map(fn (RediDomainCert $row) => self::certCanonicalHost($row))
             ->all();
 
         $names = implode(', ', array_map(
@@ -448,6 +457,57 @@ class RediHealthReport
     protected static function certHostIsReportable(string $domainName): bool
     {
         return HostNameValidator::isNodePublishableHost($domainName);
+    }
+
+    protected static function certCanonicalHost(RediDomainCert $cert): string
+    {
+        $cert->loadMissing('domain');
+
+        return DomainRecordNormalizer::originalUrlIfValid((string) optional($cert->domain)->original_url ?? '');
+    }
+
+    /**
+     * @return array<int, array{level: string, code: string, message: string}>
+     */
+    protected static function certDomainNameDriftIssues(): array
+    {
+        $statuses = [
+            RediDomainCert::STATUS_ACTIVE,
+            RediDomainCert::STATUS_ISSUED,
+            RediDomainCert::STATUS_DEPLOYING,
+            RediDomainCert::STATUS_VALIDATING,
+            RediDomainCert::STATUS_FAILED,
+        ];
+
+        $issues = [];
+        RediDomainCert::query()
+            ->with('domain')
+            ->whereIn('status', $statuses)
+            ->whereHas('domain', fn ($q) => $q->where('status', 1))
+            ->orderBy('id')
+            ->get(['id', 'domain_id', 'domain_name', 'status'])
+            ->each(function (RediDomainCert $cert) use (&$issues) {
+                $canonical = self::certCanonicalHost($cert);
+                if ($canonical === '') {
+                    return;
+                }
+                $certHost = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
+                if ($certHost === $canonical) {
+                    return;
+                }
+                $issues[] = [
+                    'level' => 'warning',
+                    'code' => 'cert_domain_name_drift',
+                    'message' => sprintf(
+                        '证书 #%d domain_name 与域名不一致：记录 %s，应为 %s（续期/部署可能已自动纠正）',
+                        $cert->id,
+                        OpsDisplaySanitizer::field($cert->domain_name, (string) $cert->domain_name, 253),
+                        OpsDisplaySanitizer::field($canonical, $canonical, 253)
+                    ),
+                ];
+            });
+
+        return $issues;
     }
 
     /**

@@ -70,6 +70,7 @@
 | `cert_expired` | critical | 已过期且域名仍启用 |
 | `cert_expiring` | warning | 在 `--days` 窗口内即将到期 |
 | `cert_validating_stuck` | warning | validating 超过 `REDI_HEALTH_VALIDATING_STUCK_HOURS` |
+| `cert_domain_name_drift` | warning | 证书 `domain_name` 与域名 `original_url` 不一致 |
 | `queue_failed_jobs` | critical | `failed_jobs` 非空 |
 | `queue_backlog` | warning | `jobs` 积压超过阈值 |
 | `queue_stale` | warning | `jobs` 中 `available_at` 超过 **N 小时**仍未执行（默认 **2**，`REDI_HEALTH_QUEUE_STALE_HOURS`）；仅 `QUEUE_CONNECTION=database` |
@@ -148,6 +149,10 @@
 **2026-10-16 #99 已合并 `main`：** 见 [PR #99](https://github.com/freejbgo/301/pull/99)（health JSON summary 队列阈值、文档同步）。
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
+
+**2026-10-17 #187 已合并 `main`：** 见 [PR #187](https://github.com/freejbgo/301/pull/187)。
+
+**2026-10-17 复核（#188）：** `realignCertDomainNameFromAdminDomain` 在部署/续期自动纠偏；health 新增 `cert_domain_name_drift`；到期告警按域名 canonical 展示；PHPUnit **234**（**434** assertions）。
 
 **2026-10-17 #186 已合并 `main`：** 见 [PR #186](https://github.com/freejbgo/301/pull/186)。
 
