@@ -35,14 +35,15 @@ class RenewDomainCertificatesCommand extends Command
         $queued = 0;
         $i = 0;
         foreach ($certs as $cert) {
-            $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
-            if ($host === '' || ! HostNameValidator::isValidHostLabel($host)) {
+            if (! HostNameValidator::isNodePublishableHost((string) $cert->domain_name)) {
                 Log::warning('redi:renew-certificates skip invalid domain_name', [
                     'cert_id' => $cert->id,
                 ]);
                 $this->warn('跳过非法域名 cert #'.$cert->id);
                 continue;
             }
+
+            $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
 
             if ($dryRun) {
                 $this->line(sprintf(

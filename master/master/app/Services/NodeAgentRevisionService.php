@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\RediDomainCert;
 use App\Support\HostNameValidator;
-use App\Support\OpsDisplaySanitizer;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -19,15 +18,12 @@ class NodeAgentRevisionService
             ->orderBy('id')
             ->get(['domain_name', 'token', 'response_body', 'updated_at'])
             ->filter(function ($row) {
-                return ! OpsDisplaySanitizer::containsControlChars((string) $row->domain_name);
+                return AcmeChallengeQuery::nodePublishableRow($row->domain_name, $row->token, $row->response_body);
             })
             ->map(function ($row) {
                 $row->domain_name = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
 
                 return $row;
-            })
-            ->filter(function ($row) {
-                return AcmeChallengeQuery::nodePublishableRow($row->domain_name, $row->token, $row->response_body);
             })
             ->values();
 
@@ -49,15 +45,12 @@ class NodeAgentRevisionService
             ->orderBy('id')
             ->get(['id', 'domain_name', 'updated_at'])
             ->filter(function ($row) {
-                return ! OpsDisplaySanitizer::containsControlChars((string) $row->domain_name);
+                return HostNameValidator::isNodePublishableHost((string) $row->domain_name);
             })
             ->map(function ($row) {
                 $row->domain_name = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
 
                 return $row;
-            })
-            ->filter(function ($row) {
-                return $row->domain_name !== '' && HostNameValidator::isValidHostLabel($row->domain_name);
             })
             ->values();
 
@@ -66,15 +59,12 @@ class NodeAgentRevisionService
             ->orderBy('id')
             ->get(['id', 'original_url', 'force_https', 'updated_at'])
             ->filter(function ($row) {
-                return ! OpsDisplaySanitizer::containsControlChars((string) $row->original_url);
+                return HostNameValidator::isNodePublishableHost((string) $row->original_url);
             })
             ->map(function ($row) {
                 $row->original_url = HostNameValidator::toCanonicalAscii((string) $row->original_url);
 
                 return $row;
-            })
-            ->filter(function ($row) {
-                return $row->original_url !== '' && HostNameValidator::isValidHostLabel($row->original_url);
             })
             ->values();
 

@@ -187,7 +187,7 @@ class NodeAgentController extends Controller
 
         $payload = [];
         foreach ($certs as $cert) {
-            if (OpsDisplaySanitizer::containsControlChars((string) $cert->domain_name)) {
+            if (! HostNameValidator::isNodePublishableHost((string) $cert->domain_name)) {
                 continue;
             }
             $pem = $cert->getCertificatePem();
@@ -199,9 +199,6 @@ class NodeAgentController extends Controller
                 continue;
             }
             $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
-            if ($host === '' || ! HostNameValidator::isValidHostLabel($host)) {
-                continue;
-            }
             $payload[] = [
                 'cert_id' => $cert->id,
                 'domain' => $host,
@@ -272,17 +269,13 @@ class NodeAgentController extends Controller
             ->where('status', 1)
             ->get(['original_url', 'force_https'])
             ->filter(function ($row) {
-                return ! OpsDisplaySanitizer::containsControlChars((string) $row->original_url);
+                return HostNameValidator::isNodePublishableHost((string) $row->original_url);
             })
             ->map(function ($row) {
                 return [
                     'original_url' => HostNameValidator::toCanonicalAscii((string) $row->original_url),
                     'force_https' => (bool) $row->force_https,
                 ];
-            })
-            ->filter(function ($row) {
-                return $row['original_url'] !== ''
-                    && HostNameValidator::isValidHostLabel($row['original_url']);
             })
             ->values();
 

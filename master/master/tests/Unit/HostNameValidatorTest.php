@@ -27,6 +27,13 @@ class HostNameValidatorTest extends TestCase
         $this->assertSame('', HostNameValidator::toCanonicalAscii("foo\r\n.com"));
     }
 
+    public function test_is_node_publishable_host(): void
+    {
+        $this->assertTrue(HostNameValidator::isNodePublishableHost('good.example'));
+        $this->assertFalse(HostNameValidator::isNodePublishableHost("evil\x00.example"));
+        $this->assertFalse(HostNameValidator::isNodePublishableHost('1.2.3.4'));
+    }
+
     public function test_rejects_ip_path_and_garbage(): void
     {
         $this->assertFalse(HostNameValidator::isValidHostLabel(''));

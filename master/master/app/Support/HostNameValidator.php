@@ -61,4 +61,12 @@ class HostNameValidator
 
         return $host;
     }
+
+    /** 节点 API / 部署 / revision 可使用的原始主机名（含 IDN 与控制字符拒绝）。 */
+    public static function isNodePublishableHost(string $raw): bool
+    {
+        $host = self::toCanonicalAscii($raw);
+
+        return $host !== '' && self::isValidHostLabel($host);
+    }
 }
