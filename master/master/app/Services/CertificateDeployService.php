@@ -15,6 +15,7 @@ class CertificateDeployService
 {
     /**
      * 与节点 API `/certificates` 一致：该证是否会被下发给边缘（含 PEM、域名一致、启用域名）。
+     * 仅内存 realign；落库由 queueDeploy / ack / requeue 等路径负责。
      */
     public static function certIsNodePullable(RediDomainCert $cert): bool
     {
@@ -23,7 +24,7 @@ class CertificateDeployService
             return false;
         }
 
-        DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+        DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert, false);
         if (! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
             return false;
         }
@@ -331,6 +332,9 @@ class CertificateDeployService
             if (! self::certIsNodePullable($cert)) {
                 continue;
             }
+
+            $cert = $cert->fresh()->load('domain');
+            DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
 
             $existing = RediCertDeployment::query()
                 ->where('cert_id', $cert->id)
