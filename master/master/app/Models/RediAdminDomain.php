@@ -15,6 +15,8 @@ class RediAdminDomain extends Model
     use BelongsToAdminTenant;
     use HasDateTimeFormatter;
 
+    private const DISABLE_DEPLOY_CANCEL_MSG = '域名已停用，已取消节点证书部署排队';
+
     protected static function booted(): void
     {
         static::saving(function (self $domain) {
@@ -40,9 +42,26 @@ class RediAdminDomain extends Model
         });
 
         static::saved(function (self $domain) {
-            if (! $domain->wasChanged('status') || (int) $domain->status !== 2) {
+            if (! $domain->wasChanged('status')) {
                 return;
             }
+
+            $newStatus = (int) $domain->status;
+
+            if ($newStatus === 1) {
+                $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
+                if ($cert && $cert->last_error === self::DISABLE_DEPLOY_CANCEL_MSG) {
+                    $cert->last_error = null;
+                    $cert->save();
+                }
+
+                return;
+            }
+
+            if ($newStatus !== 2) {
+                return;
+            }
+
             $purgeHosts = [];
             foreach ([$domain->original_url, $domain->getOriginal('original_url')] as $raw) {
                 $raw = (string) $raw;
@@ -62,7 +81,7 @@ class RediAdminDomain extends Model
                     RediDomainCert::STATUS_DEPLOYING,
                 ], true)) {
                     $cert->status = RediDomainCert::STATUS_ISSUED;
-                    $cert->last_error = '域名已停用，已取消节点证书部署排队';
+                    $cert->last_error = self::DISABLE_DEPLOY_CANCEL_MSG;
                     $cert->save();
                 }
                 CertificateDeployService::forgetActionableDeploymentMetrics();

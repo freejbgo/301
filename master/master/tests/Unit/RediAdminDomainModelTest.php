@@ -207,4 +207,29 @@ class RediAdminDomainModelTest extends TestCase
         $this->assertSame(RediDomainCert::STATUS_ISSUED, RediDomainCert::query()->find($certId)->status);
         $this->assertStringContainsString('域名已停用', (string) RediDomainCert::query()->find($certId)->last_error);
     }
+
+    public function test_reenabling_domain_clears_disable_deploy_cancel_message(): void
+    {
+        $domain = RediAdminDomain::create([
+            'group_id' => 1,
+            'admin_id' => 1,
+            'original_url' => 'back.example',
+            'skip_url' => 'https://dest.example/',
+            'status' => 2,
+        ]);
+
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domain->id,
+            'domain_name' => 'back.example',
+            'status' => RediDomainCert::STATUS_ISSUED,
+            'last_error' => '域名已停用，已取消节点证书部署排队',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $domain->status = 1;
+        $domain->save();
+
+        $this->assertNull(RediDomainCert::query()->find($certId)->last_error);
+    }
 }

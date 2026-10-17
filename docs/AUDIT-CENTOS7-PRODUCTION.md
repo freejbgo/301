@@ -168,6 +168,10 @@
 
 **2026-10-17 #207 已合并 `main`：** 见 [PR #207](https://github.com/freejbgo/301/pull/207)。
 
+**2026-10-17 #208 已合并 `main`：** 见 [PR #208](https://github.com/freejbgo/301/pull/208)。
+
+**2026-10-17 复核（#209）：** 域名重新启用时清除停用部署取消提示；停用/启用消息常量化；PHPUnit **261**（**495** assertions）。
+
 **2026-10-17 复核（#208）：** 域名停用时将证书从 active/deploying 降为 issued 并写明原因；PHPUnit **260**（**494** assertions）。
 
 **2026-10-17 复核（#207）：** 节点停用删除其 `redi_cert_deployments` 并刷新 health 指标缓存；SECURITY 域名停用说明同步；PHPUnit **260**（**492** assertions）。
@@ -541,4 +545,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **260** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **261** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
