@@ -598,6 +598,38 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertSame(0, CertificateDeployService::countActionableDeployments('pending'));
     }
 
+    public function test_disabling_node_deletes_its_cert_deployments(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => 'deploying',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $node->enabled = false;
+        $node->save();
+
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
+    }
+
     public function test_forget_actionable_deployment_metrics_clears_request_cache(): void
     {
         $ref = new \ReflectionClass(CertificateDeployService::class);

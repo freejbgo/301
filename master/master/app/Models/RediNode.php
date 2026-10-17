@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CertificateDeployService;
 use App\Support\OpsDisplaySanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
@@ -49,10 +50,18 @@ class RediNode extends Model
         });
 
         static::saved(function (RediNode $node) {
-            if (! $node->enabled || ! $node->wasChanged('enabled')) {
+            if (! $node->wasChanged('enabled')) {
                 return;
             }
-            app(\App\Services\CertificateDeployService::class)->syncDeploymentsForNode($node);
+
+            if (! $node->enabled) {
+                RediCertDeployment::where('node_id', $node->id)->delete();
+                CertificateDeployService::forgetActionableDeploymentMetrics();
+
+                return;
+            }
+
+            app(CertificateDeployService::class)->syncDeploymentsForNode($node);
         });
     }
 
