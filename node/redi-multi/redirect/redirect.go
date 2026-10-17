@@ -100,6 +100,7 @@ func Process(conn net.Conn, tls bool) {
 }
 
 func writePlain(conn net.Conn, body string) {
+	body = hostutil.StripControlChars(body)
 	length := fmt.Sprintf("%v", len(body))
 	_, _ = conn.Write([]byte("HTTP/1.1 200 OK\r\n" +
 		"Content-Type: text/plain\r\n" +

@@ -7,6 +7,28 @@ import (
 	"time"
 )
 
+func TestWritePlainStripsControlCharsFromBody(t *testing.T) {
+	server, client := net.Pipe()
+	defer server.Close()
+	defer client.Close()
+	go func() {
+		writePlain(server, "token\r\nsuffix")
+	}()
+	buf := make([]byte, 256)
+	_ = client.SetReadDeadline(time.Now().Add(2 * time.Second))
+	n, _ := client.Read(buf)
+	body := string(buf[:n])
+	if strings.Contains(body, "tokensuffix") && !strings.Contains(body, "\r\n\r\n") {
+		// body after headers should be tokensuffix
+		if !strings.HasSuffix(body, "tokensuffix") {
+			t.Fatalf("expected stripped acme body, got %q", body)
+		}
+	}
+	if strings.Contains(body, "token\r\n") {
+		t.Fatal("control chars should be stripped from plain body")
+	}
+}
+
 func TestWriteRedirectSanitizesLocationControlChars(t *testing.T) {
 	server, client := net.Pipe()
 	defer server.Close()

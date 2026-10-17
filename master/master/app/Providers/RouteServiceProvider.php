@@ -62,7 +62,7 @@ class RouteServiceProvider extends ServiceProvider
                 return Limit::none();
             }
 
-            return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
+            return Limit::perMinute(60)->by(optional($request->user())->id ?: $this->throttleIpKey($request));
         });
 
         RateLimiter::for('redi-node', function (Request $request) {
@@ -71,7 +71,7 @@ class RouteServiceProvider extends ServiceProvider
             if ($token !== null && OpsDisplaySanitizer::containsControlChars($token)) {
                 $token = null;
             }
-            $key = $node ? 'node:'.$node->id : ($token ?: $request->ip());
+            $key = $node ? 'node:'.$node->id : ($token ?: $this->throttleIpKey($request));
 
             if ($request->is('api/nodes/certificates')) {
                 return Limit::perMinute(30)->by($key);
@@ -79,5 +79,15 @@ class RouteServiceProvider extends ServiceProvider
 
             return Limit::perMinute(300)->by($key);
         });
+    }
+
+    protected function throttleIpKey(Request $request): string
+    {
+        $ip = (string) $request->ip();
+        if ($ip === '' || OpsDisplaySanitizer::containsControlChars($ip)) {
+            return 'invalid-ip';
+        }
+
+        return $ip;
     }
 }
