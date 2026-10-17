@@ -301,6 +301,55 @@ class RediHealthReportTest extends TestCase
         $this->assertNotContains('cert_deploy_pending', $codes);
     }
 
+    public function test_summary_deploy_counts_match_actionable_deployments_only(): void
+    {
+        $nodePending = \DB::table('redi_nodes')->insertGetId([
+            'enabled' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $nodeFailed = \DB::table('redi_nodes')->insertGetId([
+            'enabled' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'disabled.example',
+            'status' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'disabled.example',
+            'status' => 'deploying',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $nodePending,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $nodeFailed,
+            'status' => 'failed',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $summary = RediHealthReport::summary();
+        $this->assertSame(0, $summary['pending_deploys']);
+        $this->assertSame(0, $summary['failed_deploys']);
+
+        $codes = array_column(RediHealthReport::collectIssues(7), 'code');
+        $this->assertNotContains('cert_deploy_pending', $codes);
+        $this->assertNotContains('cert_deploy_failed', $codes);
+    }
+
     public function test_collect_hints_warns_file_cache_with_database_queue(): void
     {
         config(['queue.default' => 'database']);

@@ -32,6 +32,26 @@ class CertificateDeployService
         return $cert->getCertificatePem() && $cert->getPrivateKeyPem();
     }
 
+    /**
+     * `redi:health` / JSON summary：仅统计边缘仍能拉取证书的部署行。
+     */
+    public static function countActionableDeployments(string $status): int
+    {
+        return RediCertDeployment::query()
+            ->where('status', $status)
+            ->whereHas('node', function ($query) {
+                $query->where('enabled', true);
+            })
+            ->with(['cert.domain'])
+            ->get()
+            ->filter(function (RediCertDeployment $deployment) {
+                $cert = $deployment->cert;
+
+                return $cert && self::certIsNodePullable($cert);
+            })
+            ->count();
+    }
+
     protected static function certStatusAllowsNodePull(RediDomainCert $cert): bool
     {
         if (in_array($cert->status, [

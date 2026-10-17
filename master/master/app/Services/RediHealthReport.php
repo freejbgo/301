@@ -52,19 +52,7 @@ class RediHealthReport
             ];
         }
 
-        $pendingDeploys = RediCertDeployment::query()
-            ->where('status', 'pending')
-            ->whereHas('node', function ($query) {
-                $query->where('enabled', true);
-            })
-            ->with(['cert.domain'])
-            ->get()
-            ->filter(function (RediCertDeployment $deployment) {
-                $cert = $deployment->cert;
-
-                return $cert && CertificateDeployService::certIsNodePullable($cert);
-            })
-            ->count();
+        $pendingDeploys = CertificateDeployService::countActionableDeployments('pending');
 
         if ($pendingDeploys > 0) {
             $issues[] = [
@@ -74,12 +62,7 @@ class RediHealthReport
             ];
         }
 
-        $failedDeploys = (int) RediCertDeployment::query()
-            ->where('status', 'failed')
-            ->whereHas('node', function ($query) {
-                $query->where('enabled', true);
-            })
-            ->count();
+        $failedDeploys = CertificateDeployService::countActionableDeployments('failed');
 
         if ($failedDeploys > 0) {
             $issues[] = [
@@ -444,14 +427,8 @@ class RediHealthReport
             'cache_driver' => (string) config('cache.default', 'file'),
             'enabled_nodes' => $enabled,
             'stale_nodes' => $stale,
-            'pending_deploys' => (int) RediCertDeployment::query()
-                ->where('status', 'pending')
-                ->whereHas('node', fn ($q) => $q->where('enabled', true))
-                ->count(),
-            'failed_deploys' => (int) RediCertDeployment::query()
-                ->where('status', 'failed')
-                ->whereHas('node', fn ($q) => $q->where('enabled', true))
-                ->count(),
+            'pending_deploys' => CertificateDeployService::countActionableDeployments('pending'),
+            'failed_deploys' => CertificateDeployService::countActionableDeployments('failed'),
             'queue_pending' => $queuePending,
             'queue_failed' => $queueFailed,
             'health_queue_pending_threshold' => max(10, (int) config('redi.health_queue_pending_threshold', 80)),
@@ -527,7 +504,10 @@ class RediHealthReport
             ->each(function (RediCertDeployment $deployment) use (&$pendingByNode, &$failedByNode) {
                 $nodeId = (int) $deployment->node_id;
                 if ($deployment->status === 'failed') {
-                    $failedByNode[$nodeId] = ($failedByNode[$nodeId] ?? 0) + 1;
+                    $cert = $deployment->cert;
+                    if ($cert && CertificateDeployService::certIsNodePullable($cert)) {
+                        $failedByNode[$nodeId] = ($failedByNode[$nodeId] ?? 0) + 1;
+                    }
 
                     return;
                 }
