@@ -16,6 +16,16 @@ class RediNode extends Model
             if ($node->isDirty('public_ip')) {
                 $node->public_ip = trim(OpsDisplaySanitizer::stripControlChars((string) $node->public_ip));
             }
+            if ($node->isDirty('extra_ips')) {
+                $extras = [];
+                foreach ((array) $node->extra_ips as $ip) {
+                    $ip = trim(OpsDisplaySanitizer::stripControlChars(trim((string) $ip)));
+                    if ($ip !== '') {
+                        $extras[] = $ip;
+                    }
+                }
+                $node->extra_ips = $extras === [] ? null : array_values($extras);
+            }
             if ($node->isDirty('name')) {
                 $name = OpsDisplaySanitizer::stripControlChars((string) $node->name);
                 $name = trim($name);
