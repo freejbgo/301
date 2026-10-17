@@ -71,16 +71,17 @@ class NodeAgentController extends Controller
                     'domain' => OpsDisplaySanitizer::field($raw, '', 253),
                 ], 422);
             }
-            $domain = HostNameValidator::toCanonicalAscii($raw);
-            if ($domain === '') {
-                continue;
-            }
-            if (strlen($domain) > 253 || ! HostNameValidator::isValidHostLabel($domain)) {
+            if (! HostNameValidator::isNodePublishableHost($raw)) {
+                if (trim($raw) === '') {
+                    continue;
+                }
+
                 return response()->json([
                     'message' => 'invalid domain',
                     'domain' => OpsDisplaySanitizer::field($raw, '', 253),
                 ], 422);
             }
+            $domain = HostNameValidator::toCanonicalAscii($raw);
             if (! $allowed->has($domain)) {
                 $ignored++;
                 continue;

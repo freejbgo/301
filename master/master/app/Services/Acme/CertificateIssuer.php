@@ -46,10 +46,10 @@ class CertificateIssuer
             'mode' => $platform->acme_staging ? Client::MODE_STAGING : Client::MODE_LIVE,
         ]);
 
-        $domain = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
-        if ($domain === '' || ! HostNameValidator::isValidHostLabel($domain)) {
+        if (! HostNameValidator::isNodePublishableHost((string) $cert->domain_name)) {
             throw new RuntimeException('域名主机名无效，无法签发证书');
         }
+        $domain = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
         $cert->status = RediDomainCert::STATUS_VALIDATING;
         $cert->last_error = null;
         $cert->save();
@@ -123,10 +123,10 @@ class CertificateIssuer
         if ((int) $domain->status !== 1) {
             throw new RuntimeException('域名已停用，已中止证书签发');
         }
-        $canonical = HostNameValidator::toCanonicalAscii((string) $domain->original_url);
-        if ($canonical === '' || ! HostNameValidator::isValidHostLabel($canonical)) {
+        if (! HostNameValidator::isNodePublishableHost((string) $domain->original_url)) {
             throw new RuntimeException('域名主机名无效，无法签发证书');
         }
+        $canonical = HostNameValidator::toCanonicalAscii((string) $domain->original_url);
         if (HostNameValidator::toCanonicalAscii((string) $cert->domain_name) !== $canonical) {
             $cert->domain_name = $canonical;
             $cert->save();

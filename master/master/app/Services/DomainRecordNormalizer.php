@@ -27,7 +27,7 @@ class DomainRecordNormalizer
     {
         $normalized = self::normalizeOriginalUrl($url);
 
-        return $normalized !== '' && HostNameValidator::isValidHostLabel($normalized);
+        return HostNameValidator::isNodePublishableHost($normalized);
     }
 
     public static function originalUrlHash(string $normalizedOriginalUrl): string

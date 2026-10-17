@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-17 复核（#182）：** ACME/健康/域名规范化链路复用 `isNodePublishableHost`；`challenges-synced` 校验与之一致。
+
 **2026-10-17 复核（#181）：** `HostNameValidator::isNodePublishableHost` 统一节点/部署/续期主机名校验；PHPUnit **230**（+1）。
 
 **2026-10-17 复核（#180）：** `deployableCertsForNodes` 与 challenges revision 排除控制字符域名；PHPUnit **229**（+1）。

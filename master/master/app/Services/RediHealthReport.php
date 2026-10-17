@@ -447,9 +447,7 @@ class RediHealthReport
 
     protected static function certHostIsReportable(string $domainName): bool
     {
-        $host = HostNameValidator::toCanonicalAscii($domainName);
-
-        return $host !== '' && HostNameValidator::isValidHostLabel($host);
+        return HostNameValidator::isNodePublishableHost($domainName);
     }
 
     /**
