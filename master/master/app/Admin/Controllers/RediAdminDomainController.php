@@ -15,6 +15,7 @@ use App\Admin\Actions\Modal\BatchDomainModal;
 use App\Models\RediDomainCert;
 use App\Services\DomainDnsPointingGuard;
 use App\Services\DomainOriginalUrlGuard;
+use App\Services\CertificateDeployService;
 use App\Services\DomainRecordNormalizer;
 use App\Services\CnamePrecheckService;
 use App\Services\TenantEdgeService;
@@ -381,7 +382,7 @@ JS
                     ->get()
                     ->each(function (RediDomainCert $cert) use ($domain) {
                         $cert->setRelation('domain', $domain);
-                        DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+                        CertificateDeployService::freshCertWithPersistedRealign($cert);
                         if ((int) $cert->admin_id !== (int) $domain->admin_id) {
                             $cert->admin_id = (int) $domain->admin_id;
                             $cert->save();
