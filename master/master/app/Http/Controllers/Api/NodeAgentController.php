@@ -189,6 +189,7 @@ class NodeAgentController extends Controller
 
         $payload = [];
         foreach ($certs as $cert) {
+            DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
             if (! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
                 continue;
             }

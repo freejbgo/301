@@ -391,11 +391,18 @@ JS
                 $oldUrl = (string) ($previousOriginalUrl ?? '');
                 $newUrl = $domain->original_url;
                 if ($oldUrl !== '' && $oldUrl !== $newUrl) {
-                    if ($oldUrl !== '') {
-                        RediAcmeChallenge::query()->where('domain_name', $oldUrl)->delete();
-                        RediAcmeChallengeNodeSync::query()->where('domain_name', $oldUrl)->delete();
+                    $oldCanonical = DomainRecordNormalizer::originalUrlIfValid($oldUrl);
+                    if ($oldCanonical === '') {
+                        $oldCanonical = DomainRecordNormalizer::normalizeOriginalUrl($oldUrl);
                     }
-                    RediAcmeChallengeNodeSync::query()->where('domain_name', $newUrl)->delete();
+                    if ($oldCanonical !== '') {
+                        RediAcmeChallenge::query()->where('domain_name', $oldCanonical)->delete();
+                        RediAcmeChallengeNodeSync::query()->where('domain_name', $oldCanonical)->delete();
+                    }
+                    $newCanonical = DomainRecordNormalizer::originalUrlIfValid($newUrl);
+                    if ($newCanonical !== '') {
+                        RediAcmeChallengeNodeSync::query()->where('domain_name', $newCanonical)->delete();
+                    }
                     if ((int) $domain->status === 1) {
                         IssueDomainCertificateJob::dispatch((int) $domain->id)
                             ->delay(now()->addSeconds(15));

@@ -137,8 +137,14 @@ class NodeAgentRevisionServiceTest extends TestCase
         $svc = new NodeAgentRevisionService();
         $a = $svc->build();
 
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => '1.2.3.4',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
         \DB::table('redi_domain_certs')->insert([
-            'domain_id' => 1,
+            'domain_id' => 2,
             'domain_name' => "evil\x00.example",
             'status' => 'active',
             'certificate' => 'y',

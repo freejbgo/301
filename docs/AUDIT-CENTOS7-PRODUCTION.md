@@ -150,6 +150,10 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-17 #189 已合并 `main`：** 见 [PR #189](https://github.com/freejbgo/301/pull/189)。
+
+**2026-10-17 复核（#190）：** 节点拉证/revision 拉取前 realign；后台改域名时 ACME 清理用 canonical 主机名；移除无用 `certHostIsReportable`；PHPUnit **236**（**438** assertions）。
+
 **2026-10-17 #188 已合并 `main`：** 见 [PR #188](https://github.com/freejbgo/301/pull/188)。
 
 **2026-10-17 复核（#189）：** health 漂移检测先 `realign`；`requeue`/节点 `ack` 与 ACME `assertDomainIssuable` 同步纠偏；PHPUnit **235**（**436** assertions）。
