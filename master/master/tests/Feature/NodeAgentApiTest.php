@@ -443,6 +443,20 @@ class NodeAgentApiTest extends TestCase
         ]);
     }
 
+    public function test_heartbeat_preserves_agent_version_when_version_key_absent(): void
+    {
+        [$node, $token] = $this->createNodeWithToken();
+        $node->agent_version = '0.1.3';
+        $node->save();
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/heartbeat', [])
+            ->assertOk();
+
+        $node->refresh();
+        $this->assertSame('0.1.3', $node->agent_version);
+    }
+
     public function test_redirect_rules_shape(): void
     {
         [, $token] = $this->createNodeWithToken();

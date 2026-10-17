@@ -39,7 +39,7 @@ func readRequest(conn net.Conn) (*httpRequest, error) {
 		}
 		lower := strings.ToLower(h)
 		if strings.HasPrefix(lower, "host:") {
-			req.Host = hostWithoutPort(strings.TrimSpace(h[5:]))
+			req.Host = sanitizeHost(hostWithoutPort(strings.TrimSpace(h[5:])))
 		}
 		if strings.HasPrefix(lower, "user-agent:") {
 			req.UserAgent = strings.TrimSpace(h[len("user-agent:"):])

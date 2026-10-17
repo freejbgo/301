@@ -47,6 +47,22 @@ class RejectOldRediAgentMiddlewareTest extends TestCase
         $this->assertSame(426, $response->getStatusCode());
     }
 
+    public function test_rejects_empty_string_version_in_body(): void
+    {
+        $node = new RediNode();
+        $node->enabled = true;
+        $node->agent_version = '0.1.3';
+        $node->save();
+
+        $request = Request::create('/api/nodes/heartbeat', 'POST', ['version' => '']);
+        $request->attributes->set('redi_node', $node);
+
+        $middleware = new RejectOldRediAgent();
+        $response = $middleware->handle($request, fn () => response()->json(['ok' => true]));
+
+        $this->assertSame(426, $response->getStatusCode());
+    }
+
     public function test_uses_stored_version_when_body_omits_version_key(): void
     {
         $node = new RediNode();
