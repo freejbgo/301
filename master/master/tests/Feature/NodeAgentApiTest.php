@@ -443,6 +443,27 @@ class NodeAgentApiTest extends TestCase
         ]);
     }
 
+    public function test_register_preserves_agent_version_when_version_key_absent(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->timestamps();
+        });
+
+        [$node, $token] = $this->createNodeWithToken();
+        $node->agent_version = '0.1.3';
+        $node->save();
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/register', [])
+            ->assertOk();
+
+        $node->refresh();
+        $this->assertSame('0.1.3', $node->agent_version);
+    }
+
     public function test_heartbeat_preserves_agent_version_when_version_key_absent(): void
     {
         [$node, $token] = $this->createNodeWithToken();

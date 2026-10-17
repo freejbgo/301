@@ -42,7 +42,7 @@ func readRequest(conn net.Conn) (*httpRequest, error) {
 			req.Host = sanitizeHost(hostWithoutPort(strings.TrimSpace(h[5:])))
 		}
 		if strings.HasPrefix(lower, "user-agent:") {
-			req.UserAgent = strings.TrimSpace(h[len("user-agent:"):])
+			req.UserAgent = sanitizeUserAgent(h[len("user-agent:"):])
 		}
 	}
 	return req, nil

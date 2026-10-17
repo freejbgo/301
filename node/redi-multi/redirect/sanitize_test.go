@@ -44,6 +44,12 @@ func TestSanitizeHostRejectsTab(t *testing.T) {
 	}
 }
 
+func TestSanitizeUserAgentStripsControlChars(t *testing.T) {
+	if ua := sanitizeUserAgent("Mozilla/5.0\r\n"); ua != "" {
+		t.Fatalf("expected empty ua, got %q", ua)
+	}
+}
+
 func TestSanitizeHostCanonicalizesAscii(t *testing.T) {
 	if h := sanitizeHost("Foo.COM"); h != "foo.com" {
 		t.Fatalf("expected foo.com, got %q", h)
