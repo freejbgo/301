@@ -23,11 +23,20 @@ class DomainRecordNormalizer
         return HostNameValidator::toCanonicalAscii($url);
     }
 
-    public static function isValidOriginalHost(?string $url): bool
+    /** 规范化后的可签发/可启用主机名；无效则返回空字符串。 */
+    public static function originalUrlIfValid(?string $url): string
     {
         $normalized = self::normalizeOriginalUrl($url);
+        if ($normalized === '' || ! HostNameValidator::isValidHostLabel($normalized)) {
+            return '';
+        }
 
-        return $normalized !== '' && HostNameValidator::isValidHostLabel($normalized);
+        return $normalized;
+    }
+
+    public static function isValidOriginalHost(?string $url): bool
+    {
+        return self::originalUrlIfValid($url) !== '';
     }
 
     public static function originalUrlHash(string $normalizedOriginalUrl): string

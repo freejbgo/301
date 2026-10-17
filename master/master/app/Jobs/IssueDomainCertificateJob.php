@@ -6,6 +6,7 @@ use App\Models\RediAdminDomain;
 use App\Models\RediDomainCert;
 use App\Services\Acme\CertificateIssuer;
 use App\Services\AcmeChallengeCleanup;
+use App\Services\DomainRecordNormalizer;
 use App\Services\CnamePrecheckService;
 use App\Services\TenantEdgeService;
 use App\Support\HostNameValidator;
@@ -73,28 +74,7 @@ class IssueDomainCertificateJob implements ShouldQueue
             return;
         }
 
-        if (! HostNameValidator::isNodePublishableHost((string) $domain->original_url)) {
-            $canonicalHost = HostNameValidator::toCanonicalAscii((string) $domain->original_url);
-
-            $cert = RediDomainCert::firstOrCreate(
-                ['domain_id' => $domain->id],
-                [
-                    'domain_name' => $canonicalHost,
-                    'status' => RediDomainCert::STATUS_NONE,
-                ]
-            );
-
-            $cert->domain_name = $canonicalHost;
-            $cert->admin_id = (int) $domain->admin_id;
-            $cert->status = RediDomainCert::STATUS_FAILED;
-            $cert->last_error = '域名主机名无效，无法签发证书';
-            $cert->save();
-
-            return;
-        }
-
-        $canonicalHost = HostNameValidator::toCanonicalAscii((string) $domain->original_url);
-
+        $canonicalHost = DomainRecordNormalizer::normalizeOriginalUrl((string) $domain->original_url);
         $cert = RediDomainCert::firstOrCreate(
             ['domain_id' => $domain->id],
             [
@@ -102,9 +82,19 @@ class IssueDomainCertificateJob implements ShouldQueue
                 'status' => RediDomainCert::STATUS_NONE,
             ]
         );
-
         $cert->domain_name = $canonicalHost;
         $cert->admin_id = (int) $domain->admin_id;
+
+        $publishableHost = DomainRecordNormalizer::originalUrlIfValid((string) $domain->original_url);
+        if ($publishableHost === '') {
+            $cert->status = RediDomainCert::STATUS_FAILED;
+            $cert->last_error = '域名主机名无效，无法签发证书';
+            $cert->save();
+
+            return;
+        }
+        $canonicalHost = $publishableHost;
+        $cert->domain_name = $canonicalHost;
         $cert->save();
 
         TenantEdgeService::ensureForAdmin((int) $domain->admin_id);

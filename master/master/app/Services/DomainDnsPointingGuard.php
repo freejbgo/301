@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Support\AdminTenantContext;
+
 class DomainDnsPointingGuard
 {
     public static function mustPointToEdgeBeforeEnable(): bool
@@ -12,10 +13,10 @@ class DomainDnsPointingGuard
 
     public static function pointsToTenantEdge(int $adminId, string $originalUrl): bool
     {
-        if (! DomainRecordNormalizer::isValidOriginalHost($originalUrl)) {
+        $originalUrl = DomainRecordNormalizer::originalUrlIfValid($originalUrl);
+        if ($originalUrl === '') {
             return false;
         }
-        $originalUrl = DomainRecordNormalizer::normalizeOriginalUrl($originalUrl);
 
         TenantEdgeService::ensureForAdmin($adminId);
         $edgeFqdn = TenantEdgeService::cnameTargetForAdmin($adminId);

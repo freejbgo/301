@@ -8,10 +8,10 @@ class DomainOriginalUrlGuard
 {
     public static function isTakenGlobally(string $originalUrl, ?int $exceptDomainId = null): bool
     {
-        if (! DomainRecordNormalizer::isValidOriginalHost($originalUrl)) {
+        $originalUrl = DomainRecordNormalizer::originalUrlIfValid($originalUrl);
+        if ($originalUrl === '') {
             return false;
         }
-        $originalUrl = DomainRecordNormalizer::normalizeOriginalUrl($originalUrl);
 
         $hash = DomainRecordNormalizer::originalUrlHash($originalUrl);
         $query = RediAdminDomain::query()->withoutGlobalScope('admin_tenant');
