@@ -244,6 +244,16 @@ class NodeAgentApiTest extends TestCase
         $response->assertJsonPath('ignored_count', 1);
     }
 
+    public function test_challenges_synced_rejects_control_chars_in_domain_with_422(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/challenges-synced', ['domains' => ["sync\x00.example"]])
+            ->assertStatus(422)
+            ->assertJsonPath('domain', 'sync.example');
+    }
+
     public function test_challenges_synced_rejects_invalid_host_with_422(): void
     {
         [, $token] = $this->createNodeWithToken();

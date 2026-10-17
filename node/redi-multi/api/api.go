@@ -55,8 +55,7 @@ func setJSResponseHeaders(c echo.Context) {
 
 func rateLimitMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		ip := c.RealIP()
-		if !allowRate(ip) {
+		if !allowRate(host.SanitizeClientIP(c.RealIP())) {
 			setJSResponseHeaders(c)
 			return c.String(http.StatusTooManyRequests, "// rate limit")
 		}
