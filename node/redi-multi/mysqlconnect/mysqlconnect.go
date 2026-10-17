@@ -12,6 +12,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
+	"redi-multi/util/host"
 )
 
 var (
@@ -52,6 +53,11 @@ func openPool() (*sqlx.DB, error) {
 	port := envOr("REDI_DB_PORT", "3306")
 	dbName := envOr("REDI_DB_NAME", "redi_admin")
 	charset := envOr("REDI_DB_CHARSET", "utf8mb4")
+	for _, part := range []string{userName, password, ipAddress, port, dbName, charset} {
+		if host.ContainsControlChars(part) {
+			return nil, fmt.Errorf("mysql: REDI_DB_* env contains invalid control characters")
+		}
+	}
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true&timeout=5s&readTimeout=5s&writeTimeout=5s", userName, password, ipAddress, port, dbName, charset)
 	dsn, err := appendTlsToDSN(dsn, os.Getenv("REDI_DB_TLS"))

@@ -10,6 +10,9 @@ import (
 
 // WriteAsset 在 80/443 上直接输出 /c.js 与 /api.js，使 HTTPS 页面用当前域名加载脚本。
 func WriteAsset(conn net.Conn, requestURI, remoteIP, userAgent string) bool {
+	if host.ContainsControlChars(requestURI) {
+		return false
+	}
 	u, err := url.ParseRequestURI(requestURI)
 	if err != nil || u.Host != "" {
 		return false

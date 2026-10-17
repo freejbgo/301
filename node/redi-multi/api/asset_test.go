@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+func TestWriteAssetRejectsControlCharsInURI(t *testing.T) {
+	if WriteAsset(nil, "/c.js\n", "1.2.3.4", "ua") {
+		t.Fatal("expected false for control chars in URI")
+	}
+}
+
 func TestWriteAssetCjsRateLimitOn80Path(t *testing.T) {
 	rateMu.Lock()
 	rateHits = map[string][]time.Time{}

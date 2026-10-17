@@ -55,6 +55,20 @@ class RediOpsWebhookTest extends TestCase
         });
     }
 
+    public function test_webhook_url_rejects_control_chars_in_config(): void
+    {
+        config([
+            'redi.ops_webhook_url' => "https://hooks.example/ops\n",
+            'redi.health_webhook_url' => '',
+        ]);
+
+        Http::fake();
+
+        $this->assertFalse(RediOpsWebhook::notifyTaskFailure('redi:health', 'x'));
+
+        Http::assertNothingSent();
+    }
+
     public function test_post_sanitizes_issue_messages_in_payload(): void
     {
         config(['redi.health_webhook_url' => 'https://hooks.example/health']);
