@@ -35,4 +35,10 @@ class AcmeChallengeQueryTest extends TestCase
         $this->assertFalse(AcmeChallengeQuery::nodeReadyRow("bad\x00.example", 'ok-token', 'body'));
         $this->assertFalse(AcmeChallengeQuery::http01ContentValid('ok-token', "body\n"));
     }
+
+    public function test_node_publishable_row_accepts_scheme_in_domain_name(): void
+    {
+        $this->assertTrue(AcmeChallengeQuery::nodePublishableRow('https://good.example/', 'ok-token', 'body'));
+        $this->assertTrue(AcmeChallengeQuery::nodeReadyRow('http://Good.Example', 'ok-token', 'body'));
+    }
 }

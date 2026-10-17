@@ -27,8 +27,7 @@ use App\Admin\Actions\Grid\RedeployCertificate;
 use App\Jobs\IssueDomainCertificateJob;
 use App\Services\DomainListCsvExporter;
 use Illuminate\Http\Request;
-use App\Models\RediAcmeChallenge;
-use App\Models\RediAcmeChallengeNodeSync;
+use App\Services\AcmeChallengeCleanup;
 use Illuminate\Validation\ValidationException;
 
 
@@ -396,18 +395,7 @@ JS
                 $oldUrl = (string) ($previousOriginalUrl ?? '');
                 $newUrl = $domain->original_url;
                 if ($oldUrl !== '' && $oldUrl !== $newUrl) {
-                    $oldCanonical = DomainRecordNormalizer::originalUrlIfValid($oldUrl);
-                    if ($oldCanonical === '') {
-                        $oldCanonical = DomainRecordNormalizer::normalizeOriginalUrl($oldUrl);
-                    }
-                    if ($oldCanonical !== '') {
-                        RediAcmeChallenge::query()->where('domain_name', $oldCanonical)->delete();
-                        RediAcmeChallengeNodeSync::query()->where('domain_name', $oldCanonical)->delete();
-                    }
-                    $newCanonical = DomainRecordNormalizer::originalUrlIfValid($newUrl);
-                    if ($newCanonical !== '') {
-                        RediAcmeChallengeNodeSync::query()->where('domain_name', $newCanonical)->delete();
-                    }
+                    AcmeChallengeCleanup::purgeForHosts([$oldUrl, $newUrl]);
                     if ((int) $domain->status === 1) {
                         IssueDomainCertificateJob::dispatch((int) $domain->id)
                             ->delay(now()->addSeconds(15));
