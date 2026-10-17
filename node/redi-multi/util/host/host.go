@@ -24,6 +24,14 @@ func SanitizeUserAgent(ua string) string {
 	return ua
 }
 
+// SanitizeClientIP 用于限流 map 键与 c.js 的 cip（拒控制字符并 trim）。
+func SanitizeClientIP(ip string) string {
+	if ContainsControlChars(ip) {
+		return ""
+	}
+	return strings.TrimSpace(ip)
+}
+
 // CanonicalLookupHost 与主控 HostNameValidator::toCanonicalAscii 对齐（小写 + punycode）。
 func CanonicalLookupHost(raw string) string {
 	if ContainsControlChars(raw) {

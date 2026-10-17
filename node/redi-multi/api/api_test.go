@@ -21,6 +21,12 @@ func TestApiJsSourceRejectsControlChars(t *testing.T) {
 	}
 }
 
+func TestAllowRateRejectsControlCharIP(t *testing.T) {
+	if allowRate("203.0.113.1\n") {
+		t.Fatal("expected rate limit deny for invalid IP")
+	}
+}
+
 func TestApiJsQueryValid(t *testing.T) {
 	if !apiJsQueryValid("") {
 		t.Fatal("empty query should be valid")
