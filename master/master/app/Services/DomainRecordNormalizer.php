@@ -58,6 +58,8 @@ class DomainRecordNormalizer
 
     /**
      * 将证书 domain_name 对齐到关联域名的 originalUrlIfValid；域名无效时返回 false。
+     *
+     * @param  bool  $persist  false 时仅改内存（如 revision 哈希），不写库、不触发部署 reconcile。
      */
     public static function realignCertDomainNameFromAdminDomain(RediDomainCert $cert, bool $persist = true): bool
     {
