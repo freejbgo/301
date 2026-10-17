@@ -50,20 +50,31 @@ class NodeAgentController extends Controller
         $synced = [];
         $ignored = 0;
         foreach ($domains as $raw) {
-            if (OpsDisplaySanitizer::containsControlChars((string) $raw)) {
+            if ($raw === null) {
+                continue;
+            }
+            if (! is_string($raw)) {
+                if (is_int($raw) || is_float($raw)) {
+                    $raw = (string) $raw;
+                } else {
+                    $ignored++;
+                    continue;
+                }
+            }
+            if (OpsDisplaySanitizer::containsControlChars($raw)) {
                 return response()->json([
                     'message' => 'invalid domain',
-                    'domain' => OpsDisplaySanitizer::field((string) $raw, '', 253),
+                    'domain' => OpsDisplaySanitizer::field($raw, '', 253),
                 ], 422);
             }
-            $domain = HostNameValidator::toCanonicalAscii((string) $raw);
+            $domain = HostNameValidator::toCanonicalAscii($raw);
             if ($domain === '') {
                 continue;
             }
             if (strlen($domain) > 253 || ! HostNameValidator::isValidHostLabel($domain)) {
                 return response()->json([
                     'message' => 'invalid domain',
-                    'domain' => OpsDisplaySanitizer::field((string) $raw, '', 253),
+                    'domain' => OpsDisplaySanitizer::field($raw, '', 253),
                 ], 422);
             }
             if (! $allowed->has($domain)) {

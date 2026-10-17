@@ -272,6 +272,7 @@ func getJSON(client *http.Client, cfg config, path string, dest interface{}, reg
 		return err
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
+	setMasterAgentHeaders(req)
 	res, err := client.Do(req)
 	if err != nil {
 		return err
@@ -305,6 +306,7 @@ func postJSON(client *http.Client, cfg config, path string, body interface{}, de
 	}
 	req.Header.Set("Authorization", "Bearer "+cfg.Token)
 	req.Header.Set("Content-Type", "application/json")
+	setMasterAgentHeaders(req)
 	res, err := client.Do(req)
 	if err != nil {
 		return err
@@ -332,6 +334,10 @@ func postJSON(client *http.Client, cfg config, path string, body interface{}, de
 
 func masterBodySnippet(b []byte) string {
 	return host.LogSnippet(string(b), 512)
+}
+
+func setMasterAgentHeaders(req *http.Request) {
+	req.Header.Set("User-Agent", "redi-multi/"+agentVersion)
 }
 
 // 仅 401 视为 Token 失效；ack 等业务 403/409 不应触发重新 register。
