@@ -140,7 +140,9 @@ class RediAdminDomainController extends AdminController
             });
             $grid->column('skip_num', '跳转次数');
             $grid->column('status', '状态')->using([1 => "启用", 2 => "停用"]);
-            $grid->column('admin_name', '添加人');
+            $grid->column('admin_name', '添加人')->display(function ($value) {
+                return e(OpsDisplaySanitizer::field($value, '—', 120));
+            });
             $grid->column('created_at');
             $grid->column('updated_at')->sortable();
 

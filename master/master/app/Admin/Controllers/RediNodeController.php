@@ -39,7 +39,9 @@ class RediNodeController extends AdminController
 
         return Grid::make(new RediNode(), function (Grid $grid) use ($deployByNode) {
             $grid->column('id')->sortable();
-            $grid->column('name', '名称');
+            $grid->column('name', '名称')->display(function ($value) {
+                return e(OpsDisplaySanitizer::field($value, '—', 120));
+            });
             $grid->column('public_ip', '公网 IP')->display(function () {
                 return implode('<br>', array_map('e', $this->publicIps()));
             });

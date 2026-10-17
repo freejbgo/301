@@ -279,12 +279,12 @@ func getJSON(client *http.Client, cfg config, path string, dest interface{}, reg
 	}
 	if res.StatusCode == http.StatusUpgradeRequired {
 		b, _ := io.ReadAll(io.LimitReader(res.Body, maxMasterJSONBytes))
-		logrus.Warnf("主控要求升级 redi-multi Agent (426): %s", string(b))
+		logrus.Warnf("主控要求升级 redi-multi Agent (426): %s", masterBodySnippet(b))
 		return fmt.Errorf("GET %s: agent upgrade required (426)", path)
 	}
 	if res.StatusCode >= 300 {
 		b, _ := io.ReadAll(io.LimitReader(res.Body, maxMasterJSONBytes))
-		return fmt.Errorf("GET %s: %s", path, string(b))
+		return fmt.Errorf("GET %s: %s", path, masterBodySnippet(b))
 	}
 	return json.NewDecoder(io.LimitReader(res.Body, maxMasterJSONBytes)).Decode(dest)
 }
@@ -312,17 +312,21 @@ func postJSON(client *http.Client, cfg config, path string, body interface{}, de
 	}
 	if res.StatusCode == http.StatusUpgradeRequired {
 		b, _ := io.ReadAll(io.LimitReader(res.Body, maxMasterJSONBytes))
-		logrus.Warnf("主控要求升级 redi-multi Agent (426): %s", string(b))
+		logrus.Warnf("主控要求升级 redi-multi Agent (426): %s", masterBodySnippet(b))
 		return fmt.Errorf("POST %s: agent upgrade required (426)", path)
 	}
 	if res.StatusCode >= 300 {
 		b, _ := io.ReadAll(io.LimitReader(res.Body, maxMasterJSONBytes))
-		return fmt.Errorf("POST %s: %s", path, string(b))
+		return fmt.Errorf("POST %s: %s", path, masterBodySnippet(b))
 	}
 	if dest != nil {
 		return json.NewDecoder(io.LimitReader(res.Body, maxMasterJSONBytes)).Decode(dest)
 	}
 	return nil
+}
+
+func masterBodySnippet(b []byte) string {
+	return host.LogSnippet(string(b), 512)
 }
 
 // 仅 401 视为 Token 失效；ack 等业务 403/409 不应触发重新 register。
