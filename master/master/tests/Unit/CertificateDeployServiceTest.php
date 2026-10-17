@@ -674,6 +674,29 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertSame('issued', $cert->fresh()->status);
     }
 
+    public function test_cert_is_node_pullable_does_not_persist_realign(): void
+    {
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'stale.example',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->with('domain')->find($certId);
+
+        $this->assertTrue(CertificateDeployService::certIsNodePullable($cert));
+        $this->assertSame('stale.example', RediDomainCert::query()->find($certId)->domain_name);
+    }
+
     public function test_cert_is_node_pullable_requires_pem_domain_match_and_status(): void
     {
         $domainId = \DB::table('redi_admin_domain')->insertGetId([

@@ -247,6 +247,10 @@
 
 **2026-10-17 #234 已合并 `main`：** 见 [PR #234](https://github.com/freejbgo/301/pull/234)。
 
+**2026-10-17 #235 已合并 `main`：** 见 [PR #235](https://github.com/freejbgo/301/pull/235)。
+
+**2026-10-17 复核（#236）：** `certIsNodePullable` 只读 realign（health/节点拉取不再误写库）；PHPUnit **282**（**535** assertions）。
+
 **2026-10-17 复核（#235）：** `certIsEligibleForDeployQueue` 只读 realign；`requeueFailedDeployments` 入队前显式落库 realign；PHPUnit **281**（**533** assertions）。
 
 **2026-10-17 复核（#234）：** `deployableCertsForNodes` 列表阶段仅内存 realign；Feature 测 revision 忽略无部署行证书；PHPUnit **280**（**531** assertions）。
@@ -676,4 +680,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **281** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **282** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
