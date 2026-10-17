@@ -42,6 +42,9 @@ func readRequest(conn net.Conn) (*httpRequest, error) {
 		if h == "" {
 			break
 		}
+		if hostutil.ContainsControlChars(h) {
+			return nil, io.ErrUnexpectedEOF
+		}
 		lower := strings.ToLower(h)
 		if strings.HasPrefix(lower, "host:") {
 			req.Host = sanitizeHost(hostWithoutPort(strings.TrimSpace(h[5:])))

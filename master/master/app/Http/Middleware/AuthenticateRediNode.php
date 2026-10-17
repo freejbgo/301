@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\RediNode;
+use App\Support\OpsDisplaySanitizer;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -11,7 +12,7 @@ class AuthenticateRediNode
     public function handle(Request $request, Closure $next)
     {
         $header = $request->bearerToken();
-        if (! $header) {
+        if (! $header || OpsDisplaySanitizer::containsControlChars($header)) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 

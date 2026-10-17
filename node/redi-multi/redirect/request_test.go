@@ -21,6 +21,22 @@ func TestReadRequestRejectsControlCharsInRequestLine(t *testing.T) {
 	}
 }
 
+func TestReadRequestRejectsControlCharsInHeader(t *testing.T) {
+	server, client := net.Pipe()
+	defer server.Close()
+	defer client.Close()
+	done := make(chan error, 1)
+	go func() {
+		_, err := readRequest(server)
+		done <- err
+	}()
+	_, _ = client.Write([]byte("GET /c.js HTTP/1.1\r\nHost: example.com\r\nX-Evil: a\x00b\r\n\r\n"))
+	err := <-done
+	if err == nil {
+		t.Fatal("expected error for control chars in header")
+	}
+}
+
 func TestHostWithoutPort(t *testing.T) {
 	cases := map[string]string{
 		"foo.com":           "foo.com",
