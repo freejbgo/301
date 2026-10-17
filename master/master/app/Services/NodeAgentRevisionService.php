@@ -21,10 +21,15 @@ class NodeAgentRevisionService
                 return AcmeChallengeQuery::nodePublishableRow($row->domain_name, $row->token, $row->response_body);
             })
             ->map(function ($row) {
-                $row->domain_name = HostNameValidator::toCanonicalAscii((string) $row->domain_name);
+                $host = DomainRecordNormalizer::acmeHostKey((string) $row->domain_name);
+                if ($host === '') {
+                    return null;
+                }
+                $row->domain_name = $host;
 
                 return $row;
             })
+            ->filter()
             ->values();
 
         $certs = RediDomainCert::query()

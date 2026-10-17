@@ -58,7 +58,10 @@ class RediAdminDomain extends Model
                 RediCertDeployment::where('cert_id', $cert->id)->delete();
                 $cert->delete();
             }
-            AcmeChallengeCleanup::purgeForHosts([$domain->original_url]);
+            $host = AcmeChallengeCleanup::canonicalPurgeHost((string) $domain->original_url);
+            if ($host !== '') {
+                AcmeChallengeCleanup::purgeForHosts([$host]);
+            }
         });
     }
 

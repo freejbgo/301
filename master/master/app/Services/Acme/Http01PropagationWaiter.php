@@ -6,7 +6,7 @@ use App\Models\RediAcmeChallengeNodeSync;
 use App\Models\RediNode;
 use App\Services\AcmeChallengeQuery;
 use App\Support\AcmeHttp01Token;
-use App\Support\HostNameValidator;
+use App\Services\DomainRecordNormalizer;
 use App\Support\OpsDisplaySanitizer;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -19,10 +19,10 @@ class Http01PropagationWaiter
     public function wait(string $domain, string $token, string $expectedBody, int $maxSeconds = 120): void
     {
         $maxSeconds = min(600, max(10, $maxSeconds));
-        if (! HostNameValidator::isNodePublishableHost($domain)) {
+        $domain = DomainRecordNormalizer::acmeHostKey($domain);
+        if ($domain === '') {
             throw new RuntimeException('HTTP-01 域名无效');
         }
-        $domain = HostNameValidator::toCanonicalAscii($domain);
         try {
             $token = AcmeHttp01Token::normalize($token);
         } catch (\InvalidArgumentException $e) {

@@ -40,6 +40,21 @@ class DomainRecordNormalizer
         return self::originalUrlIfValid($url) !== '';
     }
 
+    /** ACME 挑战/同步用的主机名键（与节点 challenges-synced 解析一致）。 */
+    public static function acmeHostKey(string $raw): string
+    {
+        $host = self::originalUrlIfValid($raw);
+        if ($host !== '') {
+            return $host;
+        }
+        $normalized = self::normalizeOriginalUrl($raw);
+        if ($normalized !== '' && HostNameValidator::isValidHostLabel($normalized)) {
+            return $normalized;
+        }
+
+        return '';
+    }
+
     /**
      * 将证书 domain_name 对齐到关联域名的 originalUrlIfValid；域名无效时返回 false。
      */

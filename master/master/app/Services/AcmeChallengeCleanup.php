@@ -4,8 +4,6 @@ namespace App\Services;
 
 use App\Models\RediAcmeChallenge;
 use App\Models\RediAcmeChallengeNodeSync;
-use App\Support\HostNameValidator;
-
 class AcmeChallengeCleanup
 {
     /**
@@ -33,15 +31,6 @@ class AcmeChallengeCleanup
     /** 停用/删域名时清理挑战：兼容带 scheme 的遗留 original_url。 */
     public static function canonicalPurgeHost(string $raw): string
     {
-        $host = DomainRecordNormalizer::originalUrlIfValid($raw);
-        if ($host !== '') {
-            return $host;
-        }
-        $normalized = DomainRecordNormalizer::normalizeOriginalUrl($raw);
-        if ($normalized !== '' && HostNameValidator::isValidHostLabel($normalized)) {
-            return $normalized;
-        }
-
-        return '';
+        return DomainRecordNormalizer::acmeHostKey($raw);
     }
 }
