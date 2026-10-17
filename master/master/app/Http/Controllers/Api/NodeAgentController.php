@@ -209,7 +209,7 @@ class NodeAgentController extends Controller
         /** @var RediNode $node */
         $node = $request->attributes->get('redi_node');
         $certId = (int) $request->input('cert_id');
-        $ok = (bool) $request->input('ok', true);
+        $ok = $request->boolean('ok', true);
         $error = $request->input('error');
 
         if ($certId < 1) {
