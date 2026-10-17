@@ -89,7 +89,13 @@ class CertificateDeployService
     public function queueDeploy(RediDomainCert $cert): void
     {
         $cert->loadMissing('domain');
-        DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+        if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)
+            || ! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
+            $cert->last_error = '域名主机名无效或与证书不一致，已跳过部署排队';
+            $cert->save();
+
+            return;
+        }
 
         $cert->status = RediDomainCert::STATUS_DEPLOYING;
         $cert->save();

@@ -36,6 +36,38 @@ class Http01PropagationWaiterTest extends TestCase
         });
     }
 
+    public function test_wait_accepts_legacy_scheme_in_sync_domain_name(): void
+    {
+        $domain = 'legacy-sync.example';
+        $token = 'test-token';
+        $body = 'challenge-response-body';
+
+        \DB::table('redi_nodes')->insert([
+            'enabled' => true,
+            'last_heartbeat_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_acme_challenge_node_sync')->insert([
+            'node_id' => 1,
+            'domain_name' => 'https://'.$domain.'/',
+            'synced_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Http::fake([
+            'http://'.$domain.'/.well-known/acme-challenge/'.$token => Http::response($body, 200),
+        ]);
+
+        app(Http01PropagationWaiter::class)->wait($domain, $token, $body, 15);
+
+        Http::assertSent(function ($request) use ($domain, $token) {
+            return $request->url() === 'http://'.$domain.'/.well-known/acme-challenge/'.$token;
+        });
+    }
+
     public function test_wait_succeeds_when_node_synced_and_http_probe_matches(): void
     {
         $domain = 'acme-prep.example';
