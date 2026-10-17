@@ -421,4 +421,34 @@ class CertificateDeployServiceTest extends TestCase
         \DB::table('redi_admin_domain')->where('id', $domainId)->update(['status' => 0]);
         $this->assertFalse(CertificateDeployService::certIsNodePullable($cert->fresh()));
     }
+
+    public function test_count_actionable_deployments_excludes_non_pullable_certs(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_DEPLOYING,
+        ]);
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $cert->id,
+            'node_id' => $node->id,
+            'status' => 'failed',
+            'last_error' => 'simulated',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertSame(0, CertificateDeployService::countActionableDeployments('failed'));
+        $this->assertSame(0, CertificateDeployService::countActionableDeployments('pending'));
+    }
 }
