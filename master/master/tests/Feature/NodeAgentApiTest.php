@@ -741,6 +741,47 @@ class NodeAgentApiTest extends TestCase
             ->assertJsonPath('ignored', true);
     }
 
+    public function test_revision_certificates_unchanged_for_unassigned_pullable_cert(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->timestamps();
+        });
+
+        [, $token] = $this->createNodeWithToken();
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'rev.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => 'rev.example',
+            'status' => 'issued',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $before = $this->withToken($token)->getJson('/api/nodes/revision')->json('certificates_revision');
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => 'other.example',
+            'status' => 'issued',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $after = $this->withToken($token)->getJson('/api/nodes/revision')->json('certificates_revision');
+
+        $this->assertSame($before, $after);
+    }
+
     public function test_register_backfills_cert_deployments_for_active_certs(): void
     {
         Schema::create('redi_admin_domain', function (Blueprint $table) {
