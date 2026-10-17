@@ -213,6 +213,44 @@ class RediAdminDomainModelTest extends TestCase
         $this->assertStringContainsString('域名已停用', (string) RediDomainCert::query()->find($certId)->last_error);
     }
 
+    public function test_changing_original_url_prunes_non_pullable_deployments(): void
+    {
+        $domain = RediAdminDomain::create([
+            'group_id' => 1,
+            'admin_id' => 1,
+            'original_url' => 'was.example',
+            'skip_url' => 'https://dest.example/',
+            'status' => 1,
+        ]);
+
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domain->id,
+            'domain_name' => 'was.example',
+            'status' => RediDomainCert::STATUS_ISSUED,
+            'certificate' => null,
+            'private_key' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $nodeId = \DB::table('redi_nodes')->insertGetId([
+            'enabled' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $nodeId,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $domain->original_url = 'now.example';
+        $domain->save();
+
+        $this->assertSame(0, \DB::table('redi_cert_deployments')->count());
+    }
+
     public function test_disabling_domain_sets_cancel_hint_on_failed_cert_with_deployments(): void
     {
         $domain = RediAdminDomain::create([
