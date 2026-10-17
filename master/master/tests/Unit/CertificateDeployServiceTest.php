@@ -674,6 +674,27 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertSame('issued', $cert->fresh()->status);
     }
 
+    public function test_fresh_cert_with_persisted_realign_updates_stale_domain_name(): void
+    {
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'stale.example',
+            'status' => RediDomainCert::STATUS_ISSUED,
+        ]);
+
+        $fresh = CertificateDeployService::freshCertWithPersistedRealign($cert);
+
+        $this->assertNotNull($fresh);
+        $this->assertSame('edge.example', $fresh->domain_name);
+        $this->assertSame('edge.example', RediDomainCert::query()->find($cert->id)->domain_name);
+    }
+
     public function test_cert_is_node_pullable_does_not_persist_realign(): void
     {
         $domainId = \DB::table('redi_admin_domain')->insertGetId([

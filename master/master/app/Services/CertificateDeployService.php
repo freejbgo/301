@@ -487,10 +487,11 @@ class CertificateDeployService
     public function queueDeploy(RediDomainCert $cert): bool
     {
         $cert->loadMissing('domain');
-        if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)
-            || ! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
-            return $this->refuseQueueDeploy($cert, '域名主机名无效或与证书不一致，已跳过部署排队');
+        $fresh = self::freshCertWithPersistedRealign($cert);
+        if (! $fresh || ! DomainRecordNormalizer::certMatchesAdminDomain($fresh)) {
+            return $this->refuseQueueDeploy($fresh ?? $cert, '域名主机名无效或与证书不一致，已跳过部署排队');
         }
+        $cert = $fresh;
 
         if (! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem()) {
             return $this->refuseQueueDeploy($cert, '证书材料不可用，已跳过部署排队');
