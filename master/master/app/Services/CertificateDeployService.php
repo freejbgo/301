@@ -9,6 +9,7 @@ use App\Models\RediNode;
 use App\Support\OpsDisplaySanitizer;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CertificateDeployService
 {
@@ -187,6 +188,10 @@ class CertificateDeployService
      */
     public function pruneNonPullableDeployments(RediDomainCert $cert): int
     {
+        if (! Schema::hasTable('redi_cert_deployments')) {
+            return 0;
+        }
+
         $cert->loadMissing('domain');
         if (self::certIsNodePullable($cert)) {
             return 0;
@@ -244,6 +249,10 @@ class CertificateDeployService
 
     public function pruneStaleDeploymentsForNode(RediNode $node): void
     {
+        if (! Schema::hasTable('redi_cert_deployments')) {
+            return;
+        }
+
         $pruned = false;
         RediCertDeployment::query()
             ->where('node_id', $node->id)

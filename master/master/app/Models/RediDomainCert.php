@@ -2,12 +2,25 @@
 
 namespace App\Models;
 
+use App\Services\CertificateDeployService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 
 class RediDomainCert extends Model
 {
+    protected static function booted(): void
+    {
+        static::saved(function (self $cert) {
+            if (! $cert->wasChanged(['domain_name', 'certificate', 'private_key', 'domain_id'])) {
+                return;
+            }
+
+            $cert->loadMissing('domain');
+            app(CertificateDeployService::class)->pruneNonPullableDeployments($cert);
+        });
+    }
+
     public const STATUS_NONE = 'none';
 
     public const STATUS_PENDING_DNS = 'pending_dns';
@@ -119,6 +132,8 @@ class RediDomainCert extends Model
         $this->last_error = $msg;
         $this->saveQuietly();
         Log::warning('redi_domain_cert credential decrypt failed', ['cert_id' => $this->id]);
+        $this->loadMissing('domain');
+        app(CertificateDeployService::class)->pruneNonPullableDeployments($this);
     }
 
     public function setPrivateKeyPem(string $pem): void
