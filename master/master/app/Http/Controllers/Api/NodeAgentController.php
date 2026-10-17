@@ -184,6 +184,9 @@ class NodeAgentController extends Controller
 
         $payload = [];
         foreach ($certs as $cert) {
+            if (OpsDisplaySanitizer::containsControlChars((string) $cert->domain_name)) {
+                continue;
+            }
             $pem = $cert->getCertificatePem();
             $key = $cert->getPrivateKeyPem();
             if (! $pem || ! $key) {
@@ -265,6 +268,9 @@ class NodeAgentController extends Controller
         $rows = DB::table('redi_admin_domain')
             ->where('status', 1)
             ->get(['original_url', 'force_https'])
+            ->filter(function ($row) {
+                return ! OpsDisplaySanitizer::containsControlChars((string) $row->original_url);
+            })
             ->map(function ($row) {
                 return [
                     'original_url' => HostNameValidator::toCanonicalAscii((string) $row->original_url),
