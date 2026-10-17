@@ -249,6 +249,10 @@
 
 **2026-10-17 #235 已合并 `main`：** 见 [PR #235](https://github.com/freejbgo/301/pull/235)。
 
+**2026-10-17 #236 已合并 `main`：** 见 [PR #236](https://github.com/freejbgo/301/pull/236)。
+
+**2026-10-17 复核（#237）：** `freshCertWithPersistedRealign` 统一 sync/拉证落库对齐；health 漂移先只读 realign 再按需落库；PHPUnit **282**（**535** assertions）。
+
 **2026-10-17 复核（#236）：** `certIsNodePullable` 只读 realign（health/节点拉取不再误写库）；PHPUnit **282**（**535** assertions）。
 
 **2026-10-17 复核（#235）：** `certIsEligibleForDeployQueue` 只读 realign；`requeueFailedDeployments` 入队前显式落库 realign；PHPUnit **281**（**533** assertions）。

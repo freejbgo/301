@@ -212,8 +212,10 @@ class NodeAgentController extends Controller
 
                 continue;
             }
-            $cert = $cert->fresh()->load('domain');
-            DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+            $cert = CertificateDeployService::freshCertWithPersistedRealign($cert);
+            if (! $cert) {
+                continue;
+            }
             $pem = $cert->getCertificatePem();
             $key = $cert->getPrivateKeyPem();
             $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);

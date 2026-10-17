@@ -49,6 +49,19 @@ class CertificateDeployService
         return $memo[$certId];
     }
 
+    /** 从库重载证书并将 domain_name 对齐到后台域名（节点 sync / 拉取 PEM 前）。 */
+    public static function freshCertWithPersistedRealign(RediDomainCert $cert): ?RediDomainCert
+    {
+        $fresh = $cert->fresh()->load('domain');
+        if (! $fresh) {
+            return null;
+        }
+
+        DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($fresh);
+
+        return $fresh;
+    }
+
     /** @var array{pending: int, failed: int}|null */
     protected static $actionableDeploymentStatusCounts = null;
 
@@ -333,8 +346,10 @@ class CertificateDeployService
                 continue;
             }
 
-            $cert = $cert->fresh()->load('domain');
-            DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+            $cert = self::freshCertWithPersistedRealign($cert);
+            if (! $cert) {
+                continue;
+            }
 
             $existing = RediCertDeployment::query()
                 ->where('cert_id', $cert->id)
@@ -455,8 +470,8 @@ class CertificateDeployService
             if (! $cert) {
                 continue;
             }
-            DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
-            $this->reconcileCertDeployStatus($cert->fresh()->load('domain'));
+            $cert = self::freshCertWithPersistedRealign($cert) ?? $cert;
+            $this->reconcileCertDeployStatus($cert);
             $cert = $cert->fresh();
             if ($cert && $cert->status === RediDomainCert::STATUS_DEPLOYING) {
                 $cert->last_error = '已重新排队失败节点的证书部署，等待节点拉取';
