@@ -149,9 +149,13 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
-**2026-10-17 #184 已合并 `main`：** 见 [PR #184](https://github.com/freejbgo/301/pull/184)。
+**2026-10-17 #185 已合并 `main`：** 见 [PR #185](https://github.com/freejbgo/301/pull/185)。
+
+**2026-10-17 复核（#186）：** 后台/批量/CSV/模型保存全面改用 `originalUrlIfValid`；签发 Job 先算可发布主机名；`CertificateIssuer` 签发前校验 cert 行主机名。
 
 **2026-10-17 复核（#185）：** `DomainRecordNormalizer::originalUrlIfValid` 统一规范化+校验；签发 Job / `CertificateIssuer` / DNS 守卫去重；PHPUnit **230**（**425** assertions）。
+
+**2026-10-17 #184 已合并 `main`：** 见 [PR #184](https://github.com/freejbgo/301/pull/184)。
 
 **2026-10-17 复核（#184）：** `isValidOriginalHost` 单次规范化后校验；CNAME 预检 / CSV 导出 / 占坑守卫 / `redi:normalize-domain-hosts` 对齐。
 

@@ -47,10 +47,10 @@ class CertificateIssuer
             'mode' => $platform->acme_staging ? Client::MODE_STAGING : Client::MODE_LIVE,
         ]);
 
-        if (! HostNameValidator::isNodePublishableHost((string) $cert->domain_name)) {
+        $domain = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
+        if ($domain === '' || ! HostNameValidator::isValidHostLabel($domain)) {
             throw new RuntimeException('域名主机名无效，无法签发证书');
         }
-        $domain = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
         $cert->status = RediDomainCert::STATUS_VALIDATING;
         $cert->last_error = null;
         $cert->save();

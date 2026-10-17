@@ -94,7 +94,8 @@ class DomainListCsvExporter
      */
     public static function dnsExportColumnsForDomain(RediAdminDomain $domain): array
     {
-        if (! DomainRecordNormalizer::isValidOriginalHost((string) $domain->original_url)) {
+        $host = DomainRecordNormalizer::originalUrlIfValid((string) $domain->original_url);
+        if ($host === '') {
             return ['', 'unknown'];
         }
 
@@ -104,7 +105,7 @@ class DomainListCsvExporter
             return ['', 'unknown'];
         }
 
-        $ok = CnamePrecheckService::pointsToEdgeCached($domain->original_url, $edge);
+        $ok = CnamePrecheckService::pointsToEdgeCached($host, $edge);
 
         return [$edge, $ok ? 'yes' : 'no'];
     }

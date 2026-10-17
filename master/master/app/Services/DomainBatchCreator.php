@@ -75,20 +75,22 @@ class DomainBatchCreator
 
             if (preg_match('/[,\t|]/u', $line)) {
                 $parts = preg_split('/[,\t|]/u', $line, 2);
-                $originalUrl = DomainRecordNormalizer::normalizeOriginalUrl($parts[0] ?? '');
+                $rawOriginal = $parts[0] ?? '';
                 $skipUrl = DomainRecordNormalizer::normalizeSkipUrl($parts[1] ?? '');
             } else {
-                $originalUrl = DomainRecordNormalizer::normalizeOriginalUrl($line);
+                $rawOriginal = $line;
                 $skipUrl = $defaultSkip;
             }
 
+            $originalUrl = DomainRecordNormalizer::originalUrlIfValid($rawOriginal);
             if ($originalUrl === '') {
-                $result['errors'][] = "第 {$rowIndex} 行：原始域名不能为空或含路径";
-                continue;
-            }
-            if (! DomainRecordNormalizer::isValidOriginalHost($originalUrl)) {
-                $label = OpsDisplaySanitizer::field($originalUrl, '—', 253);
-                $result['errors'][] = "第 {$rowIndex} 行（{$label}）：原始域名格式无效";
+                $attempt = DomainRecordNormalizer::normalizeOriginalUrl($rawOriginal);
+                if ($attempt === '') {
+                    $result['errors'][] = "第 {$rowIndex} 行：原始域名不能为空或含路径";
+                } else {
+                    $label = OpsDisplaySanitizer::field($attempt, '—', 253);
+                    $result['errors'][] = "第 {$rowIndex} 行（{$label}）：原始域名格式无效";
+                }
                 continue;
             }
 

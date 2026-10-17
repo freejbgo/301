@@ -282,18 +282,22 @@ JS
                     }
                 }
 
-                $originalUrl = DomainRecordNormalizer::normalizeOriginalUrl($request['original_url'] ?? '');
+                $rawOriginal = $request['original_url'] ?? '';
+                $originalUrl = DomainRecordNormalizer::originalUrlIfValid($rawOriginal);
                 $skipUrl = DomainRecordNormalizer::normalizeSkipUrl($request['skip_url'] ?? '');
                 $groupId = (int) ($request['group_id'] ?? 0);
 
-                if ($originalUrl === '' || $skipUrl === '') {
+                if ($skipUrl === '') {
                     throw ValidationException::withMessages([
                         'original_url' => '原始域名与跳转链接不能为空',
                     ]);
                 }
-                if (! DomainRecordNormalizer::isValidOriginalHost($originalUrl)) {
+                if ($originalUrl === '') {
+                    $attempt = DomainRecordNormalizer::normalizeOriginalUrl($rawOriginal);
                     throw ValidationException::withMessages([
-                        'original_url' => '原始域名格式无效（请填写主域名主机名，如 foo.com，不要含路径、IP 或非法字符）',
+                        'original_url' => $attempt === ''
+                            ? '原始域名不能为空或含路径'
+                            : '原始域名格式无效（请填写主域名主机名，如 foo.com，不要含路径、IP 或非法字符）',
                     ]);
                 }
 
