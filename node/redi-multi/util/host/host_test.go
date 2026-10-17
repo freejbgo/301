@@ -24,6 +24,15 @@ func TestCanonicalLookupHostRejectsCRLF(t *testing.T) {
 	}
 }
 
+func TestContainsControlChars(t *testing.T) {
+	if !ContainsControlChars("a\n") {
+		t.Fatal("expected newline to be control char")
+	}
+	if ContainsControlChars("abc") {
+		t.Fatal("expected plain ascii to be clean")
+	}
+}
+
 func TestCanonicalLookupHostRejectsTab(t *testing.T) {
 	if CanonicalLookupHost("evil\t.com") != "" {
 		t.Fatal("expected empty for tab in host")
