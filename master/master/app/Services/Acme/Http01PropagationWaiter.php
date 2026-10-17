@@ -19,10 +19,10 @@ class Http01PropagationWaiter
     public function wait(string $domain, string $token, string $expectedBody, int $maxSeconds = 120): void
     {
         $maxSeconds = min(600, max(10, $maxSeconds));
-        $domain = HostNameValidator::toCanonicalAscii($domain);
-        if ($domain === '' || ! HostNameValidator::isValidHostLabel($domain)) {
+        if (! HostNameValidator::isNodePublishableHost($domain)) {
             throw new RuntimeException('HTTP-01 域名无效');
         }
+        $domain = HostNameValidator::toCanonicalAscii($domain);
         try {
             $token = AcmeHttp01Token::normalize($token);
         } catch (\InvalidArgumentException $e) {

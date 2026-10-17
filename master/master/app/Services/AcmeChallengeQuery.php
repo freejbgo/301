@@ -34,10 +34,7 @@ class AcmeChallengeQuery
 
     public static function nodeReadyRow(?string $domainName, ?string $token, ?string $responseBody): bool
     {
-        $domain = HostNameValidator::toCanonicalAscii((string) $domainName);
-
-        return $domain !== ''
-            && HostNameValidator::isValidHostLabel($domain)
+        return HostNameValidator::isNodePublishableHost((string) $domainName)
             && self::http01ContentValid($token, $responseBody);
     }
 
