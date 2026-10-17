@@ -182,6 +182,28 @@ class CertificateDeployService
         }
     }
 
+    /**
+     * 证书已不可被节点拉取时，删除 pending/failed 部署行（保留 ok，便于审计）。
+     */
+    public function pruneNonPullableDeployments(RediDomainCert $cert): int
+    {
+        $cert->loadMissing('domain');
+        if (self::certIsNodePullable($cert)) {
+            return 0;
+        }
+
+        $deleted = (int) RediCertDeployment::query()
+            ->where('cert_id', $cert->id)
+            ->whereIn('status', ['pending', 'failed'])
+            ->delete();
+
+        if ($deleted > 0) {
+            self::forgetActionableDeploymentMetrics();
+        }
+
+        return $deleted;
+    }
+
     public function syncDeploymentsForNode(RediNode $node): void
     {
         if (! $node->enabled) {
@@ -214,6 +236,18 @@ class CertificateDeployService
                 ]
             );
         }
+
+        RediCertDeployment::query()
+            ->where('node_id', $node->id)
+            ->whereIn('status', ['pending', 'failed'])
+            ->with(['cert.domain'])
+            ->get()
+            ->each(function (RediCertDeployment $deployment) {
+                $cert = $deployment->cert;
+                if (! $cert || ! self::certIsNodePullable($cert)) {
+                    $deployment->delete();
+                }
+            });
 
         self::forgetActionableDeploymentMetrics();
     }
@@ -281,24 +315,15 @@ class CertificateDeployService
         $cert->loadMissing('domain');
         if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)
             || ! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
-            $cert->last_error = '域名主机名无效或与证书不一致，已跳过部署排队';
-            $cert->save();
-
-            return false;
+            return $this->refuseQueueDeploy($cert, '域名主机名无效或与证书不一致，已跳过部署排队');
         }
 
         if (! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem()) {
-            $cert->last_error = '证书材料不可用，已跳过部署排队';
-            $cert->save();
-
-            return false;
+            return $this->refuseQueueDeploy($cert, '证书材料不可用，已跳过部署排队');
         }
 
         if (! $cert->domain || (int) $cert->domain->status !== 1) {
-            $cert->last_error = '域名已停用，已跳过部署排队';
-            $cert->save();
-
-            return false;
+            return $this->refuseQueueDeploy($cert, '域名已停用，已跳过部署排队');
         }
 
         $cert->status = RediDomainCert::STATUS_DEPLOYING;
@@ -445,6 +470,15 @@ class CertificateDeployService
         self::forgetActionableDeploymentMetrics();
 
         return $applied;
+    }
+
+    protected function refuseQueueDeploy(RediDomainCert $cert, string $message): bool
+    {
+        $this->pruneNonPullableDeployments($cert);
+        $cert->last_error = $message;
+        $cert->save();
+
+        return false;
     }
 
     /**

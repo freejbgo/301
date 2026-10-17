@@ -25,7 +25,7 @@
 | 节点 API Token | 格式 `{节点ID}.{随机串}`，仅存 bcrypt 哈希；创建节点时**仅展示一次**。泄露或主机被控后须 **立即轮换 Token**（后台节点管理），并视情况吊销/重装证书；在启用节点上仍可能拿到 **已分配部署任务的全池证书** |
 | `redirect-rules` | 认证节点可拉取 **全平台启用域名** 列表（无 `skip_url`），用于池内任意节点上 `force_https`；属元数据泄露面，依赖 Token 保密 |
 | `TRUSTED_PROXIES=*` | 生产默认 **拒绝启动**（含 `queue:work` / `schedule:run`）；仅 `REDI_ALLOW_TRUST_ALL_PROXIES=true` 且主控绝不直连公网时例外 |
-| `/api/nodes/certificates` | Bearer 鉴权；**仅返回本节点在 `redi_cert_deployments` 中有记录的证书**（与 `ack` 一致）。Token 泄露仍可拿到该节点被分配的全池证书，须轮换 Token 并隔离主机 |
+| `/api/nodes/certificates` | Bearer 鉴权；**仅返回本节点在 `redi_cert_deployments` 中有记录且可拉取的证书**（与 `ack` 一致；不可拉取时 pending/failed 行会被主控清理）。Token 泄露仍可拿到该节点被分配的全池证书，须轮换 Token 并隔离主机 |
 | 节点 `ack` | 仅当存在该节点对应的 `redi_cert_deployments` 行且状态可更新时才接受；否则 **409**（避免伪造部署成功） |
 | `challenges-synced` | 非法 Host 返回 **422**；未在 ACME 就绪表中的域名返回 200 且计入 `ignored_count`（节点可区分同步失败与格式错误） |
 | 平台 DNS 表单 | 仅超级管理员可提交（与「DNS 与节点池」页面一致） |
