@@ -13,6 +13,9 @@ class RediNode extends Model
     protected static function booted(): void
     {
         static::saving(function (RediNode $node) {
+            if ($node->isDirty('public_ip')) {
+                $node->public_ip = trim(OpsDisplaySanitizer::stripControlChars((string) $node->public_ip));
+            }
             if ($node->isDirty('name')) {
                 $name = OpsDisplaySanitizer::stripControlChars((string) $node->name);
                 $name = trim($name);
