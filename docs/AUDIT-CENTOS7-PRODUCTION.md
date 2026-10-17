@@ -149,9 +149,13 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
-**2026-10-17 #182 已合并 `main`：** 见 [PR #182](https://github.com/freejbgo/301/pull/182)。
+**2026-10-17 #183 已合并 `main`：** 见 [PR #183](https://github.com/freejbgo/301/pull/183)。
+
+**2026-10-17 复核（#184）：** `isValidOriginalHost` 单次规范化后校验；CNAME 预检 / CSV 导出 / 占坑守卫 / `redi:normalize-domain-hosts` 对齐。
 
 **2026-10-17 复核（#183）：** 签发 Job / ACME 清理 / DNS 启用守卫与后台域名保存统一 `isNodePublishableHost` / `isValidOriginalHost`。
+
+**2026-10-17 #182 已合并 `main`：** 见 [PR #182](https://github.com/freejbgo/301/pull/182)。
 
 **2026-10-17 复核（#182）：** ACME/健康/域名规范化链路复用 `isNodePublishableHost`；`challenges-synced` 校验与之一致。
 
