@@ -78,6 +78,19 @@ func TestReplaceAllSkipsTrailingNewlineInResponseBody(t *testing.T) {
 	}
 }
 
+func TestResponseForPathRejectsPathWithControlChars(t *testing.T) {
+	ReplaceAll([]Item{{
+		DomainName:   "example.com",
+		Token:        "tok123",
+		ResponseBody: "body",
+	}})
+
+	_, ok := ResponseForPath("example.com", "/.well-known/acme-challenge/tok123\n")
+	if ok {
+		t.Fatal("path with trailing newline must not match")
+	}
+}
+
 func TestResponseForPathRejectsMalformedToken(t *testing.T) {
 	ReplaceAll([]Item{{
 		DomainName:   "example.com",

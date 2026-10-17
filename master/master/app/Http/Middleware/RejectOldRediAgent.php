@@ -13,9 +13,13 @@ class RejectOldRediAgent
     {
         /** @var RediNode|null $node */
         $node = $request->attributes->get('redi_node');
-        $version = RediAgentVersionGate::sanitize($request->input('version'));
-        if ($version === null && $node) {
+        $input = $request->all();
+        if (array_key_exists('version', $input)) {
+            $version = RediAgentVersionGate::sanitize($input['version']);
+        } elseif ($node) {
             $version = RediAgentVersionGate::sanitize($node->agent_version);
+        } else {
+            $version = null;
         }
 
         if ($reject = RediAgentVersionGate::rejectResponse($version)) {
