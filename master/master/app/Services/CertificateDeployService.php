@@ -550,6 +550,7 @@ class CertificateDeployService
                 return false;
             }
             $cert->loadMissing('domain');
+            // 行锁内对齐；不可用 freshCertWithPersistedRealign（会释放锁行上下文）。
             DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
             if ($ok && ! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
                 $ok = false;

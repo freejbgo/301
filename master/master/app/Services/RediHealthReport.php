@@ -474,14 +474,17 @@ class RediHealthReport
                 if (DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
                     $alignedHost = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
                     if ($recordedHost !== $alignedHost) {
-                        DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert->fresh()->load('domain'));
+                        CertificateDeployService::freshCertWithPersistedRealign($cert);
                     }
 
                     return;
                 }
-                DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert->fresh()->load('domain'));
-                if (DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
+                $healed = CertificateDeployService::freshCertWithPersistedRealign($cert);
+                if ($healed && DomainRecordNormalizer::certMatchesAdminDomain($healed)) {
                     return;
+                }
+                if ($healed) {
+                    $cert = $healed;
                 }
                 $canonical = self::certCanonicalHost($cert);
                 $issues[] = [
