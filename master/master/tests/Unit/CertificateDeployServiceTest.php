@@ -26,6 +26,7 @@ class CertificateDeployServiceTest extends TestCase
             $table->increments('id');
             $table->boolean('enabled')->default(true);
             $table->string('public_ip', 45)->nullable();
+            $table->timestamp('last_heartbeat_at')->nullable();
             $table->timestamps();
         });
 
@@ -86,6 +87,37 @@ class CertificateDeployServiceTest extends TestCase
             'node_id' => $node->id,
             'status' => 'pending',
         ]);
+    }
+
+    public function test_sync_deployments_reconciles_issued_to_deploying_for_live_node(): void
+    {
+        $node = RediNode::query()->create([
+            'enabled' => true,
+            'public_ip' => '1.2.3.4',
+            'last_heartbeat_at' => now(),
+        ]);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_ISSUED,
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        app(CertificateDeployService::class)->syncDeploymentsForNode($node);
+
+        $this->assertSame(
+            RediDomainCert::STATUS_DEPLOYING,
+            RediDomainCert::query()->find($certId)->status
+        );
     }
 
     public function test_sync_deployments_for_node_creates_pending_rows(): void
@@ -796,7 +828,9 @@ class CertificateDeployServiceTest extends TestCase
 
         app(CertificateDeployService::class)->handleDomainReenabledFromDisabled($domain);
 
-        $this->assertNull(RediDomainCert::query()->find($certId)->last_error);
+        $fresh = RediDomainCert::query()->find($certId);
+        $this->assertNotSame(\App\Models\RediAdminDomain::DISABLE_DEPLOY_CANCEL_MSG, $fresh->last_error);
+        $this->assertSame(RediDomainCert::STATUS_DEPLOYING, $fresh->status);
         $this->assertDatabaseHas('redi_cert_deployments', [
             'cert_id' => $certId,
             'node_id' => $node->id,

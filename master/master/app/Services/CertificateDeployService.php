@@ -326,6 +326,7 @@ class CertificateDeployService
             return;
         }
 
+        $affectedCertIds = [];
         foreach ($this->deployableCertsForNodes() as $cert) {
             if (! self::certIsNodePullable($cert)) {
                 continue;
@@ -351,9 +352,17 @@ class CertificateDeployService
                     'deployed_at' => null,
                 ]
             );
+            $affectedCertIds[(int) $cert->id] = true;
         }
 
         $this->pruneStaleDeploymentsForNode($node);
+
+        foreach (array_keys($affectedCertIds) as $certId) {
+            $cert = RediDomainCert::query()->with('domain')->find($certId);
+            if ($cert) {
+                $this->reconcileCertDeployStatus($cert);
+            }
+        }
 
         self::forgetActionableDeploymentMetrics();
     }
@@ -442,9 +451,12 @@ class CertificateDeployService
             if (! $cert) {
                 continue;
             }
-            $cert->status = RediDomainCert::STATUS_DEPLOYING;
-            $cert->last_error = '已重新排队失败节点的证书部署，等待节点拉取';
-            $cert->save();
+            $this->reconcileCertDeployStatus($cert);
+            $cert = $cert->fresh();
+            if ($cert && $cert->status === RediDomainCert::STATUS_DEPLOYING) {
+                $cert->last_error = '已重新排队失败节点的证书部署，等待节点拉取';
+                $cert->save();
+            }
         }
 
         self::forgetActionableDeploymentMetrics();
