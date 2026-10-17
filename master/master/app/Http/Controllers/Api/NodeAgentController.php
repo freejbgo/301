@@ -110,9 +110,12 @@ class NodeAgentController extends Controller
         ]);
     }
 
-    public function revision(NodeAgentRevisionService $revisions)
+    public function revision(Request $request, NodeAgentRevisionService $revisions)
     {
-        return response()->json($revisions->build());
+        /** @var RediNode $node */
+        $node = $request->attributes->get('redi_node');
+
+        return response()->json($revisions->build($node));
     }
 
     public function heartbeat(Request $request, CertificateDeployService $deployService)
