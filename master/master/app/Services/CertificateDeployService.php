@@ -117,7 +117,7 @@ class CertificateDeployService
     public static function certIsEligibleForDeployQueue(RediDomainCert $cert): bool
     {
         $cert->loadMissing('domain');
-        if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert)
+        if (! DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert, false)
             || ! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
             return false;
         }
@@ -451,7 +451,8 @@ class CertificateDeployService
             if (! $cert) {
                 continue;
             }
-            $this->reconcileCertDeployStatus($cert);
+            DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+            $this->reconcileCertDeployStatus($cert->fresh()->load('domain'));
             $cert = $cert->fresh();
             if ($cert && $cert->status === RediDomainCert::STATUS_DEPLOYING) {
                 $cert->last_error = '已重新排队失败节点的证书部署，等待节点拉取';
