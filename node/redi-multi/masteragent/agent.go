@@ -191,6 +191,9 @@ func pullRedirectRules(client *http.Client, cfg config, registered *bool) error 
 	}
 	m := map[string]bool{}
 	for _, r := range out.Rules {
+		if host.ContainsControlChars(r.OriginalURL) {
+			continue
+		}
 		host := host.CanonicalLookupHost(r.OriginalURL)
 		if host == "" {
 			continue
@@ -222,6 +225,9 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 	remoteIDs := make([]int, 0, len(out.Certificates))
 	failed := false
 	for _, row := range out.Certificates {
+		if host.ContainsControlChars(row.Domain) {
+			continue
+		}
 		domain := host.CanonicalLookupHost(row.Domain)
 		if domain == "" {
 			continue
