@@ -57,6 +57,7 @@ class RediAdminDomainModelTest extends TestCase
             $table->unsignedInteger('domain_id');
             $table->string('domain_name');
             $table->string('status')->default('none');
+            $table->text('last_error')->nullable();
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });
@@ -182,7 +183,7 @@ class RediAdminDomainModelTest extends TestCase
         $certId = \DB::table('redi_domain_certs')->insertGetId([
             'domain_id' => $domain->id,
             'domain_name' => 'off.example',
-            'status' => RediDomainCert::STATUS_DEPLOYING,
+            'status' => RediDomainCert::STATUS_ACTIVE,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -203,5 +204,7 @@ class RediAdminDomainModelTest extends TestCase
         $domain->save();
 
         $this->assertSame(0, \DB::table('redi_cert_deployments')->count());
+        $this->assertSame(RediDomainCert::STATUS_ISSUED, RediDomainCert::query()->find($certId)->status);
+        $this->assertStringContainsString('域名已停用', (string) RediDomainCert::query()->find($certId)->last_error);
     }
 }

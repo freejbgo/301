@@ -166,6 +166,10 @@
 
 **2026-10-17 #206 已合并 `main`：** 见 [PR #206](https://github.com/freejbgo/301/pull/206)。
 
+**2026-10-17 #207 已合并 `main`：** 见 [PR #207](https://github.com/freejbgo/301/pull/207)。
+
+**2026-10-17 复核（#208）：** 域名停用时将证书从 active/deploying 降为 issued 并写明原因；PHPUnit **260**（**494** assertions）。
+
 **2026-10-17 复核（#207）：** 节点停用删除其 `redi_cert_deployments` 并刷新 health 指标缓存；SECURITY 域名停用说明同步；PHPUnit **260**（**492** assertions）。
 
 **2026-10-17 复核（#206）：** 部署变更后 `forgetActionableDeploymentMetrics` 刷新 health 缓存；单条重下发与批量同用 `certIsEligibleForDeployQueue`；PHPUnit **259**（**491** assertions）。

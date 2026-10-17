@@ -57,6 +57,14 @@ class RediAdminDomain extends Model
             $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
             if ($cert) {
                 RediCertDeployment::where('cert_id', $cert->id)->delete();
+                if (in_array($cert->status, [
+                    RediDomainCert::STATUS_ACTIVE,
+                    RediDomainCert::STATUS_DEPLOYING,
+                ], true)) {
+                    $cert->status = RediDomainCert::STATUS_ISSUED;
+                    $cert->last_error = '域名已停用，已取消节点证书部署排队';
+                    $cert->save();
+                }
                 CertificateDeployService::forgetActionableDeploymentMetrics();
             }
         });
