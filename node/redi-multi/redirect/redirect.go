@@ -108,6 +108,9 @@ func writePlain(conn net.Conn, body string) {
 }
 
 func writeRedirect(conn net.Conn, code int, location string) {
+	if hostutil.ContainsControlChars(location) {
+		location = "/"
+	}
 	_, _ = conn.Write([]byte(fmt.Sprintf("HTTP/1.1 %d\r\nLocation: %s\r\nContent-Length: 0\r\nConnection: close\r\n\r\n", code, location)))
 }
 
