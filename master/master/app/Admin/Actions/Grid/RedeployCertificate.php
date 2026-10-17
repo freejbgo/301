@@ -31,6 +31,10 @@ class RedeployCertificate extends RowAction
             return $this->response()->error('无权操作该域名');
         }
 
+        if ((int) $domain->status !== 1) {
+            return $this->response()->error('域名未启用，无法重新下发证书');
+        }
+
         $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
         if (! $cert) {
             return $this->response()->error('尚未申请证书');
