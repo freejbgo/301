@@ -101,7 +101,7 @@ func pruneRateMap(cutoff time.Time) {
 
 func handleCjs(c echo.Context) error {
 	c.Response().Header().Set("Content-Type", "application/javascript; charset=utf-8")
-	return c.String(http.StatusOK, cjsSource(c.RealIP(), c.Request().UserAgent()))
+	return c.String(http.StatusOK, cjsSource(c.RealIP(), host.SanitizeUserAgent(c.Request().UserAgent())))
 }
 
 func handleApiJs(c echo.Context) error {

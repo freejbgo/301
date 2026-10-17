@@ -48,15 +48,7 @@ func sanitizeRequestPath(path string) string {
 }
 
 func sanitizeUserAgent(ua string) string {
-	if hostutil.ContainsControlChars(ua) {
-		return ""
-	}
-	ua = strings.TrimSpace(ua)
-	if len(ua) > 512 {
-		return ua[:512]
-	}
-
-	return ua
+	return hostutil.SanitizeUserAgent(ua)
 }
 
 func sanitizeLocationURL(location string) string {

@@ -1,6 +1,9 @@
 package host
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestCanonicalLookupHostPunycode(t *testing.T) {
 	got := CanonicalLookupHost("münchen.de")
@@ -36,5 +39,15 @@ func TestContainsControlChars(t *testing.T) {
 func TestCanonicalLookupHostRejectsTab(t *testing.T) {
 	if CanonicalLookupHost("evil\t.com") != "" {
 		t.Fatal("expected empty for tab in host")
+	}
+}
+
+func TestSanitizeUserAgent(t *testing.T) {
+	if SanitizeUserAgent("Mozilla/5.0\r\n") != "" {
+		t.Fatal("expected empty for CRLF in UA")
+	}
+	long := strings.Repeat("a", 600)
+	if len(SanitizeUserAgent(long)) != 512 {
+		t.Fatal("expected UA truncated to 512")
 	}
 }

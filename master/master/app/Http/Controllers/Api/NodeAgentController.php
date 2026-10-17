@@ -103,7 +103,7 @@ class NodeAgentController extends Controller
         if (! array_key_exists('version', $input)) {
             return;
         }
-        $version = RediAgentVersionGate::sanitize($input['version']);
+        $version = RediAgentVersionGate::resolveFromInput($input);
         if ($version !== null) {
             $node->agent_version = $version;
         }
