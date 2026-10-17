@@ -65,7 +65,7 @@
 | `node_stale` | warning | 启用节点超过 15 分钟无心跳 |
 | `node_pool_empty` | warning | 没有启用的边缘节点 |
 | `node_no_public_ip` | warning | 启用节点均未配置公网 IP |
-| `cert_deploy_pending` | warning | 仍有 pending 证书部署 |
+| `cert_deploy_pending` | warning | 仍有节点可拉取的 pending 证书部署（与 `/api/nodes/certificates` 一致，忽略无 PEM/漂移/停用域名的僵尸 pending） |
 | `cert_deploy_failed` | critical | 节点证书安装 failed |
 | `cert_expired` | critical | 已过期且域名仍启用 |
 | `cert_expiring` | warning | 在 `--days` 窗口内即将到期 |
@@ -151,6 +151,10 @@
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
 **2026-10-17 #199 已合并 `main`：** 见 [PR #199](https://github.com/freejbgo/301/pull/199)。
+
+**2026-10-17 #200 已合并 `main`：** 见 [PR #200](https://github.com/freejbgo/301/pull/200)。
+
+**2026-10-17 复核（#201）：** `certIsNodePullable` 统一节点拉证/health/后台 pending 统计；`cert_deploy_pending` 不再误报僵尸 pending；PHPUnit **250**（**471** assertions）。
 
 **2026-10-17 复核（#200）：** `markNodeAck` 拒停用域名；`purgeForHosts` 直查 + 遗留键；签发后感知 `queueDeploy` 失败；批量重下发无效域名单测；PHPUnit **248**（**467** assertions）。
 
@@ -509,4 +513,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **248** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **250** 条 Feature/Unit；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。

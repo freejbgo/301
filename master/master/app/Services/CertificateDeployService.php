@@ -11,6 +11,45 @@ use Illuminate\Support\Facades\DB;
 class CertificateDeployService
 {
     /**
+     * 与节点 API `/certificates` 一致：该证是否会被下发给边缘（含 PEM、域名一致、启用域名）。
+     */
+    public static function certIsNodePullable(RediDomainCert $cert): bool
+    {
+        $cert->loadMissing('domain');
+        if (! $cert->domain || (int) $cert->domain->status !== 1) {
+            return false;
+        }
+
+        DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+        if (! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
+            return false;
+        }
+
+        if (! self::certStatusAllowsNodePull($cert)) {
+            return false;
+        }
+
+        return $cert->getCertificatePem() && $cert->getPrivateKeyPem();
+    }
+
+    protected static function certStatusAllowsNodePull(RediDomainCert $cert): bool
+    {
+        if (in_array($cert->status, [
+            RediDomainCert::STATUS_ISSUED,
+            RediDomainCert::STATUS_DEPLOYING,
+            RediDomainCert::STATUS_ACTIVE,
+        ], true)) {
+            return true;
+        }
+
+        if ($cert->status === RediDomainCert::STATUS_VALIDATING) {
+            return $cert->certificate !== null && $cert->certificate !== '';
+        }
+
+        return false;
+    }
+
+    /**
      * 新启用或新注册的节点：为所有应下发的证书补齐 pending 部署行（不重置已 ok 的行）。
      */
     public function syncDeploymentsForNode(RediNode $node): void

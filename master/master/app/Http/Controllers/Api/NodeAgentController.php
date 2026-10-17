@@ -198,18 +198,18 @@ class NodeAgentController extends Controller
 
         $payload = [];
         foreach ($certs as $cert) {
-            DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
-            if (! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
+            if (! CertificateDeployService::certIsNodePullable($cert)) {
+                DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($cert);
+                if (DomainRecordNormalizer::certMatchesAdminDomain($cert)
+                    && ($cert->certificate || $cert->private_key)
+                    && (! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem())) {
+                    $cert->flagCredentialUnreadableIfNeeded();
+                }
+
                 continue;
             }
             $pem = $cert->getCertificatePem();
             $key = $cert->getPrivateKeyPem();
-            if (! $pem || ! $key) {
-                if ($cert->certificate || $cert->private_key) {
-                    $cert->flagCredentialUnreadableIfNeeded();
-                }
-                continue;
-            }
             $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
             $payload[] = [
                 'cert_id' => $cert->id,

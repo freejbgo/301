@@ -52,10 +52,17 @@ class RediHealthReport
             ];
         }
 
-        $pendingDeploys = (int) RediCertDeployment::query()
+        $pendingDeploys = RediCertDeployment::query()
             ->where('status', 'pending')
             ->whereHas('node', function ($query) {
                 $query->where('enabled', true);
+            })
+            ->with(['cert.domain'])
+            ->get()
+            ->filter(function (RediCertDeployment $deployment) {
+                $cert = $deployment->cert;
+
+                return $cert && CertificateDeployService::certIsNodePullable($cert);
             })
             ->count();
 
@@ -510,9 +517,35 @@ class RediHealthReport
      */
     public static function deploymentCountsByNode(): Collection
     {
-        return RediCertDeployment::query()
-            ->selectRaw("node_id, sum(case when status = 'pending' then 1 else 0 end) as pending_count, sum(case when status = 'failed' then 1 else 0 end) as failed_count")
-            ->groupBy('node_id')
-            ->get();
+        $pendingByNode = [];
+        $failedByNode = [];
+
+        RediCertDeployment::query()
+            ->whereIn('status', ['pending', 'failed'])
+            ->with(['cert.domain'])
+            ->get(['id', 'node_id', 'status', 'cert_id'])
+            ->each(function (RediCertDeployment $deployment) use (&$pendingByNode, &$failedByNode) {
+                $nodeId = (int) $deployment->node_id;
+                if ($deployment->status === 'failed') {
+                    $failedByNode[$nodeId] = ($failedByNode[$nodeId] ?? 0) + 1;
+
+                    return;
+                }
+
+                $cert = $deployment->cert;
+                if ($cert && CertificateDeployService::certIsNodePullable($cert)) {
+                    $pendingByNode[$nodeId] = ($pendingByNode[$nodeId] ?? 0) + 1;
+                }
+            });
+
+        $nodeIds = array_unique(array_merge(array_keys($pendingByNode), array_keys($failedByNode)));
+
+        return collect($nodeIds)->map(function (int $nodeId) use ($pendingByNode, $failedByNode) {
+            return (object) [
+                'node_id' => $nodeId,
+                'pending_count' => $pendingByNode[$nodeId] ?? 0,
+                'failed_count' => $failedByNode[$nodeId] ?? 0,
+            ];
+        });
     }
 }
