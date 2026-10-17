@@ -106,6 +106,10 @@ func handleCjs(c echo.Context) error {
 
 func handleApiJs(c echo.Context) error {
 	encoded := c.QueryParam("d")
+	if !apiJsQueryValid(encoded) {
+		c.Response().Header().Set("Content-Type", "application/javascript; charset=utf-8")
+		return c.String(http.StatusBadRequest, "// invalid")
+	}
 	if !allowApiJsDomainRate(c.RealIP(), encoded) {
 		return c.String(http.StatusTooManyRequests, "// rate limit")
 	}
@@ -114,10 +118,11 @@ func handleApiJs(c echo.Context) error {
 	return c.String(code, body)
 }
 
+func apiJsQueryValid(encoded string) bool {
+	return len(encoded) <= 4096 && !host.ContainsControlChars(encoded)
+}
+
 func allowApiJsDomainRate(ip, encodedDomain string) bool {
-	if len(encodedDomain) > 4096 || host.ContainsControlChars(encodedDomain) {
-		return false
-	}
 	key := ip + "|" + strings.TrimSpace(encodedDomain)
 	if key != ip+"|" {
 		now := time.Now()
@@ -195,7 +200,7 @@ String.prototype.decode = function () {
 }
 
 func apiJsSource(encodedDomain string) (string, int) {
-	if len(encodedDomain) > 4096 {
+	if !apiJsQueryValid(encodedDomain) {
 		return "// invalid", http.StatusBadRequest
 	}
 	db := mysqlconnect.DB()

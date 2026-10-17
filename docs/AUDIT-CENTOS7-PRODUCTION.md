@@ -149,6 +149,8 @@
 
 **2026-10-16 #100 已合并 `main`：** 见 [PR #100](https://github.com/freejbgo/301/pull/100)（health JSON summary 单测、jq 采集示例）。
 
+**2026-10-17 复核（#154）：** `/api.js` 查询 `d` 含控制字符返回 **400**（不再误报 429）；`apiJsQueryValid` 统一校验；TLS 直连 `WriteAsset` 的 `/c.js` 也净化 UA；PHPUnit **197**（Go +2）。
+
 **2026-10-17 复核（#153）：** Go `host.SanitizeUserAgent` 统一 Echo `/c.js` 与 redirect 路径；`persistAgentVersionIfPresent` 复用 `resolveFromInput`；PHPUnit **197**（Go +2）。
 
 **2026-10-17 复核（#152）：** `RediAgentVersionGate::resolveFromInput` 统一版本解析；register 无 version 保留版本；redirect User-Agent / api.js 域名限流拒控制字符；PHPUnit **197**（+4）。
