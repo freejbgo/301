@@ -173,6 +173,20 @@ class CertificateDeployService
             return false;
         }
 
+        if (! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem()) {
+            $cert->last_error = '证书材料不可用，已跳过部署排队';
+            $cert->save();
+
+            return false;
+        }
+
+        if (! $cert->domain || (int) $cert->domain->status !== 1) {
+            $cert->last_error = '域名已停用，已跳过部署排队';
+            $cert->save();
+
+            return false;
+        }
+
         $cert->status = RediDomainCert::STATUS_DEPLOYING;
         $cert->save();
 
@@ -208,6 +222,11 @@ class CertificateDeployService
     public function markNodeAck(RediDomainCert $cert, RediNode $node, bool $ok, ?string $error = null): bool
     {
         return DB::transaction(function () use ($cert, $node, $ok, $error) {
+            $node = RediNode::query()->whereKey($node->id)->lockForUpdate()->first();
+            if (! $node || ! $node->enabled) {
+                return false;
+            }
+
             $cert = RediDomainCert::query()->whereKey($cert->id)->lockForUpdate()->first();
             if (! $cert) {
                 return false;

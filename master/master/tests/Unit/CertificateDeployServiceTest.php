@@ -370,6 +370,89 @@ class CertificateDeployServiceTest extends TestCase
         ]);
     }
 
+    public function test_queue_deploy_skips_without_pem_material(): void
+    {
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_ISSUED,
+        ]);
+        RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+
+        $queued = app(CertificateDeployService::class)->queueDeploy($cert);
+
+        $this->assertFalse($queued);
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
+        $this->assertStringContainsString('证书材料不可用', (string) $cert->fresh()->last_error);
+        $this->assertSame(RediDomainCert::STATUS_ISSUED, $cert->fresh()->status);
+    }
+
+    public function test_queue_deploy_skips_when_domain_disabled(): void
+    {
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_ISSUED,
+        ]);
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
+        RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+
+        $queued = app(CertificateDeployService::class)->queueDeploy($cert->fresh());
+
+        $this->assertFalse($queued);
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
+        $this->assertStringContainsString('域名已停用', (string) $cert->fresh()->last_error);
+    }
+
+    public function test_mark_node_ack_rejects_disabled_node(): void
+    {
+        $node = RediNode::query()->create(['enabled' => false, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_DEPLOYING,
+        ]);
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $cert->id,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $applied = app(CertificateDeployService::class)->markNodeAck($cert, $node, true);
+
+        $this->assertFalse($applied);
+        $this->assertDatabaseHas('redi_cert_deployments', [
+            'cert_id' => $cert->id,
+            'node_id' => $node->id,
+            'status' => 'pending',
+        ]);
+    }
+
     public function test_queue_deploy_skips_when_cert_does_not_match_admin_domain(): void
     {
         $domainId = \DB::table('redi_admin_domain')->insertGetId([
