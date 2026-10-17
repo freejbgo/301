@@ -160,6 +160,30 @@ class NodeAgentApiTest extends TestCase
         $this->assertNotContains('empty.example', $names);
     }
 
+    public function test_acme_challenges_omits_control_chars_in_domain_name(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        RediAcmeChallenge::create([
+            'domain_name' => "bad\x00.example",
+            'token' => 'ok-token',
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+        RediAcmeChallenge::create([
+            'domain_name' => 'good.example',
+            'token' => 'ok-token',
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $response = $this->withToken($token)->getJson('/api/nodes/acme-challenges');
+        $response->assertOk();
+        $names = array_column($response->json('challenges'), 'domain_name');
+        $this->assertContains('good.example', $names);
+        $this->assertNotContains('bad.example', $names);
+    }
+
     public function test_acme_challenges_omits_control_chars_in_response_body(): void
     {
         [, $token] = $this->createNodeWithToken();
@@ -384,6 +408,16 @@ class NodeAgentApiTest extends TestCase
         $this->withToken($token)
             ->postJson('/api/nodes/ack', ['cert_id' => $certId, 'ok' => true])
             ->assertStatus(409);
+    }
+
+    public function test_ack_missing_cert_id_returns_422(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/ack', ['ok' => true])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'invalid cert_id');
     }
 
     public function test_ack_rejects_malformed_cert_id_with_422(): void
@@ -753,6 +787,95 @@ class NodeAgentApiTest extends TestCase
         $this->assertArrayHasKey('original_url', $rules[0]);
         $this->assertArrayHasKey('force_https', $rules[0]);
         $this->assertArrayNotHasKey('skip_url', $rules[0]);
+    }
+
+    public function test_redirect_rules_omit_hosts_with_control_chars(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('group_id')->default(1);
+            $table->unsignedInteger('admin_id')->default(1);
+            $table->string('original_url');
+            $table->string('skip_url')->default('http://example.com');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        \DB::table('redi_admin_domain')->insert([
+            [
+                'original_url' => 'good.example',
+                'status' => 1,
+                'force_https' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'original_url' => "bad\x00.example",
+                'status' => 1,
+                'force_https' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        $response = $this->withToken($token)->getJson('/api/nodes/redirect-rules');
+        $response->assertOk();
+        $rules = $response->json('rules');
+        $this->assertCount(1, $rules);
+        $this->assertSame('good.example', $rules[0]['original_url']);
+    }
+
+    public function test_certificates_omit_control_char_domain_names(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->timestamps();
+        });
+
+        [$node, $token] = $this->createNodeWithToken();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'cert.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $goodId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'cert.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $badId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => "evil\x00.example",
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest2\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest2\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_cert_deployments')->insert([
+            ['cert_id' => $goodId, 'node_id' => $node->id, 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()],
+            ['cert_id' => $badId, 'node_id' => $node->id, 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $response = $this->withToken($token)->getJson('/api/nodes/certificates');
+        $response->assertOk();
+        $ids = array_column($response->json('certificates'), 'cert_id');
+        $this->assertContains($goodId, $ids);
+        $this->assertNotContains($badId, $ids);
     }
 
     public function test_redirect_rules_omit_invalid_hosts(): void
