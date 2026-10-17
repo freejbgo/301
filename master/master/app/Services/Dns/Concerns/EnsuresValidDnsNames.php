@@ -3,13 +3,14 @@
 namespace App\Services\Dns\Concerns;
 
 use App\Support\HostNameValidator;
+use App\Support\OpsDisplaySanitizer;
 use RuntimeException;
 
 trait EnsuresValidDnsNames
 {
     protected function requireDnsFqdn(string $fqdn, string $label = 'DNS FQDN'): string
     {
-        if ($this->dnsNameContainsControlChars($fqdn)) {
+        if (OpsDisplaySanitizer::containsControlChars($fqdn)) {
             throw new RuntimeException($label.' 无效');
         }
         $fqdn = HostNameValidator::toCanonicalAscii($fqdn);
@@ -22,7 +23,7 @@ trait EnsuresValidDnsNames
 
     protected function requireDnsRrLabel(string $name): string
     {
-        if ($this->dnsNameContainsControlChars($name)) {
+        if (OpsDisplaySanitizer::containsControlChars($name)) {
             throw new RuntimeException('DNS 主机记录名无效');
         }
         $name = strtolower(trim($name, '.'));
@@ -34,13 +35,5 @@ trait EnsuresValidDnsNames
         }
 
         return $name;
-    }
-
-    protected function dnsNameContainsControlChars(string $value): bool
-    {
-        return str_contains($value, "\r")
-            || str_contains($value, "\n")
-            || str_contains($value, "\0")
-            || str_contains($value, "\t");
     }
 }

@@ -28,11 +28,11 @@ func sanitizeHost(host string) string {
 }
 
 func sanitizeRequestPath(path string) string {
-	path = strings.TrimSpace(path)
-	if path == "" {
+	if strings.ContainsAny(path, "\r\n\x00\t") {
 		return "/"
 	}
-	if strings.ContainsAny(path, "\r\n\x00\t") {
+	path = strings.TrimSpace(path)
+	if path == "" {
 		return "/"
 	}
 	if !strings.HasPrefix(path, "/") {
@@ -55,11 +55,11 @@ func sanitizeLocationURL(location string) string {
 }
 
 func sanitizeRawQuery(raw string) string {
-	raw = strings.TrimSpace(raw)
-	if raw == "" || !strings.HasPrefix(raw, "?") {
+	if strings.ContainsAny(raw, "\r\n\x00\t") {
 		return ""
 	}
-	if strings.ContainsAny(raw, "\r\n\x00\t") {
+	raw = strings.TrimSpace(raw)
+	if raw == "" || !strings.HasPrefix(raw, "?") {
 		return ""
 	}
 	return raw

@@ -8,6 +8,12 @@ func TestSanitizeRequestPathBlocksProtocolRelative(t *testing.T) {
 	}
 }
 
+func TestSanitizeRequestPathRejectsControlCharsBeforeTrim(t *testing.T) {
+	if p := sanitizeRequestPath("/ok\n"); p != "/" {
+		t.Fatalf("expected /, got %q", p)
+	}
+}
+
 func TestSanitizeRequestPathBlocksBackslash(t *testing.T) {
 	if p := sanitizeRequestPath("/admin\\evil"); p != "/" {
 		t.Fatalf("expected /, got %q", p)

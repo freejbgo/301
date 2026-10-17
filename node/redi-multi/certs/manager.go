@@ -61,8 +61,11 @@ func SyncFromMaster(valid []Entry, remoteIDs []int) {
 
 func upsertIntoMaps(hostMap map[string]Entry, idMap map[int]Entry, list []Entry) {
 	for _, e := range list {
+		if strings.ContainsAny(e.Domain, "\r\n\x00\t") {
+			continue
+		}
 		d := strings.ToLower(strings.TrimSpace(e.Domain))
-		if d == "" || strings.ContainsAny(d, "\r\n\x00\t") {
+		if d == "" {
 			continue
 		}
 		hostMap[d] = e
@@ -99,7 +102,15 @@ func InstallEntry(e Entry) error {
 		return err
 	}
 	mu.Lock()
+	if strings.ContainsAny(e.Domain, "\r\n\x00\t") {
+		mu.Unlock()
+		return fmt.Errorf("invalid domain")
+	}
 	d := strings.ToLower(strings.TrimSpace(e.Domain))
+	if d == "" {
+		mu.Unlock()
+		return fmt.Errorf("invalid domain")
+	}
 	entries[d] = e
 	byID[e.CertID] = e
 	mu.Unlock()

@@ -71,7 +71,7 @@ class RediHealthCommand extends Command
         $command->line('');
         $command->line('配置建议（不影响退出码）：');
         foreach ($hints as $hint) {
-            $command->line('  · '.OpsDisplaySanitizer::stripControlChars((string) ($hint['message'] ?? '')));
+            $command->line('  · '.OpsDisplaySanitizer::field($hint['message'] ?? '', '—', 300));
         }
     }
 }
