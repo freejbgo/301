@@ -56,6 +56,10 @@ func rateLimitMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func allowRate(ip string) bool {
+	ip = host.SanitizeClientIP(ip)
+	if ip == "" {
+		return false
+	}
 	now := time.Now()
 	cutoff := now.Add(-1 * time.Minute)
 	rateMu.Lock()
@@ -101,7 +105,7 @@ func pruneRateMap(cutoff time.Time) {
 
 func handleCjs(c echo.Context) error {
 	c.Response().Header().Set("Content-Type", "application/javascript; charset=utf-8")
-	return c.String(http.StatusOK, cjsSource(c.RealIP(), host.SanitizeUserAgent(c.Request().UserAgent())))
+	return c.String(http.StatusOK, cjsSource(host.SanitizeClientIP(c.RealIP()), host.SanitizeUserAgent(c.Request().UserAgent())))
 }
 
 func handleApiJs(c echo.Context) error {
@@ -123,6 +127,10 @@ func apiJsQueryValid(encoded string) bool {
 }
 
 func allowApiJsDomainRate(ip, encodedDomain string) bool {
+	ip = host.SanitizeClientIP(ip)
+	if ip == "" {
+		return false
+	}
 	key := ip + "|" + strings.TrimSpace(encodedDomain)
 	if key != ip+"|" {
 		now := time.Now()

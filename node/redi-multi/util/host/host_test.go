@@ -42,6 +42,15 @@ func TestCanonicalLookupHostRejectsTab(t *testing.T) {
 	}
 }
 
+func TestSanitizeClientIP(t *testing.T) {
+	if SanitizeClientIP("203.0.113.1\n") != "" {
+		t.Fatal("expected empty for CRLF in IP")
+	}
+	if SanitizeClientIP(" 10.0.0.1 ") != "10.0.0.1" {
+		t.Fatal("expected trim")
+	}
+}
+
 func TestSanitizeUserAgent(t *testing.T) {
 	if SanitizeUserAgent("Mozilla/5.0\r\n") != "" {
 		t.Fatal("expected empty for CRLF in UA")
