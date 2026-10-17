@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\RediAcmeChallenge;
 use App\Models\RediDomainCert;
+use App\Models\RediNode;
 use App\Services\NodeAgentRevisionService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Crypt;
@@ -155,6 +156,45 @@ class NodeAgentRevisionServiceTest extends TestCase
         (new NodeAgentRevisionService())->build();
 
         $this->assertSame('stale.example', RediDomainCert::query()->find($certId)->domain_name);
+    }
+
+    public function test_certificates_revision_scoped_to_node_deployment_rows(): void
+    {
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => 'scoped.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => 1,
+            'domain_name' => 'scoped.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => 2,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $nodeOne = new RediNode();
+        $nodeOne->id = 1;
+        $nodeOne->exists = true;
+        $nodeTwo = new RediNode();
+        $nodeTwo->id = 2;
+        $nodeTwo->exists = true;
+
+        $svc = new NodeAgentRevisionService();
+        $empty = $svc->build($nodeOne)['certificates_revision'];
+        $withCert = $svc->build($nodeTwo)['certificates_revision'];
+
+        $this->assertNotSame($withCert, $empty);
     }
 
     public function test_certificates_revision_changes_when_deployment_row_added(): void

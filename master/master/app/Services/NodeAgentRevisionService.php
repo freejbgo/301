@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\RediDomainCert;
+use App\Models\RediNode;
 use App\Support\HostNameValidator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +14,7 @@ class NodeAgentRevisionService
     /**
      * @return array{revision: string, challenges_revision: string, rules_revision: string, certificates_revision: string}
      */
-    public function build(): array
+    public function build(?RediNode $node = null): array
     {
         $challenges = AcmeChallengeQuery::ready()
             ->orderBy('id')
@@ -50,7 +51,11 @@ class NodeAgentRevisionService
             });
 
         if (Schema::hasTable('redi_cert_deployments')) {
-            $certsQuery->whereHas('deployments');
+            $certsQuery->whereHas('deployments', function ($query) use ($node) {
+                if ($node !== null) {
+                    $query->where('node_id', $node->id);
+                }
+            });
         }
 
         $certs = $certsQuery
