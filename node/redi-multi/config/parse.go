@@ -77,14 +77,18 @@ func resolveTlsAddrFromJSON(payload map[string]interface{}) string {
 }
 
 func applyEnvOverrides() {
-	if v, ok := os.LookupEnv("REDI_HTTP_LISTEN"); ok {
-		Addr = strings.TrimSpace(v)
-	}
-	if v, ok := os.LookupEnv("REDI_TLS_LISTEN"); ok {
-		TlsAddr = strings.TrimSpace(v)
-	}
-	if v, ok := os.LookupEnv("REDI_API_LISTEN"); ok {
-		ApiListen = strings.TrimSpace(v)
+	applyEnvListen("REDI_HTTP_LISTEN", &Addr)
+	applyEnvListen("REDI_TLS_LISTEN", &TlsAddr)
+	applyEnvListen("REDI_API_LISTEN", &ApiListen)
+}
+
+func applyEnvListen(envKey string, dest *string) {
+	if v, ok := os.LookupEnv(envKey); ok {
+		v = strings.TrimSpace(v)
+		if host.ContainsControlChars(v) {
+			log.Fatalf("config: %s contains invalid control characters", envKey)
+		}
+		*dest = v
 	}
 }
 

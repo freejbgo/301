@@ -21,6 +21,22 @@ func TestReadRequestRejectsControlCharsInRequestLine(t *testing.T) {
 	}
 }
 
+func TestReadRequestRejectsControlCharsInRequestPath(t *testing.T) {
+	server, client := net.Pipe()
+	defer server.Close()
+	defer client.Close()
+	done := make(chan error, 1)
+	go func() {
+		_, err := readRequest(server)
+		done <- err
+	}()
+	_, _ = client.Write([]byte("GET /a\tb HTTP/1.1\r\nHost: example.com\r\n\r\n"))
+	err := <-done
+	if err == nil {
+		t.Fatal("expected error for tab in request path")
+	}
+}
+
 func TestReadRequestRejectsControlCharsInHeader(t *testing.T) {
 	server, client := net.Pipe()
 	defer server.Close()
