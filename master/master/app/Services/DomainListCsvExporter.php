@@ -94,7 +94,7 @@ class DomainListCsvExporter
      */
     public static function dnsExportColumnsForDomain(RediAdminDomain $domain): array
     {
-        if (! \App\Support\HostNameValidator::isValidHostLabel((string) $domain->original_url)) {
+        if (! DomainRecordNormalizer::isValidOriginalHost((string) $domain->original_url)) {
             return ['', 'unknown'];
         }
 

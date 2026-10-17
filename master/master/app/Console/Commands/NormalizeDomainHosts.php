@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\RediAdminDomain;
 use App\Services\DomainRecordNormalizer;
-use App\Support\HostNameValidator;
 use Illuminate\Console\Command;
 
 class NormalizeDomainHosts extends Command
@@ -20,11 +19,11 @@ class NormalizeDomainHosts extends Command
 
         RediAdminDomain::query()->orderBy('id')->chunk(200, function ($rows) use ($dry, &$updated) {
             foreach ($rows as $domain) {
-                $canonical = DomainRecordNormalizer::normalizeOriginalUrl($domain->original_url);
-                if ($canonical === '' || ! HostNameValidator::isValidHostLabel($canonical)) {
+                if (! DomainRecordNormalizer::isValidOriginalHost($domain->original_url)) {
                     $this->warn("跳过 id={$domain->id} 非法 original_url");
                     continue;
                 }
+                $canonical = DomainRecordNormalizer::normalizeOriginalUrl($domain->original_url);
                 $skip = DomainRecordNormalizer::normalizeSkipUrl($domain->skip_url);
                 $dirty = $canonical !== $domain->original_url
                     || $skip !== (string) $domain->skip_url;

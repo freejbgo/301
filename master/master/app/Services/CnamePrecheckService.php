@@ -11,6 +11,10 @@ class CnamePrecheckService
 {
     public static function pointsToEdgeCached(string $customerDomain, string $edgeFqdn, int $seconds = 60): bool
     {
+        if (! HostNameValidator::isNodePublishableHost($customerDomain)
+            || ! HostNameValidator::isNodePublishableHost($edgeFqdn)) {
+            return false;
+        }
         $customerDomain = HostNameValidator::toCanonicalAscii($customerDomain);
         $edgeFqdn = HostNameValidator::toCanonicalAscii($edgeFqdn);
         $key = 'cname-precheck:'.md5($customerDomain.'|'.$edgeFqdn);
@@ -25,17 +29,13 @@ class CnamePrecheckService
      */
     public static function pointsToEdge(string $customerDomain, string $edgeFqdn): bool
     {
+        if (! HostNameValidator::isNodePublishableHost($customerDomain)
+            || ! HostNameValidator::isNodePublishableHost($edgeFqdn)) {
+            return false;
+        }
+
         $customerDomain = HostNameValidator::toCanonicalAscii($customerDomain);
         $edgeFqdn = HostNameValidator::toCanonicalAscii($edgeFqdn);
-
-        if ($customerDomain === '' || $edgeFqdn === '') {
-            return false;
-        }
-
-        if (! HostNameValidator::isValidHostLabel($customerDomain)
-            || ! HostNameValidator::isValidHostLabel($edgeFqdn)) {
-            return false;
-        }
 
         if (! function_exists('dns_get_record')) {
             return false;
@@ -45,7 +45,7 @@ class CnamePrecheckService
         $allowedTargets = [];
         foreach ([$edgeFqdn, $poolFqdn] as $target) {
             $target = HostNameValidator::toCanonicalAscii((string) $target);
-            if ($target !== '' && HostNameValidator::isValidHostLabel($target)) {
+            if (HostNameValidator::isNodePublishableHost((string) $target)) {
                 $allowedTargets[] = $target;
             }
         }
@@ -73,10 +73,10 @@ class CnamePrecheckService
 
     public static function aRecordPointsToPool(string $customerDomain): bool
     {
-        $customerDomain = HostNameValidator::toCanonicalAscii($customerDomain);
-        if ($customerDomain === '' || ! HostNameValidator::isValidHostLabel($customerDomain)) {
+        if (! HostNameValidator::isNodePublishableHost($customerDomain)) {
             return false;
         }
+        $customerDomain = HostNameValidator::toCanonicalAscii($customerDomain);
 
         $poolIps = RediNode::enabledPublicIps();
         if ($poolIps === []) {
@@ -97,10 +97,10 @@ class CnamePrecheckService
         if ($depth <= 0) {
             return false;
         }
-        $host = HostNameValidator::toCanonicalAscii($host);
-        if ($host === '' || ! HostNameValidator::isValidHostLabel($host)) {
+        if (! HostNameValidator::isNodePublishableHost($host)) {
             return false;
         }
+        $host = HostNameValidator::toCanonicalAscii($host);
         if (in_array($host, $targets, true)) {
             return true;
         }
@@ -123,10 +123,10 @@ class CnamePrecheckService
      */
     protected static function resolveA(string $host): array
     {
-        $host = HostNameValidator::toCanonicalAscii($host);
-        if ($host === '' || ! HostNameValidator::isValidHostLabel($host)) {
+        if (! HostNameValidator::isNodePublishableHost($host)) {
             return [];
         }
+        $host = HostNameValidator::toCanonicalAscii($host);
         $rows = @dns_get_record($host, DNS_A);
         if (! is_array($rows)) {
             return [];
