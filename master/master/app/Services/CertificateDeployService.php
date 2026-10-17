@@ -522,6 +522,9 @@ class CertificateDeployService
     protected function refuseQueueDeploy(RediDomainCert $cert, string $message): bool
     {
         $this->pruneNonPullableDeployments($cert);
+        $this->reconcileCertDeployStatus($cert->fresh()->load('domain'));
+        $cert = $cert->fresh();
+        $cert->loadMissing('domain');
         $cert->last_error = $message;
         $cert->save();
 

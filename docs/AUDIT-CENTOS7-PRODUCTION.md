@@ -199,6 +199,10 @@
 
 **2026-10-17 #218 已合并 `main`：** 见 [PR #218](https://github.com/freejbgo/301/pull/218)。
 
+**2026-10-17 #219 已合并 `main`：** 见 [PR #219](https://github.com/freejbgo/301/pull/219)（含 #211–#219 抽检与 `reconcileCertDeployStatus`）。
+
+**2026-10-17 复核（#220）：** `refuseQueueDeploy` 在写入跳过原因前先 reconcile，避免残留 active；SECURITY 证书队列说明；PHPUnit **271**（**511** assertions）。
+
 **2026-10-17 复核（#211–#219 合并前抽检）：** 证书部署链路一致；补 `reconcileCertDeployStatus`（PEM/主机名变更后自动回写 status，避免残留 active）；约定「继续」流程见上文。
 
 **2026-10-17 复核（#219）：** `refreshCertStatusFromDeployments` 仅在 `certIsNodePullable` 时标为 active；`reconcileCertDeployStatus`；PHPUnit **271**（**511** assertions）。
