@@ -34,8 +34,13 @@ func Run() {
 		logrus.Warn("[masteragent] REDI_MASTER_URL or REDI_NODE_TOKEN not set; agent disabled")
 		return
 	}
+	master = strings.TrimSpace(master)
+	token = strings.TrimSpace(token)
+	if host.ContainsControlChars(master) || host.ContainsControlChars(token) {
+		logrus.Fatal("[masteragent] REDI_MASTER_URL or REDI_NODE_TOKEN contains invalid control characters")
+	}
 	insecure := strings.TrimSpace(os.Getenv("REDI_MASTER_INSECURE")) == "1"
-	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(master)), "http://") {
+	if strings.HasPrefix(strings.ToLower(master), "http://") {
 		if !insecure {
 			logrus.Fatal("[masteragent] REDI_MASTER_URL must use https:// (or set REDI_MASTER_INSECURE=1 for lab only)")
 		}

@@ -13,6 +13,9 @@ type Decoded struct {
 }
 
 func (d *Decoded) Encode() string {
+	if host.ContainsControlChars(d.Content) {
+		return ""
+	}
 	aa := []rune(d.Content)
 	res := ""
 	for _, r := range aa {
