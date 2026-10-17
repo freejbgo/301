@@ -30,7 +30,7 @@
 | `challenges-synced` | 非法 Host 返回 **422**；未在 ACME 就绪表中的域名返回 200 且计入 `ignored_count`（节点可区分同步失败与格式错误） |
 | 平台 DNS 表单 | 仅超级管理员可提交（与「DNS 与节点池」页面一致） |
 | DNS API 同步 | 厂商记录 **先增/改、后删**；Pool A 与租户 CNAME 分步执行。租户 `edge_fqdn` 不在平台 zone 下会 **中止**（全部无效时不写厂商；部分无效时 Pool/已写 CNAME 可能已更新）。任一步失败则 **不更新** `dns_synced_at`（需修正后重试）。`dns_mode=api` 时未知 `dns_driver` 会 **抛错**（不会静默退回手动模式） |
-| 域名停用 | `status=2` 时清除该域 ACME 挑战、节点 sync 行及 `redi_cert_deployments`，证书 active/deploying 降为 issued；从停用 **改回** `status=1` 且 PEM 可用时会自动 `queueDeploy`（非新建即启用） |
+| 域名停用 | `status=2` 时清除该域 ACME 挑战、节点 sync 行及 `redi_cert_deployments`，证书 active/deploying 降为 issued 并写明取消部署；**issued** 且仍有部署行时同样写入取消提示；从停用 **改回** `status=1` 且 PEM 可用时会自动 `queueDeploy`（非新建即启用） |
 | Session Cookie | HTTPS 后台请设 `SESSION_SECURE_COOKIE=true`（见 `.env.example`） |
 | 证书存储 | `redi_domain_certs` 中 PEM 经 Laravel `Crypt` 加密；备份库即备份密钥材料 |
 | ACME | 主控 `storage/app/acme` 存 LE 账户；签发前要求节点上报挑战已同步，并探测公网域名 HTTP-01 |
