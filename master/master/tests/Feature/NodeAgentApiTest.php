@@ -495,6 +495,70 @@ class NodeAgentApiTest extends TestCase
         $this->assertSame($before, $after);
     }
 
+    public function test_revision_bumps_challenges_and_combined_when_ready_challenge_added(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $beforeResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $beforeResponse->assertOk();
+        $before = $beforeResponse->json();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'acme-rev.example',
+            'token' => 'tok',
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $afterResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $afterResponse->assertOk();
+        $after = $afterResponse->json();
+
+        $this->assertNotSame($before['challenges_revision'], $after['challenges_revision']);
+        $this->assertNotSame($before['revision'], $after['revision']);
+        $this->assertSame($before['certificates_revision'], $after['certificates_revision']);
+        $this->assertSame($before['rules_revision'], $after['rules_revision']);
+    }
+
+    public function test_revision_unchanged_when_unpublishable_challenge_added(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $beforeResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $beforeResponse->assertOk();
+        $before = $beforeResponse->json();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'skip-rev.example',
+            'token' => '',
+            'response_body' => '',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $afterResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $afterResponse->assertOk();
+        $after = $afterResponse->json();
+
+        $this->assertSame($before['challenges_revision'], $after['challenges_revision']);
+        $this->assertSame($before['revision'], $after['revision']);
+    }
+
     public function test_revision_bumps_rules_and_certificates_when_force_https_toggled(): void
     {
         [$node, $token] = $this->createNodeWithToken();
