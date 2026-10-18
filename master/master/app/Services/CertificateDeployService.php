@@ -213,8 +213,9 @@ class CertificateDeployService
             $cert->save();
         }
 
-        if (self::certIsEligibleForDeployQueue($cert)) {
-            $this->queueDeploy($cert);
+        $fresh = self::freshCertWithPersistedRealign($cert);
+        if ($fresh && self::certIsEligibleForDeployQueue($fresh)) {
+            $this->queueDeploy($fresh);
         }
     }
 

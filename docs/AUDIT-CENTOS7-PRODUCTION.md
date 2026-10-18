@@ -17,7 +17,7 @@
 | 项 | 结论 |
 |----|------|
 | 范围 | **76** 个 PR（#145–#220 已合并 `main`）；相对 #144 合并点约 **98** 文件、+4326/-425 行 |
-| 门禁 | `bash scripts/dev-preflight.sh`：**296** tests / **557** assertions；Go 测试通过 |
+| 门禁 | `bash scripts/dev-preflight.sh`：**299** tests / **562** assertions；Go 测试通过 |
 | A. 节点 API / Agent（#145–#174, #198–#200） | ack 校验、控制字符过滤、`redirect-rules` / challenges 出站域名校验；与 Go `AcmeHostKey` 对齐 |
 | B. ACME / 主机名（#175–#197） | `acmeHostKey`、`nodePublishableRow`、`originalUrlIfValid` 收敛；purge 先增后删与 legacy 键兼容 |
 | C. 证书漂移与 realign（#187–#240） | 只读扫描 + `freshCertWithPersistedRealign` 落库；`saveQuietly` + 显式 `reconcile`；节点 `ack` 行锁内对齐 |
@@ -278,6 +278,10 @@
 **2026-10-18 #249 已合并 `main`：** 见 [PR #249](https://github.com/freejbgo/301/pull/249)。
 
 **2026-10-18 #250 已合并 `main`：** 见 [PR #250](https://github.com/freejbgo/301/pull/250)。
+
+**2026-10-18 #251 已合并 `main`：** 见 [PR #251](https://github.com/freejbgo/301/pull/251)。
+
+**2026-10-18 复核（#252）：** 域名重新启用走 `freshCertWithPersistedRealign` 再 `queueDeploy`；`certificates_revision` 含本节点 `deployment_status`；Feature 测 requeue 后 revision 变化；PHPUnit **299**（**562** assertions）。
 
 **2026-10-18 复核（#251）：** `requeueFailedDeployments` 跳过不可入队证书时清理 failed 部署行并 reconcile；PHPUnit **296**（**557** assertions）。
 

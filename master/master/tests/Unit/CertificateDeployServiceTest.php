@@ -989,6 +989,36 @@ class CertificateDeployServiceTest extends TestCase
         );
     }
 
+    public function test_handle_domain_reenabled_from_disabled_realigns_stale_domain_name_before_queue(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $domain = \App\Models\RediAdminDomain::query()->find($domainId);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'stale.example',
+            'status' => RediDomainCert::STATUS_ISSUED,
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        app(CertificateDeployService::class)->handleDomainReenabledFromDisabled($domain);
+
+        $this->assertSame('edge.example', RediDomainCert::query()->find($certId)->domain_name);
+        $this->assertDatabaseHas('redi_cert_deployments', [
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+        ]);
+    }
+
     public function test_handle_domain_reenabled_from_disabled_queues_eligible_cert(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
