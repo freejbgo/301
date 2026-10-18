@@ -292,6 +292,7 @@ class NodeAgentController extends Controller
     {
         $rows = DB::table('redi_admin_domain')
             ->where('status', 1)
+            ->orderBy('id')
             ->get(['original_url', 'force_https'])
             ->map(function ($row) {
                 $host = DomainRecordNormalizer::originalUrlIfValid((string) $row->original_url);

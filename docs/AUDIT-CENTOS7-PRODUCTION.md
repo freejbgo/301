@@ -17,7 +17,7 @@
 | 项 | 结论 |
 |----|------|
 | 范围 | **76** 个 PR（#145–#220 已合并 `main`）；相对 #144 合并点约 **98** 文件、+4326/-425 行 |
-| 门禁 | `bash scripts/dev-preflight.sh`：**302** tests / **570** assertions；Go 测试通过 |
+| 门禁 | `bash scripts/dev-preflight.sh`：**332** tests / **686** assertions；Go 测试通过 |
 | A. 节点 API / Agent（#145–#174, #198–#200） | ack 校验、控制字符过滤、`redirect-rules` / challenges 出站域名校验；与 Go `AcmeHostKey` 对齐 |
 | B. ACME / 主机名（#175–#197） | `acmeHostKey`、`nodePublishableRow`、`originalUrlIfValid` 收敛；purge 先增后删与 legacy 键兼容 |
 | C. 证书漂移与 realign（#187–#240） | 只读扫描 + `freshCertWithPersistedRealign` 落库；`saveQuietly` + 显式 `reconcile`；节点 `ack` 行锁内对齐 |
@@ -312,6 +312,10 @@
 **2026-10-18 #266 已合并 `main`：** 见 [PR #266](https://github.com/freejbgo/301/pull/266)。
 
 **2026-10-18 #267 已合并 `main`：** 见 [PR #267](https://github.com/freejbgo/301/pull/267)。
+
+**2026-10-18 #268 已合并 `main`：** 见 [PR #268](https://github.com/freejbgo/301/pull/268)。
+
+**2026-10-18 复核（#269）：** `redirect-rules` 按 `id` 排序且与 `rules_revision` 过滤一致（停用域名、HTTP-01 token 格式非法不入 revision/`acme-challenges`）；PHPUnit **332**（**686** assertions）。
 
 **2026-10-18 复核（#268）：** Feature 测 ACME token/域名与规则 `original_url` 含控制字符不入 revision 哈希；PHPUnit **329**（**677** assertions）。
 
@@ -808,4 +812,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **302** 条 Feature/Unit（**570** assertions）；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **332** 条 Feature/Unit（**686** assertions）；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
