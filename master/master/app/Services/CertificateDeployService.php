@@ -310,7 +310,7 @@ class CertificateDeployService
         $this->reconcileCertDeployStatus($cert->fresh()->load('domain'));
     }
 
-    /** 证书已不可被节点拉取时，删除 pending/failed 部署行（保留 ok，便于审计）。 */
+    /** 证书已不可被节点拉取时，删除全部部署行（与节点 heartbeat/拉证清理策略一致）。 */
     public function pruneNonPullableDeployments(RediDomainCert $cert): int
     {
         if (! Schema::hasTable('redi_cert_deployments')) {
@@ -324,7 +324,6 @@ class CertificateDeployService
 
         $deleted = (int) RediCertDeployment::query()
             ->where('cert_id', $cert->id)
-            ->whereIn('status', ['pending', 'failed'])
             ->delete();
 
         if ($deleted > 0) {

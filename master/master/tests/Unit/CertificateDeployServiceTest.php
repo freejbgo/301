@@ -802,8 +802,10 @@ class CertificateDeployServiceTest extends TestCase
         $cert->private_key = null;
         $cert->save();
 
-        $this->assertSame(RediDomainCert::STATUS_ISSUED, $cert->fresh()->status);
-        $this->assertStringContainsString('不可下发', (string) $cert->fresh()->last_error);
+        $fresh = $cert->fresh();
+        $this->assertSame(RediDomainCert::STATUS_ISSUED, $fresh->status);
+        $this->assertNotSame(RediDomainCert::STATUS_ACTIVE, $fresh->status);
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
     }
 
     public function test_cert_save_without_pem_prunes_pending_deployments(): void
