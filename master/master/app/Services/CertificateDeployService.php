@@ -445,7 +445,13 @@ class CertificateDeployService
         $eligibleCertIds = [];
         foreach ($certIds as $cid) {
             $cert = RediDomainCert::query()->with('domain')->find($cid);
-            if (! $cert || ! self::certIsEligibleForDeployQueue($cert)) {
+            if (! $cert) {
+                continue;
+            }
+            if (! self::certIsEligibleForDeployQueue($cert)) {
+                $this->pruneNonPullableDeployments($cert);
+                $this->reconcileCertDeployStatus($cert->fresh()->load('domain'));
+
                 continue;
             }
             $eligibleCertIds[] = (int) $cid;

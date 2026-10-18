@@ -257,6 +257,39 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertSame('edge.example', $cert->fresh()->domain_name);
     }
 
+    public function test_requeue_failed_deployments_prunes_ineligible_failed_rows(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_FAILED,
+            'certificate' => null,
+            'private_key' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'failed',
+            'last_error' => 'simulated',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $count = app(CertificateDeployService::class)->requeueFailedDeployments((int) $node->id, null);
+
+        $this->assertSame(0, $count);
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
+    }
+
     public function test_requeue_failed_deployments_resets_status(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
@@ -507,7 +540,7 @@ class CertificateDeployServiceTest extends TestCase
         $count = app(CertificateDeployService::class)->requeueFailedDeployments((int) $node->id, null);
 
         $this->assertSame(0, $count);
-        $this->assertDatabaseHas('redi_cert_deployments', ['status' => 'failed']);
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
     }
 
     public function test_requeue_failed_deployments_skips_disabled_node(): void
@@ -571,11 +604,7 @@ class CertificateDeployServiceTest extends TestCase
         $count = app(CertificateDeployService::class)->requeueFailedDeployments((int) $node->id, null);
 
         $this->assertSame(0, $count);
-        $this->assertDatabaseHas('redi_cert_deployments', [
-            'cert_id' => $certId,
-            'node_id' => $node->id,
-            'status' => 'failed',
-        ]);
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
     }
 
     public function test_queue_deploy_skips_without_pem_material(): void
