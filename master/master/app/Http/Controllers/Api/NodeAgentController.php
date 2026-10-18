@@ -148,6 +148,7 @@ class NodeAgentController extends Controller
     public function acmeChallenges()
     {
         $rows = AcmeChallengeQuery::ready()
+            ->orderBy('id')
             ->get(['domain_name', 'token', 'response_body'])
             ->filter(function ($row) {
                 return AcmeChallengeQuery::nodePublishableRow($row->domain_name, $row->token, $row->response_body);
