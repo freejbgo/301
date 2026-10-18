@@ -120,6 +120,61 @@ class CertificateDeployServiceTest extends TestCase
         );
     }
 
+    public function test_sync_prunes_stale_ok_before_backfilling_pullable_cert(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $staleDomainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'stale.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $staleCertId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $staleDomainId,
+            'domain_name' => 'stale.example',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+            'certificate' => null,
+            'private_key' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $staleCertId,
+            'node_id' => $node->id,
+            'status' => 'ok',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $goodDomainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'good.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $goodCertId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $goodDomainId,
+            'domain_name' => 'good.example',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        app(CertificateDeployService::class)->syncDeploymentsForNode($node);
+
+        $this->assertDatabaseMissing('redi_cert_deployments', [
+            'cert_id' => $staleCertId,
+            'node_id' => $node->id,
+        ]);
+        $this->assertDatabaseHas('redi_cert_deployments', [
+            'cert_id' => $goodCertId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+        ]);
+    }
+
     public function test_sync_deployments_for_node_creates_pending_rows(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
