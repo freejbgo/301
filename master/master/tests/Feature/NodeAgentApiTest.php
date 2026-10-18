@@ -921,6 +921,99 @@ class NodeAgentApiTest extends TestCase
         $this->assertSame($before['revision'], $after['revision']);
     }
 
+    public function test_revision_unchanged_when_challenge_token_has_control_chars(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $beforeResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $beforeResponse->assertOk();
+        $before = $beforeResponse->json();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'bad-token.example',
+            'token' => "ok-token\n",
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $afterResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $afterResponse->assertOk();
+        $after = $afterResponse->json();
+
+        $this->assertSame($before['challenges_revision'], $after['challenges_revision']);
+        $this->assertSame($before['revision'], $after['revision']);
+    }
+
+    public function test_revision_unchanged_when_challenge_domain_has_control_chars(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $beforeResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $beforeResponse->assertOk();
+        $before = $beforeResponse->json();
+
+        RediAcmeChallenge::create([
+            'domain_name' => "evil\x00.example",
+            'token' => 'ok-token',
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $afterResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $afterResponse->assertOk();
+        $after = $afterResponse->json();
+
+        $this->assertSame($before['challenges_revision'], $after['challenges_revision']);
+        $this->assertSame($before['revision'], $after['revision']);
+    }
+
+    public function test_revision_unchanged_when_rules_domain_has_control_char_original_url(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $beforeResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $beforeResponse->assertOk();
+        $before = $beforeResponse->json();
+
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => "bad\x00.example",
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $afterResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $afterResponse->assertOk();
+        $after = $afterResponse->json();
+
+        $this->assertSame($before['rules_revision'], $after['rules_revision']);
+        $this->assertSame($before['revision'], $after['revision']);
+    }
+
     public function test_revision_bumps_rules_when_original_url_becomes_invalid_host(): void
     {
         [, $token] = $this->createNodeWithToken();
