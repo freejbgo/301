@@ -2240,6 +2240,34 @@ class NodeAgentApiTest extends TestCase
         );
     }
 
+    public function test_redirect_rules_normalizes_scheme_in_original_url(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('group_id')->default(1);
+            $table->unsignedInteger('admin_id')->default(1);
+            $table->string('original_url');
+            $table->string('skip_url')->default('http://example.com');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => 'https://Canon.Example/',
+            'status' => 1,
+            'force_https' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $rules = $this->withToken($token)->getJson('/api/nodes/redirect-rules')->json('rules');
+        $this->assertCount(1, $rules);
+        $this->assertSame('canon.example', $rules[0]['original_url']);
+    }
+
     public function test_redirect_rules_lists_domain_when_rules_revision_bumps(): void
     {
         [, $token] = $this->createNodeWithToken();
@@ -2389,6 +2417,91 @@ class NodeAgentApiTest extends TestCase
 
         $challenges = $this->withToken($token)->getJson('/api/nodes/acme-challenges')->json('challenges');
         $this->assertSame([], $challenges);
+    }
+
+    public function test_acme_challenges_ordered_by_challenge_id(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'zzz.example',
+            'token' => 'tok-z',
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+        RediAcmeChallenge::create([
+            'domain_name' => 'aaa.example',
+            'token' => 'tok-a',
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $names = array_column(
+            $this->withToken($token)->getJson('/api/nodes/acme-challenges')->json('challenges'),
+            'domain_name'
+        );
+        $this->assertSame(['zzz.example', 'aaa.example'], $names);
+    }
+
+    public function test_certificates_ordered_by_cert_id(): void
+    {
+        [$node, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $domainA = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'cert-z.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $domainB = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'cert-a.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $certZ = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainA,
+            'domain_name' => 'cert-z.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\nz\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\nz\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certA = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainB,
+            'domain_name' => 'cert-a.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\na\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\na\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        foreach ([$certZ, $certA] as $certId) {
+            \DB::table('redi_cert_deployments')->insert([
+                'cert_id' => $certId,
+                'node_id' => $node->id,
+                'status' => 'ok',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $ids = array_column(
+            $this->withToken($token)->getJson('/api/nodes/certificates')->json('certificates'),
+            'cert_id'
+        );
+        $this->assertSame([$certZ, $certA], $ids);
     }
 
     public function test_redirect_rules_shape(): void
