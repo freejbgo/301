@@ -85,8 +85,10 @@ class NodeAgentRevisionService
                     'credentials' => $row->credentialCiphertextFingerprint(),
                 ];
                 if ($node !== null) {
+                    $deployment = $row->deployments->first();
                     $payload['cert_status'] = (string) $row->status;
-                    $payload['deployment_status'] = (string) optional($row->deployments->first())->status;
+                    $payload['deployment_status'] = (string) optional($deployment)->status;
+                    $payload['deployment_error'] = sha1((string) optional($deployment)->last_error);
                 }
 
                 return (object) $payload;
