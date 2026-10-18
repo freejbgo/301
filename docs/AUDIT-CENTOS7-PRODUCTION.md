@@ -297,6 +297,10 @@
 
 **2026-10-18 #259 已合并 `main`：** 见 [PR #259](https://github.com/freejbgo/301/pull/259)。
 
+**2026-10-18 #260 已合并 `main`：** 见 [PR #260](https://github.com/freejbgo/301/pull/260)。
+
+**2026-10-18 复核（#261）：** Feature 测 `force_https` 切换同时 bump `rules_revision`、`certificates_revision` 与组合 `revision`；PHPUnit **312**（**601** assertions）。
+
 **2026-10-18 复核（#260）：** Feature 测他节点失败后成功 ack 清除 `cert_last_error` 并 bump 本节点 revision；Feature 测成功 ack 清除陈旧部署 `last_error` 后 `deployment_error` revision 变化；PHPUnit **311**（**598** assertions）。
 
 **2026-10-18 复核（#259）：** `markNodeAck` 在 `ok` 且部署行已为 `ok` 时清除陈旧 `last_error`；Feature 测他节点失败重排队后本节点 revision 变化；PHPUnit **309**（**590** assertions）。

@@ -495,6 +495,53 @@ class NodeAgentApiTest extends TestCase
         $this->assertSame($before, $after);
     }
 
+    public function test_revision_bumps_rules_and_certificates_when_force_https_toggled(): void
+    {
+        [$node, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'https-toggle-rev.example',
+            'status' => 1,
+            'force_https' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'https-toggle-rev.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'ok',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $before = $this->withToken($token)->getJson('/api/nodes/revision')->json();
+
+        \DB::table('redi_admin_domain')->where('id', $domainId)->update(['force_https' => 1]);
+
+        $after = $this->withToken($token)->getJson('/api/nodes/revision')->json();
+
+        $this->assertNotSame($before['rules_revision'], $after['rules_revision']);
+        $this->assertNotSame($before['certificates_revision'], $after['certificates_revision']);
+        $this->assertNotSame($before['revision'], $after['revision']);
+    }
+
     public function test_revision_certificates_revision_drops_when_domain_disabled(): void
     {
         [$node, $token] = $this->createNodeWithToken();
