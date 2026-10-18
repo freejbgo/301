@@ -27,6 +27,7 @@
 | `TRUSTED_PROXIES=*` | 生产默认 **拒绝启动**（含 `queue:work` / `schedule:run`）；仅 `REDI_ALLOW_TRUST_ALL_PROXIES=true` 且主控绝不直连公网时例外 |
 | `/api/nodes/certificates` | Bearer 鉴权；**仅返回本节点在 `redi_cert_deployments` 中有记录且可拉取的证书**（与 `ack` 一致；不可拉取时主控会清理该节点全部部署行，含历史 `ok`）。Token 泄露仍可拿到该节点被分配的全池证书，须轮换 Token 并隔离主机 |
 | `/api/nodes/revision` | 与 `/certificates` 相同会先清理本节点不可拉取证书的部署行；`certificates_revision` 哈希含本节点 `deployment_status`、`deployment_error`（部署 `last_error` SHA1）、`cert_status`、`cert_last_error`（证书级 `last_error` SHA1）、域名 `force_https`、证书元数据与**加密 PEM 密文指纹**（非明文）；`rules_revision` / `challenges_revision` 分别哈希启用域名跳转策略与**可发布** ACME 挑战（空 token/非法 body 不计入），组合 `revision` 三者 SHA1 嵌套；续期、跳转策略、挑战或部署变更后 Agent 会拉取对应端点 |
+| 节点列表端点顺序 | `redirect-rules`、`acme-challenges`、`/certificates` 与对应分项 revision 哈希均按表主键 `id` 升序返回，便于 Agent 做确定性 diff |
 | 节点 `heartbeat` / `register` | 更新 `last_heartbeat_at`；`register` 会 `syncDeploymentsForNode`（先清理本节点陈旧部署行再补齐 pending）；`heartbeat`、拉证与 `revision` 亦会清理不可拉取证书的全部部署行（含历史 `ok`）并 reconcile |
 | 节点 `ack` | 仅当存在该节点对应的 `redi_cert_deployments` 行且状态可更新时才接受；否则 **409**（避免伪造部署成功）；部署行 `pending`/`failed`/`ok` 变化会反映到本节点 `certificates_revision`；已为 `failed` 时再次 `ok=false` 且带新 `error` 会更新 `last_error`（驱动 `deployment_error` revision）；`ok=true` 且部署行已为 `ok` 时会清除陈旧 `last_error`；他节点失败/重排队导致证书级 `last_error` 变更时，本节点 `ok` 部署亦会通过 `cert_last_error` bump revision |
 | `challenges-synced` | 非法 Host 返回 **422**；未在 ACME 就绪表中的域名返回 200 且计入 `ignored_count`（节点可区分同步失败与格式错误） |

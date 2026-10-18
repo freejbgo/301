@@ -823,6 +823,9 @@ class NodeAgentApiTest extends TestCase
 
         $this->assertNotSame($before['challenges_revision'], $after['challenges_revision']);
         $this->assertNotSame($before['revision'], $after['revision']);
+
+        $challenges = $this->withToken($token)->getJson('/api/nodes/acme-challenges')->json('challenges');
+        $this->assertSame([], $challenges);
     }
 
     public function test_revision_bumps_challenges_when_ready_challenge_expires(): void
@@ -2151,6 +2154,45 @@ class NodeAgentApiTest extends TestCase
         $this->assertNotSame($before, $after);
     }
 
+    public function test_register_lists_cert_on_certificates_after_revision_bumps(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        [$node, $token] = $this->createNodeWithToken();
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'pull-after-reg.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'pull-after-reg.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $before = $this->withToken($token)->getJson('/api/nodes/revision')->json('certificates_revision');
+        $this->withToken($token)->postJson('/api/nodes/register', ['version' => '0.1.3'])->assertOk();
+        $after = $this->withToken($token)->getJson('/api/nodes/revision')->json('certificates_revision');
+        $this->assertNotSame($before, $after);
+
+        $ids = array_column(
+            $this->withToken($token)->getJson('/api/nodes/certificates')->json('certificates'),
+            'cert_id'
+        );
+        $this->assertSame([$certId], $ids);
+    }
+
     public function test_register_preserves_agent_version_when_version_key_absent(): void
     {
         Schema::create('redi_admin_domain', function (Blueprint $table) {
@@ -2417,6 +2459,22 @@ class NodeAgentApiTest extends TestCase
 
         $challenges = $this->withToken($token)->getJson('/api/nodes/acme-challenges')->json('challenges');
         $this->assertSame([], $challenges);
+    }
+
+    public function test_acme_challenges_normalizes_scheme_in_domain_name(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'https://Canon-Acme.Example/',
+            'token' => 'tok',
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $challenges = $this->withToken($token)->getJson('/api/nodes/acme-challenges')->json('challenges');
+        $this->assertCount(1, $challenges);
+        $this->assertSame('canon-acme.example', $challenges[0]['domain_name']);
     }
 
     public function test_acme_challenges_ordered_by_challenge_id(): void
