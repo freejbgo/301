@@ -68,7 +68,7 @@ class NodeAgentRevisionService
         $certs = $certsQuery
             ->with('domain')
             ->orderBy('id')
-            ->get(['id', 'domain_id', 'domain_name', 'status', 'certificate', 'private_key', 'updated_at'])
+            ->get(['id', 'domain_id', 'domain_name', 'status', 'certificate', 'private_key', 'last_error', 'updated_at'])
             ->each(function ($row) {
                 DomainRecordNormalizer::realignCertDomainNameFromAdminDomain($row, false);
             })
@@ -87,6 +87,7 @@ class NodeAgentRevisionService
                 if ($node !== null) {
                     $deployment = $row->deployments->first();
                     $payload['cert_status'] = (string) $row->status;
+                    $payload['cert_last_error'] = sha1((string) $row->last_error);
                     $payload['deployment_status'] = (string) optional($deployment)->status;
                     $payload['deployment_error'] = sha1((string) optional($deployment)->last_error);
                 }
