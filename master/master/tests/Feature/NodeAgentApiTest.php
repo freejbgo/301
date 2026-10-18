@@ -495,6 +495,30 @@ class NodeAgentApiTest extends TestCase
         $this->assertSame($before, $after);
     }
 
+    public function test_revision_combined_matches_nested_sha1_of_split_fields(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $payload = $this->withToken($token)->getJson('/api/nodes/revision')->json();
+        $expected = sha1(json_encode([
+            'challenges' => $payload['challenges_revision'],
+            'rules' => $payload['rules_revision'],
+            'certificates' => $payload['certificates_revision'],
+        ]));
+        $this->assertSame($expected, $payload['revision']);
+        $this->assertNotSame('', $payload['challenges_revision']);
+        $this->assertNotSame('', $payload['rules_revision']);
+        $this->assertNotSame('', $payload['certificates_revision']);
+    }
+
     public function test_revision_bumps_challenges_and_combined_when_ready_challenge_added(): void
     {
         [, $token] = $this->createNodeWithToken();
@@ -2560,6 +2584,47 @@ class NodeAgentApiTest extends TestCase
             'cert_id'
         );
         $this->assertSame([$certZ, $certA], $ids);
+    }
+
+    public function test_certificates_response_includes_force_https(): void
+    {
+        [$node, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(true);
+            $table->timestamps();
+        });
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'force-https-cert.example',
+            'status' => 1,
+            'force_https' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'force-https-cert.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'ok',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $certs = $this->withToken($token)->getJson('/api/nodes/certificates')->json('certificates');
+        $this->assertCount(1, $certs);
+        $this->assertTrue($certs[0]['force_https']);
     }
 
     public function test_redirect_rules_shape(): void
