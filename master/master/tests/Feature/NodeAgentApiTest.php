@@ -890,6 +890,70 @@ class NodeAgentApiTest extends TestCase
         $this->assertSame($before['revision'], $after['revision']);
     }
 
+    public function test_revision_unchanged_when_challenge_has_control_chars_in_response_body(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $beforeResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $beforeResponse->assertOk();
+        $before = $beforeResponse->json();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'bad-body.example',
+            'token' => 'ok-token',
+            'response_body' => "bo\r\ndy",
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $afterResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $afterResponse->assertOk();
+        $after = $afterResponse->json();
+
+        $this->assertSame($before['challenges_revision'], $after['challenges_revision']);
+        $this->assertSame($before['revision'], $after['revision']);
+    }
+
+    public function test_revision_bumps_rules_when_original_url_becomes_invalid_host(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'was-valid.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $beforeResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $beforeResponse->assertOk();
+        $before = $beforeResponse->json();
+
+        \DB::table('redi_admin_domain')->where('id', $domainId)->update(['original_url' => '1.2.3.4']);
+
+        $afterResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $afterResponse->assertOk();
+        $after = $afterResponse->json();
+
+        $this->assertNotSame($before['rules_revision'], $after['rules_revision']);
+        $this->assertNotSame($before['revision'], $after['revision']);
+    }
+
     public function test_revision_bumps_rules_and_certificates_when_force_https_toggled(): void
     {
         [$node, $token] = $this->createNodeWithToken();
