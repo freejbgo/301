@@ -197,6 +197,50 @@ class NodeAgentRevisionServiceTest extends TestCase
         $this->assertNotSame($withCert, $empty);
     }
 
+    public function test_certificates_revision_changes_when_cert_status_changes_for_node(): void
+    {
+        $stamp = '2020-01-01 00:00:00';
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => 'status.example',
+            'status' => 1,
+            'force_https' => 0,
+            'created_at' => $stamp,
+            'updated_at' => $stamp,
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => 1,
+            'domain_name' => 'status.example',
+            'status' => 'deploying',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => $stamp,
+            'updated_at' => $stamp,
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => 1,
+            'status' => 'ok',
+            'created_at' => $stamp,
+            'updated_at' => $stamp,
+        ]);
+
+        $node = new RediNode();
+        $node->id = 1;
+        $node->exists = true;
+
+        $svc = new NodeAgentRevisionService();
+        $before = $svc->build($node)['certificates_revision'];
+
+        \DB::table('redi_domain_certs')->where('id', $certId)->update([
+            'status' => 'active',
+            'updated_at' => $stamp,
+        ]);
+
+        $after = $svc->build($node)['certificates_revision'];
+
+        $this->assertNotSame($before, $after);
+    }
+
     public function test_certificates_revision_changes_when_node_deployment_status_changes(): void
     {
         \DB::table('redi_admin_domain')->insert([
