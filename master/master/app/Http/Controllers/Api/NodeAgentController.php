@@ -205,6 +205,7 @@ class NodeAgentController extends Controller
             ->whereHas('domain', function ($query) {
                 $query->where('status', 1);
             })
+            ->orderBy('id')
             ->get();
 
         $payload = [];
