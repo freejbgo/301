@@ -285,6 +285,10 @@
 
 **2026-10-18 #253 已合并 `main`：** 见 [PR #253](https://github.com/freejbgo/301/pull/253)。
 
+**2026-10-18 #254 已合并 `main`：** 见 [PR #254](https://github.com/freejbgo/301/pull/254)。
+
+**2026-10-18 复核（#255）：** `certificates_revision` 含本节点 `deployment_error`（部署 `last_error` SHA1）；单测锁定同状态仅错误文案变更亦 bump revision；PHPUnit **303**（**571** assertions）。
+
 **2026-10-18 复核（#254）：** `certificates_revision` 含本节点 `cert_status`；Feature 测 ack 失败（pending→failed）后 revision 变化；PHPUnit **302**（**570** assertions）。
 
 **2026-10-18 复核（#253）：** Feature 测 `ack` 成功（pending→ok）后 `certificates_revision` 变化；PHPUnit **300**（**565** assertions）。
