@@ -674,6 +674,78 @@ class NodeAgentApiTest extends TestCase
         ]);
     }
 
+    public function test_revision_changes_when_repeat_failed_ack_updates_last_error(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        [$node, $token] = $this->createNodeWithToken();
+        $peer = new RediNode();
+        $peer->name = 'n2';
+        $peer->public_ip = '5.6.7.8';
+        $peer->enabled = true;
+        $peer->last_heartbeat_at = now();
+        $peer->save();
+        $node->last_heartbeat_at = now();
+        $node->save();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 're-fail.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 're-fail.example',
+            'status' => 'deploying',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            [
+                'cert_id' => $certId,
+                'node_id' => $node->id,
+                'status' => 'pending',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cert_id' => $certId,
+                'node_id' => $peer->id,
+                'status' => 'pending',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/ack', ['cert_id' => $certId, 'ok' => false, 'error' => 'first failure'])
+            ->assertOk();
+
+        $before = $this->withToken($token)->getJson('/api/nodes/revision')->json('certificates_revision');
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/ack', ['cert_id' => $certId, 'ok' => false, 'error' => 'second failure'])
+            ->assertOk();
+
+        $this->assertSame(
+            'second failure',
+            \DB::table('redi_cert_deployments')->where('cert_id', $certId)->where('node_id', $node->id)->value('last_error')
+        );
+
+        $after = $this->withToken($token)->getJson('/api/nodes/revision')->json('certificates_revision');
+
+        $this->assertNotSame($before, $after);
+    }
+
     public function test_revision_changes_after_failed_ack(): void
     {
         Schema::create('redi_admin_domain', function (Blueprint $table) {

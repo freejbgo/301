@@ -688,6 +688,54 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertStringContainsString('域名已停用', (string) $cert->fresh()->last_error);
     }
 
+    public function test_mark_node_ack_updates_last_error_when_deployment_already_failed(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $peer = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.5']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_DEPLOYING,
+        ]);
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
+        \DB::table('redi_cert_deployments')->insert([
+            [
+                'cert_id' => $cert->id,
+                'node_id' => $node->id,
+                'status' => 'failed',
+                'last_error' => 'first',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'cert_id' => $cert->id,
+                'node_id' => $peer->id,
+                'status' => 'pending',
+                'last_error' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        $svc = app(CertificateDeployService::class);
+        $this->assertTrue($svc->markNodeAck($cert->fresh(), $node, false, 'second failure'));
+
+        $this->assertDatabaseHas('redi_cert_deployments', [
+            'cert_id' => $cert->id,
+            'node_id' => $node->id,
+            'status' => 'failed',
+            'last_error' => 'second failure',
+        ]);
+    }
+
     public function test_mark_node_ack_rejects_disabled_node(): void
     {
         $node = RediNode::query()->create(['enabled' => false, 'public_ip' => '1.2.3.4']);
