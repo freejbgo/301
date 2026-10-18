@@ -724,6 +724,104 @@ class NodeAgentApiTest extends TestCase
         $this->assertSame($before['certificates_revision'], $after['certificates_revision']);
     }
 
+    public function test_revision_bumps_challenges_when_ready_challenge_deleted(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $challenge = RediAcmeChallenge::create([
+            'domain_name' => 'delete-rev.example',
+            'token' => 'tok',
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $beforeResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $beforeResponse->assertOk();
+        $before = $beforeResponse->json();
+
+        $challenge->delete();
+
+        $afterResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $afterResponse->assertOk();
+        $after = $afterResponse->json();
+
+        $this->assertNotSame($before['challenges_revision'], $after['challenges_revision']);
+        $this->assertNotSame($before['revision'], $after['revision']);
+    }
+
+    public function test_revision_bumps_challenges_when_ready_challenge_expires(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $challenge = RediAcmeChallenge::create([
+            'domain_name' => 'expire-rev.example',
+            'token' => 'tok',
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $beforeResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $beforeResponse->assertOk();
+        $before = $beforeResponse->json();
+
+        $challenge->expires_at = now()->subMinute();
+        $challenge->save();
+
+        $afterResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $afterResponse->assertOk();
+        $after = $afterResponse->json();
+
+        $this->assertNotSame($before['challenges_revision'], $after['challenges_revision']);
+        $this->assertNotSame($before['revision'], $after['revision']);
+    }
+
+    public function test_revision_unchanged_when_expired_challenge_inserted(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $beforeResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $beforeResponse->assertOk();
+        $before = $beforeResponse->json();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'already-expired.example',
+            'token' => 'tok',
+            'response_body' => 'body',
+            'expires_at' => now()->subHour(),
+        ]);
+
+        $afterResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $afterResponse->assertOk();
+        $after = $afterResponse->json();
+
+        $this->assertSame($before['challenges_revision'], $after['challenges_revision']);
+        $this->assertSame($before['revision'], $after['revision']);
+    }
+
     public function test_revision_bumps_rules_and_certificates_when_force_https_toggled(): void
     {
         [$node, $token] = $this->createNodeWithToken();
