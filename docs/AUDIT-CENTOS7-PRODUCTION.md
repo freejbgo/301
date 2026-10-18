@@ -307,6 +307,10 @@
 
 **2026-10-18 #264 已合并 `main`：** 见 [PR #264](https://github.com/freejbgo/301/pull/264)。
 
+**2026-10-18 #265 已合并 `main`：** 见 [PR #265](https://github.com/freejbgo/301/pull/265)。
+
+**2026-10-18 复核（#266）：** Feature 测域名重新启用与 `original_url` 主机名变更 bump `rules_revision`；PHPUnit **324**（**657** assertions）。
+
 **2026-10-18 复核（#265）：** Feature 测就绪 ACME 挑战删除/过期 bump `challenges_revision`；已过期挑战不入 revision；PHPUnit **322**（**647** assertions）。
 
 **2026-10-18 复核（#264）：** Feature 测非法/停用域名不入 `rules_revision`；就绪 ACME 挑战更新 bump `challenges_revision`；PHPUnit **319**（**635** assertions）。
