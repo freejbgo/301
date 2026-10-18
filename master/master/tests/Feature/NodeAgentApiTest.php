@@ -626,6 +626,74 @@ class NodeAgentApiTest extends TestCase
         $this->assertNotSame($before['revision'], $after['revision']);
     }
 
+    public function test_revision_bumps_rules_when_domain_reenabled(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'reenable-rule.example',
+            'status' => 2,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $beforeResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $beforeResponse->assertOk();
+        $before = $beforeResponse->json();
+
+        \DB::table('redi_admin_domain')->where('id', $domainId)->update(['status' => 1]);
+
+        $afterResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $afterResponse->assertOk();
+        $after = $afterResponse->json();
+
+        $this->assertNotSame($before['rules_revision'], $after['rules_revision']);
+        $this->assertNotSame($before['revision'], $after['revision']);
+    }
+
+    public function test_revision_bumps_rules_when_original_url_host_changes(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'old-host.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $beforeResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $beforeResponse->assertOk();
+        $before = $beforeResponse->json();
+
+        \DB::table('redi_admin_domain')->where('id', $domainId)->update(['original_url' => 'new-host.example']);
+
+        $afterResponse = $this->withToken($token)->getJson('/api/nodes/revision');
+        $afterResponse->assertOk();
+        $after = $afterResponse->json();
+
+        $this->assertNotSame($before['rules_revision'], $after['rules_revision']);
+        $this->assertNotSame($before['revision'], $after['revision']);
+        $this->assertSame($before['certificates_revision'], $after['certificates_revision']);
+        $this->assertSame($before['challenges_revision'], $after['challenges_revision']);
+    }
+
     public function test_revision_unchanged_when_invalid_domain_host_added(): void
     {
         [, $token] = $this->createNodeWithToken();
