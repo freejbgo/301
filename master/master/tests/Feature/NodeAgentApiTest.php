@@ -866,6 +866,44 @@ class NodeAgentApiTest extends TestCase
         ]);
     }
 
+    public function test_register_bumps_certificates_revision_when_sync_adds_deployment(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        [$node, $token] = $this->createNodeWithToken();
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'rev-reg.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => 'rev-reg.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $before = $this->withToken($token)->getJson('/api/nodes/revision')->json('certificates_revision');
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/register', ['version' => '0.1.3'])
+            ->assertOk();
+
+        $after = $this->withToken($token)->getJson('/api/nodes/revision')->json('certificates_revision');
+
+        $this->assertNotSame($before, $after);
+    }
+
     public function test_register_preserves_agent_version_when_version_key_absent(): void
     {
         Schema::create('redi_admin_domain', function (Blueprint $table) {

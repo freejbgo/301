@@ -386,6 +386,7 @@ class CertificateDeployService
         self::forgetActionableDeploymentMetrics();
     }
 
+    /** 本节点：证书已不可拉取时删除任意状态的部署行（含历史 ok），并 reconcile 受影响证书。 */
     public function pruneStaleDeploymentsForNode(RediNode $node): void
     {
         if (! Schema::hasTable('redi_cert_deployments')) {
@@ -397,7 +398,6 @@ class CertificateDeployService
         $touchedCertIds = [];
         RediCertDeployment::query()
             ->where('node_id', $node->id)
-            ->whereIn('status', ['pending', 'failed'])
             ->with(['cert.domain'])
             ->get()
             ->each(function (RediCertDeployment $deployment) use (&$pruned, &$pullableByCertId, &$touchedCertIds) {
