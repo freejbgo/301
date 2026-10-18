@@ -339,6 +339,8 @@ class CertificateDeployService
             return;
         }
 
+        $this->pruneStaleDeploymentsForNode($node);
+
         $affectedCertIds = [];
         foreach ($this->deployableCertsForNodes() as $cert) {
             if (! self::certIsNodePullable($cert)) {
@@ -372,8 +374,6 @@ class CertificateDeployService
             );
             $affectedCertIds[(int) $cert->id] = true;
         }
-
-        $this->pruneStaleDeploymentsForNode($node);
 
         foreach (array_keys($affectedCertIds) as $certId) {
             $cert = RediDomainCert::query()->with('domain')->find($certId);

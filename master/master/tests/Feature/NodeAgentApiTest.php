@@ -539,6 +539,50 @@ class NodeAgentApiTest extends TestCase
         $this->assertNotSame($before, $after);
     }
 
+    public function test_revision_drops_when_this_nodes_deployment_row_removed(): void
+    {
+        [$node, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'unassign.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'unassign.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'ok',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $before = $this->withToken($token)->getJson('/api/nodes/revision')->json('certificates_revision');
+
+        \DB::table('redi_cert_deployments')->where('node_id', $node->id)->delete();
+
+        $after = $this->withToken($token)->getJson('/api/nodes/revision')->json('certificates_revision');
+
+        $this->assertNotSame($before, $after);
+    }
+
     public function test_revision_prunes_stale_ok_deployment_without_heartbeat(): void
     {
         [$node, $token] = $this->createNodeWithToken();
