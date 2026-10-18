@@ -293,6 +293,10 @@
 
 **2026-10-18 #257 已合并 `main`：** 见 [PR #257](https://github.com/freejbgo/301/pull/257)。
 
+**2026-10-18 #258 已合并 `main`：** 见 [PR #258](https://github.com/freejbgo/301/pull/258)。
+
+**2026-10-18 复核（#259）：** `markNodeAck` 在 `ok` 且部署行已为 `ok` 时清除陈旧 `last_error`；Feature 测他节点失败重排队后本节点 revision 变化；PHPUnit **309**（**590** assertions）。
+
 **2026-10-18 复核（#258）：** Feature 测他节点失败 ack 后本节点 `ok` 部署仍因 `cert_last_error` bump revision；SECURITY 补充说明；PHPUnit **307**（**583** assertions）。
 
 **2026-10-18 复核（#257）：** `certificates_revision` 含本节点 `cert_last_error`（证书 `last_error` SHA1）；单测锁定本节点 `ok` 时证书提示文案变更亦 bump revision；PHPUnit **306**（**578** assertions）。
