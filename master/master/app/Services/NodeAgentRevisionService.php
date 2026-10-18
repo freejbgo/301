@@ -73,6 +73,7 @@ class NodeAgentRevisionService
                     'id' => (int) $row->id,
                     'domain_id' => (int) $row->domain_id,
                     'domain_name' => HostNameValidator::toCanonicalAscii((string) $row->domain_name),
+                    'force_https' => (bool) optional($row->domain)->force_https,
                     'updated_at' => $row->updated_at,
                     'credentials' => $row->credentialCiphertextFingerprint(),
                 ];
