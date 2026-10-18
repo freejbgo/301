@@ -299,6 +299,10 @@
 
 **2026-10-18 #260 已合并 `main`：** 见 [PR #260](https://github.com/freejbgo/301/pull/260)。
 
+**2026-10-18 #261 已合并 `main`：** 见 [PR #261](https://github.com/freejbgo/301/pull/261)。
+
+**2026-10-18 复核（#262）：** Feature 测就绪 ACME 挑战入库 bump `challenges_revision` 与组合 `revision`（证书/规则不变）；不可发布挑战不入 revision；SECURITY 补充 `rules_revision`/`challenges_revision`；PHPUnit **314**（**611** assertions）。
+
 **2026-10-18 复核（#261）：** Feature 测 `force_https` 切换同时 bump `rules_revision`、`certificates_revision` 与组合 `revision`；PHPUnit **312**（**601** assertions）。
 
 **2026-10-18 复核（#260）：** Feature 测他节点失败后成功 ack 清除 `cert_last_error` 并 bump 本节点 revision；Feature 测成功 ack 清除陈旧部署 `last_error` 后 `deployment_error` revision 变化；PHPUnit **311**（**598** assertions）。
