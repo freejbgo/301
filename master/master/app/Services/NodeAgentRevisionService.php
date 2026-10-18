@@ -56,6 +56,13 @@ class NodeAgentRevisionService
                     $query->where('node_id', $node->id);
                 }
             });
+            if ($node !== null) {
+                $certsQuery->with([
+                    'deployments' => function ($query) use ($node) {
+                        $query->where('node_id', $node->id);
+                    },
+                ]);
+            }
         }
 
         $certs = $certsQuery
@@ -68,8 +75,8 @@ class NodeAgentRevisionService
             ->filter(function ($row) {
                 return CertificateDeployService::certIsNodePullable($row);
             })
-            ->map(function ($row) {
-                return (object) [
+            ->map(function ($row) use ($node) {
+                $payload = [
                     'id' => (int) $row->id,
                     'domain_id' => (int) $row->domain_id,
                     'domain_name' => HostNameValidator::toCanonicalAscii((string) $row->domain_name),
@@ -77,6 +84,11 @@ class NodeAgentRevisionService
                     'updated_at' => $row->updated_at,
                     'credentials' => $row->credentialCiphertextFingerprint(),
                 ];
+                if ($node !== null) {
+                    $payload['deployment_status'] = (string) optional($row->deployments->first())->status;
+                }
+
+                return (object) $payload;
             })
             ->values();
 
