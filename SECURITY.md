@@ -28,7 +28,7 @@
 | `/api/nodes/certificates` | Bearer 鉴权；**仅返回本节点在 `redi_cert_deployments` 中有记录且可拉取的证书**（与 `ack` 一致；不可拉取时主控会清理该节点全部部署行，含历史 `ok`）。Token 泄露仍可拿到该节点被分配的全池证书，须轮换 Token 并隔离主机 |
 | `/api/nodes/revision` | 与 `/certificates` 相同会先清理本节点不可拉取证书的部署行；`certificates_revision` 哈希含本节点 `deployment_status`、`deployment_error`（`last_error` 的 SHA1，非明文）、`cert_status`、域名 `force_https`、证书元数据与**加密 PEM 密文指纹**（非明文），续期、跳转策略、部署或证书状态变更后 Agent 会拉取 `/certificates` |
 | 节点 `heartbeat` / `register` | 更新 `last_heartbeat_at`；`register` 会 `syncDeploymentsForNode`（先清理本节点陈旧部署行再补齐 pending）；`heartbeat`、拉证与 `revision` 亦会清理不可拉取证书的全部部署行（含历史 `ok`）并 reconcile |
-| 节点 `ack` | 仅当存在该节点对应的 `redi_cert_deployments` 行且状态可更新时才接受；否则 **409**（避免伪造部署成功）；部署行 `pending`/`failed`/`ok` 变化会反映到本节点 `certificates_revision` |
+| 节点 `ack` | 仅当存在该节点对应的 `redi_cert_deployments` 行且状态可更新时才接受；否则 **409**（避免伪造部署成功）；部署行 `pending`/`failed`/`ok` 变化会反映到本节点 `certificates_revision`；已为 `failed` 时再次 `ok=false` 且带新 `error` 会更新 `last_error`（驱动 `deployment_error` revision） |
 | `challenges-synced` | 非法 Host 返回 **422**；未在 ACME 就绪表中的域名返回 200 且计入 `ignored_count`（节点可区分同步失败与格式错误） |
 | 平台 DNS 表单 | 仅超级管理员可提交（与「DNS 与节点池」页面一致） |
 | DNS API 同步 | 厂商记录 **先增/改、后删**；Pool A 与租户 CNAME 分步执行。租户 `edge_fqdn` 不在平台 zone 下会 **中止**（全部无效时不写厂商；部分无效时 Pool/已写 CNAME 可能已更新）。任一步失败则 **不更新** `dns_synced_at`（需修正后重试）。`dns_mode=api` 时未知 `dns_driver` 会 **抛错**（不会静默退回手动模式） |

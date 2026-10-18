@@ -590,12 +590,20 @@ class CertificateDeployService
             }
 
             $targetStatus = $ok ? 'ok' : 'failed';
+            $errorSnippet = $error !== null
+                ? OpsDisplaySanitizer::logSnippet($error, 2000)
+                : null;
+            if ($errorSnippet === '') {
+                $errorSnippet = null;
+            }
+
             if ($deployment->status !== $targetStatus) {
                 $deployment->status = $targetStatus;
-                $deployment->last_error = $error !== null
-                    ? OpsDisplaySanitizer::logSnippet($error, 2000)
-                    : null;
+                $deployment->last_error = $ok ? null : $errorSnippet;
                 $deployment->deployed_at = $ok ? now() : null;
+                $deployment->save();
+            } elseif (! $ok && $errorSnippet !== null && $deployment->last_error !== $errorSnippet) {
+                $deployment->last_error = $errorSnippet;
                 $deployment->save();
             }
 
