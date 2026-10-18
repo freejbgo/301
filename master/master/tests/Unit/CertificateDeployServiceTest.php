@@ -838,6 +838,37 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertDatabaseCount('redi_cert_deployments', 0);
     }
 
+    public function test_prune_stale_deployments_for_node_drops_non_pullable_ok_row(): void
+    {
+        $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+            'certificate' => null,
+            'private_key' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'ok',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        app(CertificateDeployService::class)->pruneStaleDeploymentsForNode($node);
+
+        $this->assertDatabaseCount('redi_cert_deployments', 0);
+    }
+
     public function test_prune_stale_deployments_for_node_drops_non_pullable_pending(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);
