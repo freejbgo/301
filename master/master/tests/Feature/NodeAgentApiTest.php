@@ -2240,6 +2240,157 @@ class NodeAgentApiTest extends TestCase
         );
     }
 
+    public function test_redirect_rules_lists_domain_when_rules_revision_bumps(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('group_id')->default(1);
+            $table->unsignedInteger('admin_id')->default(1);
+            $table->string('original_url');
+            $table->string('skip_url')->default('http://example.com');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $before = $this->withToken($token)->getJson('/api/nodes/revision')->json();
+
+        \DB::table('redi_admin_domain')->insert([
+            'original_url' => 'new-rule.example',
+            'status' => 1,
+            'force_https' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $after = $this->withToken($token)->getJson('/api/nodes/revision')->json();
+        $this->assertNotSame($before['rules_revision'], $after['rules_revision']);
+
+        $rules = $this->withToken($token)->getJson('/api/nodes/redirect-rules')->json('rules');
+        $this->assertCount(1, $rules);
+        $this->assertSame('new-rule.example', $rules[0]['original_url']);
+        $this->assertFalse($rules[0]['force_https']);
+    }
+
+    public function test_redirect_rules_reflects_force_https_toggle(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('group_id')->default(1);
+            $table->unsignedInteger('admin_id')->default(1);
+            $table->string('original_url');
+            $table->string('skip_url')->default('http://example.com');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'https-toggle-rules.example',
+            'status' => 1,
+            'force_https' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $before = $this->withToken($token)->getJson('/api/nodes/revision')->json();
+        \DB::table('redi_admin_domain')->where('id', $domainId)->update(['force_https' => 1]);
+        $after = $this->withToken($token)->getJson('/api/nodes/revision')->json();
+        $this->assertNotSame($before['rules_revision'], $after['rules_revision']);
+
+        $rules = $this->withToken($token)->getJson('/api/nodes/redirect-rules')->json('rules');
+        $this->assertCount(1, $rules);
+        $this->assertTrue($rules[0]['force_https']);
+    }
+
+    public function test_redirect_rules_ordered_by_domain_id(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('group_id')->default(1);
+            $table->unsignedInteger('admin_id')->default(1);
+            $table->string('original_url');
+            $table->string('skip_url')->default('http://example.com');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        \DB::table('redi_admin_domain')->insert([
+            [
+                'original_url' => 'zzz-last-alpha.example',
+                'status' => 1,
+                'force_https' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'original_url' => 'aaa-first-alpha.example',
+                'status' => 1,
+                'force_https' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        $hosts = array_column(
+            $this->withToken($token)->getJson('/api/nodes/redirect-rules')->json('rules'),
+            'original_url'
+        );
+        $this->assertSame(['zzz-last-alpha.example', 'aaa-first-alpha.example'], $hosts);
+    }
+
+    public function test_acme_challenges_lists_ready_row_when_challenges_revision_bumps(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $before = $this->withToken($token)->getJson('/api/nodes/revision')->json();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'acme-api.example',
+            'token' => 'tok',
+            'response_body' => 'body',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $after = $this->withToken($token)->getJson('/api/nodes/revision')->json();
+        $this->assertNotSame($before['challenges_revision'], $after['challenges_revision']);
+
+        $challenges = $this->withToken($token)->getJson('/api/nodes/acme-challenges')->json('challenges');
+        $this->assertCount(1, $challenges);
+        $this->assertSame('acme-api.example', $challenges[0]['domain_name']);
+        $this->assertSame('tok', $challenges[0]['token']);
+    }
+
+    public function test_acme_challenges_omit_expired_rows(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        RediAcmeChallenge::create([
+            'domain_name' => 'stale.example',
+            'token' => 'tok',
+            'response_body' => 'body',
+            'expires_at' => now()->subHour(),
+        ]);
+
+        $challenges = $this->withToken($token)->getJson('/api/nodes/acme-challenges')->json('challenges');
+        $this->assertSame([], $challenges);
+    }
+
     public function test_redirect_rules_shape(): void
     {
         [, $token] = $this->createNodeWithToken();
