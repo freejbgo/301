@@ -674,6 +674,55 @@ class NodeAgentApiTest extends TestCase
         ]);
     }
 
+    public function test_revision_changes_after_successful_ack(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        [$node, $token] = $this->createNodeWithToken();
+        $node->last_heartbeat_at = now();
+        $node->save();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'ack-rev.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'ack-rev.example',
+            'status' => 'deploying',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $before = $this->withToken($token)->getJson('/api/nodes/revision')->json('certificates_revision');
+
+        $this->withToken($token)
+            ->postJson('/api/nodes/ack', ['cert_id' => $certId, 'ok' => true])
+            ->assertOk();
+
+        $after = $this->withToken($token)->getJson('/api/nodes/revision')->json('certificates_revision');
+
+        $this->assertNotSame($before, $after);
+        $this->assertSame('ok', \DB::table('redi_cert_deployments')->where('cert_id', $certId)->value('status'));
+    }
+
     public function test_revision_certificates_revision_drops_when_pem_cleared(): void
     {
         [$node, $token] = $this->createNodeWithToken();
