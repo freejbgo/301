@@ -605,6 +605,9 @@ class CertificateDeployService
             } elseif (! $ok && $errorSnippet !== null && $deployment->last_error !== $errorSnippet) {
                 $deployment->last_error = $errorSnippet;
                 $deployment->save();
+            } elseif ($ok && $deployment->last_error !== null) {
+                $deployment->last_error = null;
+                $deployment->save();
             }
 
             $this->refreshCertStatusFromDeployments($cert);
