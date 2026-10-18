@@ -17,7 +17,7 @@
 | 项 | 结论 |
 |----|------|
 | 范围 | **76** 个 PR（#145–#220 已合并 `main`）；相对 #144 合并点约 **98** 文件、+4326/-425 行 |
-| 门禁 | `bash scripts/dev-preflight.sh`：**342** tests / **709** assertions；Go 测试通过 |
+| 门禁 | `bash scripts/dev-preflight.sh`：**344** tests / **715** assertions；Go 测试通过 |
 | A. 节点 API / Agent（#145–#174, #198–#200） | ack 校验、控制字符过滤、`redirect-rules` / challenges 出站域名校验；与 Go `AcmeHostKey` 对齐 |
 | B. ACME / 主机名（#175–#197） | `acmeHostKey`、`nodePublishableRow`、`originalUrlIfValid` 收敛；purge 先增后删与 legacy 键兼容 |
 | C. 证书漂移与 realign（#187–#240） | 只读扫描 + `freshCertWithPersistedRealign` 落库；`saveQuietly` + 显式 `reconcile`；节点 `ack` 行锁内对齐 |
@@ -27,6 +27,19 @@
 | 已修缺口（#219 合并） | PEM/主机名变更后仍显示 **active** → 模型钩子 + reconcile |
 | #220 已合并 | `refuseQueueDeploy` 先 reconcile 再写跳过文案 |
 | 后续观察（非阻塞） | ① 无心跳节点 pending 不阻塞 active（#218 设计如此）② 单测库常无 `redi_cert_deployments` 表，已用 `Schema::hasTable` 守卫 |
+
+### 节点 revision / 拉取 API 深度扫 — 收口（#273，2026-10-18）
+
+| 检查项 | 状态 |
+|--------|------|
+| `rules_revision` ↔ `redirect-rules`（过滤、`id` 序、scheme 规范化） | ✅ #269–#271 |
+| `challenges_revision` ↔ `acme-challenges`（可发布行、`id` 序、过期/非法 token） | ✅ #270–#272 |
+| `certificates_revision` ↔ `/certificates`（本节点部署行、prune、`id` 序、`force_https`） | ✅ #271–#273 |
+| 部署 prune / `markNodeAck` / 他节点失败驱动分项 revision | ✅ #254–#260、#272 |
+| 组合 `revision` = 三项分项 SHA1 嵌套 | ✅ #273 Feature 契约测 |
+| Go `masteragent` 分项 revision 仅拉变更项 | ✅ #273 `tick_test` |
+
+**结论（代码侧）：** 上述子域在 `main` 上视为 **已收口**；除非改节点 API 行为或真机验收发现问题，**不再**按「继续」做小步堆 PR。剩余风险见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md)（公网 HTTP-01、双节点时序）。
 
 ### 运维 Agent「继续」约定（2026-10-17）
 
@@ -320,6 +333,10 @@
 **2026-10-18 #270 已合并 `main`：** 见 [PR #270](https://github.com/freejbgo/301/pull/270)。
 
 **2026-10-18 #271 已合并 `main`：** 见 [PR #271](https://github.com/freejbgo/301/pull/271)。
+
+**2026-10-18 #272 已合并 `main`：** 见 [PR #272](https://github.com/freejbgo/301/pull/272)。
+
+**2026-10-18 复核（#273，收口）：** 组合 `revision` 嵌套 SHA1 契约测；`/certificates` 返回 `force_https`；Go `tick` 仅拉变更分项；AUDIT 节点 revision 子域标记完成；PHPUnit **344**（**715** assertions，以 preflight 为准）。
 
 **2026-10-18 复核（#272）：** Feature 测 `register` 后 `certificates_revision` 与 `/certificates` 一致；ACME 挑战删除后 `acme-challenges` 为空；挑战域名 scheme 规范化；SECURITY 补充列表 `id` 顺序；PHPUnit **342**（**709** assertions）。
 
@@ -824,4 +841,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **342** 条 Feature/Unit（**709** assertions）；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **344** 条 Feature/Unit（**715** assertions）；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
