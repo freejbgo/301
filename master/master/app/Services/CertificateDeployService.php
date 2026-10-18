@@ -333,6 +333,9 @@ class CertificateDeployService
         return $deleted;
     }
 
+    /**
+     * 新注册/启用节点：先清理本节点陈旧部署行，再为可拉取证书补齐 pending（保留已 ok 行）。
+     */
     public function syncDeploymentsForNode(RediNode $node): void
     {
         if (! $node->enabled) {
