@@ -2,7 +2,7 @@
 
 **状态：** 第一期 **V6-01–V6-27** 已在 `main` 落地。默认仍 **不** 发布 Pool AAAA、节点仍听 `0.0.0.0`；控制面（`NODE_IPS`、MySQL 3306、lagran）仍 IPv4。真机双栈打勾见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7。本文不是已上线说明。
 
-**读者：** Composer 2.5。一次会话只做表里的一行，做完就停。
+**读者：** Composer 2.5。第一期表格 **V6-01–V6-27** 已做完；后续改动须新开设计行，勿擅自扩大 §7「不做」范围。
 
 **配套：** [IPV6-DUALSTACK-IMPLEMENTATION.md](IPV6-DUALSTACK-IMPLEMENTATION.md)。
 

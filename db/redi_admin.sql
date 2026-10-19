@@ -4,8 +4,8 @@
 --
 -- 绿场/bootstrap 用：一次导入即可（Dcat 菜单 + 业务表 + 默认 admin + 节点存储过程 redi_node_bump_skip）。
 -- 过程体与 database/migrations/2026_03_28_100009_redi_node_skip_procedure.php 保持一致；发版改过程时两处同步。
--- 无历史数据环境：勿再执行已删除的「升级/清理」迁移（如原 100010）。
--- 主控发版后若有新迁移（100010+），再在服务器执行 php artisan migrate --force。
+-- 无历史数据环境：勿再执行已删除的清理迁移 100010_cleanup_tenant_edge_admin_zero（与当前 100010_add_node_ipv6_columns 无关）。
+-- 主控发版后若有新迁移（100011+），再在服务器执行 php artisan migrate --force。
 -- ------------------------------------------------------
 -- Server version	5.6.50-log
 

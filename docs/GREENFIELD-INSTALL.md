@@ -20,11 +20,11 @@
 | 步骤 | 命令 / 动作 | 内容 |
 |------|-------------|------|
 | 1 建库 | `db/mysql_setup.example.sql` 或 `deploy-master.sh` | 创建 `redi_admin` 库与 `redi_admin` 应用账号 |
-| 2 导入 | **`mysql … redi_admin < db/redi_admin.sql`** | Dcat 菜单/权限、业务表、默认超管 `admin`、节点存储过程 **`redi_node_bump_skip`**、`migrations` 表登记至 **`100009`** |
+| 2 导入 | **`mysql … redi_admin < db/redi_admin.sql`** | Dcat 菜单/权限、业务表、默认超管 `admin`、节点存储过程 **`redi_node_bump_skip`**、节点 IPv6 列、`migrations` 表登记至 **`100010_add_node_ipv6_columns`** |
 
 **绿场不需要**为了节点跳转再单独跑一遍 migrate。导入完成后节点即可 `CALL redi_node_bump_skip`。
 
-主控代码解压、`key:generate`、`storage:link` 后，部署脚本仍会执行 **`php artisan migrate --force`**：在绿场通常是 **无待执行迁移**；以后发版若仓库增加了 **`100010+`** 迁移，在同一台主控上再执行 migrate 即可。
+主控代码解压、`key:generate`、`storage:link` 后，部署脚本仍会执行 **`php artisan migrate --force`**：在绿场通常是 **无待执行迁移**；以后发版若仓库增加了 **`100011+`** 迁移，在同一台主控上再执行 migrate 即可。
 
 **验证（主控本机，导入 SQL 后）：**
 
@@ -37,7 +37,7 @@ CentOS 的 `deploy-master.sh` 在 `migrate` 之后会检查该过程是否存在
 
 ### 仅空库 migrate（不推荐绿场）
 
-若 **不** 导入 `redi_admin.sql`，只对空库执行 `php artisan migrate`，会得到表结构与 `100009` 过程，但 **缺 Dcat 菜单与默认管理员**，需另做 seed 或自行导入 admin 部分。绿场请用 **`redi_admin.sql` 一次导入**。
+若 **不** 导入 `redi_admin.sql`，只对空库执行 `php artisan migrate`，会得到表结构（含 IPv6 列）与至 `100010` 的迁移，但 **缺 Dcat 菜单与默认管理员**，需另做 seed 或自行导入 admin 部分。绿场请用 **`redi_admin.sql` 一次导入**。
 
 ## 主控首次登录
 
@@ -59,7 +59,7 @@ cd /opt/301/master   # 或你的程序目录
 php artisan migrate --force
 ```
 
-若仓库新增了 `100010+` 迁移，这一步会改库；绿场初次安装若已导入当前版 `redi_admin.sql`，通常显示无待执行迁移。节点 MySQL 账号为 **`redi_node`** 时，在主控更新 `vars.env` 的 `NODE_IPS` 后执行 `grant-nodes-from-vars.sh` 或 `deploy-master.sh`；单 IP 可用 `grant-node-mysql.sh`（仅 `EXECUTE` 存储过程）。
+若仓库新增了 `100011+` 迁移，这一步会改库；绿场初次安装若已导入当前版 `redi_admin.sql`，通常显示无待执行迁移。节点 MySQL 账号为 **`redi_node`** 时，在主控更新 `vars.env` 的 `NODE_IPS` 后执行 `grant-nodes-from-vars.sh` 或 `deploy-master.sh`；单 IP 可用 `grant-node-mysql.sh`（仅 `EXECUTE` 存储过程）。
 
 主控 cron（`deploy-master.sh` 写入 `/etc/cron.d/redi-renew`）：**03:10** 证书续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`（需 `REDI_HEALTH_WEBHOOK_URL` 方能在有 issues 时静默退出 0；勿配置 `php artisan schedule:run`）。节点 `GetSkipUrl` 与主控一致对 Host 做 **punycode** 归一。
 
