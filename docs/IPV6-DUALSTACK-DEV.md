@@ -1,6 +1,6 @@
 # IPv4 / IPv6 双栈 — 开发设计
 
-**状态：** 第一期 **V6-01–V6-27** 已在 `main` 落地。默认仍 **不** 发布 Pool AAAA、节点仍听 `0.0.0.0`；控制面（`NODE_IPS`、MySQL 3306、lagran）仍 IPv4。真机双栈打勾见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7。本文不是已上线说明。
+**状态：** 第一期 **V6-01–V6-27** 已在 `main` 落地。默认仍 **不** 发布 Pool AAAA。配置字符串仍是 `0.0.0.0`，Linux 上进程已经双栈监听（见 §8 V6-29）。控制面（`NODE_IPS`、MySQL 3306、lagran）仍 IPv4。真机双栈打勾见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7。本文不是已上线说明。
 
 **读者：** Composer 2.5。第一期 **V6-01–V6-27** 已做完。第二期按 **§8** 一次一行；§7 仍约束未列出的范围。
 
@@ -16,8 +16,8 @@
 | Pool DNS | **A** 行为与第一期前一致；**AAAA** 仅 `REDI_PUBLISH_POOL_AAAA=true` 且厂商实现 `SupportsPoolAAAA` 时由 `syncAll` 对账 |
 | A / AAAA 对账 | A 仍走 `reconcileARecordValues` + `filterValidIpv4List`；AAAA 走 `reconcileAAAARecordValues`（独立，开关关时零次 API） |
 | 预检 | CNAME 优先；可选 A /（开关开时）AAAA 命中 pool（`dns_precheck_allow_a_to_pool` 默认 true，`dns_precheck_allow_aaaa_to_pool` 默认 false） |
-| HTTP-01 | 主控 `Http::get('http://客户域名/...')`；发布 AAAA 后解析可能优先 IPv6，节点须已听 IPv6（见 DEPLOY-centos7 §12） |
-| 节点 | 默认 `0.0.0.0:80` / `0.0.0.0:443`；双栈须运维按文档改 `[::]:80/443`，不改仓库默认 `config.json` |
+| HTTP-01 | 主控 `Http::get('http://客户域名/...')`；发布 AAAA 后解析可能优先 IPv6。有 IPv6 的节点进程已经在 80/443 上双栈接听；发布前仍要主控 `curl -6` 通该公网地址（见 §8） |
+| 节点 | 配置默认 `0.0.0.0:80` / `0.0.0.0:443`。`Listen("tcp")` 在 Linux 上把这个通配地址绑成 `[::]`，不要为了接 IPv6 再改配置字符串 |
 | 控制面 | `NODE_IPS`、MySQL、firewalld 3306、lagran 仍只处理 IPv4 |
 
 `filter_var(..., FILTER_FLAG_IPV6)` 会放过 `::ffff:192.0.2.1`、`::1`、`fe80::1`，不能单独当池地址校验。
@@ -28,7 +28,7 @@
 
 同一条节点可以再记可选的主 IPv6 和其他 IPv6。Pool 的 A 记录行为不变。
 
-AAAA **默认不写**。主控 `.env` 里 `REDI_PUBLISH_POOL_AAAA=true` 之后，已经实现 `SupportsPoolAAAA` 的厂商才按地址列表增删 AAAA。节点仍默认听 `0.0.0.0`。先让节点能接受 IPv6 连接，再开这个开关。否则只有 AAAA、80 端口无人接听时，签发和续期的 HTTP-01 会超时。
+AAAA **默认不写**。主控 `.env` 里 `REDI_PUBLISH_POOL_AAAA=true` 之后，已经实现 `SupportsPoolAAAA` 的厂商才按地址列表增删 AAAA。节点配置字符串仍是 `0.0.0.0`，在有 IPv6 的 Linux 上已经双栈接听。发布前要确认的是网卡上的公网地址和主控 `curl -6`，不是把字符串改成 `[::]`。只有 AAAA、主控又访问不到节点 IPv6 时，签发和续期的 HTTP-01 会超时。
 
 控制面（Agent、MySQL、`NODE_IPS`、lagran）保持 IPv4。
 
@@ -73,7 +73,7 @@ AAAA **默认不写**。主控 `.env` 里 `REDI_PUBLISH_POOL_AAAA=true` 之后�
 35. **迁移不要加 `unique()`。** `public_ip` 上的 unique 不能照抄。空字符串会撞唯一键。主地址空白存 null，查重只走 `assertIpv6Available`。`public_ipv6` 和 `extra_ipv6` 缺一都算还没迁移。
 36. **厂商上已有、但不是公网 IPv6 的值，只要本次期望列表合法或为空，就当对不上并删除。** 不要因为旧记录非法就抛错，否则一条垃圾 AAAA 会让以后每次同步都失败。抛错只针对期望列表里的非法项，而且在任何创建和删除之前。dns.com 在进对账前丢掉的 IPv4 值不在此列（见 32），那些 id 不能删。
 37. **`SanitizeClientIP` 在 `To4()` 为 nil 时返回 trim 后的原文，不要返回空字符串。** 控制字符仍返回空。普通 IPv4 仍是原来的点分写法。`To4()` 为 nil 时不要调用 `String()`，也不要改用 `ip.String()`：那会把原生 IPv6 收成另一种压缩。
-38. **不要同时监听 `0.0.0.0:80` 和 `[::]:80`。** `bindv6only=0` 时第二个 bind 失败，80 端口整个起不来。只改其中一个地址。443 同样。节点程序只有一个监听地址。
+38. **不要同时监听 `0.0.0.0:80` 和 `[::]:80`。** 第二个 bind 会失败，80 端口整个起不来。443 同样。节点程序只有一个监听地址。配置里的 `0.0.0.0:80` 已经会被 `Listen("tcp")` 绑成双栈，不要再额外加一条 `[::]`。
 39. **阿里云、DNSPod 的方法写在父类上。** `AliyunCn` / `AliyunIntl` 只是换 endpoint，`DnspodCn` / `DnspodIntl` 也是。只改子类会漏掉另一边。`implements SupportsPoolAAAA` 加在父类。DNSPod 新建 AAAA 用 `$this->recordLine`，不要在这次调用里写死「默认」或 `Default`。国际站构造函数传入的是 `Default`。构造函数原来的默认参数不要改。
 40. **新字段要进 `$fillable`。** 模型同时写了 `$fillable` 时，没列进去的字段后台保存会被丢掉。`publicIpv6s` 和 `hasUnreadableIpv6` 不要调用 `parseExtraIpv6`：那个函数是后台校验，非法地址会抛 `ValidationException`，读路径应该跳过或返回真，而不是抛错。
 41. **CNAME 判断保持在 A / AAAA 之前。** CNAME 命中就成功。把 AAAA 挪到前面，会让原来只靠 CNAME 的租户被 AAAA 未命中带走。
@@ -83,7 +83,7 @@ AAAA **默认不写**。主控 `.env` 里 `REDI_PUBLISH_POOL_AAAA=true` 之后�
 45. **`aaaaRecordPointsToPool` 列不存在或 `DNS_AAAA` 未定义时返回 false，不要抛错。** 预检挂在启用域名和签发上，抛错会让这些操作 500。没有可比较的地址时同样返回 false。
 46. **`saving` 不要把非法地址改成 null，也不要从数组里删掉。** 表单提交的非法值要报错，不让新写入库。已经在库里的 `fe80::1` 必须原样留着，`hasUnreadableIpv6` 才看得到。清掉之后，发布开关会把它当成空列表，把厂商上的 AAAA 删光。
 47. **补 AAAA 说明时保留原来的 Pool A 字样。** CNAME 失败和「edge 不在 zone」现在写的是 Pool A 可能已更新。加上 AAAA 即可，不要整句换成只提 AAAA。成功日志在调用了 AAAA 时仍要有 `pool A` 和 `tenant CNAME`。
-48. **节点改听 IPv6 时地址要带方括号。** 写成 `[::]:80` 和 `[::]:443`。`::80` 解析不出端口，lagran 会拿到 `:80`，对不上 80。这只写进部署说明。
+48. **默认监听字符串不用改成 `[::]`。** `Listen("tcp", "0.0.0.0:80")` 在 Linux 上已经是双栈。若仍要手改通配地址，写成 `[::]:80` 和 `[::]:443`。`::80` 解析不出端口，lagran 会拿到 `:80`，对不上 80。
 49. **AAAA 用单独的 try，不要放进 A 的那个 catch。** A 的文案是「Pool A 记录同步失败」，表示 A 没写上。AAAA 失败时 A 可能已经写上，CNAME 还没写，`dns_synced_at` 也不前进。厂商没实现接口时，成功日志里仍然不要出现 `AAAA`；warning 单独记。成功日志里的 AAAA 条数用 `enabledPublicIpv6s()` 的长度，不要复用 A 的 `$ips`。
 50. **AAAA 对账的键用 `canonicalPublicIpv6`，不要照 A 那样只 `strtolower`。** 只做大小写比较时，`2001:db8::1` 和 `2001:0db8::1` 对不上，每次同步都会删了再建。已有记录的值也走这个函数。
 51. **灰色云和橙色云同时存在、地址相同时，只删橙色云，不要再创建一条灰色云。** 灰色云已经对齐。橙色云不在对账列表里，所以对账不会替你删它；对账返回后再删橙色云 id。
@@ -154,7 +154,7 @@ IPv4 主地址仍必填。没有主 IPv6 时不能填其他 IPv6。其他项与�
 | V6-23 | `aaaaRecordPointsToPool`，不接到 `pointsToEdge` | 读 `$row['ipv6']`，用 16 字节和 `enabledPublicIpv6s()` 比。列不存在、`DNS_AAAA` 未定义、或池地址为空时返回 false，不抛错。现有预检测试不改 |
 | V6-24 | 接到 `pointsToEdge`，并让 `pointsToEdgeCached` 的键包含该开关。配置 `redi.dns_precheck_allow_aaaa_to_pool` 默认 false，读法用 `FILTER_VALIDATE_BOOLEAN` | `filter_var` 写在 `pointsToEdge` 里。签发调用的是这个函数。CNAME 命中仍先返回。A 未命中时仍会评估 AAAA，不能沿用 `return aRecordPointsToPool()`。字符串 `"false"`：只有 AAAA、没有 CNAME/A 则失败。true 且字节命中则成功。缓存键同时有客户域名、edge 和 `(int)` 开关；true 和 false 两个键不同。A 开关默认仍是 true。原有 CNAME 成功用例不变 |
 | V6-25 | `SanitizeClientIP` | `To4().String()` 得到 `203.0.113.5`。两种映射写法都覆盖。`ParseIP().String()` 那种 `::ffff:` 结果算失败。`To4()` 为 nil 时返回 trim 原文，不返回空，也不要 `ip.String()`。`2001:db8::1` 除 trim 外不变。带控制字符的输入仍返回空。不改监听默认值 |
-| V6-26 | 只改 `DEPLOY-centos7.md` | 写明：在主控上 `curl -6` 节点公网 IPv6 的 80 通了，再把发布开关设为 true 并 `config:cache`。只在节点本机测不算数。主控没有 IPv6 出口就不要开。`bindv6only` 不是 0 就不要改监听；要改监听就写成 `[::]:80` 和 `[::]:443`，不要写成 `::80`；不要同时绑 `0.0.0.0` 和 `[::]`；`api_listen` 仍是 `127.0.0.1:8080`；改回 `0.0.0.0:80` / `0.0.0.0:443`；lagran 不管 IPv6；未听 IPv6 就发布 AAAA 会让 HTTP-01 失败；不要加只匹配 IPv4 的 firewalld rich rule。不改 Go、脚本和默认 `config.json` |
+| V6-26 | 只改 `DEPLOY-centos7.md` | 写明：在主控上 `curl -6` 节点公网 IPv6 的 80 通了，再把发布开关设为 true 并 `config:cache`。只在节点本机测不算数。主控没有 IPv6 出口就不要开。当时还写了 `bindv6only` 不是 0 就不要改监听、要改监听就写成 `[::]`、lagran 不管 IPv6。这三句以 V6-29 和 V6-31 为准，不要再照做。`::80` 仍然不行；不要同时绑 `0.0.0.0` 和 `[::]`；`api_listen` 仍是 `127.0.0.1:8080`；不要加只匹配 IPv4 的 firewalld rich rule。不改 Go、脚本和默认 `config.json` |
 | V6-27 | `vars.example.env` 注释 | IPv6 只填后台；禁止写入 `NODE_IPS`；发布开关不要在部署脚本里写成 true。不改 `redi_is_ipv4` |
 
 V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且在它合并前不要打开发布开关。V6-21 不要求四家都做完，也不要再拆：坏字段检查必须和第一次可能删除 AAAA 的调用放在同一次提交里。
@@ -165,7 +165,7 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 
 - IPv6 连主控、改 `NODE_IPS`、3306 的 IPv6 规则、主控 Nginx 听 IPv6。不要为主控或 3306 加 ip6tables。节点 lagran 的 IPv6 规则见 V6-30。访问计数是节点用自己的 IPv4 调用 `redi_node_bump_skip`，按域名给 `skip_num` 加 1，不记录访客 IP。IPv6 访客走同一条连库连接，不要为此开放 3306 的 IPv6
 - 把 IPv4/IPv6 收成一个函数，或改 `HostNameValidator`
-- 代码里把默认监听改成 `[::]`（第二期只允许 **显式开关** 写入节点 `config.json`，见 V6-29；不要改 `config.json.example` 的默认值）
+- 把默认监听改成 `[::]`，或加部署开关去改 `addr` / `tls_addr`。`0.0.0.0` 在 Linux 上已经是双栈，见 V6-29。不要改 `config.json.example`
 - 没填 IPv6 就 health 告警。主控看不到节点 `config.json`，也不要根据「有 IPv6 且发布开关为真」加一条永远出现的 hint
 - 发布开关默认 true，或在 false 时主动删除已有 AAAA
 - 节点只有 IPv6、没有 IPv4。主控没有 IPv6 时，这种节点无法连主控。`public_ip` 保持必填
@@ -176,26 +176,20 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 
 **目标：** 访客侧 IPv4 和 IPv6 功能相同：能连上、能跳转、限流按客户端地址生效、lagran 对出站 TCP 做同样的窗口处理。主控只有 IPv4，不部署 IPv6。节点只有两种：只填公网 IPv4，或同时填公网 IPv4 和 IPv6。节点不会只有 IPv6，否则主控无法和它通信。控制面（Agent、MySQL、`NODE_IPS`、3306、主控 Nginx）继续只走 IPv4。`public_ip` 保持必填。
 
-**和第一期的差距：** 后台已能存可选 IPv6，Pool AAAA 可按开关发布，客户端 IP 已能识别 IPv6。节点默认仍只听 `0.0.0.0`，lagran 只写 iptables、只解析 IPv4，所以 IPv6 访客既连不上，也没有同等的干扰处理。
+**和第一期的差距：** 后台已能存可选 IPv6，Pool AAAA 可按开关发布，客户端 IP 已能识别 IPv6。节点在有 IPv6 的 Linux 上已经能同时接 IPv4 和 IPv6。lagran 仍只写 iptables、只解析 IPv4，所以 IPv6 访客连得上，但没有同等的窗口处理。
 
 | 编号 | 只改这些 | 做完时 |
 |------|----------|--------|
 | V6-28 | 本节与路线图 | 方向写进仓库。不改代码 |
-| V6-29 | `deploy-node.sh` 与 `vars.example.env` | 见下方监听开关。不改 Go，不改 `config.json.example`，不改 `env.sh` 里的监听变量 |
-| V6-30 | `lagran.go`、`lagran-cleanup-iptables.sh`、`lagran-diagnose.sh` | 见下方。IPv4 规则文本不改。不改监听默认值 |
+| V6-29 | 不改代码 | 监听开关取消。见下方 |
+| V6-30 | `lagran.go`、同目录测试、`lagran-cleanup-iptables.sh`、`lagran-diagnose.sh` | 见下方。IPv4 规则文本不改。不改监听 |
 | V6-31 | `DEPLOY-centos7.md` 与 `ACCEPTANCE-CENTOS7-DEPLOY.md` | 见下方验收。不改 health，不改脚本 |
 
-**V6-29 监听开关。** 变量 `REDI_NODE_DUALSTACK_LISTEN`，默认不写或空。脚本已 `set -u`，已有的 `vars.env` 里没有这个变量，读取必须写成 `${REDI_NODE_DUALSTACK_LISTEN:-}`。trim 之后只接受空、`0`、`1`。`01`、`true`、`yes` 或其它值直接失败，且不改文件。用 Python 一次写回整个 JSON，不要用 `sed`，也不要先改 `addr` 再改 `tls_addr`。放在 `redi_ensure_lagran_enabled` 之后、`redi_svc_enable_now` 之前：前面那个函数会把整个 `config.json` 再写一遍，`enable --now` 会按磁盘上的文件把进程拉起来。写晚了，这次部署仍听 `0.0.0.0`。检查失败要 `die`（退出码非 0），不要走到 enable 或 restart。只改 `addr` 和 `tls_addr`，保留 `server_ip`、`api_listen`、`lagran` 和其它字段，不要用 example 重新生成文件。
+**V6-29 不做监听开关。** `http.go` 和 `https.go` 调用 `Listen("tcp", addr)`。在 Linux 上，`0.0.0.0:80` 会绑到 `[::]`，套接字的 `IPV6_V6ONLY` 为 0。本机看到的地址是 `[::]:端口`。IPv4 客户端的 `RemoteAddr` 仍是 IPv4。把配置改成 `[::]:80` 得到同一个套接字，不会多接进连接，也不影响 lagran。
 
-- 空：不改 `addr`、`tls_addr`、`api_listen`。重复部署不能把现有监听改掉。
-- `1`：先检查，再写入。`/proc/net/if_inet6` 不存在则失败。`/proc/sys/net/ipv6/bindv6only` 读不到或 trim 后不是 `0` 则失败（`0\n` 仍算 0）。两个地址都合法才写入。`addr` 的主机改成 `[::]`，端口保持原值；`0.0.0.0:80` 变成 `[::]:80`。`tls_addr` 是空字符串或 JSON `null` 时表示 HTTPS 已关闭，保持关闭，不要写成 `[::]:443`。字段不存在时，进程会默认听 `0.0.0.0:443`，所以要写成 `[::]:443`，否则只有 HTTP 变成双栈。已有非空值时只换主机、保留端口。当前主机不是 `0.0.0.0` 或 `::` 时失败，不要改成别的地址。
-- `0`：先看完两个地址再写。把主机为 `::` 的项改回 `0.0.0.0`，端口不变。已经是 `0.0.0.0` 则不动。空字符串或 JSON `null` 保持关闭。字段不存在则不要新增。其它主机则失败，两个地址都不改。
-- 比较主机时按 `net.SplitHostPort` 的结果：`[::]:80` 的主机是 `::`，不是字符串 `[::]`。先去掉一层方括号再和 `0.0.0.0`、`::` 比较。没去掉的话，第二次部署 `1` 会把已经写好的 `[::]` 当成非法主机，整次 `deploy-node.sh` 失败；`0` 也退不回 `0.0.0.0`。
-- `addr` 缺失或两个地址里有一个解析不了，则两个都不改。`addr` 在进程里是必填。不要写 `::80`。`[::]:80` 得到端口 `80`，`::80` 对不上 lagran 的端口。节点只有一个 `addr`，不要再留一条 `0.0.0.0`。
-- 先写到与 `config.json` 同一目录的临时文件，再替换原文件。不要直接打开原文件 `json.dump`，那会先把文件截成空的。`indent=2`，末尾一个换行。
-- 这个变量只在部署时从 `vars.env` 读取，不要写进 `env.sh`。Go 不读它。不要在 `env.sh` 写入 `REDI_HTTP_LISTEN` 或 `REDI_TLS_LISTEN`，这两个变量会覆盖 `config.json`。`api_listen` 保持 `127.0.0.1:8080`。
-- 不改 firewalld，也不改 systemd unit。部署脚本已经放行 `http` 和 `https` 服务，这两个服务同时覆盖 IPv4 和 IPv6。不要再加只匹配 IPv4 或只匹配 IPv6 的 rich rule。
-- 不改 `SanitizeClientIP`。`bindv6only=0` 时，IPv4 客户端在 `[::]` 上会变成映射地址，现有 `To4()` 已经能还原。限流键走的就是这个函数，不要再为 IPv6 加一条限流改动。
+不要新增 `REDI_NODE_DUALSTACK_LISTEN`。不要改 `deploy-node.sh`、`vars.example.env`、`config.json.example`、`http.go`、`https.go`。不要读 `bindv6only`，也不要改这个 sysctl。它只是新建套接字的默认值，Go 会在套接字上设成 0。`/proc/net/if_inet6` 不存在时，内核不支持 IPv6，`0.0.0.0` 会保持只听 IPv4。这种机器没有公网 IPv6，不要填后台地址。
+
+只有把 `addr` 写成某一个具体 IPv4（不是 `0.0.0.0`）时，才会真的只听 IPv4。默认配置和部署脚本都写的是 `0.0.0.0`。不要加开关去改它，也不要同时再绑一条 `[::]`。限流已经走 `SanitizeClientIP`，不要再为 IPv6 加一行。
 
 **V6-30 lagran 与 IPv4 相同。** 规则在 `OUTPUT`，按 TCP 源端口匹配，不看节点的公网地址。不要读后台的 `public_ipv6`。
 
@@ -205,16 +199,16 @@ CentOS 7 的内核是 3.10。从 3.8 起内核忽略 `NFQNL_CFG_CMD_PF_BIND` 和
 
 听在 `[::]` 上的 IPv4 客户端，内核发出的仍是 IPv4 包，走原来的 iptables。不要为 `::ffff` 再加一条 ip6tables。
 
-回调看首字节高 4 位。`4` 走现在的 IPv4 路径。`6` 用 `LayerTypeIPv6` 解，`SetNetworkLayerForChecksum` 用这一层 IPv6，不要套一个 IPv4 头。不要用 `LayerTypeIPv4` 解 IPv6 包。空包、解析失败、带扩展头，或序列化失败时，对原包 `NfAccept`，不要改包，不要丢包，也不要把空 buffer 送回去。没有扩展头的 IPv6 TCP 必须改成与 IPv4 相同的窗口。
+回调看首字节高 4 位。`4` 走现在的 IPv4 路径。`6` 用 `LayerTypeIPv6` 解。只处理 IPv6 头第 7 字节（Next Header）等于 6 的包。不要用「已经解出 TCP 层」来判断：gopacket 会穿过 Hop-by-Hop 仍给出 TCP 层，那种包校验和会算错。`SetNetworkLayerForChecksum` 用这一层 IPv6，不要套一个 IPv4 头。不要用 `LayerTypeIPv4` 解 IPv6 包。空包、解析失败、Next Header 不是 6，或序列化失败时，对原包 `NfAccept`，不要改包，不要丢包，也不要把空 buffer 送回去。Next Header 为 6 且没有扩展头的 IPv6 TCP 必须改成与 IPv4 相同的窗口，TCP 选项要留着。
 
-进程退出时在 `UnsetIptable` 里删掉两套。IPv4 删除失败也要继续删 ip6tables。`main` 仍只调用一次，不要改 `main.go`。`lagran-cleanup-iptables.sh` 用同一组队列号删两套；没有 `ip6tables` 时删完 IPv4 并退出 0。`lagran-diagnose.sh` 同时列出两套。改包函数不依赖 NFQUEUE。测试要覆盖三件事：没有扩展头的 IPv6 窗口与 IPv4 相同、带扩展头的字节不变、IPv4 仍改窗口。不改 IPv4 规则参数，不把主 IPv4 改成可空。这一行不能再拆：只加规则而不改解析时，IPv6 包会进现有队列，按 IPv4 解不开，然后原样接受，窗口不变。
+进程退出时在 `UnsetIptable` 里删掉两套。IPv4 删除失败也要继续删 ip6tables。`main` 仍只调用一次，不要改 `main.go`。`lagran-cleanup-iptables.sh` 用同一组队列号删两套；没有 `ip6tables` 时删完 IPv4 并退出 0。`lagran-diagnose.sh` 同时列出两套。它是 `set -euo pipefail`，缺 `ip6tables` 时要打印一句并继续，退出码仍为 0，不要让命令不存在把后面的检查带走。改包函数不依赖 NFQUEUE。测试至少包括：带 MSS 选项、没有载荷的 IPv6 SYN-ACK，窗口与 IPv4 相同且选项还在，按 IPv6 伪首部重算的校验和能通过；没有载荷的 IPv6 ACK 同样；带 Hop-by-Hop 的包字节不变；IPv4 仍改窗口。不改 IPv4 规则参数，不把主 IPv4 改成可空。这一行不能再拆：只加规则而不改解析时，IPv6 包会进现有队列，按 IPv4 解不开，然后原样接受，窗口不变。
 
-**V6-31 验收。** 主控可以没有公网 IPv6，但发布 AAAA 之前必须有 IPv6 出网。没有出网时，主控上的 `curl -6` 和随后的 HTTP-01 都会失败。监听开关在每台节点的 `vars.env` 里，发布开关在主控上，一次同步会把所有启用节点的 IPv6 都写成 Pool AAAA。只填 IPv4 的节点没有 AAAA，IPv6 访客不会落到它上面。已经填写 IPv6、却还听 `0.0.0.0` 的节点也会被写进 AAAA。所以打开发布开关之前，每一台已填 IPv6 的启用节点都要先打开监听，并在主控上对它的公网 IPv6 做 `curl -6`。只测过一台就打开关，其余节点会让一部分 IPv6 访客和 HTTP-01 失败。
+**V6-31 验收。** 主控可以没有公网 IPv6，但发布 AAAA 之前必须有 IPv6 出网。没有出网时，主控上的 `curl -6` 和随后的 HTTP-01 都会失败。发布开关在主控上，一次同步会把所有启用节点的 IPv6 都写成 Pool AAAA。只填 IPv4 的节点没有 AAAA，IPv6 访客不会落到它上面。配置里写着 `0.0.0.0` 不代表拒绝 IPv6。打开发布开关之前，每一台已填 IPv6 的启用节点都要在网卡上有这个地址，并在主控上对它的公网 IPv6 做 `curl -6`。只测过一台就打开关，其余节点会让一部分 IPv6 访客和 HTTP-01 失败。`addr` 若被改成某个具体 IPv4，IPv6 会连不上，先改回 `0.0.0.0` 或带方括号的 `[::]:端口`。
 
-顺序是：节点已有 IPv4、后台再填 IPv6、该节点把 `REDI_NODE_DUALSTACK_LISTEN=1` 写进自己的 `vars.env` 并重跑 `deploy-node.sh`、主控 `curl -6` 通 80、全部这类节点都通过之后，再把 `REDI_PUBLISH_POOL_AAAA` 设为 true。分别用 IPv4 和 IPv6 访问客户域名，跳转都要成立。`ip6tables -L OUTPUT` 与 iptables 成对，队列号相同（`1000:1127` 这一组），不是另一段号码；规则不是挂在某一条连接上。
+顺序是：节点已有 IPv4、后台再填 IPv6、确认没有把 `addr` 改成具体 IPv4、主控 `curl -6` 通 80、全部这类节点都通过之后，再把 `REDI_PUBLISH_POOL_AAAA` 设为 true。不要要求先改 `config.json` 或设置部署变量。分别用 IPv4 和 IPv6 访问客户域名，跳转都要成立。`ip6tables -L OUTPUT` 与 iptables 成对，队列号相同（`1000:1127` 这一组），不是另一段号码；规则不是挂在某一条连接上。
 
-验收改的是操作说明，不是再写一套手工 `sed`。`DEPLOY-centos7.md` §12 里「lagran 与 iptables 规则仍按 IPv4 节点地址工作，不因 Pool AAAA 而自动处理 IPv6」改成与 V6-30 一致：同一组队列号，不按节点地址匹配。只 `curl -6` 80 不能证明 443：`tls_addr` 不是空字符串也不是 JSON `null` 时，再对 443 做一次 `curl -6 -k`。HTTPS 已关闭则只测 80。
+`DEPLOY-centos7.md` §12 删掉「`bindv6only` 为 1 就不要改监听」和「必须先把 `addr` 改成 `[::]`」。默认字符串不用改。同一节里「lagran 与 iptables 规则仍按 IPv4 节点地址工作，不因 Pool AAAA 而自动处理 IPv6」改成与 V6-30 一致：同一组队列号，不按节点地址匹配。只 `curl -6` 80 不能证明 443：`tls_addr` 不是空字符串也不是 JSON `null` 时，再对 443 做一次 `curl -6 -k`。HTTPS 已关闭则只测 80。
 
 不要做「检测节点是否已听 `[::]`」的 health hint。心跳只上报版本，主控读不到节点 `config.json`；按「已填 IPv6 且开关为真」提示会在监听正确时也一直出现。
 
-先做 V6-29，再做 V6-30，最后做 V6-31。节点始终保留 IPv4。
+V6-29 没有代码。先做 V6-30，再做 V6-31。节点始终保留 IPv4。
