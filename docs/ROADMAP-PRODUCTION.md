@@ -38,7 +38,7 @@
 | lagran NFQUEUE 卸载/升级脚本化 | ✅ `lagran_ports.py` 与进程端口一致 + 诊断/清理 |
 | 多机 queue + redis | ✅ [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md) + health hints |
 | 更强租户隔离审计（API/后台） | 📋 |
-| IPv4/IPv6 双栈（数据面） | 📋 现网只支持 IPv4。V6-01–V6-27，见 [IPV6-DUALSTACK-DEV.md](IPV6-DUALSTACK-DEV.md)。发布开关和 AAAA 预检都用 `filter_var` 读字符串 `"false"`。Cloudflare 橙色云看 `proxied`，不要看 `proxiable`。`curl -6` 在主控上测。非法地址或未迁移不得被当成空 AAAA 列表 |
+| IPv4/IPv6 双栈（数据面） | ✅ 第一期 V6-01–27 已在 `main`（默认仍不发布 AAAA、节点仍 `0.0.0.0`）。真机见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7、[IPV6-DUALSTACK-DEV.md](IPV6-DUALSTACK-DEV.md)。控制面 IPv6、默认双栈监听仍 📋 不做（设计 §7） |
 
 ## 产品行为（非缺陷）
 

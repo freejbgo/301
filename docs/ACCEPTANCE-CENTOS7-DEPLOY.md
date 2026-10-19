@@ -232,7 +232,40 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 
 ---
 
-## 7. 常见问题速查
+## 7. IPv4/IPv6 双栈（可选）
+
+**前提：** 主控与节点代码已含 V6-01–V6-27（`main` 默认仍 **不** 发布 Pool AAAA，节点默认仍听 `0.0.0.0`）。需要节点有 **公网 IPv6**、主控有 **IPv6 出口**；操作细节见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12 与 [IPV6-DUALSTACK-IMPLEMENTATION.md](IPV6-DUALSTACK-IMPLEMENTATION.md) §3。
+
+在后台「节点管理」填写主 IPv6 / 其他 IPv6（**不要**写入 `vars.env` 的 `NODE_IPS`）。
+
+### 7.1 发布开关关闭（默认）
+
+- [ ] 主控 `.env` 未设置或 `REDI_PUBLISH_POOL_AAAA=false`，已执行 `sudo -u nginx php artisan config:cache`。
+- [ ] 节点已登记 IPv6 后做 DNS 同步（API 模式或手动对照参考表）：厂商 **Pool A 与开关开启前一致**；**不出现新的 AAAA**（参考表也不增加 AAAA 行）。
+- [ ] `NODE_IPS` 仍 **仅 IPv4**；`grant-nodes-from-vars` / 防火墙 3306 行为与 IPv4 节点一致。
+
+### 7.2 打开 Pool AAAA 前（主控侧连通）
+
+在 **主控**上对节点 **公网 IPv6** 测 80（仅在节点本机 `curl` **不算**）：
+
+```bash
+curl -6 -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "http://[2001:db8::1]/"
+```
+
+将 `2001:db8::1` 换成后台登记的主 IPv6。若节点尚未听 IPv6，须先按 DEPLOY §12 改 `config.json` 监听（例如 `[::]:80` / `[::]:443`）并重启 `redi-multi`，再重测。
+
+- [ ] 主控 `curl -6` 得到非 `000` 的 HTTP 状态码。
+- [ ] 主控无 IPv6 出口时 **不要** 进行 §7.3。
+
+### 7.3 发布开关打开
+
+- [ ] `/opt/301/master/.env` 设置 `REDI_PUBLISH_POOL_AAAA=true`，`config:cache` 后 DNS 同步：厂商 Pool 出现与启用节点一致的 **AAAA**（A 记录仍正常）。
+- [ ] 将节点 IPv6 清空并保持 `REDI_PUBLISH_POOL_AAAA=true`，再同步：**AAAA 被删或对齐为空**，**A 仍在**。
+- [ ] （可选）`REDI_DNS_PRECHECK_ALLOW_AAAA_TO_POOL=true` 时，客户域仅 AAAA 指向 Pool 的预检行为符合预期；默认 false 时仅 AAAA 不应单独通过预检。
+
+---
+
+## 8. 常见问题速查
 
 | 现象 | 处理 |
 |------|------|
@@ -245,7 +278,7 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 
 ---
 
-## 8. 开发机容器冒烟（非真机替代）
+## 9. 开发机容器冒烟（非真机替代）
 
 仅验证包与 yum/migrate，**不能**代替本节 systemd/firewalld 验收：
 
@@ -259,4 +292,4 @@ sudo bash scripts/centos7/run-on-centos7-host.sh
 
 ---
 
-**签收**：主控 §1–3、节点 §4–5 全部打勾后，可认为 **CentOS 7.9 脚本化部署验收通过**；业务 F 项以 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) 为准。
+**签收**：主控 §1–3、节点 §4–5 全部打勾后，可认为 **CentOS 7.9 脚本化部署验收通过**；业务 F 项以 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) 为准。有公网 IPv6 环境时，可另做 §7 双栈打勾（非脚本安装必需）。
