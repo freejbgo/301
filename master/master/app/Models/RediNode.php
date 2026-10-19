@@ -348,6 +348,45 @@ class RediNode extends Model
     }
 
     /**
+     * @param  string[]  $ipv6s
+     */
+    public static function assertIpv6Available(array $ipv6s, ?int $exceptId = null): void
+    {
+        if ($ipv6s === []) {
+            return;
+        }
+
+        $query = static::query();
+        if ($exceptId) {
+            $query->where('id', '!=', $exceptId);
+        }
+        $taken = [];
+        foreach ($query->get() as $node) {
+            foreach ($node->publicIpv6s() as $ip) {
+                $bytes = self::ipv6ToBytes($ip);
+                if ($bytes !== '') {
+                    $taken[$bytes] = self::canonicalPublicIpv6($ip);
+                }
+            }
+        }
+
+        $primary = $ipv6s[0] ?? null;
+        foreach ($ipv6s as $ip) {
+            $bytes = self::ipv6ToBytes($ip);
+            if ($bytes === '') {
+                continue;
+            }
+            if (! isset($taken[$bytes])) {
+                continue;
+            }
+            $canonical = self::canonicalPublicIpv6($ip);
+            throw ValidationException::withMessages([
+                ($ip === $primary ? 'public_ipv6' : 'extra_ipv6') => 'IPv6 已被其他节点使用：'.$canonical,
+            ]);
+        }
+    }
+
+    /**
      * @param  string[]  $ips
      */
     public static function assertIpsAvailable(array $ips, ?int $exceptId = null): void
