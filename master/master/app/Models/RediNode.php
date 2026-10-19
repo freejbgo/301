@@ -114,6 +114,26 @@ class RediNode extends Model
     }
 
     /**
+     * @return string 16-byte binary string, or '' when the input is not a plain IPv6 address
+     */
+    public static function ipv6ToBytes(string $ip): string
+    {
+        $ip = trim($ip);
+        if ($ip === '') {
+            return '';
+        }
+        if (strpbrk($ip, "[]%/\t\n\r ") !== false) {
+            return '';
+        }
+        $packed = @inet_pton($ip);
+        if ($packed === false || strlen($packed) !== 16) {
+            return '';
+        }
+
+        return $packed;
+    }
+
+    /**
      * @param  array<int, mixed>  $ips
      * @return string[]
      */
