@@ -10,7 +10,7 @@ use App\Services\Dns\Concerns\ReconcilesDnsRecords;
 use GuzzleHttp\Client;
 use RuntimeException;
 
-class DnspodDnsProvider implements DnsProviderInterface
+class DnspodDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
 {
     use EnsuresValidDnsNames;
     use ParsesZoneNames;
@@ -62,6 +62,35 @@ class DnspodDnsProvider implements DnsProviderInterface
                     'domain' => $parts['domain'],
                     'sub_domain' => $sub,
                     'record_type' => 'A',
+                    'record_line' => $this->recordLine,
+                    'value' => $ip,
+                    'ttl' => 120,
+                ]);
+            },
+            function (string $id) use ($parts) {
+                $this->request('Record.Remove', [
+                    'domain' => $parts['domain'],
+                    'record_id' => $id,
+                ]);
+            }
+        );
+    }
+
+    public function upsertAAAARecords(string $fqdn, array $ipv6): void
+    {
+        $fqdn = $this->requireDnsFqdn($fqdn);
+        $parts = $this->splitFqdn($fqdn, $this->zoneName());
+        $sub = $parts['rr'] === '@' ? '@' : $parts['rr'];
+        $rows = $this->listRecordRows($parts['domain'], $sub, 'AAAA');
+
+        $this->reconcileAAAARecordValues(
+            $rows,
+            $ipv6,
+            function (string $ip) use ($parts, $sub) {
+                $this->request('Record.Create', [
+                    'domain' => $parts['domain'],
+                    'sub_domain' => $sub,
+                    'record_type' => 'AAAA',
                     'record_line' => $this->recordLine,
                     'value' => $ip,
                     'ttl' => 120,
