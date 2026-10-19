@@ -9,6 +9,7 @@ use App\Models\RediNode;
 use App\Services\RediHealthReport;
 use App\Support\OpsDisplaySanitizer;
 use Dcat\Admin\Form;
+use Illuminate\Support\Facades\Schema;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Http\Controllers\AdminController;
 use Illuminate\Validation\ValidationException;
@@ -44,6 +45,14 @@ class RediNodeController extends AdminController
             });
             $grid->column('public_ip', '公网 IP')->display(function () {
                 return implode('<br>', array_map('e', $this->publicIps()));
+            });
+            $grid->column('public_ipv6s', '公网 IPv6')->display(function () {
+                $ips = $this->publicIpv6s();
+                if ($ips === []) {
+                    return '—';
+                }
+
+                return implode('<br>', array_map('e', $ips));
             });
             $grid->column('enabled', '启用')->switch();
             $grid->column('last_heartbeat_at', '最后心跳')->display(function ($value) {
@@ -112,6 +121,10 @@ class RediNodeController extends AdminController
         return Form::make(new RediNode(), function (Form $form) {
             $form->text('name', '名称')->required();
             $form->ip('public_ip', '主公网 IP')->required()->help('这台机器对外的主 IP，也是节点程序所在机器。一台机器只建一条节点。');
+            if (Schema::hasColumn('redi_nodes', 'public_ipv6')) {
+                $form->text('public_ipv6', '主公网 IPv6')
+                    ->help('可选。默认不会在 Pool 发布 AAAA 记录；需开启 REDI_PUBLISH_POOL_AAAA 并同步后才会写入厂商 DNS。');
+            }
             $form->textarea('extra_ips', '其他公网 IP')->rows(4)
                 ->help('同一台机器上还要写入 pool 的公网 IPv4，一行一个。Pool 只写 A 记录。仍然只跑一个节点进程、只用一个 Token。不要为这些 IP 再新建节点。')
                 ->customFormat(function ($value) {
@@ -150,6 +163,14 @@ class RediNodeController extends AdminController
                 $exceptId = $form->isEditing() ? (int) $form->getKey() : null;
                 RediNode::assertIpsAvailable(array_merge([$primary], $extras), $exceptId);
                 $form->input('extra_ips', $extras === [] ? null : $extras);
+
+                if (Schema::hasColumn('redi_nodes', 'public_ipv6')) {
+                    $canonicalV6 = RediNode::preparePublicIpv6ForStorage($form->input('public_ipv6'));
+                    if ($canonicalV6 !== null) {
+                        RediNode::assertIpv6Available([$canonicalV6], $exceptId);
+                    }
+                    $form->input('public_ipv6', $canonicalV6);
+                }
             });
 
             $form->saved(function (Form $form) {
