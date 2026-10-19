@@ -169,6 +169,34 @@ class RediNode extends Model
      * @param  array<int, mixed>  $ips
      * @return string[]
      */
+    public static function filterValidIpv6List(array $ips): array
+    {
+        $out = [];
+        $seen = [];
+        foreach ($ips as $ip) {
+            $ip = trim((string) $ip);
+            if ($ip === '' || ! self::isValidPublicIpv6($ip)) {
+                continue;
+            }
+            $bytes = self::ipv6ToBytes($ip);
+            if ($bytes === '' || isset($seen[$bytes])) {
+                continue;
+            }
+            $canonical = self::canonicalPublicIpv6($ip);
+            if ($canonical === '') {
+                continue;
+            }
+            $seen[$bytes] = true;
+            $out[] = $canonical;
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  array<int, mixed>  $ips
+     * @return string[]
+     */
     public static function filterValidIpv4List(array $ips): array
     {
         $out = [];
