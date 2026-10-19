@@ -125,6 +125,23 @@ class RediNodeController extends AdminController
                 $form->text('public_ipv6', '主公网 IPv6')
                     ->help('可选。默认不会在 Pool 发布 AAAA 记录；需开启 REDI_PUBLISH_POOL_AAAA 并同步后才会写入厂商 DNS。');
             }
+            if (Schema::hasColumn('redi_nodes', 'extra_ipv6')) {
+                $form->textarea('extra_ipv6', '其他公网 IPv6')->rows(4)
+                    ->help('同一台机器上还要写入 pool 的公网 IPv6，一行一个。须先填写主公网 IPv6。')
+                    ->customFormat(function ($value) {
+                        if (is_array($value)) {
+                            return implode("\n", $value);
+                        }
+                        if (is_string($value) && strncmp($value, '[', 1) === 0) {
+                            $decoded = json_decode($value, true);
+                            if (is_array($decoded)) {
+                                return implode("\n", $decoded);
+                            }
+                        }
+
+                        return (string) $value;
+                    });
+            }
             $form->textarea('extra_ips', '其他公网 IP')->rows(4)
                 ->help('同一台机器上还要写入 pool 的公网 IPv4，一行一个。Pool 只写 A 记录。仍然只跑一个节点进程、只用一个 Token。不要为这些 IP 再新建节点。')
                 ->customFormat(function ($value) {
@@ -164,12 +181,34 @@ class RediNodeController extends AdminController
                 RediNode::assertIpsAvailable(array_merge([$primary], $extras), $exceptId);
                 $form->input('extra_ips', $extras === [] ? null : $extras);
 
+                $canonicalV6 = null;
                 if (Schema::hasColumn('redi_nodes', 'public_ipv6')) {
                     $canonicalV6 = RediNode::preparePublicIpv6ForStorage($form->input('public_ipv6'));
-                    if ($canonicalV6 !== null) {
-                        RediNode::assertIpv6Available([$canonicalV6], $exceptId);
-                    }
                     $form->input('public_ipv6', $canonicalV6);
+                }
+
+                if (Schema::hasColumn('redi_nodes', 'extra_ipv6')) {
+                    $extraV6 = RediNode::parseExtraIpv6((string) $form->input('extra_ipv6'));
+                    if ($extraV6 !== [] && $canonicalV6 === null) {
+                        throw ValidationException::withMessages([
+                            'extra_ipv6' => '请先填写主公网 IPv6',
+                        ]);
+                    }
+                    if ($canonicalV6 !== null) {
+                        $extraV6 = array_values(array_filter($extraV6, function ($ip) use ($canonicalV6) {
+                            return $ip !== $canonicalV6;
+                        }));
+                    }
+                    $ipv6Candidates = array_merge(
+                        $canonicalV6 !== null ? [$canonicalV6] : [],
+                        $extraV6
+                    );
+                    if ($ipv6Candidates !== []) {
+                        RediNode::assertIpv6Available($ipv6Candidates, $exceptId);
+                    }
+                    $form->input('extra_ipv6', $extraV6 === [] ? null : $extraV6);
+                } elseif ($canonicalV6 !== null) {
+                    RediNode::assertIpv6Available([$canonicalV6], $exceptId);
                 }
             });
 
