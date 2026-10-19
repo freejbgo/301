@@ -15,7 +15,7 @@
 
 分支：`cursor/ipv6-v6-0N-<短词>-bb20`。合进 `main` 再开下一个。
 
-出现这些情况就整次作废：用正则拒绝 IPv6、用「前 12 字节为 0」判断映射地址、把 AAAA 并进 A 的对账、改 `DnsProviderInterface`、把发布开关默认写成 true、改 `config.json` 的监听、给 `public_ipv6` 加 `unique()`、在 `upsertAAAARecords` 里调用 `filterValidIpv4List` 或 `filterValidIpv6List`、A 预检未命中时直接 `return`、先删橙色云再创建、只改阿里云或 DNSPod 的子类、把 AAAA 判断放到 CNAME 前面、在 `saving` 里把非法地址改成 null、把 AAAA 放进 A 的 catch。
+出现这些情况就整次作废：用正则拒绝 IPv6、用「前 12 字节为 0」判断映射地址、把 AAAA 并进 A 的对账、改 `DnsProviderInterface`、把发布开关默认写成 true、改 `config.json` 的监听、给 `public_ipv6` 加 `unique()`、在 `upsertAAAARecords` 里调用 `filterValidIpv4List` 或 `filterValidIpv6List`、A 预检未命中时直接 `return`、先删橙色云再创建、只改阿里云或 DNSPod 的子类、把 AAAA 判断放到 CNAME 前面、在 `saving` 里把非法地址改成 null、把 AAAA 放进 A 的 catch、用 `(array) $this->extra_ipv6` 读附加地址。
 
 ---
 
@@ -63,8 +63,8 @@ CentOS 真机放在 V6-27 之后：后台同时有 v4/v6；开关仍关时厂商
 - **V6-08**：停用节点的附加地址里已有 `2001:db8::1` 时，另一条节点不能再保存这个地址。只和 `public_ipv6` 列相同的检查不算通过。本行还没有 cast：用 `publicIpv6s()` 能读到的形式做测试，不要为了本行去改 `$casts`。
 - **V6-09**：字段不是 `required()`。已有节点不填 IPv6 仍能保存。模仿启用开关只提交 `enabled` 的请求时，已保存的主 IPv6 仍在。正常编辑把主 IPv6 清空后，库里是 null。帮助文字里能看到默认不发布。表单提交 `fe80::1` 失败。库里已经是 `fe80::1` 时，只改备注再保存，这个地址还在。
 - **V6-10**：`extra_ipv6` 存成 JSON 数组后，编辑页展示的是一行一个地址，不是整段 JSON。数组里已有 `fe80::1` 时，保存备注不会把它去掉。
-- **V6-06 / V6-12**：实现里不要调用 `parseExtraIpv6`。`fe80::1` 对 `hasUnreadableIpv6` 为真；`''`、null、`2001:db8::1` 为假。
-- **V6-15～19**：假客户端里先放一条 A。空列表调用后，那条 A 的删除次数是 0。`['not-an-ip']` 的删除次数也是 0。传入 `['2001:db8::1']` 时创建参数里要有这个地址。`upsertAAAARecords` 不调用 `filterValidIpv4List` 或 `filterValidIpv6List`。`upsertARecords` 里的 `filterValidIpv4List` 留着。不要改 `listRecordRows` 现有的类型判断。
+- **V6-06 / V6-12**：实现里不要调用 `parseExtraIpv6`，也不要 `(array) $this->extra_ipv6`。`fe80::1` 对 `hasUnreadableIpv6` 为真；`''`、null、`2001:db8::1` 为假。用查询把 `extra_ipv6` 写成不是 JSON 的 `fe80::1` 后，结果仍为真。
+- **V6-15～19**：假客户端里先放一条 A。空列表调用后，那条 A 的删除次数是 0。`['not-an-ip']` 的删除次数也是 0。传入 `['2001:db8::1']` 时创建参数里要有这个地址。`upsertAAAARecords` 不调用 `filterValidIpv4List` 或 `filterValidIpv6List`。`upsertARecords` 里的 `filterValidIpv4List` 留着。不要改 `listRecordRows` 现有的类型判断。Cloudflare 列表的 `name` 是完整 FQDN，创建是相对主机名。阿里云、DNSPod 根域创建参数仍是 `@`，不是空字符串。
 - **V6-16**：已有灰色云且地址相同则删除次数为 0。只有橙色云且地址相同：请求顺序是创建灰色云，然后删除橙色云；`proxied=false`。灰色云和橙色云都在且地址相同：创建次数为 0，只删橙色云。期望为 `[]`、只有橙色云时，橙色云 id 仍被删除。创建请求失败时，橙色云的删除次数为 0。不要改 `reconcileAAAARecordValues`。
 - **V6-17 / V6-18**：`implements SupportsPoolAAAA` 出现在父类，不在 `AliyunCnDnsProvider` 或 `DnspodCnDnsProvider`。AAAA 的创建参数使用 `$this->recordLine`。不要在这次新建调用里写死「默认」或 `Default`。构造函数原来的默认参数不要改。
 - **V6-19**：类型字段为空、值是 `1.2.3.4` 的 id，空 AAAA 列表不删。类型为 AAAA 的另一条仍会删。
