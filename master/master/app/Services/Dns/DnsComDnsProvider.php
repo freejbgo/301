@@ -10,7 +10,7 @@ use App\Services\Dns\Concerns\ReconcilesDnsRecords;
 use GuzzleHttp\Client;
 use RuntimeException;
 
-class DnsComDnsProvider implements DnsProviderInterface
+class DnsComDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
 {
     use EnsuresValidDnsNames;
     use ParsesZoneNames;
@@ -59,6 +59,35 @@ class DnsComDnsProvider implements DnsProviderInterface
                     'domain' => $parts['domain'],
                     'record' => $parts['rr'],
                     'type' => 'A',
+                    'value' => $ip,
+                    'ttl' => 120,
+                ]);
+            },
+            function (string $id) use ($parts) {
+                $this->signedPost('api/record/delete/', [
+                    'domain' => $parts['domain'],
+                    'record_id' => $id,
+                ]);
+            }
+        );
+    }
+
+    public function upsertAAAARecords(string $fqdn, array $ipv6): void
+    {
+        $fqdn = $this->requireDnsFqdn($fqdn);
+        $parts = $this->splitFqdn($fqdn, $this->zoneName());
+        $rows = $this->aaaaRowsForReconcile(
+            $this->listRecordRows($parts['domain'], $parts['rr'], 'AAAA')
+        );
+
+        $this->reconcileAAAARecordValues(
+            $rows,
+            $ipv6,
+            function (string $ip) use ($parts) {
+                $this->signedPost('api/record/create/', [
+                    'domain' => $parts['domain'],
+                    'record' => $parts['rr'],
+                    'type' => 'AAAA',
                     'value' => $ip,
                     'ttl' => 120,
                 ]);
@@ -161,6 +190,19 @@ class DnsComDnsProvider implements DnsProviderInterface
         } while (count($list) === 100);
 
         return $rows;
+    }
+
+    /**
+     * @param  array<int, array{id: string, value: string}>  $rows
+     * @return array<int, array{id: string, value: string}>
+     */
+    protected function aaaaRowsForReconcile(array $rows): array
+    {
+        return array_values(array_filter($rows, function (array $row) {
+            $value = trim((string) ($row['value'] ?? ''));
+
+            return ! RediNode::isValidPublicIpv4($value);
+        }));
     }
 
     protected function signedPost(string $path, array $params): array

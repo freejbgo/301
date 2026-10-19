@@ -26,13 +26,13 @@ class SupportsPoolAaaaInterfaceTest extends TestCase
             DnspodDnsProvider::class,
             DnspodCnDnsProvider::class,
             DnspodIntlDnsProvider::class,
+            DnsComDnsProvider::class,
         ];
         foreach ($implemented as $class) {
             $this->assertContains(SupportsPoolAAAA::class, class_implements($class) ?: [], $class);
         }
 
         $others = [
-            DnsComDnsProvider::class,
             ManualDnsProvider::class,
         ];
 
