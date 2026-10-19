@@ -8,6 +8,7 @@ use App\Services\Dns\AliyunIntlDnsProvider;
 use App\Services\Dns\CloudflareDnsProvider;
 use App\Services\Dns\DnsComDnsProvider;
 use App\Services\Dns\DnspodCnDnsProvider;
+use App\Services\Dns\DnspodDnsProvider;
 use App\Services\Dns\DnspodIntlDnsProvider;
 use App\Services\Dns\ManualDnsProvider;
 use App\Services\Dns\SupportsPoolAAAA;
@@ -15,16 +16,22 @@ use Tests\TestCase;
 
 class SupportsPoolAaaaInterfaceTest extends TestCase
 {
-    public function test_cloudflare_and_aliyun_parent_implement_supports_pool_aaaa(): void
+    public function test_implemented_supports_pool_aaaa_on_parent_providers(): void
     {
-        $this->assertContains(SupportsPoolAAAA::class, class_implements(CloudflareDnsProvider::class) ?: []);
-        $this->assertContains(SupportsPoolAAAA::class, class_implements(AliyunDnsProvider::class) ?: []);
-        $this->assertContains(SupportsPoolAAAA::class, class_implements(AliyunCnDnsProvider::class) ?: []);
-        $this->assertContains(SupportsPoolAAAA::class, class_implements(AliyunIntlDnsProvider::class) ?: []);
-
-        $others = [
+        $implemented = [
+            CloudflareDnsProvider::class,
+            AliyunDnsProvider::class,
+            AliyunCnDnsProvider::class,
+            AliyunIntlDnsProvider::class,
+            DnspodDnsProvider::class,
             DnspodCnDnsProvider::class,
             DnspodIntlDnsProvider::class,
+        ];
+        foreach ($implemented as $class) {
+            $this->assertContains(SupportsPoolAAAA::class, class_implements($class) ?: [], $class);
+        }
+
+        $others = [
             DnsComDnsProvider::class,
             ManualDnsProvider::class,
         ];
