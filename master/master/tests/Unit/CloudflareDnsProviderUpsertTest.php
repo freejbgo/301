@@ -125,6 +125,7 @@ class CloudflareDnsProviderUpsertTest extends TestCase
                 ],
             ])),
             new Response(200, [], json_encode(['success' => true, 'result' => []])),
+            new Response(200, [], json_encode(['success' => true, 'result' => []])),
         ]));
         $stack->push(Middleware::history($history));
 
@@ -133,10 +134,84 @@ class CloudflareDnsProviderUpsertTest extends TestCase
         $provider->upsertAAAARecords('pool.example.com', []);
 
         $methods = array_map(fn ($tx) => $tx['request']->getMethod(), $history);
-        $this->assertSame(['GET', 'DELETE'], $methods);
+        $this->assertSame(['GET', 'DELETE', 'DELETE'], $methods);
         $this->assertStringContainsString('/dns_records/gray-aaaa', (string) $history[1]['request']->getUri());
+        $this->assertStringContainsString('/dns_records/orange-aaaa', (string) $history[2]['request']->getUri());
         $this->assertStringNotContainsString('a-rec', (string) $history[1]['request']->getUri());
-        $this->assertStringNotContainsString('orange-aaaa', (string) $history[1]['request']->getUri());
+    }
+
+    public function test_upsert_aaaa_orange_only_creates_gray_then_deletes_orange(): void
+    {
+        $history = [];
+        $stack = HandlerStack::create(new MockHandler([
+            new Response(200, [], json_encode([
+                'success' => true,
+                'result' => [
+                    ['id' => 'orange-1', 'type' => 'AAAA', 'content' => '2001:db8::1', 'proxied' => true],
+                ],
+            ])),
+            new Response(200, [], json_encode(['success' => true, 'result' => ['id' => 'gray-new']])),
+            new Response(200, [], json_encode(['success' => true, 'result' => []])),
+        ]));
+        $stack->push(Middleware::history($history));
+
+        $provider = $this->cloudflareProvider($stack);
+        $provider->upsertAAAARecords('pool.example.com', ['2001:db8::1']);
+
+        $methods = array_map(fn ($tx) => $tx['request']->getMethod(), $history);
+        $this->assertSame(['GET', 'POST', 'DELETE'], $methods);
+        $this->assertFalse(json_decode((string) $history[1]['request']->getBody(), true)['proxied']);
+        $this->assertStringContainsString('orange-1', (string) $history[2]['request']->getUri());
+    }
+
+    public function test_upsert_aaaa_gray_and_orange_same_deletes_orange_only(): void
+    {
+        $history = [];
+        $stack = HandlerStack::create(new MockHandler([
+            new Response(200, [], json_encode([
+                'success' => true,
+                'result' => [
+                    ['id' => 'gray-1', 'type' => 'AAAA', 'content' => '2001:db8::1', 'proxied' => false],
+                    ['id' => 'orange-1', 'type' => 'AAAA', 'content' => '2001:db8::1', 'proxied' => true],
+                ],
+            ])),
+            new Response(200, [], json_encode(['success' => true, 'result' => []])),
+        ]));
+        $stack->push(Middleware::history($history));
+
+        $provider = $this->cloudflareProvider($stack);
+        $provider->upsertAAAARecords('pool.example.com', ['2001:db8::1']);
+
+        $methods = array_map(fn ($tx) => $tx['request']->getMethod(), $history);
+        $this->assertSame(['GET', 'DELETE'], $methods);
+        $this->assertStringContainsString('orange-1', (string) $history[1]['request']->getUri());
+    }
+
+    public function test_upsert_aaaa_create_failure_does_not_delete_orange(): void
+    {
+        $history = [];
+        $stack = HandlerStack::create(new MockHandler([
+            new Response(200, [], json_encode([
+                'success' => true,
+                'result' => [
+                    ['id' => 'orange-1', 'type' => 'AAAA', 'content' => '2001:db8::1', 'proxied' => true],
+                ],
+            ])),
+            new Response(400, [], json_encode(['success' => false, 'errors' => [['message' => 'fail']]])),
+        ]));
+        $stack->push(Middleware::history($history));
+
+        $provider = $this->cloudflareProvider($stack);
+
+        try {
+            $provider->upsertAAAARecords('pool.example.com', ['2001:db8::2']);
+            $this->fail('expected RuntimeException');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('fail', $e->getMessage());
+        }
+
+        $methods = array_map(fn ($tx) => $tx['request']->getMethod(), $history);
+        $this->assertSame(['GET', 'POST'], $methods);
     }
 
     public function test_upsert_aaaa_invalid_desired_does_not_delete(): void
