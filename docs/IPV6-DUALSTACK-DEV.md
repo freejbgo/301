@@ -163,7 +163,7 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 
 ## 7. 第一期不做（第二期只按 §8 放行）
 
-- IPv6 连主控、改 `NODE_IPS`、3306 的 IPv6 规则、主控 Nginx 听 IPv6、ip6tables
+- IPv6 连主控、改 `NODE_IPS`、3306 的 IPv6 规则、主控 Nginx 听 IPv6。不要为主控或 3306 加 ip6tables。节点 lagran 的 IPv6 规则见 V6-30
 - 把 IPv4/IPv6 收成一个函数，或改 `HostNameValidator`
 - 代码里把默认监听改成 `[::]`（第二期只允许 **显式开关** 写入节点 `config.json`，见 V6-29；不要改 `config.json.example` 的默认值）
 - 没填 IPv6 就 health 告警。主控看不到节点 `config.json`，也不要根据「有 IPv6 且发布开关为真」加一条永远出现的 hint
@@ -174,15 +174,16 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 
 ## 8. 第二期（访客双栈跳转）
 
-**目标：** 访问者用 IPv4 或 IPv6 打开客户域名，都能进节点并完成现有跳转。主控只有 IPv4，不部署 IPv6。节点只有两种：只填公网 IPv4，或同时填公网 IPv4 和 IPv6。节点不会只有 IPv6，否则主控无法和它通信。控制面（Agent、MySQL、`NODE_IPS`、3306、主控 Nginx）继续只走 IPv4。`public_ip` 保持必填。
+**目标：** 访客侧 IPv4 和 IPv6 功能相同：能连上、能跳转、限流按客户端地址生效、lagran 对出站 TCP 做同样的窗口处理。主控只有 IPv4，不部署 IPv6。节点只有两种：只填公网 IPv4，或同时填公网 IPv4 和 IPv6。节点不会只有 IPv6，否则主控无法和它通信。控制面（Agent、MySQL、`NODE_IPS`、3306、主控 Nginx）继续只走 IPv4。`public_ip` 保持必填。
 
-**和第一期的差距：** 后台已能存可选 IPv6，Pool AAAA 可按开关发布，但节点默认仍只听 `0.0.0.0`，所以 IPv6 访问者还连不上。
+**和第一期的差距：** 后台已能存可选 IPv6，Pool AAAA 可按开关发布，客户端 IP 已能识别 IPv6。节点默认仍只听 `0.0.0.0`，lagran 只写 iptables、只解析 IPv4，所以 IPv6 访客既连不上，也没有同等的干扰处理。
 
 | 编号 | 只改这些 | 做完时 |
 |------|----------|--------|
 | V6-28 | 本节与路线图 | 方向写进仓库。不改代码 |
 | V6-29 | `deploy-node.sh` 与 `vars.example.env` | 见下方监听开关。不改 Go，不改 `config.json.example`，不改 `env.sh` 里的监听变量 |
-| V6-30 | `DEPLOY-centos7.md` 与 `ACCEPTANCE-CENTOS7-DEPLOY.md` | 见下方验收。含 lagran 边界。不改 health，不改脚本 |
+| V6-30 | `lagran.go`、`lagran-cleanup-iptables.sh`、`lagran-diagnose.sh` | 见下方。IPv4 规则文本不改。不改监听默认值 |
+| V6-31 | `DEPLOY-centos7.md` 与 `ACCEPTANCE-CENTOS7-DEPLOY.md` | 见下方验收。不改 health，不改脚本 |
 
 **V6-29 监听开关。** 变量 `REDI_NODE_DUALSTACK_LISTEN`，默认不写或空。用 Python 改 JSON，不要用 `sed`：地址里有方括号。
 
@@ -193,10 +194,12 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 - 不要在 `env.sh` 写入 `REDI_HTTP_LISTEN` 或 `REDI_TLS_LISTEN`。这两个变量会覆盖 `config.json`。`api_listen` 保持 `127.0.0.1:8080`。
 - 不改 `SanitizeClientIP`。`bindv6only=0` 时，IPv4 客户端在 `[::]` 上会变成映射地址，现有 `To4()` 已经能还原。
 
-**V6-30 验收与边界。** 主控可以没有公网 IPv6，但发布 AAAA 之前必须有 IPv6 出网。没有出网时，主控上的 `curl -6` 和随后的 HTTP-01 都会失败。顺序是：节点已有 IPv4、后台再填 IPv6、打开监听开关、在主控上 `curl -6` 节点公网 IPv6 的 80、然后再把 `REDI_PUBLISH_POOL_AAAA` 设为 true。分别用 IPv4 和 IPv6 访问客户域名，跳转都要成立。
+**V6-30 lagran 与 IPv4 相同。** 节点有 IPv6 时，IPv6 出站 TCP 也要进入 NFQUEUE，并按现有四种标志组合修改窗口。用 `ip6tables` 写与现在 iptables 相同的 OUTPUT 规则，队列号不变。同一回调里按包头版本分支：IPv4 仍按 `LayerTypeIPv4` 改包；IPv6 按 IPv6 头改包并重算 TCP 校验和。不要把 IPv6 包当成 IPv4 解析。
 
-lagran 仍只写 iptables，不处理 IPv6 入站。不要加 ip6tables，也不要把主 IPv4 改成可空。
+`ip6tables` 不存在或本机没有 IPv6 时，只跳过 IPv6 规则并记日志，IPv4 的 lagran 必须照常启动。进程退出和 `lagran-cleanup-iptables.sh` 要同时删掉两套规则。`lagran-diagnose.sh` 要同时列出两套规则。抽出不依赖 NFQUEUE 的改包函数，用一个 IPv6 包做测试。不改 IPv4 规则参数，不把主 IPv4 改成可空。
+
+**V6-31 验收。** 主控可以没有公网 IPv6，但发布 AAAA 之前必须有 IPv6 出网。没有出网时，主控上的 `curl -6` 和随后的 HTTP-01 都会失败。顺序是：节点已有 IPv4、后台再填 IPv6、打开监听开关、在主控上 `curl -6` 节点公网 IPv6 的 80、然后再把 `REDI_PUBLISH_POOL_AAAA` 设为 true。分别用 IPv4 和 IPv6 访问客户域名，跳转都要成立。IPv6 连接上也要能看到与 IPv4 相同的 lagran 规则。
 
 不要做「检测节点是否已听 `[::]`」的 health hint。心跳只上报版本，主控读不到节点 `config.json`；按「已填 IPv6 且开关为真」提示会在监听正确时也一直出现。
 
-先做 V6-29，再做 V6-30。节点始终保留 IPv4。
+先做 V6-29，再做 V6-30，最后做 V6-31。节点始终保留 IPv4。
