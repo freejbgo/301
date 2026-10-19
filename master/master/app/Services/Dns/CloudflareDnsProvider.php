@@ -10,7 +10,7 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Str;
 use RuntimeException;
 
-class CloudflareDnsProvider implements DnsProviderInterface
+class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
 {
     use EnsuresValidDnsNames;
     use ReconcilesDnsRecords;
@@ -70,6 +70,34 @@ class CloudflareDnsProvider implements DnsProviderInterface
                 $this->decode($this->http->post("zones/{$zoneId}/dns_records", [
                     'json' => [
                         'type' => 'A',
+                        'name' => $name,
+                        'content' => $ip,
+                        'ttl' => 120,
+                        'proxied' => false,
+                    ],
+                ]));
+            },
+            function (string $id) use ($zoneId) {
+                $this->http->delete("zones/{$zoneId}/dns_records/{$id}");
+            }
+        );
+    }
+
+    public function upsertAAAARecords(string $fqdn, array $ipv6): void
+    {
+        $fqdn = $this->requireDnsFqdn($fqdn);
+        $zoneId = $this->zoneId();
+        $name = $this->recordNameForFqdn($fqdn);
+        $existing = $this->listRecords($zoneId, 'AAAA', $fqdn);
+        $rows = $this->grayCloudAaaaRows($existing);
+
+        $this->reconcileAAAARecordValues(
+            $rows,
+            $ipv6,
+            function (string $ip) use ($zoneId, $name) {
+                $this->decode($this->http->post("zones/{$zoneId}/dns_records", [
+                    'json' => [
+                        'type' => 'AAAA',
                         'name' => $name,
                         'content' => $ip,
                         'ttl' => 120,
@@ -155,6 +183,29 @@ class CloudflareDnsProvider implements DnsProviderInterface
         }
 
         return $fqdn;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $existing
+     * @return array<int, array{id: string, value: string}>
+     */
+    protected function grayCloudAaaaRows(array $existing): array
+    {
+        $rows = [];
+        foreach ($existing as $row) {
+            if ((string) ($row['type'] ?? '') !== 'AAAA') {
+                continue;
+            }
+            if (! empty($row['proxied'])) {
+                continue;
+            }
+            $rows[] = [
+                'id' => (string) ($row['id'] ?? ''),
+                'value' => (string) ($row['content'] ?? ''),
+            ];
+        }
+
+        return $rows;
     }
 
     protected function listRecords(string $zoneId, string $type, string $name): array

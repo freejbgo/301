@@ -14,10 +14,11 @@ use Tests\TestCase;
 
 class SupportsPoolAaaaInterfaceTest extends TestCase
 {
-    public function test_no_dns_provider_implements_supports_pool_aaaa_yet(): void
+    public function test_only_cloudflare_implements_supports_pool_aaaa(): void
     {
-        $providers = [
-            CloudflareDnsProvider::class,
+        $this->assertContains(SupportsPoolAAAA::class, class_implements(CloudflareDnsProvider::class) ?: []);
+
+        $others = [
             AliyunCnDnsProvider::class,
             AliyunIntlDnsProvider::class,
             DnspodCnDnsProvider::class,
@@ -26,12 +27,12 @@ class SupportsPoolAaaaInterfaceTest extends TestCase
             ManualDnsProvider::class,
         ];
 
-        foreach ($providers as $class) {
+        foreach ($others as $class) {
             $implements = class_implements($class) ?: [];
             $this->assertArrayNotHasKey(
                 SupportsPoolAAAA::class,
                 $implements,
-                $class.' must not implement SupportsPoolAAAA in V6-13'
+                $class.' must not implement SupportsPoolAAAA yet'
             );
         }
     }
