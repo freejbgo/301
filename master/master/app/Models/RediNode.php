@@ -165,6 +165,28 @@ class RediNode extends Model
         return $ips;
     }
 
+    public function hasUnreadableIpv6(): bool
+    {
+        if (! Schema::hasColumn($this->getTable(), 'public_ipv6')
+            || ! Schema::hasColumn($this->getTable(), 'extra_ipv6')) {
+            return false;
+        }
+
+        $primary = trim((string) ($this->getAttributes()['public_ipv6'] ?? ''));
+        if ($primary !== '' && ! self::isValidPublicIpv6($primary)) {
+            return true;
+        }
+
+        foreach ($this->rawExtraIpv6Items() as $item) {
+            $item = trim((string) $item);
+            if ($item !== '' && ! self::isValidPublicIpv6($item)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * @return array<int, mixed>
      */
