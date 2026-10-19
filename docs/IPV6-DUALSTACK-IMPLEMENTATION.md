@@ -61,11 +61,11 @@ CentOS 真机放在 V6-27 之后：后台同时有 v4/v6；开关仍关时厂商
 - **V6-14**：`['not-an-ip']` 抛错且删除次数为 0。`[]` 和 `['  ']` 会删。非空合法列表是先调用创建，再调用删除。期望列表是 `['2001:db8::1']`、已有值是 `fe80::1` 时，删除那条旧记录，不抛错。已有值 `2001:0db8::1`、期望 `2001:db8::1` 时，创建和删除次数都是 0。不要只做 `strtolower`。
 - **V6-07**：`2001:db8::1` 整段是一个地址，不能被切成多段。`2001:db8::1` 和 `2001:0db8::1` 只存一条。
 - **V6-08**：停用节点的附加地址里已有 `2001:db8::1` 时，另一条节点不能再保存这个地址。只和 `public_ipv6` 列相同的检查不算通过。本行还没有 cast：用 `publicIpv6s()` 能读到的形式做测试，不要为了本行去改 `$casts`。
-- **V6-09**：字段不是 `required()`。已有节点不填 IPv6 仍能保存。模仿启用开关只提交 `enabled` 的请求时，已保存的主 IPv6 仍在。正常编辑把主 IPv6 清空后，库里是 null。帮助文字里能看到默认不发布。表单提交 `fe80::1` 失败。库里已经是 `fe80::1` 时，只改备注再保存，这个地址还在。
+- **V6-09**：字段不是 `required()`。已有节点不填 IPv6 仍能保存。模仿启用开关只提交 `enabled` 的请求时，已保存的主 IPv6 仍在。正常编辑把主 IPv6 清空后，库里是 null。帮助文字里能看到默认不发布。表单提交 `fe80::1` 失败。库里已经是 `fe80::1` 时，只改备注再保存，这个地址还在。`public_ip` 列的展示仍只调用 `publicIps()`。
 - **V6-10**：`extra_ipv6` 存成 JSON 数组后，编辑页展示的是一行一个地址，不是整段 JSON。数组里已有 `fe80::1` 时，保存备注不会把它去掉。
 - **V6-06 / V6-12**：实现里不要调用 `parseExtraIpv6`，也不要 `(array) $this->extra_ipv6`。`fe80::1` 对 `hasUnreadableIpv6` 为真；`''`、null、`2001:db8::1` 为假。用查询把 `extra_ipv6` 写成不是 JSON 的 `fe80::1` 后，结果仍为真。
 - **V6-15～19**：假客户端里先放一条 A。空列表调用后，那条 A 的删除次数是 0。`['not-an-ip']` 的删除次数也是 0。传入 `['2001:db8::1']` 时创建参数里要有这个地址。`upsertAAAARecords` 不调用 `filterValidIpv4List` 或 `filterValidIpv6List`。`upsertARecords` 里的 `filterValidIpv4List` 留着。不要改 `listRecordRows` 现有的类型判断。Cloudflare 列表的 `name` 是完整 FQDN，创建是相对主机名。阿里云、DNSPod 根域创建参数仍是 `@`，不是空字符串。
-- **V6-16**：已有灰色云且地址相同则删除次数为 0。只有橙色云且地址相同：请求顺序是创建灰色云，然后删除橙色云；`proxied=false`。灰色云和橙色云都在且地址相同：创建次数为 0，只删橙色云。期望为 `[]`、只有橙色云时，橙色云 id 仍被删除。创建请求失败时，橙色云的删除次数为 0。不要改 `reconcileAAAARecordValues`。
+- **V6-16**：已有灰色云且地址相同则删除次数为 0。`proxiable` 为 true、`proxied` 为 false、地址相同：创建和删除都是 0。只有橙色云且地址相同：请求顺序是创建灰色云，然后删除橙色云；`proxied=false`。灰色云和橙色云都在且地址相同：创建次数为 0，只删橙色云。期望为 `[]`、只有橙色云时，橙色云 id 仍被删除。创建请求失败时，橙色云的删除次数为 0。不要改 `reconcileAAAARecordValues`。
 - **V6-17 / V6-18**：`implements SupportsPoolAAAA` 出现在父类，不在 `AliyunCnDnsProvider` 或 `DnspodCnDnsProvider`。AAAA 的创建参数使用 `$this->recordLine`。不要在这次新建调用里写死「默认」或 `Default`。构造函数原来的默认参数不要改。
 - **V6-19**：类型字段为空、值是 `1.2.3.4` 的 id，空 AAAA 列表不删。类型为 AAAA 的另一条仍会删。
 - **V6-06 / V6-09**：表还没有这两列时，现有节点测试仍能保存。不要去改那些测试的 `Schema::create`。
@@ -74,7 +74,7 @@ CentOS 真机放在 V6-27 之后：后台同时有 v4/v6；开关仍关时厂商
 - **V6-21**：`config(['redi.publish_pool_aaaa' => 'false'])` 时 A 仍会调用，AAAA 为 0，成功日志不出现 `AAAA`。源码里 `config('redi.publish_pool_aaaa'` 的默认参数是 `false`，不能是 `true`。开关为真且启用节点有坏字段，或两列缺一时，A 的次数为 0。只有停用节点是 `fe80::1` 时，A 仍会调用。开关为真、地址列表为空且厂商实现了接口时，成功日志同时含 `pool A` 和 `AAAA x0`。开关为真但假 provider 未实现接口时不抛错，测试能看到 warning，成功日志不出现 `AAAA`。AAAA 失败的错误含「AAAA」，含 A 可能已更新，不含「Pool A 记录同步失败」，且 `dns_synced_at` 仍为空。两台节点各有一个不同 IPv6 时，成功日志的 AAAA 条数是 2，不是 A 记录条数。列不存在时不要出现 SQL 缺列错误。调用 AAAA 之后若走「edge 不在 zone」中止，错误文本同时含「Pool A」和「AAAA」。action 仍是 `sync_pool_and_tenant_cname`。不要把「坏字段检查」拆到另一个 PR。
 - **V6-22**：`config` 设成字符串 `"false"` 且地址是 `fe80::1` 时，不增加说明行，也不增加 AAAA 行。开关为真且启用节点是 `fe80::1` 时，有一行无法解析的说明；若同时还有合法地址，合法行也在。只有停用节点是 `fe80::1` 时，不增加说明行。没有 IPv4 时，A 的「请先添加启用节点 IP」仍在。不要改 `PlatformDnsController`。
 - **V6-23**：记录数组只有 `ipv6` 键、没有 `ip` 键时仍能命中。`DNS_AAAA` 未定义、或两列不存在时返回 false，测试不抛错。
-- **V6-24**：只有 CNAME、没有 A/AAAA 时仍为真。A 记录不是池地址、AAAA 是池地址、两个开关都为真时，`pointsToEdge` 为真。配置是字符串 `"false"` 时，只有 AAAA 则 `pointsToEdge` 为假；这个断言打在 `pointsToEdge` 上，不要只打缓存函数。缓存键在开关 true 和 false 时不同，并且都能看出客户域名。不要断言键里有子串 `false`。
+- **V6-24**：只有 CNAME、没有 A/AAAA 时仍为真。A 记录不是池地址、AAAA 是池地址、两个开关都为真时，`pointsToEdge` 为真。配置是字符串 `"false"` 时，只有 AAAA 则 `pointsToEdge` 为假；这个断言打在 `pointsToEdge` 上，不要只打缓存函数。源码里 `config('redi.dns_precheck_allow_aaaa_to_pool'` 的默认参数是 `false`。缓存键在开关 true 和 false 时不同，并且都能看出客户域名。不要断言键里有子串 `false`。
 - **V6-25**：断言结果是 `203.0.113.5`，不是 `::ffff:203.0.113.5`。不要用 `strings.HasPrefix`。`2001:db8::1` 原样返回，不是空字符串，也不是另一种压缩。`203.0.113.1\n` 仍是空。
 - **V6-26**：文档必须写 HTTP-01 会跟着 AAAA 走，`curl -6` 在主控上对节点公网 IPv6 做，未听 IPv6 或主控没有 IPv6 出口都不能开发布开关。不要同时绑定 `0.0.0.0` 和 `[::]`，监听示例是 `[::]:80` 而不是 `::80`，并且不要改 `api_listen`。
 
