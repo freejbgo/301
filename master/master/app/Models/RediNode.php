@@ -133,6 +133,16 @@ class RediNode extends Model
         return $packed;
     }
 
+    public static function isValidPublicIpv6(string $ip): bool
+    {
+        $bytes = self::ipv6ToBytes($ip);
+        if ($bytes === '') {
+            return false;
+        }
+
+        return (ord($bytes[0]) & 0xe0) === 0x20;
+    }
+
     /**
      * @param  array<int, mixed>  $ips
      * @return string[]
