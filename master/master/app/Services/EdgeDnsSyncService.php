@@ -8,11 +8,13 @@ use App\Models\RediPlatformDns;
 use App\Models\RediTenantEdge;
 use App\Services\Dns\DnsProviderFactory;
 use App\Services\Dns\DnsProviderInterface;
+use App\Services\Dns\SupportsPoolAAAA;
 use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
@@ -60,7 +62,14 @@ class EdgeDnsSyncService
         if ($poolTarget === '' || ! HostNameValidator::isValidHostLabel($poolTarget)) {
             throw new RuntimeException('Pool CNAME 目标 无效');
         }
+        $publishAaaa = $this->publishPoolAaaaEnabled();
+        if ($publishAaaa) {
+            $this->assertIpv6ReadyForPoolAaaaPublish();
+        }
+
         $ips = RediNode::enabledPublicIps();
+        $aaaaInvoked = false;
+        $aaaaCount = 0;
 
         try {
             $provider->upsertARecords($poolFqdn, $ips);
@@ -70,6 +79,28 @@ class EdgeDnsSyncService
                 0,
                 $e
             );
+        }
+
+        if ($publishAaaa) {
+            if ($provider instanceof SupportsPoolAAAA) {
+                $ipv6s = RediNode::enabledPublicIpv6s();
+                $aaaaCount = count($ipv6s);
+                try {
+                    $provider->upsertAAAARecords($poolFqdn, $ipv6s);
+                    $aaaaInvoked = true;
+                } catch (Throwable $e) {
+                    throw new RuntimeException(
+                        'Pool AAAA 记录同步失败（Pool A 可能已在厂商侧更新，请修正后重试）：'
+                            .OpsDisplaySanitizer::logSnippet($e->getMessage(), 500),
+                        0,
+                        $e
+                    );
+                }
+            } else {
+                Log::warning('EdgeDnsSync: DNS provider does not implement SupportsPoolAAAA; skipping pool AAAA', [
+                    'driver' => OpsDisplaySanitizer::field((string) $platform->dns_driver, '', 64),
+                ]);
+            }
         }
 
         $syncedEdgeIds = [];
@@ -94,8 +125,11 @@ class EdgeDnsSyncService
                 $syncedEdgeIds[] = $edge->id;
             }
         } catch (Throwable $e) {
+            $poolHint = $aaaaInvoked
+                ? 'Pool A 与 AAAA 可能已在厂商侧更新，请修正后重试'
+                : 'Pool A 可能已在厂商侧更新，请修正后重试';
             throw new RuntimeException(
-                '租户 CNAME 同步失败（Pool A 可能已在厂商侧更新，请修正后重试）：'
+                '租户 CNAME 同步失败（'.$poolHint.'）：'
                     .OpsDisplaySanitizer::logSnippet($e->getMessage(), 500),
                 0,
                 $e
@@ -103,8 +137,11 @@ class EdgeDnsSyncService
         }
 
         if ($skipped > 0) {
+            $poolHint = $aaaaInvoked
+                ? 'Pool A 与 AAAA 可能已在厂商侧更新，请修正后重试'
+                : 'Pool A 与已成功的 CNAME 可能已在厂商侧更新，请修正后重试';
             throw new RuntimeException(
-                "有 {$skipped} 条租户 edge 不在平台域名 {$zoneLabel} 下，已中止（Pool A 与已成功的 CNAME 可能已在厂商侧更新，请修正后重试）。"
+                "有 {$skipped} 条租户 edge 不在平台域名 {$zoneLabel} 下，已中止（{$poolHint}）。"
             );
         }
 
@@ -116,11 +153,40 @@ class EdgeDnsSyncService
             RediTenantEdge::query()->whereIn('id', $syncedEdgeIds)->update(['dns_synced_at' => $now]);
         });
 
-        RediDnsSyncLog::record('sync_pool_and_tenant_cname', 'ok', sprintf(
+        $logMessage = sprintf(
             'pool A x%d, tenant CNAME x%d',
             count($ips),
             count($syncedEdgeIds)
-        ));
+        );
+        if ($aaaaInvoked) {
+            $logMessage = sprintf(
+                'pool A x%d, tenant CNAME x%d, AAAA x%d',
+                count($ips),
+                count($syncedEdgeIds),
+                $aaaaCount
+            );
+        }
+
+        RediDnsSyncLog::record('sync_pool_and_tenant_cname', 'ok', $logMessage);
+    }
+
+    protected function publishPoolAaaaEnabled(): bool
+    {
+        return filter_var(config('redi.publish_pool_aaaa', false), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    protected function assertIpv6ReadyForPoolAaaaPublish(): void
+    {
+        if (! Schema::hasColumn('redi_nodes', 'public_ipv6')
+            || ! Schema::hasColumn('redi_nodes', 'extra_ipv6')) {
+            throw new RuntimeException('节点 IPv6 字段尚未迁移，无法发布 Pool AAAA');
+        }
+
+        foreach (RediNode::enabled()->get() as $node) {
+            if ($node->hasUnreadableIpv6()) {
+                throw new RuntimeException('启用节点存在无法发布的 IPv6 地址，请先修正后台节点配置');
+            }
+        }
     }
 
     /**
