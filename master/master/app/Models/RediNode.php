@@ -143,6 +143,28 @@ class RediNode extends Model
         return (ord($bytes[0]) & 0xe0) === 0x20;
     }
 
+    public static function canonicalPublicIpv6(string $ip): string
+    {
+        $ip = trim($ip);
+        if ($ip === '') {
+            return '';
+        }
+        $ip = rtrim($ip, '.');
+        if ($ip === '') {
+            return '';
+        }
+        if (strpbrk($ip, "[]%/\t\n\r ") !== false) {
+            return '';
+        }
+        $packed = @inet_pton($ip);
+        if ($packed === false || strlen($packed) !== 16) {
+            return '';
+        }
+        $text = inet_ntop($packed);
+
+        return $text === false ? '' : strtolower($text);
+    }
+
     /**
      * @param  array<int, mixed>  $ips
      * @return string[]
