@@ -76,6 +76,18 @@ func TestSanitizeClientIP(t *testing.T) {
 	if SanitizeClientIP(" 10.0.0.1 ") != "10.0.0.1" {
 		t.Fatal("expected trim")
 	}
+	if SanitizeClientIP("::ffff:203.0.113.5") != "203.0.113.5" {
+		t.Fatalf("expected IPv4-mapped form normalized, got %q", SanitizeClientIP("::ffff:203.0.113.5"))
+	}
+	if SanitizeClientIP("0:0:0:0:0:ffff:203.0.113.5") != "203.0.113.5" {
+		t.Fatalf("expected long mapped form normalized, got %q", SanitizeClientIP("0:0:0:0:0:ffff:203.0.113.5"))
+	}
+	if SanitizeClientIP("2001:db8::1") != "2001:db8::1" {
+		t.Fatalf("expected IPv6 unchanged, got %q", SanitizeClientIP("2001:db8::1"))
+	}
+	if SanitizeClientIP(" 2001:0db8::1 ") != "2001:0db8::1" {
+		t.Fatalf("expected trimmed IPv6 literal preserved, got %q", SanitizeClientIP(" 2001:0db8::1 "))
+	}
 }
 
 func TestSanitizeUserAgent(t *testing.T) {

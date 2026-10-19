@@ -1,6 +1,7 @@
 package host
 
 import (
+	"net"
 	"strings"
 
 	"golang.org/x/net/idna"
@@ -57,7 +58,19 @@ func SanitizeClientIP(ip string) string {
 	if ContainsControlChars(ip) {
 		return ""
 	}
-	return strings.TrimSpace(ip)
+	ip = strings.TrimSpace(ip)
+	if ip == "" {
+		return ""
+	}
+	parsed := net.ParseIP(ip)
+	if parsed == nil {
+		return ip
+	}
+	if v4 := parsed.To4(); v4 != nil {
+		return v4.String()
+	}
+
+	return ip
 }
 
 // CanonicalLookupHost 与主控 HostNameValidator::toCanonicalAscii 对齐（小写 + punycode）。
