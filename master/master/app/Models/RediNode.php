@@ -6,6 +6,7 @@ use App\Services\CertificateDeployService;
 use App\Support\OpsDisplaySanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -106,6 +107,60 @@ class RediNode extends Model
         }
 
         return $ips;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function publicIpv6s(): array
+    {
+        if (! Schema::hasColumn($this->getTable(), 'public_ipv6')
+            || ! Schema::hasColumn($this->getTable(), 'extra_ipv6')) {
+            return [];
+        }
+
+        $ips = [];
+        $primary = trim((string) $this->public_ipv6);
+        if ($primary !== '' && self::isValidPublicIpv6($primary)) {
+            $ips[] = self::canonicalPublicIpv6($primary);
+        }
+
+        foreach ($this->rawExtraIpv6Items() as $item) {
+            $item = trim((string) $item);
+            if ($item === '' || ! self::isValidPublicIpv6($item)) {
+                continue;
+            }
+            $canonical = self::canonicalPublicIpv6($item);
+            if ($canonical === '' || in_array($canonical, $ips, true)) {
+                continue;
+            }
+            $ips[] = $canonical;
+        }
+
+        return $ips;
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    protected function rawExtraIpv6Items(): array
+    {
+        $raw = $this->getAttributes()['extra_ipv6'] ?? null;
+        if ($raw === null || $raw === '') {
+            return [];
+        }
+        if (is_array($raw)) {
+            return $raw;
+        }
+        if (! is_string($raw)) {
+            return [];
+        }
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded)) {
+            return $decoded;
+        }
+
+        return [$raw];
     }
 
     public static function isValidPublicIpv4(string $ip): bool
