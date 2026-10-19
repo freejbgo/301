@@ -168,14 +168,15 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 - 代码里把默认监听改成 `[::]`（第二期只允许 **显式开关** 写入节点 `config.json`，见 V6-29；不要改 `config.json.example` 的默认值）
 - 没填 IPv6 就 health 告警（已填 IPv6 且已发布 AAAA 时的提示见 V6-31，只做 hint，不当 error）
 - 发布开关默认 true，或在 false 时主动删除已有 AAAA
+- 节点只有 IPv6、没有 IPv4。主控没有 IPv6 时，这种节点无法连主控。`public_ip` 保持必填
 
 ---
 
 ## 8. 第二期（访客双栈跳转）
 
-**目标：** 访问者用 IPv4 或 IPv6 打开客户域名，都能进节点并完成现有跳转。节点后台可以只填 IPv4、只填 IPv6，或两者都填。推荐部署仍是 **主控只有 IPv4**，**节点同时有公网 IPv4 和 IPv6**。控制面（Agent、MySQL、`NODE_IPS`、3306、主控 Nginx）继续只走 IPv4。
+**目标：** 访问者用 IPv4 或 IPv6 打开客户域名，都能进节点并完成现有跳转。主控只有 IPv4，不部署 IPv6。节点只有两种：只填公网 IPv4，或同时填公网 IPv4 和 IPv6。节点不会只有 IPv6，否则主控无法和它通信。控制面（Agent、MySQL、`NODE_IPS`、3306、主控 Nginx）继续只走 IPv4。`public_ip` 保持必填。
 
-**和第一期的差距：** 后台已能存 IPv6，Pool AAAA 可按开关发布，但节点默认仍只听 `0.0.0.0`，所以 IPv6 访问者还连不上。`public_ip` 仍必填，Pool A 在没有 IPv4 时仍会失败，所以「只填 IPv6」的节点还不能上线。
+**和第一期的差距：** 后台已能存可选 IPv6，Pool AAAA 可按开关发布，但节点默认仍只听 `0.0.0.0`，所以 IPv6 访问者还连不上。
 
 | 编号 | 只改这些 | 做完时 |
 |------|----------|--------|
@@ -183,8 +184,6 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 | V6-29 | `deploy-node.sh` 与 `vars.example.env` | 新变量默认关。为真时把该节点 `addr` / `tls_addr` 写成 `[::]:80` 与 `[::]:443`。`bindv6only` 不是 0 则脚本失败退出。不要同时留下 `0.0.0.0`。`api_listen` 仍是 `127.0.0.1:8080`。不改 `config.json.example` 默认值，不改 Go |
 | V6-30 | `DEPLOY-centos7.md` 与 `ACCEPTANCE-CENTOS7-DEPLOY.md` | 推荐路径写成：节点 v4+v6、监听双栈、主控 `curl -6` 通 80 后再开 `REDI_PUBLISH_POOL_AAAA`。分别用 IPv4 与 IPv6 访问客户域名，跳转都成立 |
 | V6-31 | `redi:health` 的 hints | 启用节点有合法 IPv6、发布开关为真、且无法从配置判断节点已听 IPv6 时，给一条 hint。未填 IPv6 不告警。不把 hint 当成 health 失败 |
-| V6-32 | 后台主 IPv4 可空 | 有合法主 IPv6 时，主 IPv4 可以空。两者都空则拒绝。只填 IPv4、只填 IPv6、两者都填都能保存。查重仍按地址族分开。列表启用开关的早退条件不改 |
-| V6-33 | `syncAll` 的 Pool A | 启用节点都没有 IPv4、但有合法 IPv6 且发布开关为真时，不要抛「没有可同步的节点 IP」；跳过 A 的创建，仍按现有规则写 AAAA 与 CNAME。有任一启用节点带 IPv4 时，A 行为与现在相同。不把 AAAA 并进 `reconcileARecordValues` |
-| V6-34 | 仅文档 | lagran 仍只处理 IPv4。写明 IPv6 入站不走 lagran。不改 iptables / ip6tables |
+| V6-32 | 仅文档 | lagran 仍只处理 IPv4。写明 IPv6 入站不走 lagran。不改 iptables / ip6tables。不把主 IPv4 改成可空，也不要为「只有 IPv6」的节点改 `syncAll` |
 
-V6-32 之前不要做「只有 IPv6」的节点：A 同步仍会失败。V6-33 必须跟在 V6-32 后面。推荐部署不依赖 V6-32：节点保留 IPv4 即可先做 V6-29～31。
+先做 V6-29～31：节点保留 IPv4，需要给访客提供 IPv6 时再加地址并打开双栈监听。
