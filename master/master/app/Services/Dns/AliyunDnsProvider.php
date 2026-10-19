@@ -10,7 +10,7 @@ use App\Services\Dns\Concerns\ReconcilesDnsRecords;
 use App\Services\Dns\Support\AliyunDnsClient;
 use RuntimeException;
 
-class AliyunDnsProvider implements DnsProviderInterface
+class AliyunDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
 {
     use EnsuresValidDnsNames;
     use ParsesZoneNames;
@@ -57,6 +57,30 @@ class AliyunDnsProvider implements DnsProviderInterface
                     'DomainName' => $parts['domain'],
                     'RR' => $parts['rr'],
                     'Type' => 'A',
+                    'Value' => $ip,
+                    'TTL' => 120,
+                ]);
+            },
+            function (string $id) {
+                $this->client->call('DeleteDomainRecord', ['RecordId' => $id]);
+            }
+        );
+    }
+
+    public function upsertAAAARecords(string $fqdn, array $ipv6): void
+    {
+        $fqdn = $this->requireDnsFqdn($fqdn);
+        $parts = $this->splitFqdn($fqdn, $this->zoneName());
+        $rows = $this->listRecordRows($parts['domain'], $parts['rr'], 'AAAA');
+
+        $this->reconcileAAAARecordValues(
+            $rows,
+            $ipv6,
+            function (string $ip) use ($parts) {
+                $this->client->call('AddDomainRecord', [
+                    'DomainName' => $parts['domain'],
+                    'RR' => $parts['rr'],
+                    'Type' => 'AAAA',
                     'Value' => $ip,
                     'TTL' => 120,
                 ]);

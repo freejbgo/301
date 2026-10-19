@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Services\Dns\AliyunCnDnsProvider;
+use App\Services\Dns\AliyunDnsProvider;
 use App\Services\Dns\AliyunIntlDnsProvider;
 use App\Services\Dns\CloudflareDnsProvider;
 use App\Services\Dns\DnsComDnsProvider;
@@ -14,13 +15,14 @@ use Tests\TestCase;
 
 class SupportsPoolAaaaInterfaceTest extends TestCase
 {
-    public function test_only_cloudflare_implements_supports_pool_aaaa(): void
+    public function test_cloudflare_and_aliyun_parent_implement_supports_pool_aaaa(): void
     {
         $this->assertContains(SupportsPoolAAAA::class, class_implements(CloudflareDnsProvider::class) ?: []);
+        $this->assertContains(SupportsPoolAAAA::class, class_implements(AliyunDnsProvider::class) ?: []);
+        $this->assertContains(SupportsPoolAAAA::class, class_implements(AliyunCnDnsProvider::class) ?: []);
+        $this->assertContains(SupportsPoolAAAA::class, class_implements(AliyunIntlDnsProvider::class) ?: []);
 
         $others = [
-            AliyunCnDnsProvider::class,
-            AliyunIntlDnsProvider::class,
             DnspodCnDnsProvider::class,
             DnspodIntlDnsProvider::class,
             DnsComDnsProvider::class,
