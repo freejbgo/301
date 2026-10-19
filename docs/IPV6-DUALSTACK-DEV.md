@@ -1,6 +1,6 @@
 # IPv4 / IPv6 双栈 — 开发设计
 
-**状态：** 规划。写本文时 `main` **只支持 IPv4**。本文不是已上线说明。
+**状态：** 第一期 **V6-01–V6-27** 已在 `main` 落地。默认仍 **不** 发布 Pool AAAA、节点仍听 `0.0.0.0`；控制面（`NODE_IPS`、MySQL 3306、lagran）仍 IPv4。真机双栈打勾见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7。本文不是已上线说明。
 
 **读者：** Composer 2.5。一次会话只做表里的一行，做完就停。
 
@@ -8,18 +8,17 @@
 
 ---
 
-## 1. 现状
+## 1. 现状（`main`，第一期合并后）
 
 | 面 | 行为 |
 |----|------|
-| 后台 | `public_ip`、`extra_ips` 只收 IPv4。多个 IPv4 可以在同一条节点上（一个进程、一个 Token） |
-| IPv6 | 没有字段 |
-| DNS | 只有 `upsertARecords`。四家厂商的删除都是按记录 id，不带类型 |
-| A 对账 | `reconcileARecordValues` 先 `filterValidIpv4List`。期望为空时抛「没有可同步的节点 IP」，不删光已有 A |
-| 预检 | CNAME 到 edge/pool 即通过。另外可用 A 命中 pool IPv4（`dns_precheck_allow_a_to_pool`，默认 true） |
-| HTTP-01 | 主控 `Http::get('http://客户域名/...')`。客户若 CNAME 到 pool，解析出 AAAA 时，探测可能先走 IPv6 |
-| 节点 | 默认 `0.0.0.0:80` / `0.0.0.0:443`，不接受 IPv6。`net.ipv6.bindv6only` 默认多为 0；**被改成 1** 时，只听 `[::]` 会丢掉 IPv4 |
-| 控制面 | `NODE_IPS`、MySQL、firewalld 3306、lagran 只处理 IPv4 |
+| 后台 | `public_ip`、`extra_ips` 为 IPv4；可选 `public_ipv6`、`extra_ipv6`（同节点一个进程、一个 Token） |
+| Pool DNS | **A** 行为与第一期前一致；**AAAA** 仅 `REDI_PUBLISH_POOL_AAAA=true` 且厂商实现 `SupportsPoolAAAA` 时由 `syncAll` 对账 |
+| A / AAAA 对账 | A 仍走 `reconcileARecordValues` + `filterValidIpv4List`；AAAA 走 `reconcileAAAARecordValues`（独立，开关关时零次 API） |
+| 预检 | CNAME 优先；可选 A /（开关开时）AAAA 命中 pool（`dns_precheck_allow_a_to_pool` 默认 true，`dns_precheck_allow_aaaa_to_pool` 默认 false） |
+| HTTP-01 | 主控 `Http::get('http://客户域名/...')`；发布 AAAA 后解析可能优先 IPv6，节点须已听 IPv6（见 DEPLOY-centos7 §12） |
+| 节点 | 默认 `0.0.0.0:80` / `0.0.0.0:443`；双栈须运维按文档改 `[::]:80/443`，不改仓库默认 `config.json` |
+| 控制面 | `NODE_IPS`、MySQL、firewalld 3306、lagran 仍只处理 IPv4 |
 
 `filter_var(..., FILTER_FLAG_IPV6)` 会放过 `::ffff:192.0.2.1`、`::1`、`fe80::1`，不能单独当池地址校验。
 
