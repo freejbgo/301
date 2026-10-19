@@ -192,11 +192,12 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 - `0`：先看完两个地址再写。把主机为 `::` 的项改回 `0.0.0.0`，端口不变。已经是 `0.0.0.0` 则不动。空的 `tls_addr` 保持关闭。其它主机则失败，两个地址都不改。
 - 不要写 `::80`。`net.SplitHostPort` 对 `[::]:80` 得到端口 `80`，对 `::80` 得到整段 `:80`，lagran 端口会对不上。节点只有一个 `addr`，不要再留一条 `0.0.0.0`。
 - 不要在 `env.sh` 写入 `REDI_HTTP_LISTEN` 或 `REDI_TLS_LISTEN`。这两个变量会覆盖 `config.json`。`api_listen` 保持 `127.0.0.1:8080`。
+- 不改 firewalld。部署脚本已经放行 `http` 和 `https` 服务，这两个服务同时覆盖 IPv4 和 IPv6。不要再加只匹配 IPv4 或只匹配 IPv6 的 rich rule。
 - 不改 `SanitizeClientIP`。`bindv6only=0` 时，IPv4 客户端在 `[::]` 上会变成映射地址，现有 `To4()` 已经能还原。
 
 **V6-30 lagran 与 IPv4 相同。** 规则在 `OUTPUT`，按 TCP 源端口匹配，不看节点的公网地址。不要读后台的 `public_ipv6`，也不要为 IPv6 再 `Register` 一套队列：同一个队列号已经会收到两种包，再注册一次会抢队列。
 
-先写完现有 IPv4 规则，再写 `ip6tables`。调用 `ip6tables` 这个命令，不要用 `iptables -6`。参数、四种标志、队列号和窗口值与 IPv4 相同。`ip6tables` 不存在或写入失败时只记日志，不要 `return` 掉已经装上的 IPv4 规则，后面的 NFQUEUE 仍要启动。
+先写完现有 IPv4 规则，再写 `ip6tables`。调用 `ip6tables` 这个命令，不要用 `iptables -6`。CentOS 7 的 `iptables` 软件包里已经有 `ip6tables`，不要另装包，也不要改 `deploy-node.sh` 的安装列表。参数、四种标志、队列号和窗口值与 IPv4 相同。`ip6tables` 不存在或写入失败时只记日志，不要 `return` 掉已经装上的 IPv4 规则，后面的 NFQUEUE 仍要启动。退出时仍由 `main` 调用一次 `UnsetIptable`；在这个函数里删掉两套规则，不要改 `main.go`。
 
 回调看首字节高 4 位。`4` 走现在的 IPv4 路径。`6` 按 IPv6 头改窗口并重算 TCP 校验和。不要用 `LayerTypeIPv4` 解 IPv6 包。解析失败或带扩展头时原样 `NfAccept`，不要改包，也不要丢包。没有扩展头的 IPv6 TCP 必须改成与 IPv4 相同的窗口。
 
