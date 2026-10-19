@@ -185,11 +185,11 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 | V6-30 | `lagran.go`、`lagran-cleanup-iptables.sh`、`lagran-diagnose.sh` | 见下方。IPv4 规则文本不改。不改监听默认值 |
 | V6-31 | `DEPLOY-centos7.md` 与 `ACCEPTANCE-CENTOS7-DEPLOY.md` | 见下方验收。不改 health，不改脚本 |
 
-**V6-29 监听开关。** 变量 `REDI_NODE_DUALSTACK_LISTEN`，默认不写或空。用 Python 改 JSON，不要用 `sed`：地址里有方括号。
+**V6-29 监听开关。** 变量 `REDI_NODE_DUALSTACK_LISTEN`，默认不写或空。只接受空、`0`、`1`。`true`、`yes` 或其它值直接失败，且不改文件。用 Python 一次写回整个 JSON，不要用 `sed`，也不要先改 `addr` 再改 `tls_addr`。
 
 - 空：不改 `addr`、`tls_addr`、`api_listen`。重复部署不能把现有监听改掉。
-- `1`：先检查，再写入。`/proc/net/if_inet6` 不存在则失败。`/proc/sys/net/ipv6/bindv6only` 读不到或不是 `0` 则失败。通过后再把 `addr` 的主机改成 `[::]`，端口保持原值；`0.0.0.0:80` 变成 `[::]:80`。`tls_addr` 已是空或 JSON `null` 时不要写成 `[::]:443`，那会把关掉的 HTTPS 重新打开。非空时同样只换主机、保留端口。当前主机不是 `0.0.0.0` 或 `::` 时失败，不要改成别的地址。
-- `0`：把主机为 `::` 的 `addr` / `tls_addr` 改回 `0.0.0.0`，端口不变。已经是 `0.0.0.0` 则不动。其它主机则失败。
+- `1`：先检查，再写入。`/proc/net/if_inet6` 不存在则失败。`/proc/sys/net/ipv6/bindv6only` 读不到或 trim 后不是 `0` 则失败（`0\n` 仍算 0）。两个地址都合法才写入。`addr` 的主机改成 `[::]`，端口保持原值；`0.0.0.0:80` 变成 `[::]:80`。`tls_addr` 缺失、空字符串或 JSON `null` 时保持关闭，不要写成 `[::]:443`。非空时同样只换主机、保留端口。当前主机不是 `0.0.0.0` 或 `::` 时失败，不要改成别的地址。
+- `0`：先看完两个地址再写。把主机为 `::` 的项改回 `0.0.0.0`，端口不变。已经是 `0.0.0.0` 则不动。空的 `tls_addr` 保持关闭。其它主机则失败，两个地址都不改。
 - 不要写 `::80`。`net.SplitHostPort` 对 `[::]:80` 得到端口 `80`，对 `::80` 得到整段 `:80`，lagran 端口会对不上。节点只有一个 `addr`，不要再留一条 `0.0.0.0`。
 - 不要在 `env.sh` 写入 `REDI_HTTP_LISTEN` 或 `REDI_TLS_LISTEN`。这两个变量会覆盖 `config.json`。`api_listen` 保持 `127.0.0.1:8080`。
 - 不改 `SanitizeClientIP`。`bindv6only=0` 时，IPv4 客户端在 `[::]` 上会变成映射地址，现有 `To4()` 已经能还原。
