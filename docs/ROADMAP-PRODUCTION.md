@@ -38,7 +38,7 @@
 | lagran NFQUEUE 卸载/升级脚本化 | ✅ `lagran_ports.py` 与进程端口一致 + 诊断/清理 |
 | 多机 queue + redis | ✅ [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md) + health hints |
 | 更强租户隔离审计（API/后台） | 📋 |
-| IPv4/IPv6 双栈（数据面） | ✅ 第一期 V6-01–27 已在 `main`（默认仍不发布 AAAA、节点仍 `0.0.0.0`）。真机见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7、[IPV6-DUALSTACK-DEV.md](IPV6-DUALSTACK-DEV.md)。控制面 IPv6、默认双栈监听仍 📋 不做（设计 §7） |
+| IPv4/IPv6 双栈（数据面） | ✅ 第一期 V6-01–27。📋 第二期 V6-28–34：访客 v4/v6 都能跳转；节点可仅 v4、仅 v6 或共存；主控与 `NODE_IPS` 仍 IPv4。见 [IPV6-DUALSTACK-DEV.md](IPV6-DUALSTACK-DEV.md) §8 |
 
 ## 产品行为（非缺陷）
 
