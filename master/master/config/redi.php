@@ -44,6 +44,8 @@ return [
 
     'dns_precheck_allow_a_to_pool' => env('REDI_DNS_PRECHECK_ALLOW_A_TO_POOL', true),
 
+    'dns_precheck_allow_aaaa_to_pool' => env('REDI_DNS_PRECHECK_ALLOW_AAAA_TO_POOL', false),
+
     /*
     |--------------------------------------------------------------------------
     | Pool 发布 AAAA（厂商 DNS）；默认关闭，节点须已监听 IPv6 后再开启
