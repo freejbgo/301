@@ -185,27 +185,35 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 | V6-30 | `lagran.go`、`lagran-cleanup-iptables.sh`、`lagran-diagnose.sh` | 见下方。IPv4 规则文本不改。不改监听默认值 |
 | V6-31 | `DEPLOY-centos7.md` 与 `ACCEPTANCE-CENTOS7-DEPLOY.md` | 见下方验收。不改 health，不改脚本 |
 
-**V6-29 监听开关。** 变量 `REDI_NODE_DUALSTACK_LISTEN`，默认不写或空。只接受空、`0`、`1`。`true`、`yes` 或其它值直接失败，且不改文件。用 Python 一次写回整个 JSON，不要用 `sed`，也不要先改 `addr` 再改 `tls_addr`。放在 `redi_ensure_lagran_enabled` 之后：那个函数会把整个 `config.json` 再写一遍。只改 `addr` 和 `tls_addr`，保留 `server_ip`、`api_listen`、`lagran` 和其它字段，不要用 example 重新生成文件。
+**V6-29 监听开关。** 变量 `REDI_NODE_DUALSTACK_LISTEN`，默认不写或空。脚本已 `set -u`，已有的 `vars.env` 里没有这个变量，读取必须写成 `${REDI_NODE_DUALSTACK_LISTEN:-}`。trim 之后只接受空、`0`、`1`。`01`、`true`、`yes` 或其它值直接失败，且不改文件。用 Python 一次写回整个 JSON，不要用 `sed`，也不要先改 `addr` 再改 `tls_addr`。放在 `redi_ensure_lagran_enabled` 之后、`redi_svc_enable_now` 之前：前面那个函数会把整个 `config.json` 再写一遍，`enable --now` 会按磁盘上的文件把进程拉起来。写晚了，这次部署仍听 `0.0.0.0`。检查失败要 `die`（退出码非 0），不要走到 enable 或 restart。只改 `addr` 和 `tls_addr`，保留 `server_ip`、`api_listen`、`lagran` 和其它字段，不要用 example 重新生成文件。
 
 - 空：不改 `addr`、`tls_addr`、`api_listen`。重复部署不能把现有监听改掉。
 - `1`：先检查，再写入。`/proc/net/if_inet6` 不存在则失败。`/proc/sys/net/ipv6/bindv6only` 读不到或 trim 后不是 `0` 则失败（`0\n` 仍算 0）。两个地址都合法才写入。`addr` 的主机改成 `[::]`，端口保持原值；`0.0.0.0:80` 变成 `[::]:80`。`tls_addr` 是空字符串或 JSON `null` 时表示 HTTPS 已关闭，保持关闭，不要写成 `[::]:443`。字段不存在时，进程会默认听 `0.0.0.0:443`，所以要写成 `[::]:443`，否则只有 HTTP 变成双栈。已有非空值时只换主机、保留端口。当前主机不是 `0.0.0.0` 或 `::` 时失败，不要改成别的地址。
 - `0`：先看完两个地址再写。把主机为 `::` 的项改回 `0.0.0.0`，端口不变。已经是 `0.0.0.0` 则不动。空字符串或 JSON `null` 保持关闭。字段不存在则不要新增。其它主机则失败，两个地址都不改。
-- 不要写 `::80`。`net.SplitHostPort` 对 `[::]:80` 得到端口 `80`，对 `::80` 得到整段 `:80`，lagran 端口会对不上。节点只有一个 `addr`，不要再留一条 `0.0.0.0`。
-- 不要在 `env.sh` 写入 `REDI_HTTP_LISTEN` 或 `REDI_TLS_LISTEN`。这两个变量会覆盖 `config.json`。`api_listen` 保持 `127.0.0.1:8080`。
-- 不改 firewalld。部署脚本已经放行 `http` 和 `https` 服务，这两个服务同时覆盖 IPv4 和 IPv6。不要再加只匹配 IPv4 或只匹配 IPv6 的 rich rule。
-- 不改 `SanitizeClientIP`。`bindv6only=0` 时，IPv4 客户端在 `[::]` 上会变成映射地址，现有 `To4()` 已经能还原。
+- 比较主机时按 `net.SplitHostPort` 的结果：`[::]:80` 的主机是 `::`，不是字符串 `[::]`。先去掉一层方括号再和 `0.0.0.0`、`::` 比较。没去掉的话，第二次部署 `1` 会把已经写好的 `[::]` 当成非法主机，整次 `deploy-node.sh` 失败；`0` 也退不回 `0.0.0.0`。
+- `addr` 缺失或两个地址里有一个解析不了，则两个都不改。`addr` 在进程里是必填。不要写 `::80`。`[::]:80` 得到端口 `80`，`::80` 对不上 lagran 的端口。节点只有一个 `addr`，不要再留一条 `0.0.0.0`。
+- 先写到与 `config.json` 同一目录的临时文件，再替换原文件。不要直接打开原文件 `json.dump`，那会先把文件截成空的。`indent=2`，末尾一个换行。
+- 这个变量只在部署时从 `vars.env` 读取，不要写进 `env.sh`。Go 不读它。不要在 `env.sh` 写入 `REDI_HTTP_LISTEN` 或 `REDI_TLS_LISTEN`，这两个变量会覆盖 `config.json`。`api_listen` 保持 `127.0.0.1:8080`。
+- 不改 firewalld，也不改 systemd unit。部署脚本已经放行 `http` 和 `https` 服务，这两个服务同时覆盖 IPv4 和 IPv6。不要再加只匹配 IPv4 或只匹配 IPv6 的 rich rule。
+- 不改 `SanitizeClientIP`。`bindv6only=0` 时，IPv4 客户端在 `[::]` 上会变成映射地址，现有 `To4()` 已经能还原。限流键走的就是这个函数，不要再为 IPv6 加一条限流改动。
 
-**V6-30 lagran 与 IPv4 相同。** 规则在 `OUTPUT`，按 TCP 源端口匹配，不看节点的公网地址。不要读后台的 `public_ipv6`，也不要为 IPv6 再 `Register` 一套队列：同一个队列号已经会收到两种包，再注册一次会抢队列。
+**V6-30 lagran 与 IPv4 相同。** 规则在 `OUTPUT`，按 TCP 源端口匹配，不看节点的公网地址。不要读后台的 `public_ipv6`。
 
-先写完现有 IPv4 规则，再写 `ip6tables`。调用 `ip6tables` 这个命令，不要用 `iptables -6`。CentOS 7 的 `iptables` 软件包里已经有 `ip6tables`，不要另装包，也不要改 `deploy-node.sh` 的安装列表。参数、四种标志、队列号和窗口值与 IPv4 相同。`ip6tables` 不存在或写入失败时只记日志，不要 `return` 掉已经装上的 IPv4 规则，后面的 NFQUEUE 仍要启动。退出时仍由 `main` 调用一次 `UnsetIptable`；在这个函数里删掉两套规则，不要改 `main.go`。
+CentOS 7 的内核是 3.10。从 3.8 起内核忽略 `NFQNL_CFG_CMD_PF_BIND` 和 `PF_UNBIND`。`Open` 不设 `AfFamily` 时值是 0，这个值只进判决消息，不决定队列收哪种包。队列号是全局的：`ip6tables` 指向已经绑定的 `1000:1127`、`2000:2127`、`3000:3127`、`4000:4127`，IPv6 包会进现有套接字。不要改这些 `Open` 的 `AfFamily`，不要对同一号码再 `Open` 一次（第二次是 `EBUSY`），也不要另开 `5000` 一段。`deploy-node.sh` 写下的 unit 没有 `LimitNOFILE`（`redi-multi.service.example` 里的 65535 不会被抄进去），默认大约 1024。现有四组已经是 512 个套接字，再来一组会有打不开的；`--queue-bypass` 会让没人收的包原样通过。不要为了这个去改 systemd，也不要改 `deploy-node.sh`。
 
-回调看首字节高 4 位。`4` 走现在的 IPv4 路径。`6` 按 IPv6 头改窗口并重算 TCP 校验和。不要用 `LayerTypeIPv4` 解 IPv6 包。解析失败或带扩展头时原样 `NfAccept`，不要改包，也不要丢包。没有扩展头的 IPv6 TCP 必须改成与 IPv4 相同的窗口。
+先写完现有 IPv4 规则，再写 `ip6tables`。用 `iptables.New(iptables.IPFamily(iptables.ProtocolIPv6))`，它执行的是 `ip6tables`。不要用 `iptables -6`，也不要再调一次不带参数的 `iptables.New()` 当作 IPv6。四种标志、队列号和窗口值与 IPv4 相同。CentOS 7 的 `iptables` 软件包里已经有 `ip6tables`，不要另装包，也不要改安装列表。`ip6tables` 不存在或写入失败时只记日志，不要 `return`。IPv4 规则保留，后面的队列照常启动。不要在 `Run` 里为 IPv6 再做一组 pool：现有的 `return` 会拆掉已经启动的 IPv4 pool。
 
-进程退出、`lagran-cleanup-iptables.sh` 同时删两套规则。没有 `ip6tables` 时清理脚本仍要删完 IPv4 并退出 0。`lagran-diagnose.sh` 同时列出两套。改包函数不依赖 NFQUEUE，测试里放一个没有扩展头的 IPv6 包。不改 IPv4 规则参数，不把主 IPv4 改成可空。这一行不能再拆：规则、解析和清理必须一起提交，否则 IPv6 包会进队列却被当成 IPv4。
+听在 `[::]` 上的 IPv4 客户端，内核发出的仍是 IPv4 包，走原来的 iptables。不要为 `::ffff` 再加一条 ip6tables。
+
+回调看首字节高 4 位。`4` 走现在的 IPv4 路径。`6` 用 `LayerTypeIPv6` 解，`SetNetworkLayerForChecksum` 用这一层 IPv6，不要套一个 IPv4 头。不要用 `LayerTypeIPv4` 解 IPv6 包。空包、解析失败、带扩展头，或序列化失败时，对原包 `NfAccept`，不要改包，不要丢包，也不要把空 buffer 送回去。没有扩展头的 IPv6 TCP 必须改成与 IPv4 相同的窗口。
+
+进程退出时在 `UnsetIptable` 里删掉两套。IPv4 删除失败也要继续删 ip6tables。`main` 仍只调用一次，不要改 `main.go`。`lagran-cleanup-iptables.sh` 用同一组队列号删两套；没有 `ip6tables` 时删完 IPv4 并退出 0。`lagran-diagnose.sh` 同时列出两套。改包函数不依赖 NFQUEUE。测试要覆盖三件事：没有扩展头的 IPv6 窗口与 IPv4 相同、带扩展头的字节不变、IPv4 仍改窗口。不改 IPv4 规则参数，不把主 IPv4 改成可空。这一行不能再拆：只加规则而不改解析时，IPv6 包会进现有队列，按 IPv4 解不开，然后原样接受，窗口不变。
 
 **V6-31 验收。** 主控可以没有公网 IPv6，但发布 AAAA 之前必须有 IPv6 出网。没有出网时，主控上的 `curl -6` 和随后的 HTTP-01 都会失败。监听开关在每台节点的 `vars.env` 里，发布开关在主控上，一次同步会把所有启用节点的 IPv6 都写成 Pool AAAA。只填 IPv4 的节点没有 AAAA，IPv6 访客不会落到它上面。已经填写 IPv6、却还听 `0.0.0.0` 的节点也会被写进 AAAA。所以打开发布开关之前，每一台已填 IPv6 的启用节点都要先打开监听，并在主控上对它的公网 IPv6 做 `curl -6`。只测过一台就打开关，其余节点会让一部分 IPv6 访客和 HTTP-01 失败。
 
-顺序是：节点已有 IPv4、后台再填 IPv6、该节点打开监听开关、主控 `curl -6` 通 80、全部这类节点都通过之后，再把 `REDI_PUBLISH_POOL_AAAA` 设为 true。分别用 IPv4 和 IPv6 访问客户域名，跳转都要成立。`ip6tables -L OUTPUT` 能看到与 iptables 对应的 NFQUEUE 规则；规则不是挂在某一条连接上。
+顺序是：节点已有 IPv4、后台再填 IPv6、该节点把 `REDI_NODE_DUALSTACK_LISTEN=1` 写进自己的 `vars.env` 并重跑 `deploy-node.sh`、主控 `curl -6` 通 80、全部这类节点都通过之后，再把 `REDI_PUBLISH_POOL_AAAA` 设为 true。分别用 IPv4 和 IPv6 访问客户域名，跳转都要成立。`ip6tables -L OUTPUT` 与 iptables 成对，队列号相同（`1000:1127` 这一组），不是另一段号码；规则不是挂在某一条连接上。
+
+验收改的是操作说明，不是再写一套手工 `sed`。`DEPLOY-centos7.md` §12 里「lagran 与 iptables 规则仍按 IPv4 节点地址工作，不因 Pool AAAA 而自动处理 IPv6」改成与 V6-30 一致：同一组队列号，不按节点地址匹配。只 `curl -6` 80 不能证明 443：`tls_addr` 不是空字符串也不是 JSON `null` 时，再对 443 做一次 `curl -6 -k`。HTTPS 已关闭则只测 80。
 
 不要做「检测节点是否已听 `[::]`」的 health hint。心跳只上报版本，主控读不到节点 `config.json`；按「已填 IPv6 且开关为真」提示会在监听正确时也一直出现。
 
