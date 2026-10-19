@@ -168,3 +168,40 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health --json
 ```
 
 已上线主控若 Cron 仍是旧写法，可 `sudo bash scripts/patch-master-cron-ops-webhook.sh`（见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) §4）。
+
+## 12. 节点 IPv6 与 Pool AAAA（可选）
+
+节点公网 IPv6 在后台「节点管理」填写（主 IPv6 / 其他 IPv6）。**不要**把 IPv6 写进 `vars.env` 的 `NODE_IPS`（该列表仍只用于 IPv4 的 MySQL 授权与 firewalld 3306）。默认不会在 DNS 厂商发布 Pool 的 AAAA；主控 `.env` 里 `REDI_PUBLISH_POOL_AAAA` 仍为 **false**（见 `master/master/.env.example`）。
+
+### 何时打开发布开关
+
+1. 节点已在 80/443 上能接受 **公网 IPv6** 访问（见下文「监听」）。若只发布了 AAAA 而节点未听 IPv6，Let's Encrypt 的 **HTTP-01 会优先走 AAAA**，主控从节点拉挑战时会超时，证书签发与续期会失败。
+2. 在 **主控机器**上，对节点 **公网 IPv6** 测 80 端口（HTTP-01 从主控发出，只在节点本机 `curl` 本机地址 **不算**）：
+
+   ```bash
+   curl -6 -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "http://[2001:db8::1]/"
+   ```
+
+   将 `2001:db8::1` 换成该节点在后台登记的主 IPv6（方括号是 URL 里的 IPv6 字面量写法）。应得到非 000 的 HTTP 状态码（节点默认跳转页即可）。
+
+3. 确认主控自身有 **IPv6 出口**（能执行上述 `curl -6`）。主控没有 IPv6 出网时 **不要** 设置 `REDI_PUBLISH_POOL_AAAA=true`。
+
+4. 在 `/opt/301/master/.env` 设置 `REDI_PUBLISH_POOL_AAAA=true`，执行 `sudo -u nginx php artisan config:cache`，再在后台做 DNS 同步（或 API 模式点同步）。需要预检允许客户域名 AAAA 指向 Pool 时，另见 `REDI_DNS_PRECHECK_ALLOW_AAAA_TO_POOL`（默认 false，见 `.env.example`）。
+
+关闭发布：把开关改回 `false` 并 `config:cache` **不会**自动删除厂商里已有 AAAA；要保持 `true` 且清空节点 IPv6 后再同步，才会按对账删掉 AAAA。A 记录行为与 IPv4 一致。
+
+### 监听（仅在你主动改节点 `config.json` 时）
+
+发布包默认仍是 `0.0.0.0:80` / `0.0.0.0:443`；**不要**在本仓库的部署脚本或默认 `config.json` 里改成双栈，除非你已按下列规则手工改配置并验收。
+
+- 先查看内核：`cat /proc/sys/net/ipv6/bindv6only`。若为 **1**，不要改监听；保持 `0.0.0.0` 或按你环境单独规划。
+- 若要在同一套地址上同时服务 IPv4 与 IPv6，应把 `addr` / `tls_addr` 写成 **`[::]:80`** 与 **`[::]:443`**（带方括号），**不要**写成 `::80` / `::443`。
+- **不要**同时绑定 `0.0.0.0:80`（或 `0.0.0.0:443`）与 `[::]:80`（或 `[::]:443`），避免重复监听或行为异常。
+- **`api_listen` 保持 `127.0.0.1:8080`**，不要改成 `[::]` 或 `0.0.0.0`。
+- 回退 IPv4-only 监听时，改回 **`0.0.0.0:80`** / **`0.0.0.0:443`** 并重启 `redi-multi`。
+
+### lagran 与防火墙
+
+lagran 与 iptables 规则仍按 **IPv4** 节点地址工作，**不**因 Pool AAAA 而自动处理 IPv6。开放 80/443 时继续用部署脚本已有的服务放行即可；**不要**为「只匹配 IPv4」单独加 firewalld rich rule 而把 IPv6 挡在池外（否则 `curl -6` 与 HTTP-01 会失败）。
+
+更完整的产品约定见 [docs/IPV6-DUALSTACK-DEV.md](docs/IPV6-DUALSTACK-DEV.md)。
