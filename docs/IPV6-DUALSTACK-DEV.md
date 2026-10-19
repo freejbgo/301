@@ -194,11 +194,15 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 - 不要在 `env.sh` 写入 `REDI_HTTP_LISTEN` 或 `REDI_TLS_LISTEN`。这两个变量会覆盖 `config.json`。`api_listen` 保持 `127.0.0.1:8080`。
 - 不改 `SanitizeClientIP`。`bindv6only=0` 时，IPv4 客户端在 `[::]` 上会变成映射地址，现有 `To4()` 已经能还原。
 
-**V6-30 lagran 与 IPv4 相同。** 节点有 IPv6 时，IPv6 出站 TCP 也要进入 NFQUEUE，并按现有四种标志组合修改窗口。用 `ip6tables` 写与现在 iptables 相同的 OUTPUT 规则，队列号不变。同一回调里按包头版本分支：IPv4 仍按 `LayerTypeIPv4` 改包；IPv6 按 IPv6 头改包并重算 TCP 校验和。不要把 IPv6 包当成 IPv4 解析。
+**V6-30 lagran 与 IPv4 相同。** 规则在 `OUTPUT`，按 TCP 源端口匹配，不看节点的公网地址。不要读后台的 `public_ipv6`，也不要为 IPv6 再 `Register` 一套队列：同一个队列号已经会收到两种包，再注册一次会抢队列。
 
-`ip6tables` 不存在或本机没有 IPv6 时，只跳过 IPv6 规则并记日志，IPv4 的 lagran 必须照常启动。进程退出和 `lagran-cleanup-iptables.sh` 要同时删掉两套规则。`lagran-diagnose.sh` 要同时列出两套规则。抽出不依赖 NFQUEUE 的改包函数，用一个 IPv6 包做测试。不改 IPv4 规则参数，不把主 IPv4 改成可空。
+先写完现有 IPv4 规则，再写 `ip6tables`。调用 `ip6tables` 这个命令，不要用 `iptables -6`。参数、四种标志、队列号和窗口值与 IPv4 相同。`ip6tables` 不存在或写入失败时只记日志，不要 `return` 掉已经装上的 IPv4 规则，后面的 NFQUEUE 仍要启动。
 
-**V6-31 验收。** 主控可以没有公网 IPv6，但发布 AAAA 之前必须有 IPv6 出网。没有出网时，主控上的 `curl -6` 和随后的 HTTP-01 都会失败。顺序是：节点已有 IPv4、后台再填 IPv6、打开监听开关、在主控上 `curl -6` 节点公网 IPv6 的 80、然后再把 `REDI_PUBLISH_POOL_AAAA` 设为 true。分别用 IPv4 和 IPv6 访问客户域名，跳转都要成立。IPv6 连接上也要能看到与 IPv4 相同的 lagran 规则。
+回调看首字节高 4 位。`4` 走现在的 IPv4 路径。`6` 按 IPv6 头改窗口并重算 TCP 校验和。不要用 `LayerTypeIPv4` 解 IPv6 包。解析失败或带扩展头时原样 `NfAccept`，不要改包，也不要丢包。没有扩展头的 IPv6 TCP 必须改成与 IPv4 相同的窗口。
+
+进程退出、`lagran-cleanup-iptables.sh` 同时删两套规则。没有 `ip6tables` 时清理脚本仍要删完 IPv4 并退出 0。`lagran-diagnose.sh` 同时列出两套。改包函数不依赖 NFQUEUE，测试里放一个没有扩展头的 IPv6 包。不改 IPv4 规则参数，不把主 IPv4 改成可空。这一行不能再拆：规则、解析和清理必须一起提交，否则 IPv6 包会进队列却被当成 IPv4。
+
+**V6-31 验收。** 主控可以没有公网 IPv6，但发布 AAAA 之前必须有 IPv6 出网。没有出网时，主控上的 `curl -6` 和随后的 HTTP-01 都会失败。顺序是：节点已有 IPv4、后台再填 IPv6、打开监听开关、在主控上 `curl -6` 节点公网 IPv6 的 80、然后再把 `REDI_PUBLISH_POOL_AAAA` 设为 true。分别用 IPv4 和 IPv6 访问客户域名，跳转都要成立。`ip6tables -L OUTPUT` 能看到与 iptables 对应的 NFQUEUE 规则；规则不是挂在某一条连接上。
 
 不要做「检测节点是否已听 `[::]`」的 health hint。心跳只上报版本，主控读不到节点 `config.json`；按「已填 IPv6 且开关为真」提示会在监听正确时也一直出现。
 
