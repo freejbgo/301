@@ -38,7 +38,7 @@
 | lagran NFQUEUE 卸载/升级脚本化 | ✅ `lagran_ports.py` 与进程端口一致 + 诊断/清理 |
 | 多机 queue + redis | ✅ [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md) + health hints |
 | 更强租户隔离审计（API/后台） | 📋 |
-| IPv4/IPv6 双栈（数据面） | 📋 现网只支持 IPv4。V6-01–V6-27，见 [IPV6-DUALSTACK-DEV.md](IPV6-DUALSTACK-DEV.md)。非法地址或未迁移不得被当成空 AAAA 列表 |
+| IPv4/IPv6 双栈（数据面） | 📋 现网只支持 IPv4。V6-01–V6-27，见 [IPV6-DUALSTACK-DEV.md](IPV6-DUALSTACK-DEV.md)。非法地址或未迁移不得被当成空 AAAA 列表。A 预检未命中时不能直接 return |
 
 ## 产品行为（非缺陷）
 
