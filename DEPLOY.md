@@ -44,7 +44,7 @@ mysql -u root -p redi_admin < db/redi_admin.sql
 ```
 
 - **绿场**：`redi_admin.sql` = Dcat 菜单 + 业务表 + 默认 `admin` + **`redi_node_bump_skip` 存储过程**（无需为建库再单独 migrate）。详见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。
-- 导入 SQL 后可用下面命令确认过程已存在；主控装好后仍会执行 `php artisan migrate --force`（绿场通常无新迁移，发版后有 `100010+` 时再改库）。
+- 导入 SQL 后可用下面命令确认过程已存在；主控装好后仍会执行 `php artisan migrate --force`（绿场通常无新迁移，发版后有 `100011+` 时再改库）。
 - 验证过程（可选）：
 
 ```bash
