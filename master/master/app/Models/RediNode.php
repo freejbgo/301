@@ -37,6 +37,19 @@ class RediNode extends Model
             if (! Schema::hasColumn($node->getTable(), 'public_ipv6')) {
                 unset($node->public_ipv6);
             }
+            if (Schema::hasColumn($node->getTable(), 'extra_ipv6') && $node->isDirty('extra_ipv6')) {
+                $extras = [];
+                foreach ((array) $node->extra_ipv6 as $ip) {
+                    $ip = trim(OpsDisplaySanitizer::stripControlChars(trim((string) $ip)));
+                    if ($ip !== '') {
+                        $extras[] = $ip;
+                    }
+                }
+                $node->extra_ipv6 = $extras === [] ? null : array_values($extras);
+            }
+            if (! Schema::hasColumn($node->getTable(), 'extra_ipv6')) {
+                unset($node->extra_ipv6);
+            }
             if ($node->isDirty('name')) {
                 $name = OpsDisplaySanitizer::stripControlChars((string) $node->name);
                 $name = trim($name);
@@ -85,6 +98,7 @@ class RediNode extends Model
         'public_ip',
         'public_ipv6',
         'extra_ips',
+        'extra_ipv6',
         'enabled',
         'last_heartbeat_at',
         'agent_version',
@@ -93,6 +107,7 @@ class RediNode extends Model
 
     protected $casts = [
         'extra_ips' => 'array',
+        'extra_ipv6' => 'array',
         'enabled' => 'boolean',
         'last_heartbeat_at' => 'datetime',
     ];

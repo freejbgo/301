@@ -37,7 +37,7 @@ class RediNodeAssertIpv6AvailableTest extends TestCase
             'name' => 'disabled',
             'public_ip' => '203.0.113.1',
             'public_ipv6' => '2001:db8::1',
-            'extra_ipv6' => json_encode(['2001:db8::2']),
+            'extra_ipv6' => ['2001:db8::2'],
             'enabled' => false,
         ]);
 
