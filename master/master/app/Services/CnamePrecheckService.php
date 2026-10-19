@@ -6,6 +6,7 @@ use App\Models\RediNode;
 use App\Models\RediPlatformDns;
 use App\Support\HostNameValidator;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 
 class CnamePrecheckService
 {
@@ -92,6 +93,46 @@ class CnamePrecheckService
         return false;
     }
 
+    public static function aaaaRecordPointsToPool(string $customerDomain): bool
+    {
+        if (! HostNameValidator::isNodePublishableHost($customerDomain)) {
+            return false;
+        }
+        if (! defined('DNS_AAAA')) {
+            return false;
+        }
+        if (! Schema::hasColumn('redi_nodes', 'public_ipv6')
+            || ! Schema::hasColumn('redi_nodes', 'extra_ipv6')) {
+            return false;
+        }
+
+        $poolIpv6s = RediNode::enabledPublicIpv6s();
+        if ($poolIpv6s === []) {
+            return false;
+        }
+
+        $customerDomain = HostNameValidator::toCanonicalAscii($customerDomain);
+        $poolBytes = [];
+        foreach ($poolIpv6s as $ip) {
+            $bytes = RediNode::ipv6ToBytes($ip);
+            if ($bytes !== '') {
+                $poolBytes[$bytes] = true;
+            }
+        }
+        if ($poolBytes === []) {
+            return false;
+        }
+
+        foreach (static::resolveAAAA($customerDomain) as $ip) {
+            $bytes = RediNode::ipv6ToBytes($ip);
+            if ($bytes !== '' && isset($poolBytes[$bytes])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     protected static function cnameChainReaches(string $host, array $targets, int $depth): bool
     {
         if ($depth <= 0) {
@@ -135,6 +176,32 @@ class CnamePrecheckService
         foreach ($rows as $row) {
             if (! empty($row['ip'])) {
                 $ips[] = $row['ip'];
+            }
+        }
+
+        return array_values(array_unique($ips));
+    }
+
+    /**
+     * @return string[]
+     */
+    protected static function resolveAAAA(string $host): array
+    {
+        if (! HostNameValidator::isNodePublishableHost($host)) {
+            return [];
+        }
+        if (! defined('DNS_AAAA')) {
+            return [];
+        }
+        $host = HostNameValidator::toCanonicalAscii($host);
+        $rows = @dns_get_record($host, DNS_AAAA);
+        if (! is_array($rows)) {
+            return [];
+        }
+        $ips = [];
+        foreach ($rows as $row) {
+            if (! empty($row['ipv6'])) {
+                $ips[] = (string) $row['ipv6'];
             }
         }
 
