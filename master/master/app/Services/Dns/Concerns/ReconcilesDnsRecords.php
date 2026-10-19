@@ -53,6 +53,73 @@ trait ReconcilesDnsRecords
 
     /**
      * @param  DnsRow[]  $existing
+     * @param  string[]  $desiredIpv6s
+     */
+    protected function reconcileAAAARecordValues(array $existing, array $desiredIpv6s, callable $create, callable $deleteById): void
+    {
+        $desired = [];
+        foreach ($desiredIpv6s as $ip) {
+            $original = trim((string) $ip);
+            if ($original === '') {
+                continue;
+            }
+            if (! RediNode::isValidPublicIpv6($original)) {
+                throw new \RuntimeException('Pool AAAA 期望地址无效：'.$original);
+            }
+            $canonical = RediNode::canonicalPublicIpv6($original);
+            $bytes = RediNode::ipv6ToBytes($canonical);
+            if ($bytes === '') {
+                throw new \RuntimeException('Pool AAAA 期望地址无效：'.$original);
+            }
+            if (! isset($desired[$bytes])) {
+                $desired[$bytes] = $canonical;
+            }
+        }
+
+        if ($desired === []) {
+            $toDelete = [];
+            foreach ($existing as $row) {
+                $id = (string) ($row['id'] ?? '');
+                if ($id !== '') {
+                    $toDelete[] = $id;
+                }
+            }
+            $this->deleteDnsRecordIds($toDelete, $deleteById);
+
+            return;
+        }
+
+        $kept = [];
+        $toDelete = [];
+        foreach ($existing as $row) {
+            $id = (string) ($row['id'] ?? '');
+            $value = trim(rtrim(trim((string) ($row['value'] ?? '')), '.'));
+            if ($id === '' || $value === '') {
+                continue;
+            }
+            $bytes = '';
+            if (RediNode::isValidPublicIpv6($value)) {
+                $canonical = RediNode::canonicalPublicIpv6($value);
+                $bytes = RediNode::ipv6ToBytes($canonical);
+            }
+            if ($bytes !== '' && isset($desired[$bytes]) && ! isset($kept[$bytes])) {
+                $kept[$bytes] = $id;
+            } else {
+                $toDelete[] = $id;
+            }
+        }
+
+        foreach ($desired as $bytes => $canonical) {
+            if (! isset($kept[$bytes])) {
+                $create($canonical);
+            }
+        }
+
+        $this->deleteDnsRecordIds($toDelete, $deleteById);
+    }
+
+    /**
+     * @param  DnsRow[]  $existing
      */
     protected function reconcileCnameTarget(array $existing, string $targetFqdn, callable $create, callable $update, callable $deleteById): void
     {
