@@ -202,7 +202,9 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 
 进程退出、`lagran-cleanup-iptables.sh` 同时删两套规则。没有 `ip6tables` 时清理脚本仍要删完 IPv4 并退出 0。`lagran-diagnose.sh` 同时列出两套。改包函数不依赖 NFQUEUE，测试里放一个没有扩展头的 IPv6 包。不改 IPv4 规则参数，不把主 IPv4 改成可空。这一行不能再拆：规则、解析和清理必须一起提交，否则 IPv6 包会进队列却被当成 IPv4。
 
-**V6-31 验收。** 主控可以没有公网 IPv6，但发布 AAAA 之前必须有 IPv6 出网。没有出网时，主控上的 `curl -6` 和随后的 HTTP-01 都会失败。顺序是：节点已有 IPv4、后台再填 IPv6、打开监听开关、在主控上 `curl -6` 节点公网 IPv6 的 80、然后再把 `REDI_PUBLISH_POOL_AAAA` 设为 true。分别用 IPv4 和 IPv6 访问客户域名，跳转都要成立。`ip6tables -L OUTPUT` 能看到与 iptables 对应的 NFQUEUE 规则；规则不是挂在某一条连接上。
+**V6-31 验收。** 主控可以没有公网 IPv6，但发布 AAAA 之前必须有 IPv6 出网。没有出网时，主控上的 `curl -6` 和随后的 HTTP-01 都会失败。监听开关在每台节点的 `vars.env` 里，发布开关在主控上，一次同步会把所有启用节点的 IPv6 都写成 Pool AAAA。只填 IPv4 的节点没有 AAAA，IPv6 访客不会落到它上面。已经填写 IPv6、却还听 `0.0.0.0` 的节点也会被写进 AAAA。所以打开发布开关之前，每一台已填 IPv6 的启用节点都要先打开监听，并在主控上对它的公网 IPv6 做 `curl -6`。只测过一台就打开关，其余节点会让一部分 IPv6 访客和 HTTP-01 失败。
+
+顺序是：节点已有 IPv4、后台再填 IPv6、该节点打开监听开关、主控 `curl -6` 通 80、全部这类节点都通过之后，再把 `REDI_PUBLISH_POOL_AAAA` 设为 true。分别用 IPv4 和 IPv6 访问客户域名，跳转都要成立。`ip6tables -L OUTPUT` 能看到与 iptables 对应的 NFQUEUE 规则；规则不是挂在某一条连接上。
 
 不要做「检测节点是否已听 `[::]`」的 health hint。心跳只上报版本，主控读不到节点 `config.json`；按「已填 IPv6 且开关为真」提示会在监听正确时也一直出现。
 
