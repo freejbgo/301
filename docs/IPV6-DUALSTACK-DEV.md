@@ -163,7 +163,7 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 
 ## 7. 第一期不做（第二期只按 §8 放行）
 
-- IPv6 连主控、改 `NODE_IPS`、3306 的 IPv6 规则、主控 Nginx 听 IPv6。不要为主控或 3306 加 ip6tables。节点 lagran 的 IPv6 规则见 V6-30
+- IPv6 连主控、改 `NODE_IPS`、3306 的 IPv6 规则、主控 Nginx 听 IPv6。不要为主控或 3306 加 ip6tables。节点 lagran 的 IPv6 规则见 V6-30。访问计数是节点用自己的 IPv4 调用 `redi_node_bump_skip`，按域名给 `skip_num` 加 1，不记录访客 IP。IPv6 访客走同一条连库连接，不要为此开放 3306 的 IPv6
 - 把 IPv4/IPv6 收成一个函数，或改 `HostNameValidator`
 - 代码里把默认监听改成 `[::]`（第二期只允许 **显式开关** 写入节点 `config.json`，见 V6-29；不要改 `config.json.example` 的默认值）
 - 没填 IPv6 就 health 告警。主控看不到节点 `config.json`，也不要根据「有 IPv6 且发布开关为真」加一条永远出现的 hint
