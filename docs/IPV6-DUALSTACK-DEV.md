@@ -58,6 +58,10 @@ AAAA **默认不写**。主控 `.env` 里 `REDI_PUBLISH_POOL_AAAA=true` 之后�
 19. **Cloudflare 上 `proxied=true` 的 AAAA 不算已对齐。** 橙色云会挡住源站 80。基本的增删做完后，单独一行把这种记录删掉再建灰色云（`proxied=false`）。不要改共用的 `reconcileAAAARecordValues`。
 20. **阿里云、DNSPod、dns.com 调用现成的 `listRecordRows(..., 'AAAA')`，不要改这个方法。** dns.com 对「类型字段为空」的行会保留，那是 A 记录路径的现有行为；在 AAAA 这次里改它会连 A 一起变。DNSPod 新建时要带上现有的 `$this->recordLine`（默认「默认」），漏掉会建到别的线路或直接失败。
 21. **节点 firewalld 放行的是 `http`/`https` 服务，这两个服务默认含 IPv6。** 不要再加一条只匹配 IPv4 的 rich rule。这只写进部署说明，不改脚本。
+22. **AAAA 对账在期望非空时仍是先增后删。** 和 A 一样，创建失败不能先把旧记录删掉。只有期望本身是空数组（或只有空白）时才只删不建。某个元素 trim 后非空但不是公网 IPv6 时抛错，**不要滤掉后当成空列表**。
+23. **没迁移的库不能当成「没有 IPv6」。** `Schema::hasColumn` 为假时，读取函数返回空数组，但不要在这种情况下调用删除。发布开关为真且列不存在：在 `upsertARecords` 之前抛错。现有 sqlite 测试的建表没有这两列，`saving` 和读取都要先看列在不在，不要去改那些测试的建表。
+24. **`extra_ipv6` 可能是字符串，不能对字符串 foreach。** 那会按字符遍历。只接受 null 或数组；若是字符串，先 `json_decode` 一次，失败则整段当作一个地址。
+25. **没调用 AAAA 时，成功日志保持原来的 `pool A x%d, tenant CNAME x%d`。** 不要写成 `AAAA x0`，否则和「已经按空列表删过」分不清。本次若调用了 AAAA，CNAME 失败和「edge 不在 zone」这两句现成错误要加上「AAAA 可能已更新」。
 
 ---
 
@@ -76,7 +80,7 @@ IPv4 主地址仍必填。没有主 IPv6 时不能填其他 IPv6。其他项与�
 
 ## 5. 同步
 
-位置：A 成功之后、租户 CNAME 之前。
+非法字段或列还没迁移：在 `upsertARecords` **之前**结束。合法发布：A 成功之后、租户 CNAME 之前调用 AAAA。
 
 | 条件 | 动作 |
 |------|------|
@@ -97,25 +101,25 @@ IPv4 主地址仍必填。没有主 IPv6 时不能填其他 IPv6。其他项与�
 |----|----------|----------|
 | V6-01 | `RediNode::ipv6ToBytes`：trim 后得到 16 字节或空 | 拒绝方括号、`%`、`/`、中间空格、纯 IPv4。接受 `2001:db8::192.0.2.1` 的字节。不做 `2000::/3` 判断 |
 | V6-02 | `isValidPublicIpv6` | 只接受 `(ord($b[0]) & 0xe0) === 0x20`。`::ffff:192.0.2.1`、`::1`、`fe80::1`、`fe90::1`、`fc00::1`、`fd00::1`、`ff02::1` 失败。`2001:db8::1` 通过 |
-| V6-03 | `canonicalPublicIpv6` | 非法为 `''`。两种写法的返回值相等，且等于 `strtolower(inet_ntop(inet_pton(...)))` |
+| V6-03 | `canonicalPublicIpv6` | 非法为 `''`。`2001:db8::1` 与 `2001:0db8::1` 相等；`2001:db8::192.0.2.1` 与 `2001:db8::c000:201` 相等。等于 `strtolower(inet_ntop(inet_pton(...)))`。比较前去掉末尾的点 |
 | V6-04 | `filterValidIpv6List` | 按 16 字节去重，元素是规范字符串 |
 | V6-05 | 迁移两列。`extra_ipv6` 为 `text`。不改 `redi_admin.sql` | up/down 可走；不改现有 PHP 行为 |
-| V6-06 | `publicIpv6s()` | 用 `isValidPublicIpv6` 过滤，不能只用 `ipv6ToBytes`。`fe80::1` 不出现。null 和 `''` 当没有。主地址在前。不改 `publicIps()` |
+| V6-06 | `publicIpv6s()` | 用 `isValidPublicIpv6` 过滤，不能只用 `ipv6ToBytes`。`fe80::1` 不出现。null 和 `''` 当没有。主地址在前。列不存在则返回 `[]` 且不查询该列。不改 `publicIps()`，也不改现有测试的建表 |
 | V6-07 | `parseExtraIpv6` | 用 `preg_split('/\s+/')`，禁止按 `:` 切开。存规范字符串。错误文本含「IPv6」和原文 |
 | V6-08 | `assertIpv6Available` | 用规范形式比；`exceptId` 排除自己；不和 IPv4 比 |
 | V6-09 | 后台主 IPv6，`text`，可空 | 空白存 `null`，不存 `''`。合法值存规范字符串。`saving` 只追加对新字段的处理 |
 | V6-10 | 后台其他 IPv6；无主地址则拒绝；去掉与主地址重复的项 | 赋 PHP 数组。不改 IPv4 校验 |
 | V6-11 | `enabledPublicIpv6s()` | 停用节点不出现；不写入 `enabledPublicIps()` |
-| V6-12 | `hasUnreadableIpv6` | 原始主地址或任一附加项 trim 后非空且 `isValidPublicIpv6` 为假则为真。空白和 null 为假。不删 DNS，不改 `syncAll` |
+| V6-12 | `hasUnreadableIpv6` | 原始主地址或任一附加项 trim 后非空且 `isValidPublicIpv6` 为假则为真。空白和 null 为假。字符串不要按字符遍历。列不存在则为假（列的问题交给 V6-21）。不删 DNS，不改 `syncAll` |
 | V6-13 | 接口 `SupportsPoolAAAA`，零个实现类 | `DnsProviderInterface` 与 `syncAll` 不变 |
-| V6-14 | `reconcileAAAARecordValues` | 空期望会删已给的行，且不抛「没有可同步的节点 IP」。同一地址两种写法不删不建。不调用 `filterValidIpv4List`。不改 `reconcileARecordValues` |
+| V6-14 | `reconcileAAAARecordValues` | 空数组会删已给的行，且不抛「没有可同步的节点 IP」。非空时先增后删。任一非空元素非法则抛错且删除次数为 0。同一地址两种写法不删不建，重复行只留一条。不调用 `filterValidIpv4List`。不改 `reconcileARecordValues` |
 | V6-15 | 仅 Cloudflare 的灰色云增删，`type=AAAA`，新建 `proxied=false` | 已有 A 的 id 在空列表调用时不会被删。本行不处理已经是橙色云的记录 |
 | V6-16 | 仅 Cloudflare：`proxied=true` 的 AAAA 删掉后按灰色云重建 | 不改 V6-14 的对账函数。地址相同且已是灰色云时不删不建 |
 | V6-17 | 仅阿里云。调用现成 `listRecordRows(..., 'AAAA')`，不改该方法 | 不删 A 的 id。删除参数是 `RecordId` |
 | V6-18 | 仅 DNSPod，`record_type=AAAA`，并传入 `$this->recordLine` | 不删 A 的 id。删除参数是 `record_id` |
 | V6-19 | 仅 dns.com，`type=AAAA`。调用现成 `listRecordRows`，不改该方法 | 不删 A 的 id。删除参数是 `record_id` |
 | V6-20 | 配置 `redi.publish_pool_aaaa`，环境变量 `REDI_PUBLISH_POOL_AAAA`，默认 false | 不改 `syncAll` |
-| V6-21 | `syncAll` 按第 5 节 | 开关为假时不因坏字段中断，AAAA 次数为 0。开关为真且 `hasUnreadableIpv6` 时，A 的调用次数也是 0。字符串 `"false"` 仍是关。AAAA 失败时 CNAME 次数为 0 |
+| V6-21 | `syncAll` 按第 5 节 | 开关为假时不因坏字段或缺列中断，AAAA 次数为 0，成功日志不出现 `AAAA`。开关为真且 `hasUnreadableIpv6` 或列不存在时，A 的调用次数为 0。字符串 `"false"` 仍是关。调用了 AAAA 之后 CNAME 失败时，错误文本含「AAAA 可能已更新」。AAAA 失败时 CNAME 次数为 0 |
 | V6-22 | 手动参考表 | 开关为假时，即使库里有 IPv6 也不增加 AAAA 行。开关为真且有地址才增加。全 IPv4 时行集与现在一致 |
 | V6-23 | `aaaaRecordPointsToPool`，不接到 `pointsToEdge` | 读 `$row['ipv6']`，用 16 字节和 `enabledPublicIpv6s()` 比。现有预检测试不改 |
 | V6-24 | 接到 `pointsToEdge`，并让 `pointsToEdgeCached` 的键包含该开关。配置 `redi.dns_precheck_allow_aaaa_to_pool` 默认 false，读法用 `FILTER_VALIDATE_BOOLEAN` | 默认 false：只有 AAAA、没有 CNAME/A 则失败。true 且字节命中则成功。原有 CNAME 成功用例不变 |
