@@ -4,45 +4,99 @@ namespace Tests\Unit;
 
 use App\Models\RediPlatformDns;
 use App\Services\Dns\DnsComDnsProvider;
-use GuzzleHttp\Client;
-use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Middleware;
-use GuzzleHttp\Psr7\Response;
 use Tests\TestCase;
 
 class DnsComDnsProviderUpsertTest extends TestCase
 {
-    public function test_upsert_cname_updates_before_deleting_extra(): void
+    public function test_upsert_aaaa_empty_list_skips_empty_type_ipv4_and_deletes_aaaa(): void
     {
-        $history = [];
-        $stack = HandlerStack::create(new MockHandler([
-            new Response(200, [], json_encode([
-                'code' => 0,
+        $provider = $this->provider([
+            [
                 'data' => [
                     'list' => [
-                        ['record_id' => '99', 'record' => 'token', 'type' => 'CNAME', 'value' => 'old.pool.example.com'],
+                        ['record_id' => 'a-like', 'record' => 'pool', 'type' => '', 'value' => '1.2.3.4'],
+                        ['record_id' => 'aaaa-1', 'record' => 'pool', 'type' => 'AAAA', 'value' => '2001:db8::1'],
                     ],
                 ],
-            ])),
-            new Response(200, [], json_encode(['code' => 0])),
-        ]));
-        $stack->push(Middleware::history($history));
+            ],
+            [],
+        ]);
 
+        $provider->upsertAAAARecords('pool.example.com', []);
+
+        $paths = array_column($provider->log, 0);
+        $this->assertSame(['api/record/list/', 'api/record/delete/'], $paths);
+        $this->assertSame('aaaa-1', $provider->log[1][1]['record_id']);
+    }
+
+    public function test_upsert_aaaa_invalid_desired_does_not_delete(): void
+    {
+        $provider = $this->provider([
+            [
+                'data' => [
+                    'list' => [
+                        ['record_id' => 'aaaa-1', 'record' => 'pool', 'type' => 'AAAA', 'value' => '2001:db8::1'],
+                    ],
+                ],
+            ],
+        ]);
+
+        try {
+            $provider->upsertAAAARecords('pool.example.com', ['not-an-ip']);
+            $this->fail('expected RuntimeException');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('not-an-ip', $e->getMessage());
+        }
+
+        $this->assertSame(['api/record/list/'], array_column($provider->log, 0));
+    }
+
+    public function test_upsert_aaaa_create_uses_type_aaaa(): void
+    {
+        $provider = $this->provider([
+            ['data' => ['list' => []]],
+            [],
+        ]);
+
+        $provider->upsertAAAARecords('pool.example.com', ['2001:db8::1']);
+
+        $this->assertSame('api/record/create/', $provider->log[1][0]);
+        $params = $provider->log[1][1];
+        $this->assertSame('AAAA', $params['type']);
+        $this->assertSame('2001:db8::1', $params['value']);
+        $this->assertSame('pool', $params['record']);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $responses
+     */
+    private function provider(array $responses): DnsComDnsProvider
+    {
         $platform = new RediPlatformDns();
         $platform->edge_zone = 'example.com';
-        $platform->setApiCredentialsArray(['api_key' => 'k', 'api_secret' => 's']);
+        $platform->setApiCredentialsArray(['api_key' => 'key', 'api_secret' => 'secret']);
 
-        $provider = new DnsComDnsProvider($platform);
-        $ref = new \ReflectionClass($provider);
-        $prop = $ref->getProperty('http');
-        $prop->setAccessible(true);
-        $prop->setValue($provider, new Client(['handler' => $stack, 'base_uri' => 'https://openapi.dns.com/']));
+        return new class($platform, $responses) extends DnsComDnsProvider
+        {
+            /** @var array<int, array{0: string, 1: array<string, mixed>}> */
+            public array $log = [];
 
-        $provider->upsertCname('token', 'example.com', 'pool.example.com');
+            /** @var array<int, array<string, mixed>> */
+            private array $responses;
 
-        $paths = array_map(fn ($tx) => $tx['request']->getUri()->getPath(), $history);
-        $this->assertStringContainsString('record/list', $paths[0]);
-        $this->assertStringContainsString('record/update', $paths[1]);
+            /** @param array<int, array<string, mixed>> $responses */
+            public function __construct(RediPlatformDns $platform, array $responses)
+            {
+                parent::__construct($platform);
+                $this->responses = $responses;
+            }
+
+            protected function signedPost(string $path, array $params): array
+            {
+                $this->log[] = [$path, $params];
+
+                return array_shift($this->responses) ?? [];
+            }
+        };
     }
 }
