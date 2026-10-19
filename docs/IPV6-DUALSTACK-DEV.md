@@ -1,127 +1,129 @@
 # IPv4 / IPv6 双栈 — 开发设计
 
-**状态：** 规划。`main` 在写本文时 **只支持 IPv4**。本文约束后续实现，不表示功能已上线。
+**状态：** 规划。写本文时 `main` **只支持 IPv4**。本文不是已上线说明。
 
-**读者：** 用 **Composer 2.5** 逐个 PR 实现的人。每个 PR 必须自洽，不能依赖「模型记得上一轮」。
+**读者：** Composer 2.5。一次会话只做表里的一行，做完就停。
 
-**配套：** 实施步骤、PR 提示词和本地验证见 [IPV6-DUALSTACK-IMPLEMENTATION.md](IPV6-DUALSTACK-IMPLEMENTATION.md)。
+**配套：** [IPV6-DUALSTACK-IMPLEMENTATION.md](IPV6-DUALSTACK-IMPLEMENTATION.md)（提示词、本机验证、不要用 GitHub Actions）。
 
 ---
 
-## 1. 现状（不要假设已经支持）
+## 1. 现状
 
 | 面 | 行为 |
 |----|------|
-| 后台节点 | `public_ip` + `extra_ips` **只接受 IPv4**。`RediNode::isValidPublicIpv4` / `parseExtraIps` 拒绝其他地址 |
-| 同一节点多个地址 | **多个 IPv4** 可以：主 IP +「其他公网 IP」。仍是 **一个进程、一个 Token** |
-| 同一节点 IPv4 + IPv6 | **不行**。没有 IPv6 字段，也没有 AAAA |
-| DNS | `DnsProviderInterface::upsertARecords` 只写 **A**。Cloudflare / 阿里云 / DNSPod / dns.com / 手动模式都没有 AAAA |
-| 启用预检 | CNAME 到 edge/pool，或（开关打开时）客户域 **A** 命中 pool IPv4。没有 AAAA 预检 |
-| 部署 | `MASTER_IP`、`NODE_PUBLIC_IP`、`NODE_IPS`、MySQL 授权、firewalld 3306 全部 `redi_is_ipv4` |
-| 节点数据面 | 默认监听 `0.0.0.0:80` / `0.0.0.0:443`（IPv4）。`RemoteAddr` 解析能认出 `[2001:db8::1]:443` 这种文本，**不代表**平台会把 IPv6 写入池 |
-| lagran | iptables **NFQUEUE**，只覆盖 IPv4。IPv6 流量不会进这条链 |
+| 后台 | `public_ip`、`extra_ips` 只收 IPv4。多个 IPv4 可以挂在**同一条**节点上（一个进程、一个 Token） |
+| IPv6 | 没有字段，不能和 IPv4 记在一起 |
+| DNS | 只有 `upsertARecords`。四家厂商加手动模式都没有 AAAA |
+| A 对账 | `reconcileARecordValues` 会先走 `filterValidIpv4List`。期望列表空时 **直接抛「没有可同步的节点 IP」**，不会把 A 删光 |
+| 预检 | CNAME，或（开关打开时）A 命中 pool IPv4 |
+| 部署 | `NODE_IPS`、MySQL、firewalld 3306 只认 IPv4 |
+| 节点 | 默认 `0.0.0.0:80` / `0.0.0.0:443`。Go 1.19 对 `[::]` 是否同时接受 IPv4，取决于内核 `net.ipv6.bindv6only`（CentOS 7 上为 1 时，只听 `[::]` 会把现有 IPv4 访客弄断） |
+| lagran | 只有 IPv4 的 iptables NFQUEUE |
 
-控制面文档里的「yum 优先 IPv4」只是安装时避开坏掉的 IPv6 出口，与业务双栈无关。
-
----
-
-## 2. 目标（第一期就做这些）
-
-一台边缘机可以同时有公网 IPv4 和 IPv6。后台 **同一条节点** 登记：
-
-- 已有：主 IPv4、其他 IPv4
-- 新增（可选）：主 IPv6、其他 IPv6
-
-Pool DNS：
-
-- IPv4 列表继续写 **A**（行为与现在一致，IPv6 工作不得改变 A 的内容）
-- IPv6 列表写 **AAAA**；列表为空时清掉 pool 上由本系统管理的 AAAA（与 A 的「先增后删」同一语义）
-
-客户启用预检：
-
-- 现有 CNAME / A 逻辑保持默认
-- 增加可选「AAAA 命中 pool IPv6」；**默认关闭**，避免没配 IPv6 的环境被误判
-
-节点进程：
-
-- 操作员把 HTTP/TLS 监听改成 `[::]:80` / `[::]:443` 时，Linux 上 Go 默认双栈接受 v4+v6
-- **不**在第一期改 lagran / ip6tables
-
-明确不做（另开主题，不要塞进下面任一 PR）：
-
-- 节点用 IPv6 连主控 MySQL、`NODE_IPS` 改成 v6、firewalld 对 v6 放行 3306
-- 主控 Nginx / 后台本身的 IPv6 监听
-- lagran 的 ip6tables
-- 把 IPv4 与 IPv6 收成一个「通用 IP」大重构（Composer 2.5 容易改坏现有 IPv4 校验）
-
-**控制面保持 IPv4：** Agent、`REDI_MASTER_URL`、MySQL `redi_node` 仍走 IPv4。双栈只覆盖 **访客 → 节点 80/443** 和 **pool 的 A + AAAA**。
+`filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)` **不能单独当校验**。它接受 `::ffff:192.0.2.1`、`::1`、链路本地地址。
 
 ---
 
-## 3. 数据
+## 2. 第一期目标
 
-不复用 `public_ip` / `extra_ips` 存 IPv6。两套字段，两套校验。
+同一条节点在原有 IPv4 之外，可选主 IPv6 和其他 IPv6。Pool 继续写 A；有 IPv6 能力的厂商再写 AAAA。
 
-| 字段 | 类型 | 含义 |
+控制面不动：Agent、`REDI_MASTER_URL`、`NODE_IPS`、MySQL、firewalld、lagran 仍只走 IPv4。
+
+默认监听地址也不改。改成 `[::]` 是操作员事后的选择，而且排在「把 IPv4 映射地址折回 IPv4」的代码之后。见 V6-21、V6-22。
+
+---
+
+## 3. 必须避开的陷阱
+
+这些是上一版方案里的错误，实现时按这里，不要按「空方法 + 改原接口」做。
+
+1. **不要改 `DnsProviderInterface`。** 加一个新接口 `SupportsPoolAAAA`。厂商做完才 `implements` 它。`syncAll` 只有 `instanceof` 才调用 AAAA；否则保持今天的行为。禁止用空方法假装同步成功。
+2. **不要把 AAAA 塞进 `reconcileARecordValues`。** 那个函数会把 IPv6 滤掉，列表空了还会抛错，A 记录的「空列表即失败」不能照搬。AAAA 用新方法：用 IPv6 规范化键比较；期望为空时删掉查到的 AAAA，且不抛「没有可同步的节点 IP」。
+3. **删改记录时类型必须是 AAAA。** 复制 A 的代码却留下 `type=A`，会删掉 pool 的 A。每个厂商测试都要证明列表请求的类型是 AAAA。
+4. **比较地址用 `inet_pton` 的 16 字节，不要只 `strtolower`。** `2001:db8::1` 和 `2001:0db8:0000::1` 是同一条。只比字符串会每次同步都删了再建。
+5. **存库用 `inet_ntop(inet_pton(...))`。** 列长 45 只够这种规范写法，不够带 `%eth0` 或方括号的写法。
+6. **`extra_ipv6` 用 `text` + 数组 cast，和 `extra_ips` 一样。** 不要用数据库 JSON 类型。
+7. **只加 Laravel 迁移，不要改 `db/redi_admin.sql`。** 绿场是先导入 SQL 再 `migrate`。SQL 里提前加上列，迁移会再加一次然后失败。
+8. **后台 IPv6 用文本框，不要用 Dcat 的 `ip()`。** `ip()` 按 IPv4 控件处理。
+9. **不要把 IPv6 并进 `publicIps()` / `enabledPublicIps()`。** 那两个函数的返回值会进 A 记录。混进去之后，要么 A 被滤空然后同步抛错，要么写进错误类型。
+10. **预检是「或」，不是替换。** 现有 CNAME / A 成功仍然成功。AAAA 只在新开关为 true 时多一条成功路径。默认 false。
+11. **不要为「没填 IPv6」加 health 告警。** IPv4 仍是必填，多数节点不会有 IPv6。
+12. **不要改 `HostNameValidator`。** 客户 `original_url` 今天已经拒绝任何 IP（含 IPv6）。
+13. **`ManualDnsProvider` 不要实现 `SupportsPoolAAAA`。** 手动模式在 `syncAll` 里进 API 之前就会返回。给它加空 AAAA 会和「未实现就跳过」搅在一起。
+14. **监听不要在代码里改成 `[::]`。** `bindv6only=1` 时 IPv4 会挂。映射地址 `::ffff:a.b.c.d` 进 `SanitizeClientIP` 后会和原来的 IPv4 字符串不是同一把限流键。先做 V6-21，再在文档里告诉操作员如何自己改监听。
+
+---
+
+## 4. 数据规则
+
+| 字段 | 存储 | 含义 |
 |------|------|------|
-| `public_ipv6` | `string`，可空，最长 45 | 主 IPv6，压缩格式、无方括号、无 zone id |
-| `extra_ipv6` | JSON 数组，可空 | 同一节点上的其他公网 IPv6 |
+| `public_ipv6` | 可空 `string(45)` | 主 IPv6，可空 |
+| `extra_ipv6` | 可空 `text`，cast 数组 | 同一节点上的其他 IPv6 |
 
-规则：
-
-- 主 IPv6 可空。只有「其他 IPv6」、没有主 IPv6 时拒绝（与「其他 IPv4 依附主 IPv4」不同：IPv4 主地址今天是必填；IPv6 整组可选，但一旦填了附加地址就必须有主地址）
-- 拒绝 IPv4 映射地址（`::ffff:192.0.2.1`）
-- 拒绝带 `%` 的 zone、带 `[]` 的文本
-- 比较前转小写
-- IPv6 只跟其他节点的 IPv6 查重，不跟 IPv4 混在一个集合里
-- `publicIps()` / `enabledPublicIps()` **继续只返回 IPv4**。新增 `publicIpv6s()` / `enabledPublicIpv6s()`
-
----
-
-## 4. 为什么要拆这么细
-
-Composer 2.5 适合：**一个已有函数旁边加一个平行函数、改完跑一条点名的测试**。不适合：同一次改接口、四家 DNS、同步服务、后台表单和防火墙。
-
-硬限制（写进每个 PR 的提示词）：
-
-- 一次只做下表 **一行**
-- 除了该行点名的文件和它的测试，不要改别的
-- 不要顺手重命名、不要换 DNS 库、不要改 IPv4 校验的语义
-- 逻辑改动尽量落在 150 行以内；超了就停，把剩余拆到下一行，不要在同一次会话里硬做完
-- 验证只用仓库本地命令（见实施文档）。**不要**等 GitHub Actions，也不要为了验证去点 Re-run workflow
+- IPv4 主地址仍然必填。IPv6 整组可选。
+- 填了其他 IPv6 却没有主 IPv6：拒绝。
+- 其他 IPv6 里与主地址相同的项丢掉。
+- 拒绝：IPv4、方括号、`%` zone、未指定 `::`、环回 `::1`、IPv4 映射、IPv4 兼容（前 12 字节为 0）、链路本地 `fe80::/10`、组播 `ff00::/8`、ULA `fc00::/7`。
+- `2001:db8::/32` 属于全球单播，校验放行（测试用）。不要写进生产 DNS 的责任在操作员。
+- 查重只比 IPv6 列，不和 IPv4 放进同一个集合。
+- 模型 `saving` 里对新字段去掉控制字符，做法对齐现有的 `extra_ips`。放在后台那一行做，不要放进迁移那一行。
 
 ---
 
-## 5. PR 序列
+## 5. 同步顺序
 
-依赖只能向下。某一行测试红了就停在该行，不要跳去做后面的厂商。
+`syncAll` 在 A 成功之后、租户 CNAME 之前：
 
-| ID | 只做什么 | 主要文件 | 完成标准 |
-|----|----------|----------|----------|
-| V6-01 | `isValidPublicIpv6`：接受压缩地址，拒绝映射地址、方括号、zone、IPv4 | `RediNode.php` + 新单测 | 现有 IPv4 测试仍绿 |
-| V6-02 | `filterValidIpv6List`：去空、去重、小写 | 同上 | 不读数据库 |
-| V6-03 | 迁移 `public_ipv6`、`extra_ipv6`；`$fillable` / cast；`publicIpv6s()` 读这两列 | 新 migration、`RediNode.php`、单测 | `publicIps()` 用例结果不变 |
-| V6-04 | `parseExtraIpv6` + `assertIpv6Available` | `RediNode.php`、单测 | 错误文案写明「IPv6」 |
-| V6-05 | 后台两个可选字段；保存时走 V6-04 | `RediNodeController.php`、单测或 Feature | 不填 IPv6 时与现在相同；填 `2001:db8::1` 能存 |
-| V6-06 | `enabledPublicIpv6s()` | `RediNode.php`、单测 | 停用节点不出现 |
-| V6-07 | 接口增加 `upsertAAAARecords`；五家实现 + 测试里的匿名类先做 **空操作** | `DnsProviderInterface.php`、五家 Provider、`EdgeDnsSyncServiceTest.php` | `syncAll` 仍只调用 `upsertARecords` |
-| V6-08 | 仅 Cloudflare：按现有 A 的先增后删实现 AAAA | `CloudflareDnsProvider.php` + 其单测 | 其他厂商仍是空操作 |
-| V6-09 | 仅阿里云 AAAA | `AliyunDnsProvider.php` + 单测 | 同左 |
-| V6-10 | 仅 DNSPod AAAA | `DnspodDnsProvider.php` + 单测 | 同左 |
-| V6-11 | 仅 dns.com AAAA | `DnsComDnsProvider.php` + 单测 | 同左 |
-| V6-12 | `syncAll` 在 A 成功之后调用 `upsertAAAARecords(enabledPublicIpv6s())`；日志加上 AAAA 条数 | `EdgeDnsSyncService.php` + 其测试 | IPv6 列表为空也要调用（让厂商删掉旧 AAAA）；A 失败时不要调用 AAAA |
-| V6-13 | 手动模式参考表增加 AAAA 行 | `EdgeDnsManualReference.php` + 单测 | 没有 IPv6 时不出现 AAAA 行 |
-| V6-14 | 预检：配置 `redi.dns_precheck_allow_aaaa_to_pool` 默认 **false**；为 true 时 AAAA 命中 pool IPv6 算通过 | `config/redi.php`、`CnamePrecheckService.php`、单测 | 默认 false 时现有用例不变 |
-| V6-15 | 节点：单测锁定 `REDI_HTTP_LISTEN=[::]:80` 能写入监听地址；文档说明 CentOS 7 上这样才是双栈，以及 lagran 不管 IPv6 | `config` 测试、`DEPLOY-centos7.md` 短节 | 不改 iptables |
-| V6-16 | `vars.example.env` 注释：IPv6 只填后台，**不要**写进 `NODE_IPS` | `vars.example.env`、本文状态改成「代码侧按表落地后勾选」 | 不改 `redi_is_ipv4` |
+- provider 不是 `SupportsPoolAAAA`：什么都不做（和现在一样）。
+- 是：调用 `upsertAAAARecords($fqdn, enabledPublicIpv6s())`，空数组也调用。
+- A 抛错：不要调用 AAAA，也不要写 CNAME。
+- AAAA 抛错：不要写 CNAME。错误文本含「AAAA」，并写明 pool 的 A 可能已经更新。
+- 日志在成功时加上 AAAA 条数。
 
-V6-07 必须一次改完所有实现了接口的类，否则 PHP 直接起不来。方法体保持空，不要在这一次里写 HTTP。
+一家厂商合并后，只有那一家开始删建 AAAA。其他家仍只同步 A。这是故意的，避免一次改四家。
 
 ---
 
-## 6. 不变量
+## 6. PR 序列
 
-- 未填任何 IPv6 的节点，A 记录、预检、部署脚本与现在一致
-- `original_url` 仍然不能是 IP（含 IPv6）。客户域名还是主机名
-- Token、证书下发、revision **不**因为多了 IPv6 而改变哈希字段，除非以后单独提案
-- AAAA 同步失败的报错要写明「AAAA」，并且说明 A 可能已经写到厂商（与现有 CNAME 失败文案同一风格）
+| ID | 只做什么 | 完成标准 |
+|----|----------|----------|
+| V6-01 | `RediNode::isValidPublicIpv6` | 用 `inet_pton` 的 16 字节判断第 4 节的拒绝项。不用单独的 `FILTER_FLAG_IPV6` 了事。IPv4 函数不动 |
+| V6-02 | `canonicalPublicIpv6`：非法返回 `''`，合法返回 `inet_ntop` | `2001:0db8::1` 与 `2001:db8::1` 结果相同 |
+| V6-03 | `filterValidIpv6List`：去空、按 16 字节去重、元素为规范字符串 | 不读库 |
+| V6-04 | 迁移：两列，`text` 不是 JSON 类型。不动 `redi_admin.sql` | 迁移可 up/down；不改 PHP 行为 |
+| V6-05 | `publicIpv6s()`：只读新列，跳过非法值，主地址在前 | 不改 `publicIps()` |
+| V6-06 | `parseExtraIpv6` | 非法项的错误里能看到「IPv6」和原文 |
+| V6-07 | `assertIpv6Available` | 只和别的节点的 IPv6 冲突 |
+| V6-08 | 后台主 IPv6：`text` 不是 `ip()`；空值允许 | 不填时保存结果与现在相同 |
+| V6-09 | 后台其他 IPv6；无主地址却有附加地址则拒绝；去掉与主地址重复的项 | 不改 IPv4 文本框的校验 |
+| V6-10 | `enabledPublicIpv6s()` | 停用节点不出现；不把结果塞进 `enabledPublicIps()` |
+| V6-11 | 新接口 `SupportsPoolAAAA::upsertAAAARecords`，没有任何类实现它 | `DnsProviderInterface` 与 `syncAll` 不变 |
+| V6-12 | `reconcileAAAARecordValues` | 空期望会删已有行且不抛「没有可同步的节点 IP」；规范形式不同但地址相同则不删不建；不调用 `filterValidIpv4List`；`reconcileARecordValues` 源码不动 |
+| V6-13 | 仅 Cloudflare 实现接口，列表类型 `AAAA` | 测试证明没有对 type `A` 发删除 |
+| V6-14 | 仅阿里云，同样约束 | 不改 Cloudflare |
+| V6-15 | 仅 DNSPod | 不改前两家 |
+| V6-16 | 仅 dns.com | 不改前三家 |
+| V6-17 | `syncAll` 按第 5 节调用 | 非 `instanceof` 的假 provider 时 AAAA 调用次数为 0；A 失败时也为 0 |
+| V6-18 | 手动参考表：有 IPv6 才多 AAAA 行 | 全是 IPv4 时行集与现在一致 |
+| V6-19 | `aaaaRecordPointsToPool`，**不要**接到 `pointsToEdge` | 现有预检测试一个不改 |
+| V6-20 | 接到 `pointsToEdge`：CNAME 或 A 或（开关为 true 时）AAAA。配置默认 false | 默认 false 时，只有 AAAA、没有 CNAME/A 仍然失败 |
+| V6-21 | `SanitizeClientIP` 把 `::ffff:a.b.c.d` 收成 `a.b.c.d` | 普通 IPv6 保持不变；不改监听默认值 |
+| V6-22 | 只改 `DEPLOY-centos7.md`：`bindv6only`、如何自愿把监听改成 `[::]`、如何改回 `0.0.0.0`、lagran 仍不管 IPv6 | 不改 Go、不改默认 `config.json` |
+| V6-23 | `vars.example.env` 注释：IPv6 只填后台，禁止写入 `NODE_IPS` | `redi_is_ipv4` 不动 |
+
+依赖向下。V6-13 及以后的厂商可以在 V6-12 合并后一个一个做。V6-17 可以在第一家厂商合并后就做：还没实现接口的厂商保持只同步 A。
+
+---
+
+## 7. 不做
+
+- 用 IPv6 连主控、改 `NODE_IPS`、给 3306 加 IPv6 rich rule
+- 主控 Nginx 听 IPv6
+- ip6tables / lagran
+- 把 IPv4 与 IPv6 收成一个通用 IP 函数
+- 代码里把默认监听改成 `[::]`
+- health 催促填写 IPv6

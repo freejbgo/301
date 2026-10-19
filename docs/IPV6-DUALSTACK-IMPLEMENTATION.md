@@ -1,138 +1,81 @@
 # IPv4 / IPv6 双栈 — 实施说明（Composer 2.5）
 
-设计与不做项见 [IPV6-DUALSTACK-DEV.md](IPV6-DUALSTACK-DEV.md)。本文只回答：**谁来做、一次做多少、做完怎么在本机证明、不要用 GitHub Actions 配额。**
+设计、陷阱和 PR 表以 [IPV6-DUALSTACK-DEV.md](IPV6-DUALSTACK-DEV.md) 为准。编号不一致时以那份为准。
 
 ---
 
-## 1. 给 Composer 2.5 的工作方式
+## 1. 一次只做一行
 
-一次会话只发 **一个** PR 编号（V6-01 … V6-16）。提示词里写明：
-
-1. 只改设计文档该行点名的文件；测试文件算在内
-2. 不要实现下一行，即使「顺便能做」
-3. 不要改 IPv4 函数的判断条件
-4. 做完在仓库根目录跑下面第 3 节的命令，把退出码贴进 PR 说明
-5. 不要打开 GitHub Actions、不要 Re-run failed jobs、不要为了看 CI 反复 push
-
-Composer 2.5 容易在同一次改动里「顺手抽象」。如果它开始把 `isValidPublicIpv4` 和 IPv6 收成一个函数，停掉这次提交，退回只加平行函数的版本。
-
-建议的会话开头（把 `V6-0N` 换成当前行）：
+会话开头只贴下面这一段，把编号换成表里的当前行：
 
 ```text
-按 docs/IPV6-DUALSTACK-DEV.md 的 V6-0N 实现，只做这一行。
-约束：不改 IPv4 行为；不提前做下一行；验证用本地 bash scripts/dev-preflight.sh，不要使用 GitHub Actions。
-PR 说明里写上你实际跑过的命令和 PHPUnit/Go 计数。
+按 docs/IPV6-DUALSTACK-DEV.md 实现 V6-0N，只做这一行。
+不要改 IPv4 函数和 reconcileARecordValues。
+不要实现下一行。不要使用 GitHub Actions。
+做完在仓库根目录执行 bash scripts/dev-preflight.sh，把退出码和 PHPUnit 计数写进 PR 说明。
 ```
 
-分支名：`cursor/ipv6-v6-0N-<短词>-bb20`（全小写）。一个编号一个 PR，合进 `main` 再开下一个。
+分支：`cursor/ipv6-v6-0N-<短词>-bb20`。合进 `main` 再开下一个。
+
+Composer 2.5 如果开始合并 IPv4/IPv6 函数、修改 `DnsProviderInterface`、或把 AAAA 写进 `reconcileARecordValues`，丢掉这次改动，按设计文档第 3 节重做。
 
 ---
 
-## 2. 顺序
+## 2. 可以停的位置
 
-必须按编号做。V6-07 之前不要改 `DnsProviderInterface`。V6-12 之前 `syncAll` 不能调用 AAAA。V6-08～V6-11 可以在 V6-07 合并后逐个做，不要四个厂商一次提交。
-
-可以停的安全点：
-
-| 停在 | 已经有什么 | 还没有什么 |
-|------|------------|------------|
-| V6-06 合并后 | 后台能保存同一节点的 v4 + v6 | DNS 仍只有 A |
-| V6-13 合并后 | API 同步和手动参考表都有 AAAA | 预检默认仍不看 AAAA |
-| V6-16 合并后 | 第一期代码结束 | lagran 仍只处理 IPv4；控制面仍只走 IPv4 |
+| 已合并到 | 线上效果 |
+|----------|----------|
+| V6-10 | 后台能保存同一节点的 v4 和 v6。DNS 仍只有 A |
+| V6-16 | 做完的那几家厂商类已经会写 AAAA，但 `syncAll` 还没调用 |
+| V6-17 | 已实现接口的厂商开始同步 AAAA；没实现的仍只同步 A |
+| V6-23 | 第一期结束。默认监听仍然是 `0.0.0.0` |
 
 ---
 
-## 3. 验证（不用 Actions 配额）
+## 3. 验证
 
-每一行合并前在 **开发机仓库根目录** 执行：
+每个 PR 在仓库根目录：
 
 ```bash
 bash scripts/dev-preflight.sh
 ```
 
-这会跑 Go 测试、PHPUnit、CentOS 脚本语法和 SQL 存储过程对照。本机没有 Docker 时，脚本会跳过 MariaDB 容器导入；这可以接受，不要为此去点云端 `centos7-integration`。
+本机没有 Docker 时，脚本会跳过 MariaDB 容器。不要为此去跑 GitHub Actions 的 `centos7-integration`。Actions 失败不算这一行失败。
 
-只改了单个测试类、想先看失败时，可以缩小范围，但 **开 PR 前仍要跑完整 preflight**：
+缩小范围只用于定位，开 PR 前仍要完整 preflight：
 
 ```bash
-cd master/master && ./vendor/bin/phpunit --filter RediNode
-cd node/redi-multi && go test ./...
+cd master/master && ./vendor/bin/phpunit --filter 'RediNode|ReconcilesDns|EdgeDns|CnamePrecheck|Cloudflare|Aliyun|Dnspod|DnsCom'
+cd node/redi-multi && go test ./util/host/
 ```
 
-V6-15 若只动 Go 配置测试，preflight 里的 `go test ./...` 已经覆盖，不必再起 CentOS 虚拟机。
-
-真机（CentOS 7.9）只在 **V6-16 合并之后** 抽测，不在每个小 PR 上做：
-
-1. 后台同一节点：主 IPv4 + 主 IPv6
-2. DNS 厂商里 pool 同时有 A 和 AAAA；删掉 IPv6 后再同步，AAAA 消失、A 还在
-3. 节点 `REDI_HTTP_LISTEN=[::]:80`、`REDI_TLS_LISTEN=[::]:443` 后，从 v4 和 v6 客户端都能连上
-4. `NODE_IPS` 仍然只填节点的 IPv4，节点到主控的 MySQL 与 Agent 仍通
+CentOS 7.9 真机放到 V6-23 合并之后，不要每个小 PR 都做。真机看四件事：后台同时有 v4 和 v6；同步后 A 还在且多了 AAAA；清空 IPv6 再同步则 AAAA 没了、A 还在；`NODE_IPS` 仍是 IPv4，节点连库和 Agent 仍通。把监听改成 `[::]` 是另一项自愿操作，按 V6-22 的回滚步骤做，不要和功能验收绑在一起。
 
 ---
 
-## 4. 每一行怎么验收
+## 4. 各行验收时多看一眼
 
-### V6-01 / V6-02
-
-单测直接调用静态方法。用例至少包括：
-
-- `2001:db8::1` 通过，并变成小写
-- `::ffff:192.0.2.1`、`[2001:db8::1]`、`fe80::1%eth0`、`1.2.3.4` 失败
-- 列表去重
-
-### V6-03 / V6-04 / V6-06
-
-用现有 sqlite Feature/Unit 的建表方式。迁移要能在空库 `migrate` 加上两列。`publicIps()` 的旧用例一个都不能改期望值。
-
-### V6-05
-
-后台帮助文字写明：IPv6 可选；一行一个；不要把 IPv6 填进「其他公网 IP」（那一栏仍是 IPv4）。不填时保存路径与现在相同。
-
-### V6-07
-
-接口方法签名：
-
-```php
-/**
- * @param  string[]  $ipv6
- */
-public function upsertAAAARecords(string $fqdn, array $ipv6): void;
-```
-
-这一次五家方法体为空（或只 `filterValidIpv6List` 后 return）。测试里的匿名类补上同名空方法，否则 PHPUnit 起不来。`EdgeDnsSyncService::syncAll` 仍不调用它。
-
-### V6-08～V6-11
-
-对照该厂商已有的 `upsertARecords`：列出已有 AAAA、补缺、删掉不在列表里的。不要改 A 的代码路径。单测用假 HTTP，不要打真实厂商。
-
-### V6-12
-
-测试注入的假 Provider 记录调用顺序：先 `upsertARecords`，再 `upsertAAAARecords`。A 抛错时 AAAA 调用次数为 0。IPv6 为空数组时 AAAA 仍调用一次。
-
-### V6-13
-
-参考表在有 IPv6 时多出类型 `AAAA` 的行；全是 IPv4 时行集与现在一致。
-
-### V6-14
-
-默认配置 false。单测两支：false 时只有 AAAA、没有 CNAME/A 则预检失败；true 且 AAAA 等于某启用节点的 IPv6 则通过。
-
-### V6-15
-
-只证明环境变量能把监听地址设为 `[::]:80`。在 `DEPLOY-centos7.md` 加一小节：这样监听才同时接受 v4/v6；lagran 仍只处理 IPv4，IPv6 访客没有 NFQUEUE。不要改 `lagran.go`。
-
-### V6-16
-
-`vars.example.env` 用注释说明 IPv6 填后台节点，不写进 `NODE_IPS`。不要放宽 `redi_is_ipv4`。
+- **V6-01**：`::ffff:192.0.2.1`、`::1`、`fe80::1`、`fc00::1`、`ff02::1`、`[2001:db8::1]`、`2001:db8::1%eth0`、`1.2.3.4` 都拒绝。`2001:db8::1` 通过。
+- **V6-02 / V6-03**：两种写法收成同一个字符串，列表里只留一个。
+- **V6-04**：文件名用 `2026_10_19_100010_add_node_ipv6.php` 一类、排在现有 `100009` 之后。`extra_ipv6` 是 `text`。不要打开 `db/redi_admin.sql`。
+- **V6-05**：sqlite 测试自己建列。不要改已有 `publicIps()` 断言。
+- **V6-08 / V6-09**：表单方法是 `text`。帮助文字写明不要把 IPv6 填进「其他公网 IP」。
+- **V6-11**：全仓库还没有任何 `implements SupportsPoolAAAA`。
+- **V6-12**：用一个只为测试而 `use` 该 trait 的类。断言空列表会调用删除、不会抛「没有可同步的节点 IP」。再断言已有 `2001:0DB8::1`、期望 `2001:db8::1` 时创建次数和删除次数都是 0。
+- **V6-13～16**：假 HTTP 记录 `type`。出现 `A` 的删除即失败。不要请求真实厂商。
+- **V6-17**：调用顺序是 A，然后 AAAA，然后 CNAME。A 抛错时后两者次数为 0。AAAA 抛错时 CNAME 为 0。
+- **V6-19**：`pointsToEdge` 的 diff 应为空。
+- **V6-20**：默认配置 false。只有 AAAA 时预检失败；改为 true 且地址等于某启用节点的规范 IPv6 时通过。已有的 CNAME 成功用例不要改期望。
+- **V6-21**：`SanitizeClientIP("::ffff:203.0.113.5")` 得到 `203.0.113.5`。`2001:db8::1` 仍返回原样（或仅 trim）。不要改 `config.json.example` 的监听。
+- **V6-22**：文档写明先看 `sysctl net.ipv6.bindv6only`，不是 0 就不要改监听。回滚是把 `REDI_HTTP_LISTEN` / `REDI_TLS_LISTEN` 设回 `0.0.0.0:80` 和 `0.0.0.0:443` 后重启 `redi-multi`。
+- **V6-23**：只加注释。
 
 ---
 
-## 5. PR 说明里要有的三行
+## 5. PR 说明
 
 ```text
-范围：V6-0N（见 docs/IPV6-DUALSTACK-DEV.md）
+范围：V6-0N（docs/IPV6-DUALSTACK-DEV.md）
 验证：bash scripts/dev-preflight.sh → 退出码 0（PHPUnit N / assertions M）
-未做：下一编号及文档第 2 节「明确不做」
+未做：下一编号；设计文档第 7 节
 ```
-
-GitHub Actions 若因配额失败，不构成这一行的失败条件。本地 preflight 才是合并依据。
