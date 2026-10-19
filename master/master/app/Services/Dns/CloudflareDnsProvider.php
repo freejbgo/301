@@ -90,6 +90,7 @@ class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
         $name = $this->recordNameForFqdn($fqdn);
         $existing = $this->listRecords($zoneId, 'AAAA', $fqdn);
         $rows = $this->grayCloudAaaaRows($existing);
+        $orangeIds = $this->orangeCloudAaaaIds($existing);
 
         $this->reconcileAAAARecordValues(
             $rows,
@@ -109,6 +110,10 @@ class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                 $this->http->delete("zones/{$zoneId}/dns_records/{$id}");
             }
         );
+
+        $this->deleteDnsRecordIds($orangeIds, function (string $id) use ($zoneId) {
+            $this->http->delete("zones/{$zoneId}/dns_records/{$id}");
+        });
     }
 
     public function upsertCname(string $name, string $zone, string $targetFqdn): void
@@ -206,6 +211,29 @@ class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
         }
 
         return $rows;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $existing
+     * @return string[]
+     */
+    protected function orangeCloudAaaaIds(array $existing): array
+    {
+        $ids = [];
+        foreach ($existing as $row) {
+            if ((string) ($row['type'] ?? '') !== 'AAAA') {
+                continue;
+            }
+            if (empty($row['proxied'])) {
+                continue;
+            }
+            $id = (string) ($row['id'] ?? '');
+            if ($id !== '') {
+                $ids[] = $id;
+            }
+        }
+
+        return $ids;
     }
 
     protected function listRecords(string $zoneId, string $type, string $name): array
