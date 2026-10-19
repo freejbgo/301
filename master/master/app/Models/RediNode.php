@@ -310,6 +310,27 @@ class RediNode extends Model
     /**
      * @return string[]
      */
+    public static function enabledPublicIpv6s(): array
+    {
+        $seen = [];
+        $ips = [];
+        foreach (static::enabled()->orderBy('id')->get() as $node) {
+            foreach ($node->publicIpv6s() as $ip) {
+                $bytes = self::ipv6ToBytes($ip);
+                if ($bytes === '' || isset($seen[$bytes])) {
+                    continue;
+                }
+                $seen[$bytes] = true;
+                $ips[] = $ip;
+            }
+        }
+
+        return $ips;
+    }
+
+    /**
+     * @return string[]
+     */
     public static function parseExtraIps(?string $raw): array
     {
         $raw = trim((string) $raw);
