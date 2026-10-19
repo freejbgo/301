@@ -38,7 +38,7 @@
 | lagran NFQUEUE 卸载/升级脚本化 | ✅ `lagran_ports.py` 与进程端口一致 + 诊断/清理 |
 | 多机 queue + redis | ✅ [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md) + health hints |
 | 更强租户隔离审计（API/后台） | 📋 |
-| IPv4/IPv6 双栈（数据面） | ✅ 第一期 V6-01–27。📋 第二期 V6-29 监听、V6-30 lagran 的 IPv6 与 IPv4 相同、V6-31 验收。节点只允许「仅 v4」或「v4+v6」。控制面仍 IPv4。见 [IPV6-DUALSTACK-DEV.md](IPV6-DUALSTACK-DEV.md) §8 |
+| IPv4/IPv6 双栈（数据面） | ✅ 第一期 V6-01–27。配置里的 `0.0.0.0` 在 Linux 上已双栈接听。📋 第二期 V6-30 lagran 的 IPv6 与 IPv4 相同、V6-31 验收。不做监听开关。节点只允许「仅 v4」或「v4+v6」。控制面仍 IPv4。见 [IPV6-DUALSTACK-DEV.md](IPV6-DUALSTACK-DEV.md) §8 |
 
 ## 产品行为（非缺陷）
 
