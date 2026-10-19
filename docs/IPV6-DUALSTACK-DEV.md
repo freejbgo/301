@@ -51,7 +51,13 @@ AAAA **默认不写**。主控 `.env` 里 `REDI_PUBLISH_POOL_AAAA=true` 之后�
 12. **预检是或，不是替换。** CNAME 成功就成功，这是租户的正常路径，**不依赖** AAAA 开关。AAAA 只对应「客户域上直接做了 AAAA、没有 CNAME」这种和现有 A 预检一样的旁路。开关默认 false。缓存键要带上这个开关，否则改配置后 60 秒内仍是旧结果。
 13. **发布开关默认 false，而且要用 `filter_var(..., FILTER_VALIDATE_BOOLEAN)` 读。** `.env` 里的 `false` 是字符串，直接当布尔会变成真。开关为 false 时 **零次** AAAA API 调用（也不要借机关掉已有 AAAA）。开关从 true 改回 false **不会**删除已发布的 AAAA；要删除必须保持 true 且地址列表为空。开关为 true 但这家厂商还没实现接口：不要抛错（否则 A 和 CNAME 同步会被掐断），本次跳过 AAAA。
 14. **不要为没填 IPv6 加 health 告警。不要改 `HostNameValidator`。`ManualDnsProvider` 不要实现新接口。**
-15. **不要改默认监听。** `SanitizeClientIP` 用 `net.ParseIP` 再 `To4()` 把映射地址折回 IPv4。不要只判断字符串前缀 `::ffff:`，`0:0:0:0:0:ffff:203.0.113.5` 是同一地址。普通 IPv6 不要改写成另一种压缩形式。
+15. **不要改默认监听。** `SanitizeClientIP` 用 `net.ParseIP` 再 `To4()`。必须输出 `To4().String()`。`ParseIP().String()` 对映射地址仍是 `::ffff:203.0.113.5`，限流键不会并回去。不要只判断前缀 `::ffff:`。普通 IPv6 不要改写成另一种压缩形式。
+16. **`publicIpv6s()` 必须走 `isValidPublicIpv6`，不能只走 `ipv6ToBytes`。** `fe80::1` 也能变成 16 字节，但不是公网地址。只跳过非法字节的话，链路本地地址会被写进 AAAA。
+17. **空的主 IPv6 存 `null`，不要存 `''`。** 库里的值用规范字符串。`parseExtraIpv6` 按空白切分，和 `parseExtraIps` 一样，**禁止按 `:` 切分**。
+18. **原始字段非空但无法通过 `isValidPublicIpv6` 时，不允许靠「跳过」去同步。** 发布开关为真时，在调用 `upsertARecords` **之前**抛错，A、AAAA、CNAME 都不要写。开关为假时不要为这个原因中断 A 同步。否则一个写坏的地址会被当成空列表，把厂商上的 AAAA 删光。
+19. **Cloudflare 上 `proxied=true` 的 AAAA 不算已对齐。** 橙色云会挡住源站 80。基本的增删做完后，单独一行把这种记录删掉再建灰色云（`proxied=false`）。不要改共用的 `reconcileAAAARecordValues`。
+20. **阿里云、DNSPod、dns.com 调用现成的 `listRecordRows(..., 'AAAA')`，不要改这个方法。** dns.com 对「类型字段为空」的行会保留，那是 A 记录路径的现有行为；在 AAAA 这次里改它会连 A 一起变。DNSPod 新建时要带上现有的 `$this->recordLine`（默认「默认」），漏掉会建到别的线路或直接失败。
+21. **节点 firewalld 放行的是 `http`/`https` 服务，这两个服务默认含 IPv6。** 不要再加一条只匹配 IPv4 的 rich rule。这只写进部署说明，不改脚本。
 
 ---
 
@@ -74,8 +80,9 @@ IPv4 主地址仍必填。没有主 IPv6 时不能填其他 IPv6。其他项与�
 
 | 条件 | 动作 |
 |------|------|
-| 发布开关不是真 | 不调用 AAAA |
-| 开关为真但不是 `SupportsPoolAAAA` | 不调用 AAAA，不抛错 |
+| 发布开关不是真 | 不调用 AAAA，也不因为 IPv6 字段坏了而中断 |
+| 开关为真，且任一启用节点的原始 IPv6 非空但非法 | 在 `upsertARecords` 之前抛错。A、AAAA、CNAME 都不写 |
+| 开关为真但不是 `SupportsPoolAAAA` | 不调用 AAAA，不抛错。A 和 CNAME 照常 |
 | 开关为真且是该接口 | 调用 `upsertAAAARecords($fqdn, enabledPublicIpv6s())`，空数组也调用 |
 | A 已抛错 | 不调用 AAAA，不写 CNAME |
 | AAAA 抛错 | 不写 CNAME。错误含「AAAA」，并说明 A 可能已经写到厂商 |
@@ -93,28 +100,30 @@ IPv4 主地址仍必填。没有主 IPv6 时不能填其他 IPv6。其他项与�
 | V6-03 | `canonicalPublicIpv6` | 非法为 `''`。两种写法的返回值相等，且等于 `strtolower(inet_ntop(inet_pton(...)))` |
 | V6-04 | `filterValidIpv6List` | 按 16 字节去重，元素是规范字符串 |
 | V6-05 | 迁移两列。`extra_ipv6` 为 `text`。不改 `redi_admin.sql` | up/down 可走；不改现有 PHP 行为 |
-| V6-06 | `publicIpv6s()` | null 当空数组；跳过非法值；主地址在前；不改 `publicIps()` |
-| V6-07 | `parseExtraIpv6` | 错误文本含「IPv6」和原文 |
+| V6-06 | `publicIpv6s()` | 用 `isValidPublicIpv6` 过滤，不能只用 `ipv6ToBytes`。`fe80::1` 不出现。null 和 `''` 当没有。主地址在前。不改 `publicIps()` |
+| V6-07 | `parseExtraIpv6` | 用 `preg_split('/\s+/')`，禁止按 `:` 切开。存规范字符串。错误文本含「IPv6」和原文 |
 | V6-08 | `assertIpv6Available` | 用规范形式比；`exceptId` 排除自己；不和 IPv4 比 |
-| V6-09 | 后台主 IPv6，`text`，可空 | 不填时与现在相同。`saving` 只追加对新字段的处理 |
+| V6-09 | 后台主 IPv6，`text`，可空 | 空白存 `null`，不存 `''`。合法值存规范字符串。`saving` 只追加对新字段的处理 |
 | V6-10 | 后台其他 IPv6；无主地址则拒绝；去掉与主地址重复的项 | 赋 PHP 数组。不改 IPv4 校验 |
 | V6-11 | `enabledPublicIpv6s()` | 停用节点不出现；不写入 `enabledPublicIps()` |
-| V6-12 | 接口 `SupportsPoolAAAA`，零个实现类 | `DnsProviderInterface` 与 `syncAll` 不变 |
-| V6-13 | `reconcileAAAARecordValues` | 空期望会删已给的行，且不抛「没有可同步的节点 IP」。同一地址两种写法不删不建。不调用 `filterValidIpv4List`。不改 `reconcileARecordValues` |
-| V6-14 | 仅 Cloudflare，`type=AAAA`，新建 `proxied=false` | 已有 A 的 id 在空列表调用时不会被删 |
-| V6-15 | 仅阿里云。`listRecordRows(..., 'AAAA')` | 同上。阿里云按 RecordId 删除 |
-| V6-16 | 仅 DNSPod，`record_type=AAAA` | 同上。DNSPod 按 record_id 删除 |
-| V6-17 | 仅 dns.com，类型 AAAA | 同上 |
-| V6-18 | 配置 `redi.publish_pool_aaaa`，环境变量 `REDI_PUBLISH_POOL_AAAA`，默认 false | 不改 `syncAll` |
-| V6-19 | `syncAll` 按第 5 节 | 默认 false 时，即使假 provider 实现了接口且列表非空，AAAA 次数也是 0。字符串 `"false"` 也必须是关。A 失败时次数为 0。AAAA 失败时 CNAME 次数为 0 |
-| V6-20 | 手动参考表 | 开关为假时，即使库里有 IPv6 也不增加 AAAA 行。开关为真且有地址才增加。全 IPv4 时行集与现在一致 |
-| V6-21 | `aaaaRecordPointsToPool`，不接到 `pointsToEdge` | 读 `$row['ipv6']`，用 16 字节和 `enabledPublicIpv6s()` 比。现有预检测试不改 |
-| V6-22 | 接到 `pointsToEdge`，并让 `pointsToEdgeCached` 的键包含该开关。配置 `redi.dns_precheck_allow_aaaa_to_pool` 默认 false，读法用 `FILTER_VALIDATE_BOOLEAN` | 默认 false：只有 AAAA、没有 CNAME/A 则失败。true 且字节命中则成功。原有 CNAME 成功用例不变 |
-| V6-23 | `SanitizeClientIP` 用 `net.ParseIP` + `To4()` | `::ffff:203.0.113.5` 和 `0:0:0:0:0:ffff:203.0.113.5` 都变成 `203.0.113.5`。`2001:db8::1` 除 trim 外不变。不改监听默认值 |
-| V6-24 | 只改 `DEPLOY-centos7.md` | 写明：先 `curl -6` 通 80，再把发布开关设为 true 并 `config:cache`；`bindv6only` 不是 0 就不要改监听；改回 `0.0.0.0:80` / `0.0.0.0:443` 的办法；lagran 不管 IPv6；未听 IPv6 就发布 AAAA 会让 HTTP-01 失败。不改 Go、不改默认 `config.json` |
-| V6-25 | `vars.example.env` 注释 | IPv6 只填后台；禁止写入 `NODE_IPS`；发布开关不要在部署脚本里写成 true。不改 `redi_is_ipv4` |
+| V6-12 | `hasUnreadableIpv6` | 原始主地址或任一附加项 trim 后非空且 `isValidPublicIpv6` 为假则为真。空白和 null 为假。不删 DNS，不改 `syncAll` |
+| V6-13 | 接口 `SupportsPoolAAAA`，零个实现类 | `DnsProviderInterface` 与 `syncAll` 不变 |
+| V6-14 | `reconcileAAAARecordValues` | 空期望会删已给的行，且不抛「没有可同步的节点 IP」。同一地址两种写法不删不建。不调用 `filterValidIpv4List`。不改 `reconcileARecordValues` |
+| V6-15 | 仅 Cloudflare 的灰色云增删，`type=AAAA`，新建 `proxied=false` | 已有 A 的 id 在空列表调用时不会被删。本行不处理已经是橙色云的记录 |
+| V6-16 | 仅 Cloudflare：`proxied=true` 的 AAAA 删掉后按灰色云重建 | 不改 V6-14 的对账函数。地址相同且已是灰色云时不删不建 |
+| V6-17 | 仅阿里云。调用现成 `listRecordRows(..., 'AAAA')`，不改该方法 | 不删 A 的 id。删除参数是 `RecordId` |
+| V6-18 | 仅 DNSPod，`record_type=AAAA`，并传入 `$this->recordLine` | 不删 A 的 id。删除参数是 `record_id` |
+| V6-19 | 仅 dns.com，`type=AAAA`。调用现成 `listRecordRows`，不改该方法 | 不删 A 的 id。删除参数是 `record_id` |
+| V6-20 | 配置 `redi.publish_pool_aaaa`，环境变量 `REDI_PUBLISH_POOL_AAAA`，默认 false | 不改 `syncAll` |
+| V6-21 | `syncAll` 按第 5 节 | 开关为假时不因坏字段中断，AAAA 次数为 0。开关为真且 `hasUnreadableIpv6` 时，A 的调用次数也是 0。字符串 `"false"` 仍是关。AAAA 失败时 CNAME 次数为 0 |
+| V6-22 | 手动参考表 | 开关为假时，即使库里有 IPv6 也不增加 AAAA 行。开关为真且有地址才增加。全 IPv4 时行集与现在一致 |
+| V6-23 | `aaaaRecordPointsToPool`，不接到 `pointsToEdge` | 读 `$row['ipv6']`，用 16 字节和 `enabledPublicIpv6s()` 比。现有预检测试不改 |
+| V6-24 | 接到 `pointsToEdge`，并让 `pointsToEdgeCached` 的键包含该开关。配置 `redi.dns_precheck_allow_aaaa_to_pool` 默认 false，读法用 `FILTER_VALIDATE_BOOLEAN` | 默认 false：只有 AAAA、没有 CNAME/A 则失败。true 且字节命中则成功。原有 CNAME 成功用例不变 |
+| V6-25 | `SanitizeClientIP` | `To4().String()` 得到 `203.0.113.5`。两种映射写法都覆盖。`ParseIP().String()` 那种 `::ffff:` 结果算失败。`2001:db8::1` 除 trim 外不变。不改监听默认值 |
+| V6-26 | 只改 `DEPLOY-centos7.md` | 写明：先 `curl -6` 通 80，再把发布开关设为 true 并 `config:cache`；`bindv6only` 不是 0 就不要改监听；改回 `0.0.0.0:80` / `0.0.0.0:443`；lagran 不管 IPv6；未听 IPv6 就发布 AAAA 会让 HTTP-01 失败；不要加只匹配 IPv4 的 firewalld rich rule。不改 Go、脚本和默认 `config.json` |
+| V6-27 | `vars.example.env` 注释 | IPv6 只填后台；禁止写入 `NODE_IPS`；发布开关不要在部署脚本里写成 true。不改 `redi_is_ipv4` |
 
-V6-14 起可以在 V6-13 之后逐家做。V6-19 不要求四家都做完。
+V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面。V6-21 不要求四家都做完。
 
 ---
 
