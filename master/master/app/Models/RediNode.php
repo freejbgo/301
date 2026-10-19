@@ -309,6 +309,45 @@ class RediNode extends Model
     }
 
     /**
+     * @return string[]
+     */
+    public static function parseExtraIpv6(?string $raw): array
+    {
+        $raw = trim((string) $raw);
+        if ($raw === '') {
+            return [];
+        }
+        $ips = [];
+        $seen = [];
+        foreach (preg_split('/\s+/', $raw) as $ip) {
+            $original = trim((string) $ip);
+            $ip = trim(OpsDisplaySanitizer::stripControlChars($original));
+            if ($ip === '') {
+                continue;
+            }
+            if (! self::isValidPublicIpv6($ip)) {
+                throw ValidationException::withMessages([
+                    'extra_ipv6' => '请填写 IPv6，一行一个。无效：'.$original,
+                ]);
+            }
+            $canonical = self::canonicalPublicIpv6($ip);
+            if ($canonical === '') {
+                throw ValidationException::withMessages([
+                    'extra_ipv6' => '请填写 IPv6，一行一个。无效：'.$original,
+                ]);
+            }
+            $bytes = self::ipv6ToBytes($ip);
+            if ($bytes === '' || isset($seen[$bytes])) {
+                continue;
+            }
+            $seen[$bytes] = true;
+            $ips[] = $canonical;
+        }
+
+        return $ips;
+    }
+
+    /**
      * @param  string[]  $ips
      */
     public static function assertIpsAvailable(array $ips, ?int $exceptId = null): void
