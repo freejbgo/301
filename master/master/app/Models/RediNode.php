@@ -28,6 +28,15 @@ class RediNode extends Model
                 }
                 $node->extra_ips = $extras === [] ? null : array_values($extras);
             }
+            if (Schema::hasColumn($node->getTable(), 'public_ipv6') && $node->isDirty('public_ipv6')) {
+                $node->public_ipv6 = trim(OpsDisplaySanitizer::stripControlChars((string) $node->public_ipv6));
+                if ($node->public_ipv6 === '') {
+                    $node->public_ipv6 = null;
+                }
+            }
+            if (! Schema::hasColumn($node->getTable(), 'public_ipv6')) {
+                unset($node->public_ipv6);
+            }
             if ($node->isDirty('name')) {
                 $name = OpsDisplaySanitizer::stripControlChars((string) $node->name);
                 $name = trim($name);
@@ -74,6 +83,7 @@ class RediNode extends Model
     protected $fillable = [
         'name',
         'public_ip',
+        'public_ipv6',
         'extra_ips',
         'enabled',
         'last_heartbeat_at',
@@ -306,6 +316,24 @@ class RediNode extends Model
         }
 
         return $ips;
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function preparePublicIpv6ForStorage(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+        if (! self::isValidPublicIpv6($value)) {
+            throw ValidationException::withMessages([
+                'public_ipv6' => '主公网 IPv6 必须是可发布的全球单播地址',
+            ]);
+        }
+
+        return self::canonicalPublicIpv6($value);
     }
 
     /**
