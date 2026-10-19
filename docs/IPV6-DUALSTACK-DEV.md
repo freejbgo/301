@@ -166,7 +166,7 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 - IPv6 连主控、改 `NODE_IPS`、3306 的 IPv6 规则、主控 Nginx 听 IPv6、ip6tables
 - 把 IPv4/IPv6 收成一个函数，或改 `HostNameValidator`
 - 代码里把默认监听改成 `[::]`（第二期只允许 **显式开关** 写入节点 `config.json`，见 V6-29；不要改 `config.json.example` 的默认值）
-- 没填 IPv6 就 health 告警（已填 IPv6 且已发布 AAAA 时的提示见 V6-31，只做 hint，不当 error）
+- 没填 IPv6 就 health 告警。主控看不到节点 `config.json`，也不要根据「有 IPv6 且发布开关为真」加一条永远出现的 hint
 - 发布开关默认 true，或在 false 时主动删除已有 AAAA
 - 节点只有 IPv6、没有 IPv4。主控没有 IPv6 时，这种节点无法连主控。`public_ip` 保持必填
 
@@ -181,9 +181,22 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 | 编号 | 只改这些 | 做完时 |
 |------|----------|--------|
 | V6-28 | 本节与路线图 | 方向写进仓库。不改代码 |
-| V6-29 | `deploy-node.sh` 与 `vars.example.env` | 新变量默认关。为真时把该节点 `addr` / `tls_addr` 写成 `[::]:80` 与 `[::]:443`。`bindv6only` 不是 0 则脚本失败退出。不要同时留下 `0.0.0.0`。`api_listen` 仍是 `127.0.0.1:8080`。不改 `config.json.example` 默认值，不改 Go |
-| V6-30 | `DEPLOY-centos7.md` 与 `ACCEPTANCE-CENTOS7-DEPLOY.md` | 推荐路径写成：节点 v4+v6、监听双栈、主控 `curl -6` 通 80 后再开 `REDI_PUBLISH_POOL_AAAA`。分别用 IPv4 与 IPv6 访问客户域名，跳转都成立 |
-| V6-31 | `redi:health` 的 hints | 启用节点有合法 IPv6、发布开关为真、且无法从配置判断节点已听 IPv6 时，给一条 hint。未填 IPv6 不告警。不把 hint 当成 health 失败 |
-| V6-32 | 仅文档 | lagran 仍只处理 IPv4。写明 IPv6 入站不走 lagran。不改 iptables / ip6tables。不把主 IPv4 改成可空，也不要为「只有 IPv6」的节点改 `syncAll` |
+| V6-29 | `deploy-node.sh` 与 `vars.example.env` | 见下方监听开关。不改 Go，不改 `config.json.example`，不改 `env.sh` 里的监听变量 |
+| V6-30 | `DEPLOY-centos7.md` 与 `ACCEPTANCE-CENTOS7-DEPLOY.md` | 见下方验收。含 lagran 边界。不改 health，不改脚本 |
 
-先做 V6-29～31：节点保留 IPv4，需要给访客提供 IPv6 时再加地址并打开双栈监听。
+**V6-29 监听开关。** 变量 `REDI_NODE_DUALSTACK_LISTEN`，默认不写或空。用 Python 改 JSON，不要用 `sed`：地址里有方括号。
+
+- 空：不改 `addr`、`tls_addr`、`api_listen`。重复部署不能把现有监听改掉。
+- `1`：先检查，再写入。`/proc/net/if_inet6` 不存在则失败。`/proc/sys/net/ipv6/bindv6only` 读不到或不是 `0` 则失败。通过后再把 `addr` 的主机改成 `[::]`，端口保持原值；`0.0.0.0:80` 变成 `[::]:80`。`tls_addr` 已是空或 JSON `null` 时不要写成 `[::]:443`，那会把关掉的 HTTPS 重新打开。非空时同样只换主机、保留端口。当前主机不是 `0.0.0.0` 或 `::` 时失败，不要改成别的地址。
+- `0`：把主机为 `::` 的 `addr` / `tls_addr` 改回 `0.0.0.0`，端口不变。已经是 `0.0.0.0` 则不动。其它主机则失败。
+- 不要写 `::80`。`net.SplitHostPort` 对 `[::]:80` 得到端口 `80`，对 `::80` 得到整段 `:80`，lagran 端口会对不上。节点只有一个 `addr`，不要再留一条 `0.0.0.0`。
+- 不要在 `env.sh` 写入 `REDI_HTTP_LISTEN` 或 `REDI_TLS_LISTEN`。这两个变量会覆盖 `config.json`。`api_listen` 保持 `127.0.0.1:8080`。
+- 不改 `SanitizeClientIP`。`bindv6only=0` 时，IPv4 客户端在 `[::]` 上会变成映射地址，现有 `To4()` 已经能还原。
+
+**V6-30 验收与边界。** 主控可以没有公网 IPv6，但发布 AAAA 之前必须有 IPv6 出网。没有出网时，主控上的 `curl -6` 和随后的 HTTP-01 都会失败。顺序是：节点已有 IPv4、后台再填 IPv6、打开监听开关、在主控上 `curl -6` 节点公网 IPv6 的 80、然后再把 `REDI_PUBLISH_POOL_AAAA` 设为 true。分别用 IPv4 和 IPv6 访问客户域名，跳转都要成立。
+
+lagran 仍只写 iptables，不处理 IPv6 入站。不要加 ip6tables，也不要把主 IPv4 改成可空。
+
+不要做「检测节点是否已听 `[::]`」的 health hint。心跳只上报版本，主控读不到节点 `config.json`；按「已填 IPv6 且开关为真」提示会在监听正确时也一直出现。
+
+先做 V6-29，再做 V6-30。节点始终保留 IPv4。
