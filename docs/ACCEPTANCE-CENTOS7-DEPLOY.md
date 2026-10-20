@@ -234,7 +234,7 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 
 ## 7. IPv4/IPv6 双栈（可选）
 
-**前提：** 主控与节点代码已含 V6-01–V6-27（`main` 默认仍 **不** 发布 Pool AAAA，节点默认仍听 `0.0.0.0`）。需要节点有 **公网 IPv6**、主控有 **IPv6 出口**；操作细节见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12 与 [IPV6-DUALSTACK-IMPLEMENTATION.md](IPV6-DUALSTACK-IMPLEMENTATION.md) §3。
+**前提：** 主控与节点代码已含 V6-01–V6-30（`main` 默认仍 **不** 发布 Pool AAAA；节点默认 `0.0.0.0` 在 Linux 上已双栈接听；lagran 的 IPv6 与 IPv4 相同）。需要节点有 **公网 IPv6**、主控有 **IPv6 出口**；操作细节见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12 与 [IPV6-DUALSTACK-IMPLEMENTATION.md](IPV6-DUALSTACK-IMPLEMENTATION.md) §3。
 
 在后台「节点管理」填写主 IPv6 / 其他 IPv6（**不要**写入 `vars.env` 的 `NODE_IPS`）。
 
@@ -246,15 +246,22 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 
 ### 7.2 打开 Pool AAAA 前（主控侧连通）
 
-在 **主控**上对节点 **公网 IPv6** 测 80（仅在节点本机 `curl` **不算**）：
+在 **主控**上对后台 **`enabledPublicIpv6s()` 里的每一个公网 IPv6**（含其他 IPv6）测 80（仅在节点本机 `curl` **不算**）。默认 `0.0.0.0` 监听在 Linux 上已能接 IPv6，**不要**为此改 `config.json`。
 
 ```bash
 curl -6 -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "http://[2001:db8::1]/"
 ```
 
-将 `2001:db8::1` 换成后台登记的主 IPv6。若节点尚未听 IPv6，须先按 DEPLOY §12 改 `config.json` 监听（例如 `[::]:80` / `[::]:443`）并重启 `redi-multi`，再重测。
+将 `2001:db8::1` 换成实际登记地址；多个 IPv6 时逐个执行。
 
-- [ ] 主控 `curl -6` 得到非 `000` 的 HTTP 状态码。
+若节点 **HTTPS 未关闭**（未写 `tls_addr` 等价于开启；仅 JSON `null` 或 `""` 为关闭），对每个地址再测 443：
+
+```bash
+curl -6 -k -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "https://[2001:db8::1]/"
+```
+
+- [ ] 每个登记 IPv6 的 80 均得到非 `000` 的 HTTP 状态码。
+- [ ] HTTPS 开启时，每个登记 IPv6 的 443 均得到非 `000` 的状态码。
 - [ ] 主控无 IPv6 出口时 **不要** 进行 §7.3。
 
 ### 7.3 发布开关打开
@@ -262,6 +269,11 @@ curl -6 -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "http://[2001:d
 - [ ] `/opt/301/master/.env` 设置 `REDI_PUBLISH_POOL_AAAA=true`，`config:cache` 后 DNS 同步：厂商 Pool 出现与启用节点一致的 **AAAA**（A 记录仍正常）。
 - [ ] 将节点 IPv6 清空并保持 `REDI_PUBLISH_POOL_AAAA=true`，再同步：**AAAA 被删或对齐为空**，**A 仍在**。
 - [ ] （可选）`REDI_DNS_PRECHECK_ALLOW_AAAA_TO_POOL=true` 时，客户域仅 AAAA 指向 Pool 的预检行为符合预期；默认 false 时仅 AAAA 不应单独通过预检。
+
+### 7.4 访客跳转与 lagran（打开发布开关后）
+
+- [ ] 分别用 **IPv4** 和 **IPv6** 访问客户域名，跳转均成立（与 IPv4 行为一致）。
+- [ ] 节点上 `iptables -L OUTPUT` 与 `ip6tables -L OUTPUT` 均可见 lagran 的 NFQUEUE 规则，**队列号相同**（如 `1000:1127`），不是另一段号码。
 
 ---
 

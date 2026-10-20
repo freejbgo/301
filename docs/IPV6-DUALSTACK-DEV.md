@@ -1,6 +1,6 @@
 # IPv4 / IPv6 双栈 — 开发设计
 
-**状态：** 第一期 **V6-01–V6-27** 已在 `main` 落地。默认仍 **不** 发布 Pool AAAA。配置字符串仍是 `0.0.0.0`，Linux 上进程已经双栈监听（见 §8 V6-29）。控制面（`NODE_IPS`、MySQL 3306、lagran）仍 IPv4。真机双栈打勾见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7。本文不是已上线说明。
+**状态：** 第一期 **V6-01–V6-27** 与第二期 **V6-30**（lagran IPv6 与 IPv4 相同）已在 `main` 落地。默认仍 **不** 发布 Pool AAAA。配置字符串仍是 `0.0.0.0`，Linux 上进程已经双栈监听（见 §8 V6-29）。控制面（`NODE_IPS`、MySQL 3306）仍 IPv4；lagran 按出站 TCP 源端口匹配，iptables 与 ip6tables 共用队列号。真机双栈打勾见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7。本文不是已上线说明。
 
 **读者：** Composer 2.5。第一期 **V6-01–V6-27** 已做完。第二期按 **§8** 一次一行；§7 仍约束未列出的范围。
 
@@ -18,7 +18,7 @@
 | 预检 | CNAME 优先；可选 A /（开关开时）AAAA 命中 pool（`dns_precheck_allow_a_to_pool` 默认 true，`dns_precheck_allow_aaaa_to_pool` 默认 false） |
 | HTTP-01 | 主控 `Http::get('http://客户域名/...')`；发布 AAAA 后解析可能优先 IPv6。有 IPv6 的节点进程已经在 80/443 上双栈接听；发布前仍要主控 `curl -6` 通该公网地址（见 §8） |
 | 节点 | 配置默认 `0.0.0.0:80` / `0.0.0.0:443`。`Listen("tcp")` 在 Linux 上把这个通配地址绑成 `[::]`，不要为了接 IPv6 再改配置字符串 |
-| 控制面 | `NODE_IPS`、MySQL、firewalld 3306、lagran 仍只处理 IPv4 |
+| 控制面 | `NODE_IPS`、MySQL、firewalld 3306 仍 IPv4。lagran 在 OUTPUT 按源端口匹配；IPv4/IPv6 出站共用 NFQUEUE 队列号 |
 
 `filter_var(..., FILTER_FLAG_IPV6)` 会放过 `::ffff:192.0.2.1`、`::1`、`fe80::1`，不能单独当池地址校验。
 
@@ -176,7 +176,7 @@ V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且
 
 **目标：** 访客侧 IPv4 和 IPv6 功能相同：能连上、能跳转、限流按客户端地址生效、lagran 对出站 TCP 做同样的窗口处理。主控只有 IPv4，不部署 IPv6。节点只有两种：只填公网 IPv4，或同时填公网 IPv4 和 IPv6。节点不会只有 IPv6，否则主控无法和它通信。控制面（Agent、MySQL、`NODE_IPS`、3306、主控 Nginx）继续只走 IPv4。`public_ip` 保持必填。
 
-**和第一期的差距：** 后台已能存可选 IPv6，Pool AAAA 可按开关发布，客户端 IP 已能识别 IPv6。节点在有 IPv6 的 Linux 上已经能同时接 IPv4 和 IPv6。lagran 仍只写 iptables、只解析 IPv4，所以 IPv6 访客连得上，但没有同等的窗口处理。
+**和第一期的差距：** 后台已能存可选 IPv6，Pool AAAA 可按开关发布，客户端 IP 已能识别 IPv6。节点在有 IPv6 的 Linux 上已经能同时接 IPv4 和 IPv6。V6-30 起 lagran 对 IPv6 出站 TCP 与 IPv4 相同（仍按源端口，不按节点公网地址）。
 
 | 编号 | 只改这些 | 做完时 |
 |------|----------|--------|

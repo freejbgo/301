@@ -107,9 +107,9 @@ func setIptable(sport string) {
 	ip6, err := iptables.New(iptables.IPFamily(iptables.ProtocolIPv6))
 	if err != nil {
 		logrus.Errorf("[lagran] ip6tables new error: %v", err)
-		return
+	} else {
+		appendLagranRules(ip6, sport, "ip6tables")
 	}
-	appendLagranRules(ip6, sport, "ip6tables")
 }
 
 func UnsetIptable(sport string) {
@@ -123,9 +123,9 @@ func UnsetIptable(sport string) {
 	ip6, err := iptables.New(iptables.IPFamily(iptables.ProtocolIPv6))
 	if err != nil {
 		logrus.Errorf("[lagran] failed to new ip6tables, err: %v\n", err)
-		return
+	} else {
+		deleteLagranRules(ip6, sport, "ip6tables")
 	}
-	deleteLagranRules(ip6, sport, "ip6tables")
 }
 
 func packetHandle(queueNum int) {
