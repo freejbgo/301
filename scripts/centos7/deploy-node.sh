@@ -203,6 +203,9 @@ if redi_lagran_expected_enabled; then
   if journalctl -u redi-multi -n 40 --no-pager 2>/dev/null | grep -q '\[lagran\] disabled'; then
     echo "警告: 日志含 [lagran] disabled，请检查 REDI_LAGRAN_DISABLED 与 lagran.enabled"
   fi
+  if journalctl -u redi-multi -n 80 --no-pager 2>/dev/null | grep -q 'iptables OUTPUT rules were not installed'; then
+    echo "警告: lagran NFQUEUE 已启动但 OUTPUT 规则未写入，请检查 cap_net_admin / root 与 journalctl -u redi-multi"
+  fi
 fi
 
 step "测试到主控数据库的连接"
