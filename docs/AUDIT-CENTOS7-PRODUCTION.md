@@ -148,7 +148,7 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 深度扫（#349，待合并）：** `verify-masteragent-invariants` + 证书拉取 ack 单测；扩展租户/节点 revision 门禁。
+**2026-10-20 深度扫（#349 已合并）：** `verify-masteragent-invariants` + 证书拉取 ack 单测；扩展租户/节点 revision 门禁。
 
 **2026-10-20 深度扫（#348 已合并）：** 扩展 `verify-cert-deploy-invariants`（ack 409/批量队列/停用续部署）；`DomainCertificateQueue` 跳过停用域名单测。
 
