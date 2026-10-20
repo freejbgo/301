@@ -23,7 +23,9 @@ echo "lagran.port=${SPORT}（与 addr/tls_addr 合并后）"
 
 delete_rule() {
   local flags="$1" queue="$2"
-  while iptables -D filter OUTPUT -p tcp -m multiport --sport "$SPORT" \
+  # -t filter -D OUTPUT：与 go-iptables Delete("filter","OUTPUT",...) 相同。
+  # -D filter OUTPUT 会把 filter 当成链名，删不到 OUTPUT 上的规则。
+  while iptables -t filter -D OUTPUT -p tcp -m multiport --sport "$SPORT" \
     --tcp-flags SYN,RST,ACK,FIN,PSH "$flags" \
     -j NFQUEUE --queue-balance "$queue" --queue-bypass 2>/dev/null; do
     echo "已删除: tcp sport ${SPORT} ${flags} → ${queue}"
