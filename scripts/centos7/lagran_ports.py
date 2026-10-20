@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""与 node/redi-multi/config MergeListenerPorts + LagranSport 对齐，供 bash 运维脚本使用。"""
+"""与 node/redi-multi/config MergeListenerPorts + LagranSport 对齐，供 bash 运维脚本使用。
+
+tls_addr 与 resolveTlsAddrFromJSON 一致：缺这个键时默认 0.0.0.0:443；
+JSON null 或空字符串表示关闭 HTTPS，不并入 443。
+"""
 from __future__ import annotations
 
 import json
@@ -18,6 +22,18 @@ def port_from_listen(addr: str) -> str:
             return port
         return port_from_listen(host)
     return addr
+
+
+def resolve_tls_addr(data: dict) -> str:
+    """缺 tls_addr 时与 Go 相同，默认 0.0.0.0:443。null 或空串关闭 HTTPS。"""
+    if "tls_addr" not in data:
+        return "0.0.0.0:443"
+    value = data["tls_addr"]
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        raise SystemExit("tls_addr 必须是字符串、null 或缺省")
+    return value
 
 
 def merge_listener_ports(lagran_port, http_addr: str, tls_addr: str) -> str:
@@ -55,7 +71,7 @@ def main() -> None:
         data = json.load(f)
     lag = data.get("lagran") or {}
     lag_port = lag.get("port", "")
-    sport = merge_listener_ports(lag_port, data.get("addr", ""), data.get("tls_addr", ""))
+    sport = merge_listener_ports(lag_port, data.get("addr", ""), resolve_tls_addr(data))
     flags = (
         "1" if lagran_bool(lag, "syn_ack") else "0",
         "1" if lagran_bool(lag, "ack") else "0",
