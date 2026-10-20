@@ -19,7 +19,7 @@
 
 ## 开发机 / 发版前（与 CI 一致）
 
-在本地打 `v*` 标签或上传 tar 到服务器之前，建议在仓库根目录执行 **`bash scripts/dev-preflight.sh`**（或按 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) **§9** 分步跑）。与 GitHub `ci.yml` / `release.yml` 核心门禁相同；本机无 Docker 时 DB 校验脚本会跳过，有 Docker 时才会真正起 MariaDB 容器。
+在本地打 `v*` 标签或上传 tar 到服务器之前，建议在仓库根目录执行 **`bash scripts/dev-preflight.sh`**（或按 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) **§9** 分步跑）。与 GitHub `ci.yml` / `release.yml` 核心门禁相同；本机无 Docker 时 DB 校验脚本会跳过，有 Docker 时才会真正起 MariaDB 容器。`verify-*` 脚本索引见 [scripts/README.md](scripts/README.md)；本文与 `deploy-*.sh` / `redi_admin.sql` 的对齐由 **`bash scripts/verify-deploy-centos7-doc.sh`** 静态校验。
 
 ## 1. 准备变量
 
@@ -51,7 +51,7 @@ sudo bash scripts/centos7/deploy-master.sh
 3. 安装 MariaDB 10.6。CentOS 7 自带的 5.5 导不进这份 `utf8mb4` 库。
 4. 设置 root 密码，关闭反向域名解析，数据库监听 IPv4。3306 不对全网开放，只放行 `NODE_IPS`。
 5. 库是空的才导入 `db/redi_admin.sql`（菜单 + 业务表 + 默认 `admin` + 节点存储过程 **`redi_node_bump_skip`**；`migrations` 登记至 **`100010_add_node_ipv6_columns`**，含节点 IPv6 列）。已经有 `admin_users` 时不会覆盖。
-6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（绿场常无新迁移；发版后有新迁移时改库）、`storage:link`，并 **检查存储过程是否存在**（应由上一步 SQL 导入；不存在则脚本失败退出）。
+6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（绿场常无新迁移；发版后若有 **`100011+`** 迁移再改库）、`storage:link`，并 **检查存储过程是否存在**（应由上一步 SQL 导入；不存在则脚本失败退出）。
 7. 配置 PHP-FPM（用户 `nginx`，sock `/var/run/php-fpm/www.sock`）和 Nginx。开启 SELinux 时会放行网站访问网络和数据库。
 8. 安装队列 `redi-queue`：`queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600`（worker 每小时由 systemd 重启，避免长期内存增长）。`/etc/cron.d/redi-renew` 每天 **03:10** 续期证书、**04:10** 清理 ACME、**08:30** `redi:health --notify`（webhook 发送成功或无 issues 时 **退出 0**；未配置 URL 且有 issues 或 artisan 异常时 `|| redi:ops-webhook`）；直接 `php artisan …`，**勿**配置 `php artisan schedule:run`（续期/清理/health 仅由本文件触发；`Kernel` 内已无 schedule 任务）。多台机器跑 `queue:work` 时主控 `.env` 须 `CACHE_DRIVER=redis`（ACME 全局锁）。
 9. 防火墙开放 22、80、443。
@@ -66,7 +66,7 @@ sudo bash scripts/centos7/deploy-master.sh
 
 先在主控后台「节点管理」新建一条节点，主公网 IP 填这台机器的 IPv4，复制只显示一次的 Token。主控的 `NODE_IPS` 里也要有这个 IP；如果部署主控时还没写，补上后在主控再执行一次 `deploy-master.sh`，它会补授权和防火墙。
 
-把同一份仓库放到节点上（或只把 `redi-multi.tar.gz`、`deploy-node.sh`、`vars.env` 拷过去）。`vars.env` 里填好 `REDI_NODE_TOKEN`。
+把同一份仓库放到节点上（或只把 `redi-multi.tar.gz`、`deploy-node.sh`、`vars.env` 拷过去）。`vars.env` 里填好 `NODE_INSTALL_ROOT`（默认 `/opt/redi-multi`）、`REDI_NODE_TOKEN` 等节点项。
 
 ```bash
 sudo bash scripts/centos7/deploy-node.sh
@@ -165,6 +165,7 @@ grep -E 'renew|prune|health' /etc/cron.d/redi-renew
 cd /opt/301/master && sudo -u nginx php artisan redi:health --json
 # 可选：jq '.summary.health_queue_pending_threshold,.summary.health_queue_stale_hours,.summary.health_validating_stuck_hours,.summary.health_renew_validating_stuck_hours,.issues'
 # 生产建议在 .env 配置 REDI_HEALTH_WEBHOOK_URL，并验证：sudo -u nginx php artisan redi:health --notify; echo exit=$?
+# 证书部署 failed 行重试：后台或 php artisan redi:requeue-failed-deployments（见 PRODUCTION-READINESS.md）
 ```
 
 已上线主控若 Cron 仍是旧写法，可 `sudo bash scripts/patch-master-cron-ops-webhook.sh`（见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) §4）。

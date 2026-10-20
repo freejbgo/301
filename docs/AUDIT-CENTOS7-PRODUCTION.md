@@ -148,6 +148,8 @@
 
 ## 6. 全面复核记录（2026-10）
 
+**2026-10-20 部署文档复核（待合并）：** `verify-deploy-centos7-doc`；`DEPLOY-centos7` / 绿场索引与 `deploy-master` Cron、`100010`/`100011+` 表述对齐。
+
 **2026-10-20 复核（#358 已合并）：** §6 #357 标记已合并；§9 PHPUnit **442**/**949**；`scripts/README.md` 补全 preflight `verify-*` 索引。
 
 **2026-10-20 边角收口（#357 已合并）：** `verify-redirect-platform-invariants`（PHP/Go 跳转 URL、force HTTPS、平台 DNS 表单）；`redirecturl` 协议相对/FTP 单测。
@@ -877,7 +879,7 @@ bash scripts/dev-preflight.sh
 cd node/redi-multi && go vet ./... && go test ./...
 cd master/master && composer install && composer audit --no-interaction && ./vendor/bin/phpunit --testsuite Unit,Feature
 bash scripts/verify-redi-artisan-cron.sh
-# 其余 scripts/verify-*-invariants.sh、verify-*-doc.sh 见 dev-preflight.sh
+# 其余 scripts/verify-*-invariants.sh、verify-*-doc.sh（含 verify-deploy-centos7-doc.sh）见 dev-preflight.sh / scripts/README.md
 php scripts/verify-redi-node-procedure-sync.php
 bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 时 dev-preflight 会跳过
 bash scripts/verify-ci-preflight-parity.sh

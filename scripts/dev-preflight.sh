@@ -85,6 +85,7 @@ for f in \
   scripts/verify-node-deploy-templates.sh \
   scripts/verify-grant-nodes-templates.sh \
   scripts/verify-acceptance-centos7-doc.sh \
+  scripts/verify-deploy-centos7-doc.sh \
   scripts/verify-redi-artisan-cron.sh \
   scripts/verify-masteragent-invariants.sh \
   scripts/verify-acme-code-invariants.sh \
@@ -143,6 +144,9 @@ bash scripts/verify-grant-nodes-templates.sh
 
 echo "==> CentOS7 真机验收清单文档"
 bash scripts/verify-acceptance-centos7-doc.sh
+
+echo "==> CentOS7 部署教程与脚本"
+bash scripts/verify-deploy-centos7-doc.sh
 
 echo "==> SQL 与节点存储过程校验"
 php scripts/verify-redi-node-procedure-sync.php
