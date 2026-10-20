@@ -148,7 +148,7 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 复核（doc 同步，待合并）：** §6 #357 标记已合并；§9 PHPUnit **442**/**949**；`scripts/README.md` 补全 preflight `verify-*` 索引。
+**2026-10-20 复核（#358 已合并）：** §6 #357 标记已合并；§9 PHPUnit **442**/**949**；`scripts/README.md` 补全 preflight `verify-*` 索引。
 
 **2026-10-20 边角收口（#357 已合并）：** `verify-redirect-platform-invariants`（PHP/Go 跳转 URL、force HTTPS、平台 DNS 表单）；`redirecturl` 协议相对/FTP 单测。
 
