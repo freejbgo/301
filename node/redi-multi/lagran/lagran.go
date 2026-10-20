@@ -4,7 +4,6 @@ import (
 	"context"
 	"regexp"
 	"redi-multi/config"
-	"sync"
 	"time"
 
 	"github.com/coreos/go-iptables/iptables"
@@ -27,71 +26,38 @@ func Run() {
 		logrus.Warn("[lagran] disabled (REDI_LAGRAN_DISABLED or lagran.enabled=false)")
 		return
 	}
-	setIptable(config.LagranSport())
-	var wg sync.WaitGroup
-	if config.LagranBool("syn_ack", true) {
-		p1, err := ants.NewPoolWithFunc(128, func(i interface{}) {
-			packetHandle(i.(int))
-			wg.Done()
+	sport := config.LagranSport()
+	setIptable(sport)
+	startPool := func(label string, handler func(int), from, to int) bool {
+		p, err := ants.NewPoolWithFunc(128, func(i interface{}) {
+			handler(i.(int))
 		})
 		if err != nil {
-			logrus.Errorf("[lagran] syn_ack pool: %v", err)
-			return
+			logrus.Errorf("[lagran] %s pool: %v", label, err)
+			return false
 		}
-		defer p1.Release()
-		logrus.Debugln("[lagran] Starting Task p1")
-		for i := 1000; i < 1128; i++ {
-			wg.Add(1)
-			_ = p1.Invoke(int(i))
+		logrus.Debugf("[lagran] Starting Task %s", label)
+		for i := from; i < to; i++ {
+			_ = p.Invoke(i)
 		}
+		// NFQUEUE handlers block for process lifetime; do not Release() when Run returns.
+		return true
 	}
-	if config.LagranBool("ack", true) {
-		p2, err := ants.NewPoolWithFunc(128, func(i interface{}) {
-			packetHandle(i.(int))
-			wg.Done()
-		})
-		if err != nil {
-			logrus.Errorf("[lagran] ack pool: %v", err)
-			return
-		}
-		defer p2.Release()
-		logrus.Debugln("[lagran] Starting Task p2")
-		for i := 2000; i < 2128; i++ {
-			wg.Add(1)
-			_ = p2.Invoke(int(i))
-		}
+	if config.LagranBool("syn_ack", true) && !startPool("p1", packetHandle, 1000, 1128) {
+		UnsetIptable(sport)
+		return
 	}
-	if config.LagranBool("psh_ack", true) {
-		p3, err := ants.NewPoolWithFunc(128, func(i interface{}) {
-			packetHandle(i.(int))
-			wg.Done()
-		})
-		if err != nil {
-			logrus.Errorf("[lagran] psh_ack pool: %v", err)
-			return
-		}
-		defer p3.Release()
-		logrus.Debugln("[lagran] Starting Task p3")
-		for i := 3000; i < 3128; i++ {
-			wg.Add(1)
-			_ = p3.Invoke(int(i))
-		}
+	if config.LagranBool("ack", true) && !startPool("p2", packetHandle, 2000, 2128) {
+		UnsetIptable(sport)
+		return
 	}
-	if config.LagranBool("fin_ack", true) {
-		p4, err := ants.NewPoolWithFunc(128, func(i interface{}) {
-			packetHandle(i.(int))
-			wg.Done()
-		})
-		if err != nil {
-			logrus.Errorf("[lagran] fin_ack pool: %v", err)
-			return
-		}
-		defer p4.Release()
-		logrus.Debugln("[lagran] Starting Task p4")
-		for i := 4000; i < 4128; i++ {
-			wg.Add(1)
-			_ = p4.Invoke(int(i))
-		}
+	if config.LagranBool("psh_ack", true) && !startPool("p3", packetHandle, 3000, 3128) {
+		UnsetIptable(sport)
+		return
+	}
+	if config.LagranBool("fin_ack", true) && !startPool("p4", packetHandle, 4000, 4128) {
+		UnsetIptable(sport)
+		return
 	}
 }
 
