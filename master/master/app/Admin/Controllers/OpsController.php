@@ -31,8 +31,10 @@ class OpsController extends Controller
             admin_toastr("已重新排队 {$count} 条 failed 部署", 'success');
         }
 
-        $redirect = $request->input('_redirect');
-        if (SafeRelativeRedirect::isSafe(is_string($redirect) ? $redirect : null)) {
+        $redirect = SafeRelativeRedirect::normalizeForRedirect(
+            is_string($request->input('_redirect')) ? $request->input('_redirect') : null
+        );
+        if ($redirect !== null) {
             return redirect($redirect);
         }
 

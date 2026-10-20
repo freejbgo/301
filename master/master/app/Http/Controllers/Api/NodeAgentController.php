@@ -297,7 +297,7 @@ class NodeAgentController extends Controller
             ->orderBy('id')
             ->get(['original_url', 'force_https'])
             ->map(function ($row) {
-                $host = DomainRecordNormalizer::originalUrlIfValid((string) $row->original_url);
+                $host = DomainRecordNormalizer::acmeHostKey((string) $row->original_url);
                 if ($host === '') {
                     return null;
                 }

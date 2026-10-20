@@ -101,7 +101,7 @@ class NodeAgentRevisionService
             ->orderBy('id')
             ->get(['id', 'original_url', 'force_https', 'updated_at'])
             ->map(function ($row) {
-                $host = DomainRecordNormalizer::originalUrlIfValid((string) $row->original_url);
+                $host = DomainRecordNormalizer::acmeHostKey((string) $row->original_url);
                 if ($host === '') {
                     return null;
                 }
