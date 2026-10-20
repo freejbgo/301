@@ -57,10 +57,18 @@ class Http01PropagationWaiter
             sleep($pollSeconds);
         }
 
-        throw new RuntimeException(
-            'HTTP-01 未在 '.$maxSeconds.' 秒内就绪：请确认至少一台在线节点已同步挑战、CNAME 已生效，且公网 80 可访问 '
-            .OpsDisplaySanitizer::field($domain, $domain, 253).$path
-        );
+        throw new RuntimeException($this->timeoutMessage($domain, $path, $maxSeconds));
+    }
+
+    protected function timeoutMessage(string $domain, string $path, int $maxSeconds): string
+    {
+        $msg = 'HTTP-01 未在 '.$maxSeconds.' 秒内就绪：请确认至少一台在线节点已同步挑战、CNAME 已生效，且公网 80 可访问 '
+            .OpsDisplaySanitizer::field($domain, $domain, 253).$path;
+        if (filter_var(config('redi.publish_pool_aaaa', false), FILTER_VALIDATE_BOOLEAN)) {
+            $msg .= '。已发布 Pool AAAA 时主控探测可能优先走 IPv6，请确认主控有 IPv6 出口且节点公网 IPv6 的 80 可达（DEPLOY-centos7 §12）';
+        }
+
+        return $msg;
     }
 
     /** HTTP-01 只需任一边缘呈现挑战即可，不要求全部在线节点同步。 */

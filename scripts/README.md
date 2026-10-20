@@ -16,7 +16,7 @@
 | [centos7/apply-mysql-skip-name-resolve.sh](centos7/apply-mysql-skip-name-resolve.sh) | 关闭 MySQL 反向 DNS 解析（生产建议） |
 | [centos7/run-on-centos7-host.sh](centos7/run-on-centos7-host.sh) | 开发机 Docker/Podman 跑 CentOS 7 容器冒烟 |
 | [centos7/lagran-diagnose.sh](centos7/lagran-diagnose.sh) / [lagran-cleanup-iptables.sh](centos7/lagran-cleanup-iptables.sh) | 节点 lagran 诊断与 iptables 清理 |
-| [centos7/lagran_ports.py](centos7/lagran_ports.py) | 从 `config.json` 解析 lagran/监听端口（与 `redi-multi` 一致；`dev-preflight` / CI 会调用） |
+| [centos7/lagran_ports.py](centos7/lagran_ports.py) | 从 `config.json` 解析 lagran/监听端口（含 `REDI_HTTP_LISTEN` / `REDI_TLS_LISTEN`；cleanup/diagnose 在 `source env.sh` 后与进程一致） |
 | [systemd/](systemd/) | `redi-queue` unit 示例 |
 
 CentOS 生产路径见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)。

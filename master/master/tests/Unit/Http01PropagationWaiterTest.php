@@ -178,4 +178,13 @@ class Http01PropagationWaiterTest extends TestCase
 
         app(Http01PropagationWaiter::class)->wait('valid.example', 'ok-token', "body\n", 0);
     }
+
+    public function test_timeout_message_mentions_ipv6_when_pool_aaaa_published(): void
+    {
+        config(['redi.publish_pool_aaaa' => true]);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Pool AAAA');
+
+        app(Http01PropagationWaiter::class)->wait('no-sync.example', 'tok', 'body', 0);
+    }
 }
