@@ -49,6 +49,8 @@ assert lp.resolve_tls_addr({"tls_addr": ""}) == ""
 assert lp.resolve_tls_addr({"tls_addr": "0.0.0.0:8443"}) == "0.0.0.0:8443"
 assert lp.merge_listener_ports("", "0.0.0.0:80", lp.resolve_tls_addr({})) == "80,443"
 assert lp.merge_listener_ports("", "0.0.0.0:80", lp.resolve_tls_addr({"tls_addr": None})) == "80"
+assert lp.port_from_listen("::80") == "80"
+assert lp.merge_listener_ports("", "::80", "") == "80"
 PY
 
 echo "==> SQL 与节点存储过程校验"
