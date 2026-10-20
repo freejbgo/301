@@ -58,7 +58,8 @@ jobs:
             verify-dns-providers-invariants.sh \
             verify-node-skip-api-invariants.sh \
             verify-admin-api-invariants.sh \
-            verify-release-workflow-invariants.sh; do
+            verify-release-workflow-invariants.sh \
+            verify-node-api-js-invariants.sh; do
             bash "scripts/${s}"
           done
           bash scripts/verify-ci-preflight-parity.sh
@@ -84,7 +85,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Deploy script syntax (CentOS 7)
         run: |
-          for f in scripts/dev-preflight.sh scripts/ensure-release-tarballs.sh scripts/verify-redi-db-deploy-path.sh scripts/verify-master-cron-templates.sh scripts/verify-node-deploy-templates.sh scripts/verify-grant-nodes-templates.sh scripts/verify-acceptance-centos7-doc.sh scripts/verify-redi-artisan-cron.sh scripts/verify-masteragent-invariants.sh scripts/verify-acme-code-invariants.sh scripts/verify-renew-ops-invariants.sh scripts/verify-acme-prune-requeue-invariants.sh scripts/verify-edge-dns-invariants.sh scripts/verify-cname-cert-job-invariants.sh scripts/verify-dns-providers-invariants.sh scripts/verify-node-skip-api-invariants.sh scripts/verify-admin-api-invariants.sh scripts/verify-release-workflow-invariants.sh scripts/verify-acceptance-edge-pool-doc.sh scripts/verify-tenant-edge-queue-invariants.sh scripts/verify-health-tenant-invariants.sh scripts/verify-cert-deploy-invariants.sh scripts/verify-production-readiness-doc.sh scripts/verify-ci-preflight-parity.sh scripts/build-master-tar.sh scripts/build-node-tar.sh scripts/patch-master-cron-ops-webhook.sh scripts/centos7/*.sh; do bash -n "$f" || exit 1; done
+          for f in scripts/dev-preflight.sh scripts/ensure-release-tarballs.sh scripts/verify-redi-db-deploy-path.sh scripts/verify-master-cron-templates.sh scripts/verify-node-deploy-templates.sh scripts/verify-grant-nodes-templates.sh scripts/verify-acceptance-centos7-doc.sh scripts/verify-redi-artisan-cron.sh scripts/verify-masteragent-invariants.sh scripts/verify-acme-code-invariants.sh scripts/verify-renew-ops-invariants.sh scripts/verify-acme-prune-requeue-invariants.sh scripts/verify-edge-dns-invariants.sh scripts/verify-cname-cert-job-invariants.sh scripts/verify-dns-providers-invariants.sh scripts/verify-node-skip-api-invariants.sh scripts/verify-node-api-js-invariants.sh scripts/verify-admin-api-invariants.sh scripts/verify-release-workflow-invariants.sh scripts/verify-acceptance-edge-pool-doc.sh scripts/verify-tenant-edge-queue-invariants.sh scripts/verify-health-tenant-invariants.sh scripts/verify-cert-deploy-invariants.sh scripts/verify-production-readiness-doc.sh scripts/verify-ci-preflight-parity.sh scripts/build-master-tar.sh scripts/build-node-tar.sh scripts/patch-master-cron-ops-webhook.sh scripts/centos7/*.sh; do bash -n "$f" || exit 1; done
           python3 scripts/centos7/lagran_ports.py node/redi-multi/config.json.example | grep -q '80'
           bash scripts/verify-master-cron-templates.sh
           bash scripts/verify-node-deploy-templates.sh
@@ -102,6 +103,7 @@ jobs:
           bash scripts/verify-cname-cert-job-invariants.sh
           bash scripts/verify-dns-providers-invariants.sh
           bash scripts/verify-node-skip-api-invariants.sh
+          bash scripts/verify-node-api-js-invariants.sh
           bash scripts/verify-admin-api-invariants.sh
           bash scripts/verify-release-workflow-invariants.sh
           bash scripts/verify-ci-preflight-parity.sh

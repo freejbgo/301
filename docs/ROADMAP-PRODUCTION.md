@@ -37,7 +37,7 @@
 | MySQL 客户端 TLS | ✅ 节点 `REDI_DB_TLS` + DEPLOY-centos7 §9；主控 MariaDB SSL 需自配 |
 | lagran NFQUEUE 卸载/升级脚本化 | ✅ `lagran_ports.py` 与进程端口一致 + 诊断/清理 |
 | 多机 queue + redis | ✅ [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md) + health hints |
-| 更强租户隔离审计（API/后台） | 📋 `BelongsToAdminTenant` + 批量队列 `admin_id` + `verify-tenant-edge-queue-invariants` |
+| 更强租户隔离审计（API/后台） | 📋 `BelongsToAdminTenant` + `verify-health-tenant-invariants` + `verify-admin-api-invariants`（dcat-api 须登录） |
 | IPv4/IPv6 双栈（数据面） | ✅ V6-01–30 + V6-31 验收文档。配置里的 `0.0.0.0` 在 Linux 上已双栈接听；lagran IPv6 与 IPv4 相同。默认仍不发布 Pool AAAA。节点只允许「仅 v4」或「v4+v6」。控制面仍 IPv4。见 [IPV6-DUALSTACK-DEV.md](IPV6-DUALSTACK-DEV.md) §8、[ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7 |
 
 ## 产品行为（非缺陷）

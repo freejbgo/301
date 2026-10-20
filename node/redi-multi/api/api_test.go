@@ -42,6 +42,15 @@ func TestAllowRateRejectsControlCharIP(t *testing.T) {
 	}
 }
 
+func TestAllowRateRejectsEmptyIP(t *testing.T) {
+	if allowRate("") {
+		t.Fatal("expected deny for empty IP")
+	}
+	if allowRate("   ") {
+		t.Fatal("expected deny for blank IP")
+	}
+}
+
 func TestApiJsQueryValid(t *testing.T) {
 	if !apiJsQueryValid("") {
 		t.Fatal("empty query should be valid")

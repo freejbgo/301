@@ -20,6 +20,7 @@ echo "==> Go vet + test (node/redi-multi)"
   go test ./...
 )
 bash scripts/verify-node-skip-api-invariants.sh
+bash scripts/verify-node-api-js-invariants.sh
 
 echo "==> PHPUnit (master/master, PHP $(php -r 'echo PHP_VERSION;'))"
 (
@@ -89,6 +90,7 @@ for f in \
   scripts/verify-edge-dns-invariants.sh \
   scripts/verify-dns-providers-invariants.sh \
   scripts/verify-node-skip-api-invariants.sh \
+  scripts/verify-node-api-js-invariants.sh \
   scripts/verify-cname-cert-job-invariants.sh \
   scripts/verify-acceptance-edge-pool-doc.sh \
   scripts/verify-tenant-edge-queue-invariants.sh \
