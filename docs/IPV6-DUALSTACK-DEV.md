@@ -209,7 +209,9 @@ CentOS 7 的内核是 3.10。从 3.8 起内核忽略 `NFQNL_CFG_CMD_PF_BIND` 和
 
 顺序是：节点已有 IPv4、后台再填 IPv6（含其他 IPv6）、确认没有把 `addr` 改成具体 IPv4、主控对 `enabledPublicIpv6s()` 里的每个地址 `curl -6` 通 80、全部通过之后，再把 `REDI_PUBLISH_POOL_AAAA` 设为 true。不要要求先改 `config.json` 或设置部署变量。分别用 IPv4 和 IPv6 访问客户域名，跳转都要成立。`ip6tables -L OUTPUT` 与 iptables 成对，队列号相同（`1000:1127` 这一组），不是另一段号码；规则不是挂在某一条连接上。
 
-`DEPLOY-centos7.md` §12 删掉「`bindv6only` 为 1 就不要改监听」和「必须先把 `addr` 改成 `[::]`」。默认字符串不用改。同一节里「lagran 与 iptables 规则仍按 IPv4 节点地址工作，不因 Pool AAAA 而自动处理 IPv6」改成与 V6-30 一致：同一组队列号，不按节点地址匹配。只 `curl -6` 80 不能证明 443：`tls_addr` 不是空字符串也不是 JSON `null` 时，再对 443 做一次 `curl -6 -k`。HTTPS 已关闭则只测 80。
+`DEPLOY-centos7.md` §12 删掉「`bindv6only` 为 1 就不要改监听」和「应把 `addr` / `tls_addr` 写成 `[::]`」。默认字符串不用改，保留「不要在部署脚本或默认 `config.json` 里改监听」。删掉「除非你已按下列规则手工改配置并验收」，否则读起来仍像是默认 `0.0.0.0` 不算双栈。删掉「回退 IPv4-only 监听时，改回 `0.0.0.0`」：改回 `0.0.0.0` 不会关掉 IPv6，只有写成某个具体 IPv4 才是只听 IPv4。步骤 1 不要再写「见下文监听」去要求改 `config.json`。同一节里「lagran 与 iptables 规则仍按 IPv4 节点地址工作，不因 Pool AAAA 而自动处理 IPv6」改成与 V6-30 一致：同一组队列号，不按节点地址匹配。`::80` 仍然不行；不要同时绑 `0.0.0.0` 和 `[::]`；`api_listen` 仍是 `127.0.0.1:8080`。
+
+`ACCEPTANCE-CENTOS7-DEPLOY.md` §7.2 删掉「若节点尚未听 IPv6，须先按 DEPLOY §12 改 `config.json`」。两份文档的 `curl` 例子都只写「换成主 IPv6」。要改成 `enabledPublicIpv6s()` 里的每一个地址，包括其他 IPv6。只 `curl -6` 80 不能证明 443。缺 `tls_addr` 键时与写了 `0.0.0.0:443` 一样，HTTPS 是开的，443 也要 `curl -6 -k`。只有 JSON `null` 或空字符串才只测 80。
 
 不要做「检测节点是否已听 `[::]`」的 health hint。心跳只上报版本，主控读不到节点 `config.json`；按「已填 IPv6 且开关为真」提示会在监听正确时也一直出现。
 
