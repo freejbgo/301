@@ -148,7 +148,7 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 深度扫（#350，待合并）：** `verify-health-tenant-invariants`；批量域名上限/非法状态单测；写入失败错误信息消毒。
+**2026-10-20 深度扫（#350 已合并）：** `verify-health-tenant-invariants`；批量域名上限/非法状态单测；写入失败错误信息消毒。
 
 **2026-10-20 深度扫（#349 已合并）：** `verify-masteragent-invariants` + 证书拉取 ack 单测；扩展租户/节点 revision 门禁。
 
