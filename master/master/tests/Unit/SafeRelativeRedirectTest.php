@@ -43,4 +43,19 @@ class SafeRelativeRedirectTest extends TestCase
         $this->assertFalse(SafeRelativeRedirect::isSafe("/admin\x00/evil"));
         $this->assertFalse(SafeRelativeRedirect::isSafe("/admin\t/evil"));
     }
+
+    public function test_accepts_same_app_absolute_url_from_admin_url_helper(): void
+    {
+        config(['app.url' => 'https://master.example.com']);
+        $absolute = 'https://master.example.com/admin/nodes';
+        $this->assertTrue(SafeRelativeRedirect::isSafe($absolute));
+        $this->assertSame('/admin/nodes', SafeRelativeRedirect::normalizeForRedirect($absolute));
+    }
+
+    public function test_rejects_off_site_absolute_url(): void
+    {
+        config(['app.url' => 'https://master.example.com']);
+        $this->assertFalse(SafeRelativeRedirect::isSafe('https://evil.example/phish'));
+        $this->assertNull(SafeRelativeRedirect::normalizeForRedirect('https://evil.example/phish'));
+    }
 }

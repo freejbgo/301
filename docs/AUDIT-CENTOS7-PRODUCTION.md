@@ -148,6 +148,8 @@
 
 ## 6. 全面复核记录（2026-10）
 
+**2026-10-20 全库深度扫（#334 续）：** `SafeRelativeRedirect` 接受同域 `admin_url()` 绝对 URL 并规范为相对路径（修复运营「重试失败部署」`_redirect` 失效）；`redirect-rules` / `rules_revision` 主机名键改为 `acmeHostKey`（与 Go `AcmeHostKey` 一致）。
+
 **2026-10-20 全库深度扫（#331 + #332 已合并）：** #331：`AcmeHostKey` 拒 IPv4、TLS 查表规范化；#332：`rules`/证书内存键统一 `AcmeHostKey`，`SafeRelativeRedirect` 拒 `\0`/`\t`；门禁 **417** / **893**。
 
 **2026-10-16 全库复核（#83 后）：** `go test ./...` + PHPUnit **80** + `dev-preflight` 通过；`scripts/` 与 `centos7/` 脚本均有文档或 CI 引用；`public/vendor/dcat-admin` 为 Dcat 静态资源，**不删**；移除 `inspire` 示例；根 `.gitignore` 补充本地缓存。
