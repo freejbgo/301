@@ -30,8 +30,8 @@ for needle in \
   'docs/ACCEPTANCE-CENTOS7-DEPLOY.md' \
   'docs/UPGRADE-IN-PLACE.md' \
   'redi_node_bump_skip' \
-  '100010_add_node_ipv6_columns' \
-  '100011+' \
+  '不必手工 migrate' \
+  'UPGRADE-IN-PLACE.md' \
   'REDI_MASTER_INSECURE' \
   'REDI_DB_TLS' \
   '--max-time=3600' \
@@ -49,14 +49,11 @@ done
 grep -qF 'DEPLOY-centos7.md' "${REPO_ROOT}/DEPLOY.md" \
   || fail "DEPLOY.md must link DEPLOY-centos7.md"
 
-grep -qF '100010_add_node_ipv6_columns' "$GREEN" \
-  || fail "GREENFIELD-INSTALL.md must mention SQL migration seed 100010_add_node_ipv6_columns"
+grep -qF 'redi_node_bump_skip' "$GREEN" \
+  || fail "GREENFIELD-INSTALL.md must document redi_node_bump_skip"
 
-# SQL 头注释与部署文档中的绿场迁移名一致
-grep -q '100010_add_node_ipv6_columns' "$SQL" \
-  || fail "redi_admin.sql header must document 100010_add_node_ipv6_columns"
-grep -qF '100010_add_node_ipv6_columns' "$DOC" \
-  || fail "DEPLOY-centos7.md must match redi_admin.sql seed migration name"
+grep -qF 'redi_node_bump_skip' "$SQL" \
+  || fail "redi_admin.sql must define or reference redi_node_bump_skip"
 
 for key in MASTER_INSTALL_ROOT NODE_INSTALL_ROOT MASTER_IP DB_PASS NODE_IPS REDI_MASTER_URL; do
   grep -q "^${key}=" "$VARS" || fail "vars.example.env missing ${key} (DEPLOY §1)"

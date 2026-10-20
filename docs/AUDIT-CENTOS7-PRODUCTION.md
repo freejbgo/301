@@ -148,7 +148,7 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 部署文档复核（待合并）：** `verify-deploy-centos7-doc`；`DEPLOY-centos7` / 绿场索引与 `deploy-master` Cron、`100010`/`100011+` 表述对齐。
+**2026-10-20 部署文档复核（待合并）：** `verify-deploy-centos7-doc`；绿场文档弱化迁移编号；`DEPLOY-centos7` 与 `deploy-master` Cron 对齐。
 
 **2026-10-20 复核（#358 已合并）：** §6 #357 标记已合并；§9 PHPUnit **442**/**949**；`scripts/README.md` 补全 preflight `verify-*` 索引。
 

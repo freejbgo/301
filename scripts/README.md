@@ -11,7 +11,7 @@
 | [verify-node-deploy-templates.sh](verify-node-deploy-templates.sh) | 静态校验 `deploy-node`、`vars.example.env`、`env.example` 与 lagran 脚本（HTTPS Agent、静态 ldd、`redi_node`、setcap、lagran_ports.py、`REDI_DB_PASSWORD`） |
 | [verify-grant-nodes-templates.sh](verify-grant-nodes-templates.sh) | 静态校验 `grant-nodes-from-vars` 与 `deploy-master` 共用 `redi_sync_node_ips_access`、`vars.example` 的 `NODE_IPS`/`MYSQL_ROOT_PASS`/`DB_PASS` |
 | [verify-acceptance-centos7-doc.sh](verify-acceptance-centos7-doc.sh) | 静态校验 [ACCEPTANCE-CENTOS7-DEPLOY.md](../docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 含 Cron webhook/`--task`、grant-nodes、`redi_node` 等关键表述 |
-| [verify-deploy-centos7-doc.sh](verify-deploy-centos7-doc.sh) | 静态校验 [DEPLOY-centos7.md](../DEPLOY-centos7.md) / 绿场说明与 `deploy-*.sh`、`redi_admin.sql` 种子迁移、Cron 时刻一致 |
+| [verify-deploy-centos7-doc.sh](verify-deploy-centos7-doc.sh) | 静态校验 [DEPLOY-centos7.md](../DEPLOY-centos7.md) / 绿场说明与 `deploy-*.sh`、`redi_admin.sql`、Cron 时刻一致 |
 | [verify-redi-artisan-cron.sh](verify-redi-artisan-cron.sh) | `php artisan … --help` 确认 Cron/运维引用的 `redi:*` 命令已注册（含 `redi:health --notify`） |
 | [verify-node-skip-api-invariants.sh](verify-node-skip-api-invariants.sh) | 节点数据面 `skip_url` / `bump_skip` 与主机名键约定 |
 | [verify-node-api-js-invariants.sh](verify-node-api-js-invariants.sh) | 节点 `/c.js`、`/api.js` 限速与 redirector 出站 URL 约定 |
