@@ -25,6 +25,13 @@ func portFromListenAddr(listen string) string {
 	}
 	host, port, err := net.SplitHostPort(listen)
 	if err != nil {
+		// 误写 ::80 / ::443（缺方括号）时与 lagran_ports.py 一致，仍解析出端口数字。
+		if strings.HasPrefix(listen, "::") {
+			rest := strings.TrimPrefix(listen, "::")
+			if rest != "" && !strings.Contains(rest, ":") {
+				return rest
+			}
+		}
 		// 仅端口，如 ":80" 或 "80"
 		if strings.HasPrefix(listen, ":") {
 			return strings.TrimPrefix(listen, ":")

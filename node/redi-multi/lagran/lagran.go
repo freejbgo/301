@@ -27,38 +27,46 @@ func Run() {
 		return
 	}
 	sport := config.LagranSport()
-	setIptable(sport)
-	startPool := func(label string, handler func(int), from, to int) bool {
+	type queuePool struct {
+		label   string
+		from    int
+		to      int
+		boolKey string
+	}
+	specs := []queuePool{
+		{label: "p1", from: 1000, to: 1128, boolKey: "syn_ack"},
+		{label: "p2", from: 2000, to: 2128, boolKey: "ack"},
+		{label: "p3", from: 3000, to: 3128, boolKey: "psh_ack"},
+		{label: "p4", from: 4000, to: 4128, boolKey: "fin_ack"},
+	}
+	var pools []*ants.PoolWithFunc
+	for _, spec := range specs {
+		if !config.LagranBool(spec.boolKey, true) {
+			continue
+		}
 		p, err := ants.NewPoolWithFunc(128, func(i interface{}) {
-			handler(i.(int))
+			packetHandle(i.(int))
 		})
 		if err != nil {
-			logrus.Errorf("[lagran] %s pool: %v", label, err)
-			return false
+			logrus.Errorf("[lagran] %s pool: %v", spec.label, err)
+			return
 		}
-		logrus.Debugf("[lagran] Starting Task %s", label)
-		for i := from; i < to; i++ {
+		pools = append(pools, p)
+	}
+	poolIdx := 0
+	for _, spec := range specs {
+		if !config.LagranBool(spec.boolKey, true) {
+			continue
+		}
+		p := pools[poolIdx]
+		poolIdx++
+		logrus.Debugf("[lagran] Starting Task %s", spec.label)
+		for i := spec.from; i < spec.to; i++ {
 			_ = p.Invoke(i)
 		}
 		// NFQUEUE handlers block for process lifetime; do not Release() when Run returns.
-		return true
 	}
-	if config.LagranBool("syn_ack", true) && !startPool("p1", packetHandle, 1000, 1128) {
-		UnsetIptable(sport)
-		return
-	}
-	if config.LagranBool("ack", true) && !startPool("p2", packetHandle, 2000, 2128) {
-		UnsetIptable(sport)
-		return
-	}
-	if config.LagranBool("psh_ack", true) && !startPool("p3", packetHandle, 3000, 3128) {
-		UnsetIptable(sport)
-		return
-	}
-	if config.LagranBool("fin_ack", true) && !startPool("p4", packetHandle, 4000, 4128) {
-		UnsetIptable(sport)
-		return
-	}
+	setIptable(sport)
 }
 
 func setIptable(sport string) {
