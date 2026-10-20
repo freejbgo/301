@@ -49,7 +49,7 @@ cd master/master && ./vendor/bin/phpunit --filter 'RediNode|ReconcilesDns|EdgeDn
 cd node/redi-multi && go test ./util/host/
 ```
 
-CentOS 真机放在 V6-27 之后：后台同时有 v4/v6；开关仍关时厂商里的 A 不变、也不新出 AAAA；`curl -6` 通 80 之后才打开关，再同步才出现 AAAA；清空地址并保持开关为真再同步，AAAA 消失、A 还在；`NODE_IPS` 仍是 IPv4。逐步打勾见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7。
+CentOS 真机放在 V6-27 之后（含 V6-30 lagran 与 V6-31 文档）：后台同时有 v4/v6；开关仍关时厂商里的 A 不变、也不新出 AAAA；主控对 `enabledPublicIpv6s()` **每个**地址 `curl -6` 通 80（HTTPS 未关时再测 443）之后才打开关，再同步才出现 AAAA；打开发布后分别用 IPv4/IPv6 访问客户域验证跳转，并核对 iptables/ip6tables 同队列号；清空地址并保持开关为真再同步，AAAA 消失、A 还在；`NODE_IPS` 仍是 IPv4。逐步打勾见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7。
 
 ---
 
