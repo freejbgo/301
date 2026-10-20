@@ -7,7 +7,7 @@
 绿场库见 [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md)（**一次导入** `redi_admin.sql`，含 `redi_node_bump_skip`）。
 
 - 主控：`composer install`、**`php artisan migrate --force`**、`QUEUE_CONNECTION=database`、`php artisan queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600` 常驻（或 CentOS `redi-queue` unit）
-- 续期/清理/健康：CentOS 用 `deploy-master` 写入的 `/etc/cron.d/redi-renew`（**03:10** 续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`）；配置 `REDI_HEALTH_WEBHOOK_URL` 后 Cron 在有 issues 且发送成功时退出 0。手工部署可写同等 cron，**勿**配置 `php artisan schedule:run`（仅认 `/etc/cron.d/redi-renew`）。多台 `queue:work` 时 `CACHE_DRIVER=redis`。
+- 续期/清理/健康：CentOS 用 `deploy-master` 写入的 `/etc/cron.d/redi-renew`（**03:10** 续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`）；各行失败应带 `|| php artisan redi:ops-webhook --task=…` 兜底。配置 `REDI_HEALTH_WEBHOOK_URL` 后 Cron 在有 issues 且 webhook 发送成功时退出 0。手工部署可写同等 cron，**勿**配置 `php artisan schedule:run`（仅认 `/etc/cron.d/redi-renew`）。多台 `queue:work` 时 `CACHE_DRIVER=redis`；`queue:work` 须含 `--max-time=3600`。
 - 节点：`REDI_MASTER_URL`、`REDI_NODE_TOKEN`、`REDI_DB_*`；防火墙对公网开放 80/443（CentOS 7 脚本不开放 8080）。`/c.js`、`/api.js` 由 **80/443** 同源提供（带 IP 限速），见 [SECURITY.md](../SECURITY.md)。
 
 ## F1 手动 DNS
@@ -23,6 +23,7 @@
 2. 填写凭证，解析模式选 **API 自动**，点击「同步 Pool / 租户 CNAME 到 DNS 厂商」。
 3. 在厂商面板确认 pool A 与 token CNAME 与节点列表一致。
 4. 若租户 `edge_fqdn` 与当前平台主域名不一致，同步应 **失败** 且 `dns_synced_at` 不前进（全部不一致时不应写入厂商；见 [CONSOLE.md](CONSOLE.md)）。
+5. **无启用节点公网 IPv4** 时同步应 **失败**（提示含「没有启用的节点公网 IPv4」，不调用厂商 API）；开启 `REDI_PUBLISH_POOL_AAAA` 时须先修正节点 IPv6（见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12）。
 
 ## F3 HTTP 跳转
 
