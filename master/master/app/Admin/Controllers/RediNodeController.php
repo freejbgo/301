@@ -101,7 +101,7 @@ class RediNodeController extends AdminController
                 $tools->append(
                     '<form method="post" action="'.e($requeueUrl).'" style="display:inline-block;margin-right:6px" onsubmit="return confirm(\'将全部 failed 证书部署改回 pending？\');">'
                     .'<input type="hidden" name="_token" value="'.e($token).'">'
-                    .'<input type="hidden" name="_redirect" value="'.e(admin_url('nodes')).'">'
+                    .'<input type="hidden" name="_redirect" value="'.e(admin_base_path('nodes')).'">'
                     .'<button type="submit" class="btn btn-warning btn-sm">重试全部失败部署</button></form>'
                 );
             });

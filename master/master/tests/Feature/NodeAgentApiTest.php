@@ -2741,6 +2741,51 @@ class NodeAgentApiTest extends TestCase
         $this->assertSame('cert.example', \DB::table('redi_domain_certs')->where('id', $certId)->value('domain_name'));
     }
 
+    public function test_certificates_domain_field_uses_acme_host_key(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        [$node, $token] = $this->createNodeWithToken();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'https://cert.example/',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'cert.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $node->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->withToken($token)->getJson('/api/nodes/certificates');
+        $response->assertOk();
+        $row = collect($response->json('certificates'))->firstWhere('cert_id', $certId);
+        $this->assertNotNull($row);
+        $this->assertSame('cert.example', $row['domain']);
+        $this->assertStringNotContainsString('://', $row['domain']);
+    }
+
     public function test_certificates_omit_when_domain_original_url_invalid(): void
     {
         Schema::create('redi_admin_domain', function (Blueprint $table) {
