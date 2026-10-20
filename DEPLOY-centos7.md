@@ -175,14 +175,20 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health --json
 
 ### 何时打开发布开关
 
-1. 节点已在 80/443 上能接受 **公网 IPv6** 访问（见下文「监听」）。若只发布了 AAAA 而节点未听 IPv6，Let's Encrypt 的 **HTTP-01 会优先走 AAAA**，主控从节点拉挑战时会超时，证书签发与续期会失败。
-2. 在 **主控机器**上，对节点 **公网 IPv6** 测 80 端口（HTTP-01 从主控发出，只在节点本机 `curl` 本机地址 **不算**）：
+1. 节点网卡上已有 **公网 IPv6**，且 firewalld 已放行 http/https（`deploy-node.sh` 默认会）。发布包默认仍是 `0.0.0.0:80` / `0.0.0.0:443`；在 Linux 上 `redi-multi` 已经双栈接听，**不要**为了接 IPv6 去改 `config.json` 监听字符串。若只发布了 AAAA 而登记地址在主控上 `curl -6` 不通，Let's Encrypt 的 **HTTP-01 会优先走 AAAA**，签发与续期会超时。
+2. 在 **主控机器**上，对后台 **`enabledPublicIpv6s()` 列出的每一个 IPv6**（含「其他 IPv6」，不是只测主地址）测 80（HTTP-01 从主控发出，只在节点本机 `curl` **不算**）：
 
    ```bash
    curl -6 -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "http://[2001:db8::1]/"
    ```
 
-   将 `2001:db8::1` 换成该节点在后台登记的主 IPv6（方括号是 URL 里的 IPv6 字面量写法）。应得到非 000 的 HTTP 状态码（节点默认跳转页即可）。
+   将 `2001:db8::1` 换成实际登记地址（方括号是 URL 里的 IPv6 字面量写法）。每个地址都应得到非 `000` 的 HTTP 状态码。
+
+   若节点 **HTTPS 未关闭**（`config.json` 未写 `tls_addr` 时等价于 `0.0.0.0:443` 已开启；仅 JSON `null` 或 `""` 表示关闭 HTTPS），对每个地址再测 443：
+
+   ```bash
+   curl -6 -k -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "https://[2001:db8::1]/"
+   ```
 
 3. 确认主控自身有 **IPv6 出口**（能执行上述 `curl -6`）。主控没有 IPv6 出网时 **不要** 设置 `REDI_PUBLISH_POOL_AAAA=true`。
 
@@ -190,18 +196,18 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health --json
 
 关闭发布：把开关改回 `false` 并 `config:cache` **不会**自动删除厂商里已有 AAAA；要保持 `true` 且清空节点 IPv6 后再同步，才会按对账删掉 AAAA。A 记录行为与 IPv4 一致。
 
-### 监听（仅在你主动改节点 `config.json` 时）
+### 监听与配置（一般不用改）
 
-发布包默认仍是 `0.0.0.0:80` / `0.0.0.0:443`；**不要**在本仓库的部署脚本或默认 `config.json` 里改成双栈，除非你已按下列规则手工改配置并验收。
-
-- 先查看内核：`cat /proc/sys/net/ipv6/bindv6only`。若为 **1**，不要改监听；保持 `0.0.0.0` 或按你环境单独规划。
-- 若要在同一套地址上同时服务 IPv4 与 IPv6，应把 `addr` / `tls_addr` 写成 **`[::]:80`** 与 **`[::]:443`**（带方括号），**不要**写成 `::80` / `::443`。
-- **不要**同时绑定 `0.0.0.0:80`（或 `0.0.0.0:443`）与 `[::]:80`（或 `[::]:443`），避免重复监听或行为异常。
+- 发布包默认仍是 `0.0.0.0:80` / `0.0.0.0:443`。**不要**在本仓库的部署脚本或默认 `config.json` 里改监听。
+- 只有把 `addr` 写成**某一个具体 IPv4**（不是 `0.0.0.0`）时，才会真的只听 IPv4；改回 `0.0.0.0` **不会**关掉 IPv6。
+- 若仍要手改通配监听，写成 **`[::]:80`** / **`[::]:443`**（带方括号），**不要**写成 `::80` / `::443`（lagran 端口会解析错）。
+- **不要**同时绑定 `0.0.0.0:80` 与 `[::]:80`（443 同理）。
 - **`api_listen` 保持 `127.0.0.1:8080`**，不要改成 `[::]` 或 `0.0.0.0`。
-- 回退 IPv4-only 监听时，改回 **`0.0.0.0:80`** / **`0.0.0.0:443`** 并重启 `redi-multi`。
 
 ### lagran 与防火墙
 
-lagran 与 iptables 规则仍按 **IPv4** 节点地址工作，**不**因 Pool AAAA 而自动处理 IPv6。开放 80/443 时继续用部署脚本已有的服务放行即可；**不要**为「只匹配 IPv4」单独加 firewalld rich rule 而把 IPv6 挡在池外（否则 `curl -6` 与 HTTP-01 会失败）。
+lagran 在 **OUTPUT** 上按 TCP **源端口**（与 `addr` / `tls_addr` 合并后的 `lagran.port`）匹配，**不是**按节点公网地址。`iptables` 与 `ip6tables` 使用**同一组** NFQUEUE 队列号（如 `1000:1127` …）；IPv6 访客的出站 TCP 与 IPv4 走同样的窗口处理。自检：`bash scripts/centos7/lagran-diagnose.sh`；kill -9 遗留规则：`sudo bash scripts/centos7/lagran-cleanup-iptables.sh`。
+
+开放 80/443 时继续用部署脚本已有的服务放行即可；**不要**为「只匹配 IPv4」单独加 firewalld rich rule 而把 IPv6 挡在池外（否则 `curl -6` 与 HTTP-01 会失败）。
 
 更完整的产品约定见 [docs/IPV6-DUALSTACK-DEV.md](docs/IPV6-DUALSTACK-DEV.md)。

@@ -30,6 +30,7 @@
 | V6-28 | 第二期计划写入设计 §8。代码不变 |
 | V6-29 | 监听开关取消。`0.0.0.0` 在 Linux 上已经由 `Listen("tcp")` 绑成双栈。不要改 `deploy-node.sh`。下一行是 V6-30 lagran 的 IPv6。节点必须有 IPv4。不要做检测监听地址的 health hint |
 | V6-30 | lagran 的 ip6tables 与 IPv6 改窗与 IPv4 相同；清理/诊断脚本列两套规则。不改监听。下一行是 V6-31 验收文档 |
+| V6-31 | `DEPLOY-centos7.md` 与 `ACCEPTANCE-CENTOS7-DEPLOY.md` §7 与 §8 双栈验收一致。不改 health，不改脚本 |
 
 ---
 
