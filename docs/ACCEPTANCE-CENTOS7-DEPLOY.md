@@ -108,6 +108,7 @@ sudo firewall-cmd --list-all
 | firewalld | 含 `ssh` `http` `https`；对节点 IP 有 mysql 相关 rich rule（若已配置 `NODE_IPS`） |
 | 节点 DB 权限 | 远程账号 `redi_node` 仅 EXECUTE `redi_node_bump_skip`（`deploy-master` / `grant-nodes-from-vars` 按 `NODE_IPS` 同步，或单 IP `grant-node-mysql.sh`） |
 | `redi:health` | 退出码 **0**（可有 **hints**，见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3）；生产须已关 `APP_DEBUG` 并配好 DNS 与节点池 |
+| 证书部署失败重试 | 超管后台或 `php artisan redi:requeue-failed-deployments`（可选 `--node=` / `--cert=`）；仅重试**启用节点**上、证书仍可下发的 failed 行 |
 
 Nginx 重复部署行为：
 

@@ -16,11 +16,14 @@ for needle in \
   'redi:ops-webhook' \
   '--task=redi:renew-certificates' \
   '--task=redi:prune-acme-challenges' \
+  'redi:prune-acme-challenges' \
   '--task=redi:health' \
+  'redi:requeue-failed-deployments' \
   'schedule:run' \
   'master/master' \
   'grant-nodes-from-vars' \
   'redi_node' \
+  'dev-preflight.sh' \
   '--max-time=3600'; do
   grep -qF -- "$needle" "$DOC" || fail "ACCEPTANCE doc missing: ${needle}"
 done
