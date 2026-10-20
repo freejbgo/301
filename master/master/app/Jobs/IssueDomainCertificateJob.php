@@ -75,30 +75,29 @@ class IssueDomainCertificateJob implements ShouldQueue
         }
 
         $publishableHost = DomainRecordNormalizer::originalUrlIfValid((string) $domain->original_url);
-        $canonicalHost = $publishableHost !== ''
-            ? $publishableHost
-            : DomainRecordNormalizer::normalizeOriginalUrl((string) $domain->original_url);
 
         $cert = RediDomainCert::firstOrCreate(
             ['domain_id' => $domain->id],
             [
-                'domain_name' => $canonicalHost,
+                'domain_name' => $publishableHost,
                 'status' => RediDomainCert::STATUS_NONE,
             ]
         );
-        $cert->domain_name = $canonicalHost;
         $cert->admin_id = (int) $domain->admin_id;
 
         if ($publishableHost === '') {
+            $cert->domain_name = '';
             $cert->status = RediDomainCert::STATUS_FAILED;
             $cert->last_error = '域名主机名无效，无法签发证书';
             $cert->save();
 
             return;
         }
-        $canonicalHost = $publishableHost;
-        $cert->domain_name = $canonicalHost;
+
+        $cert->domain_name = $publishableHost;
         $cert->save();
+
+        $canonicalHost = $publishableHost;
 
         TenantEdgeService::ensureForAdmin((int) $domain->admin_id);
         $edge = \App\Models\RediTenantEdge::where('admin_id', $domain->admin_id)->first();
