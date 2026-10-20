@@ -66,15 +66,17 @@ func Run() {
 		}
 		// NFQUEUE handlers block for process lifetime; do not Release() when Run returns.
 	}
-	setIptable(sport)
+	if !setIptable(sport) {
+		logrus.Error("[lagran] iptables OUTPUT rules were not installed; NFQUEUE is running but outbound window rewrite will not apply (check cap_net_admin / root)")
+	}
 }
 
-func setIptable(sport string) {
+func setIptable(sport string) bool {
 	logrus.Debugf("[lagran] sport:%s", sport)
 	ipt, err := iptables.New()
 	if err != nil {
 		logrus.Errorf("[lagran] iptables new error:%v\n", err)
-		return
+		return false
 	}
 	appendLagranRules(ipt, sport, "iptables")
 
@@ -84,6 +86,7 @@ func setIptable(sport string) {
 	} else {
 		appendLagranRules(ip6, sport, "ip6tables")
 	}
+	return true
 }
 
 func UnsetIptable(sport string) {

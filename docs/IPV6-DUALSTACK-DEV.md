@@ -154,7 +154,7 @@ IPv4 主地址仍必填。没有主 IPv6 时不能填其他 IPv6。其他项与�
 | V6-23 | `aaaaRecordPointsToPool`，不接到 `pointsToEdge` | 读 `$row['ipv6']`，用 16 字节和 `enabledPublicIpv6s()` 比。列不存在、`DNS_AAAA` 未定义、或池地址为空时返回 false，不抛错。现有预检测试不改 |
 | V6-24 | 接到 `pointsToEdge`，并让 `pointsToEdgeCached` 的键包含该开关。配置 `redi.dns_precheck_allow_aaaa_to_pool` 默认 false，读法用 `FILTER_VALIDATE_BOOLEAN` | `filter_var` 写在 `pointsToEdge` 里。签发调用的是这个函数。CNAME 命中仍先返回。A 未命中时仍会评估 AAAA，不能沿用 `return aRecordPointsToPool()`。字符串 `"false"`：只有 AAAA、没有 CNAME/A 则失败。true 且字节命中则成功。缓存键同时有客户域名、edge 和 `(int)` 开关；true 和 false 两个键不同。A 开关默认仍是 true。原有 CNAME 成功用例不变 |
 | V6-25 | `SanitizeClientIP` | `To4().String()` 得到 `203.0.113.5`。两种映射写法都覆盖。`ParseIP().String()` 那种 `::ffff:` 结果算失败。`To4()` 为 nil 时返回 trim 原文，不返回空，也不要 `ip.String()`。`2001:db8::1` 除 trim 外不变。带控制字符的输入仍返回空。不改监听默认值 |
-| V6-26 | 只改 `DEPLOY-centos7.md` | 写明：在主控上 `curl -6` 节点公网 IPv6 的 80 通了，再把发布开关设为 true 并 `config:cache`。只在节点本机测不算数。主控没有 IPv6 出口就不要开。当时还写了 `bindv6only` 不是 0 就不要改监听、要改监听就写成 `[::]`、lagran 不管 IPv6。这三句以 V6-29 和 V6-31 为准，不要再照做。`::80` 仍然不行；不要同时绑 `0.0.0.0` 和 `[::]`；`api_listen` 仍是 `127.0.0.1:8080`；不要加只匹配 IPv4 的 firewalld rich rule。不改 Go、脚本和默认 `config.json` |
+| V6-26 | 只改 `DEPLOY-centos7.md` | 写明：在主控上 `curl -6` 节点公网 IPv6 的 80 通了，再把发布开关设为 true 并 `config:cache`。只在节点本机测不算数。主控没有 IPv6 出口就不要开。当时还写了 `bindv6only` 不是 0 就不要改监听、要改监听就写成 `[::]`、lagran 不管 IPv6。这三句以 V6-29 和 V6-31 为准，不要再照做。手改监听仍推荐 `[::]:80` 而不是 `::80`（见陷阱 48）；不要同时绑 `0.0.0.0` 和 `[::]`；`api_listen` 仍是 `127.0.0.1:8080`；不要加只匹配 IPv4 的 firewalld rich rule |
 | V6-27 | `vars.example.env` 注释 | IPv6 只填后台；禁止写入 `NODE_IPS`；发布开关不要在部署脚本里写成 true。不改 `redi_is_ipv4` |
 
 V6-15 起可以在 V6-14 之后逐家做。V6-16 只跟在 V6-15 后面，而且在它合并前不要打开发布开关。V6-21 不要求四家都做完，也不要再拆：坏字段检查必须和第一次可能删除 AAAA 的调用放在同一次提交里。

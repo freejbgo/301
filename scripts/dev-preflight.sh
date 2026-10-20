@@ -57,6 +57,10 @@ h, t = lp.apply_listen_env_overrides("0.0.0.0:80", "0.0.0.0:443")
 assert h == "0.0.0.0:80" and t == "0.0.0.0:8443"
 del os.environ["REDI_TLS_LISTEN"]
 assert lp.merge_listener_ports("", h, t) == "80,8443"
+os.environ["REDI_HTTP_LISTEN"] = ""
+h2, _ = lp.apply_listen_env_overrides("0.0.0.0:80", "0.0.0.0:443")
+assert h2 == ""
+del os.environ["REDI_HTTP_LISTEN"]
 PY
 
 echo "==> SQL 与节点存储过程校验"
