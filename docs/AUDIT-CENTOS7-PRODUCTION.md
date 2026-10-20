@@ -17,7 +17,7 @@
 | 项 | 结论 |
 |----|------|
 | 范围 | **76** 个 PR（#145–#220 已合并 `main`）；相对 #144 合并点约 **98** 文件、+4326/-425 行 |
-| 门禁 | `bash scripts/dev-preflight.sh`：**416** tests / **891** assertions；Go 测试通过 |
+| 门禁 | `bash scripts/dev-preflight.sh`：**417** tests / **893** assertions；Go 测试通过 |
 | A. 节点 API / Agent（#145–#174, #198–#200） | ack 校验、控制字符过滤、`redirect-rules` / challenges 出站域名校验；与 Go `AcmeHostKey` 对齐 |
 | B. ACME / 主机名（#175–#197） | `acmeHostKey`、`nodePublishableRow`、`originalUrlIfValid` 收敛；purge 先增后删与 legacy 键兼容 |
 | C. 证书漂移与 realign（#187–#240） | 只读扫描 + `freshCertWithPersistedRealign` 落库；`saveQuietly` + 显式 `reconcile`；节点 `ack` 行锁内对齐 |
@@ -148,7 +148,7 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 全库深度扫（#331 + 续扫）：** 已合并 #331（Go `AcmeHostKey` 拒 IPv4、TLS 查表规范化）；续扫统一 `rules`/证书映射 `CanonicalLookupHost`，`SafeRelativeRedirect` 拒 `\0`/`\t`；门禁 PHPUnit **417+**（以 preflight 为准）。
+**2026-10-20 全库深度扫（#331 + #332 已合并）：** #331：`AcmeHostKey` 拒 IPv4、TLS 查表规范化；#332：`rules`/证书内存键统一 `AcmeHostKey`，`SafeRelativeRedirect` 拒 `\0`/`\t`；门禁 **417** / **893**。
 
 **2026-10-16 全库复核（#83 后）：** `go test ./...` + PHPUnit **80** + `dev-preflight` 通过；`scripts/` 与 `centos7/` 脚本均有文档或 CI 引用；`public/vendor/dcat-admin` 为 Dcat 静态资源，**不删**；移除 `inspire` 示例；根 `.gitignore` 补充本地缓存。
 
@@ -843,4 +843,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **416** 条 Feature/Unit（**891** assertions）；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **417** 条 Feature/Unit（**893** assertions）；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
