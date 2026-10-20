@@ -49,8 +49,9 @@ grep -q 'redi_ensure_lagran_enabled' "$LIB" || fail "lib.sh: missing redi_ensure
 # env.example 与 deploy 写入的键对齐
 ENV_EX="${REPO_ROOT}/node/redi-multi/env.example"
 [[ -f "$ENV_EX" ]] || fail "missing node/redi-multi/env.example"
-for key in REDI_DB_HOST REDI_DB_USER REDI_DB_NAME REDI_MASTER_URL REDI_NODE_TOKEN REDI_LAGRAN_DISABLED; do
+for key in REDI_DB_HOST REDI_DB_USER REDI_DB_PASSWORD REDI_DB_NAME REDI_MASTER_URL REDI_NODE_TOKEN REDI_LAGRAN_DISABLED; do
   grep -q "$key" "$ENV_EX" || fail "env.example: missing ${key}"
 done
+grep -q 'REDI_DB_PASSWORD=' "$DEPLOY" || fail "deploy-node: env.sh must set REDI_DB_PASSWORD"
 
 echo "verify-node-deploy-templates: OK"

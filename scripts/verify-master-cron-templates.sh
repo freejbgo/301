@@ -32,6 +32,18 @@ check_cron_script() {
     [[ "$line" == *master/master* ]] && fail "$file: cron must not reference master/master path"
     [[ "$line" == *'|| /usr/bin/php artisan redi:ops-webhook'* ]] \
       || fail "$file: cron line missing ops-webhook fallback: ${line:0:80}..."
+    if [[ "$line" == *'redi:renew-certificates'* ]]; then
+      [[ "$line" == *'--task=redi:renew-certificates'* ]] \
+        || fail "$file: renew cron must pass --task=redi:renew-certificates to ops-webhook"
+    elif [[ "$line" == *'redi:prune-acme-challenges'* ]]; then
+      [[ "$line" == *'--task=redi:prune-acme-challenges'* ]] \
+        || fail "$file: prune cron must pass --task=redi:prune-acme-challenges to ops-webhook"
+    elif [[ "$line" == *'redi:health --notify'* ]]; then
+      [[ "$line" == *'--task=redi:health'* ]] \
+        || fail "$file: health cron must pass --task=redi:health to ops-webhook"
+    else
+      fail "$file: unrecognized cron artisan command: ${line:0:80}..."
+    fi
   done <<< "$lines"
 
   if [[ "$count" -lt 3 ]]; then

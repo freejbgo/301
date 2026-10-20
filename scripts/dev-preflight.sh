@@ -37,6 +37,7 @@ for f in \
   scripts/patch-master-cron-ops-webhook.sh \
   scripts/verify-master-cron-templates.sh \
   scripts/verify-node-deploy-templates.sh \
+  scripts/verify-grant-nodes-templates.sh \
   scripts/centos7/*.sh; do
   bash -n "$f"
 done
@@ -70,6 +71,9 @@ bash scripts/verify-master-cron-templates.sh
 
 echo "==> 节点 deploy / lagran 模板"
 bash scripts/verify-node-deploy-templates.sh
+
+echo "==> grant-nodes / vars 模板"
+bash scripts/verify-grant-nodes-templates.sh
 
 echo "==> SQL 与节点存储过程校验"
 php scripts/verify-redi-node-procedure-sync.php
