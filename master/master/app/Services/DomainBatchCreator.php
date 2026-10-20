@@ -132,7 +132,8 @@ class DomainBatchCreator
                 if ($this->isDuplicateOriginalUrl($e)) {
                     $result['skipped']++;
                 } else {
-                    $result['errors'][] = "第 {$rowIndex} 行（{$originalUrl}）：写入失败";
+                    $label = OpsDisplaySanitizer::field($originalUrl, '—', 253);
+                    $result['errors'][] = "第 {$rowIndex} 行（{$label}）：写入失败";
                 }
             }
         }

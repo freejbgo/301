@@ -144,6 +144,36 @@ class DomainBatchCreatorTest extends TestCase
         $this->assertSame(2, (int) $row->status);
     }
 
+    public function test_rejects_over_max_lines(): void
+    {
+        $lines = '';
+        for ($i = 0; $i < DomainBatchCreator::MAX_LINES_PER_BATCH + 1; $i++) {
+            $lines .= "host{$i}.com,https://example.com\n";
+        }
+
+        $creator = new DomainBatchCreator();
+        $result = $creator->createFromTextLines(10, 'tenant-a', 1, 2, $lines, null);
+
+        $this->assertSame(0, $result['imported']);
+        $this->assertStringContainsString((string) DomainBatchCreator::MAX_LINES_PER_BATCH, $result['errors'][0] ?? '');
+    }
+
+    public function test_rejects_invalid_status(): void
+    {
+        $creator = new DomainBatchCreator();
+        $result = $creator->createFromTextLines(
+            10,
+            'tenant-a',
+            1,
+            9,
+            "foo.com,https://example.com\n",
+            null
+        );
+
+        $this->assertSame(0, $result['imported']);
+        $this->assertStringContainsString('状态只能是启用或停用', $result['errors'][0] ?? '');
+    }
+
     public function test_batch_enable_requires_dns_pointing(): void
     {
         config(['redi.require_dns_pointing_to_enable' => true]);

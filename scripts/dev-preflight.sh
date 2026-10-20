@@ -45,6 +45,9 @@ bash scripts/verify-acceptance-edge-pool-doc.sh
 echo "==> 租户 edge / ACME 队列约定"
 bash scripts/verify-tenant-edge-queue-invariants.sh
 
+echo "==> redi:health / 批量域名租户约定"
+bash scripts/verify-health-tenant-invariants.sh
+
 echo "==> 证书部署 / 上线文档约定"
 bash scripts/verify-cert-deploy-invariants.sh
 bash scripts/verify-production-readiness-doc.sh
@@ -67,6 +70,7 @@ for f in \
   scripts/verify-edge-dns-invariants.sh \
   scripts/verify-acceptance-edge-pool-doc.sh \
   scripts/verify-tenant-edge-queue-invariants.sh \
+  scripts/verify-health-tenant-invariants.sh \
   scripts/verify-cert-deploy-invariants.sh \
   scripts/verify-production-readiness-doc.sh \
   scripts/centos7/*.sh; do
