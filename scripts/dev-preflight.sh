@@ -36,6 +36,9 @@ bash scripts/verify-masteragent-invariants.sh
 echo "==> ACME 主机名键约定"
 bash scripts/verify-acme-code-invariants.sh
 
+echo "==> 续期 / ops-webhook 约定"
+bash scripts/verify-renew-ops-invariants.sh
+
 echo "==> Edge DNS 同步约定"
 bash scripts/verify-edge-dns-invariants.sh
 
@@ -67,6 +70,7 @@ for f in \
   scripts/verify-redi-artisan-cron.sh \
   scripts/verify-masteragent-invariants.sh \
   scripts/verify-acme-code-invariants.sh \
+  scripts/verify-renew-ops-invariants.sh \
   scripts/verify-edge-dns-invariants.sh \
   scripts/verify-acceptance-edge-pool-doc.sh \
   scripts/verify-tenant-edge-queue-invariants.sh \

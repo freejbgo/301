@@ -17,7 +17,7 @@
 | 项 | 结论 |
 |----|------|
 | 范围 | **76** 个 PR（#145–#220 已合并 `main`）；相对 #144 合并点约 **98** 文件、+4326/-425 行 |
-| 门禁 | `bash scripts/dev-preflight.sh`：**433** tests / **933** assertions；Go 测试通过 |
+| 门禁 | `bash scripts/dev-preflight.sh`：**436** tests / **939** assertions；Go 测试通过 |
 | A. 节点 API / Agent（#145–#174, #198–#200） | ack 校验、控制字符过滤、`redirect-rules` / challenges 出站域名校验；与 Go `AcmeHostKey` 对齐 |
 | B. ACME / 主机名（#175–#197） | `acmeHostKey`、`nodePublishableRow`、`originalUrlIfValid` 收敛；purge 先增后删与 legacy 键兼容 |
 | C. 证书漂移与 realign（#187–#240） | 只读扫描 + `freshCertWithPersistedRealign` 落库；`saveQuietly` + 显式 `reconcile`；节点 `ack` 行锁内对齐 |
@@ -147,6 +147,8 @@
 ---
 
 ## 6. 全面复核记录（2026-10）
+
+**2026-10-20 深度扫（#351，待合并）：** `verify-renew-ops-invariants`；续期跳过停用域、failed 纳入续期；webhook task 控制字符单测。
 
 **2026-10-20 深度扫（#350 已合并）：** `verify-health-tenant-invariants`；批量域名上限/非法状态单测；写入失败错误信息消毒。
 
@@ -875,4 +877,4 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
 
-PHPUnit 当前 **433** 条 Feature/Unit（**933** assertions）；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **436** 条 Feature/Unit（**939** assertions）；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
