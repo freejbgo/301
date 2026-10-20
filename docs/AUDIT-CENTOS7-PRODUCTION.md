@@ -133,8 +133,8 @@
 |----|------|
 | Laravel / PHP 大版本 | 当前锁 PHP 8.0 兼容；长期需升级计划 |
 | MySQL 客户端 TLS | 节点连主控库可考虑加密通道 |
-| lagran NFQUEUE | 诊断/清理与 `lagran_ports.py` 已脚本化；更深自动化仍排期 |
-| 租户隔离审计 | API/后台更强审计与单测 |
+| lagran NFQUEUE | ✅ 诊断/清理 + `verify-node-deploy-templates`（NFQUEUE / nfnetlink） |
+| 租户隔离审计 | 📋 `BelongsToAdminTenant` + `verify-health-tenant-invariants` / `verify-admin-api-invariants`（dcat-api 401） |
 
 ---
 
@@ -148,7 +148,9 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 深度扫（#355，待合并）：** `release.yml` 对齐 CI 门禁；`verify-admin-api-invariants` / `verify-release-workflow-invariants`；lagran NFQUEUE 模板校验。
+**2026-10-20 深度扫（#356，待合并）：** `verify-node-api-js-invariants`；dcat-api/ops 路由门禁；§7 基线 #340–#356；节点空 IP 限速单测。
+
+**2026-10-20 深度扫（#355 已合并）：** `release.yml` 对齐 CI 门禁；`verify-admin-api-invariants` / `verify-release-workflow-invariants`；lagran NFQUEUE 模板校验。
 
 **2026-10-20 深度扫（#354 已合并）：** `verify-dns-providers-invariants`、`verify-node-skip-api-invariants`；AUDIT §9 与 preflight/440 基线同步。
 
@@ -834,7 +836,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**，合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#101](https://github.com/freejbgo/301/pull/101)（#101：AUDIT 复核范围 + NODE_IPS grant 错误传播；#100：health JSON 单测与 jq 示例）。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**。历史合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#101](https://github.com/freejbgo/301/pull/101)。**2026-10-20 深度扫收口** [#340](https://github.com/freejbgo/301/pull/340)–[#356](https://github.com/freejbgo/301/pull/356)（主机名对齐、租户/health、ACME/续期/prune、Edge DNS、CI/release 与 `verify-*` 门禁）；明细见 §6。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 

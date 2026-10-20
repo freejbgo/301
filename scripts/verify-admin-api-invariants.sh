@@ -14,8 +14,12 @@ routes="${REPO_ROOT}/master/master/routes/api.php"
 rsp="${APP}/Providers/RouteServiceProvider.php"
 auth="${APP}/Admin/Controllers/AuthController.php"
 kernel="${APP}/Http/Kernel.php"
+adminRoutes="${REPO_ROOT}/master/master/app/Admin/routes.php"
+adminCfg="${REPO_ROOT}/master/master/config/admin.php"
+dcatMw="${APP}/Http/Middleware/RequireAdminSessionForDcatApi.php"
+ops="${APP}/Admin/Controllers/OpsController.php"
 
-for f in "$routes" "$rsp" "$auth" "$kernel"; do
+for f in "$routes" "$rsp" "$auth" "$kernel" "$adminRoutes" "$adminCfg" "$dcatMw" "$ops"; do
   [[ -f "$f" ]] || fail "missing $f"
 done
 
@@ -26,5 +30,9 @@ grep -q 'containsControlChars' "$rsp" || fail "rate limiter must reject control 
 grep -q 'throttleIpKey' "$rsp" || fail "invalid IP must not poison rate limit keys"
 grep -q "throttle:10,1" "$auth" || fail "admin login must be throttled"
 grep -q 'throttle:api' "$kernel" || fail "api middleware group must throttle"
+grep -q 'RequireAdminSessionForDcatApi' "$adminCfg" || fail "dcat-api must require admin session"
+grep -q 'dcat-api' "$dcatMw" || fail "dcat-api middleware must scope dcat-api paths"
+grep -q 'EnsuresAdministrator' "$ops" || fail "ops requeue must be administrator-only"
+grep -q 'requeue-failed-deployments' "$adminRoutes" || fail "admin routes must expose requeue endpoint"
 
 echo "verify-admin-api-invariants: OK"
