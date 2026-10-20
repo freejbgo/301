@@ -11,7 +11,6 @@ use App\Services\AcmeChallengeQuery;
 use App\Services\CertificateDeployService;
 use App\Services\DomainRecordNormalizer;
 use App\Services\NodeAgentRevisionService;
-use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
 use App\Support\RediAgentVersionGate;
 use Illuminate\Http\Request;
@@ -225,7 +224,10 @@ class NodeAgentController extends Controller
             }
             $pem = $cert->getCertificatePem();
             $key = $cert->getPrivateKeyPem();
-            $host = HostNameValidator::toCanonicalAscii((string) $cert->domain_name);
+            $host = DomainRecordNormalizer::acmeHostKey((string) $cert->domain_name);
+            if ($host === '') {
+                continue;
+            }
             $payload[] = [
                 'cert_id' => $cert->id,
                 'domain' => $host,

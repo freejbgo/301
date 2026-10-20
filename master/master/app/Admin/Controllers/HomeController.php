@@ -48,7 +48,7 @@ class HomeController extends Controller
                 $opsHtml = $issueHtml
                     .'<form method="post" action="'.e($requeueUrl).'" class="mt-3" onsubmit="return confirm(\'将全部 failed 证书部署改回 pending？\');">'
                     .'<input type="hidden" name="_token" value="'.e($token).'">'
-                    .'<input type="hidden" name="_redirect" value="'.e(admin_url('/')).'">'
+                    .'<input type="hidden" name="_redirect" value="'.e(admin_base_path('/')).'">'
                     .'<button type="submit" class="btn btn-warning btn-sm">重试全部失败部署</button>'
                     .'<span class="text-muted ml-2">等同 <code>php artisan redi:requeue-failed-deployments</code></span>'
                     .'</form>';
