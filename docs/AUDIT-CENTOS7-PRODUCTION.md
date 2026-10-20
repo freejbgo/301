@@ -148,7 +148,7 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 深度扫（#351，待合并）：** `verify-renew-ops-invariants`；续期跳过停用域、failed 纳入续期；webhook task 控制字符单测。
+**2026-10-20 深度扫（#351 已合并）：** `verify-renew-ops-invariants`；续期跳过停用域、failed 纳入续期；webhook task 控制字符单测。
 
 **2026-10-20 深度扫（#350 已合并）：** `verify-health-tenant-invariants`；批量域名上限/非法状态单测；写入失败错误信息消毒。
 
