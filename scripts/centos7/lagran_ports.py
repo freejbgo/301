@@ -73,8 +73,8 @@ def lagran_bool(lag: dict, key: str, default: bool = True) -> bool:
 
 def apply_listen_env_overrides(http_addr: str, tls_addr: str) -> tuple[str, str]:
     """与 config.applyEnvOverrides 一致：REDI_HTTP_LISTEN / REDI_TLS_LISTEN 覆盖 config.json。"""
-    if v := os.environ.get("REDI_HTTP_LISTEN", "").strip():
-        http_addr = v
+    if "REDI_HTTP_LISTEN" in os.environ:
+        http_addr = os.environ.get("REDI_HTTP_LISTEN", "").strip()
     if "REDI_TLS_LISTEN" in os.environ:
         tls_addr = os.environ.get("REDI_TLS_LISTEN", "").strip()
     return http_addr, tls_addr
