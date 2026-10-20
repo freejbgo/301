@@ -39,6 +39,34 @@ jobs:
       - name: PHPUnit
         working-directory: master/master
         run: ./vendor/bin/phpunit --testsuite Unit,Feature
+      - name: Cron artisan commands registered
+        run: bash scripts/verify-redi-artisan-cron.sh
+      - name: ACME code invariants
+        run: bash scripts/verify-acme-code-invariants.sh
+      - name: Edge DNS invariants
+        run: bash scripts/verify-edge-dns-invariants.sh
+      - name: Tenant edge / ACME queue invariants
+        run: bash scripts/verify-tenant-edge-queue-invariants.sh
+      - name: Preflight invariant scripts (parity with dev-preflight)
+        run: |
+          set -euo pipefail
+          for s in \
+            verify-masteragent-invariants.sh \
+            verify-renew-ops-invariants.sh \
+            verify-acme-prune-requeue-invariants.sh \
+            verify-health-tenant-invariants.sh \
+            verify-cert-deploy-invariants.sh \
+            verify-production-readiness-doc.sh \
+            verify-cname-cert-job-invariants.sh \
+            verify-dns-providers-invariants.sh \
+            verify-node-skip-api-invariants.sh \
+            verify-admin-api-invariants.sh \
+            verify-release-workflow-invariants.sh \
+            verify-node-api-js-invariants.sh \
+            verify-redirect-platform-invariants.sh; do
+            bash "scripts/${s}"
+          done
+          bash scripts/verify-ci-preflight-parity.sh
 
   master-phpunit-php80:
     runs-on: ubuntu-latest

@@ -30,4 +30,9 @@ while IFS= read -r script; do
   fi
 done < <(grep -oE 'scripts/verify-[a-z0-9-]+\.sh' "$PREFLIGHT" | sort -u)
 
+for wf in ci.yml release.yml; do
+  grep -q 'bash scripts/verify-redi-artisan-cron.sh' "${REPO_ROOT}/.github/workflows/${wf}" \
+    || fail "${wf} must execute verify-redi-artisan-cron.sh (master-phpunit parity)"
+done
+
 echo "verify-ci-preflight-parity: OK"

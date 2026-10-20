@@ -18,8 +18,10 @@ adminRoutes="${REPO_ROOT}/master/master/app/Admin/routes.php"
 adminCfg="${REPO_ROOT}/master/master/config/admin.php"
 dcatMw="${APP}/Http/Middleware/RequireAdminSessionForDcatApi.php"
 ops="${APP}/Admin/Controllers/OpsController.php"
+platform="${APP}/Admin/Controllers/PlatformSettingsController.php"
+platformForm="${APP}/Admin/Forms/PlatformSettings.php"
 
-for f in "$routes" "$rsp" "$auth" "$kernel" "$adminRoutes" "$adminCfg" "$dcatMw" "$ops"; do
+for f in "$routes" "$rsp" "$auth" "$kernel" "$adminRoutes" "$adminCfg" "$dcatMw" "$ops" "$platform" "$platformForm"; do
   [[ -f "$f" ]] || fail "missing $f"
 done
 
@@ -34,5 +36,8 @@ grep -q 'RequireAdminSessionForDcatApi' "$adminCfg" || fail "dcat-api must requi
 grep -q 'dcat-api' "$dcatMw" || fail "dcat-api middleware must scope dcat-api paths"
 grep -q 'EnsuresAdministrator' "$ops" || fail "ops requeue must be administrator-only"
 grep -q 'requeue-failed-deployments' "$adminRoutes" || fail "admin routes must expose requeue endpoint"
+grep -q 'isAdministrator' "$platform" || fail "platform settings must be super-admin only"
+grep -q 'isAdministrator' "$platformForm" || fail "platform settings form must check isAdministrator"
+grep -q 'PlatformBranding' "$platformForm" || fail "platform settings must use PlatformBranding"
 
 echo "verify-admin-api-invariants: OK"

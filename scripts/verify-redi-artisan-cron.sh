@@ -20,6 +20,7 @@ commands=(
   redi:health
   redi:ops-webhook
   redi:requeue-failed-deployments
+  redi:normalize-domain-hosts
 )
 for cmd in "${commands[@]}"; do
   php artisan "$cmd" --help >/dev/null 2>&1 || fail "artisan command not registered: ${cmd}"
@@ -27,5 +28,7 @@ done
 
 php artisan redi:health --help 2>&1 | grep -q -- '--notify' \
   || fail "redi:health must support --notify (Cron 08:30)"
+php artisan redi:normalize-domain-hosts --help 2>&1 | grep -q -- '--dry-run' \
+  || fail "redi:normalize-domain-hosts must support --dry-run"
 
 echo "verify-redi-artisan-cron: OK"

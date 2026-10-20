@@ -18,6 +18,7 @@ done
 
 grep -q 'container-integration-test.sh' "$REL" || fail "release must run CentOS container smoke"
 grep -q 'composer audit' "$REL" || fail "release publish must run composer audit"
+grep -q 'verify-redi-artisan-cron.sh' "$REL" || fail "release master-phpunit must run verify-redi-artisan-cron"
 grep -q 'master/vendor/autoload.php' "$REL" || fail "release must verify master tar contents"
 grep -q 'redi-multi/bin/redi-multi' "$REL" || fail "release must verify node tar contents"
 grep -q 'verify-redi-node-procedure-sync.php' "$REL" || fail "release centos7-scripts must sync procedure"

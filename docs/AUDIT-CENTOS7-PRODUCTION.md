@@ -148,6 +148,8 @@
 
 ## 6. 全面复核记录（2026-10）
 
+**2026-10-20 按模块深度扫（待合并）：** 全库门禁 442/949 + 25×`verify-*`；修复 `release.yml` `master-phpunit` 与 CI 同跑 artisan/ACME 门禁；`verify-redi-artisan-cron` 含 `redi:normalize-domain-hosts`；`verify-admin-api` 含 `PlatformSettings` 超管约束。剩余：真机 ACME/HTTP-01、P2 租户全表隔离、intl DNS mock 单测。
+
 **2026-10-20 部署文档复核（#359 已合并）：** `verify-deploy-centos7-doc`；绿场弱化迁移编号；`DEPLOY-centos7` 与 `deploy-master` Cron 对齐。
 
 **2026-10-20 复核（#358 已合并）：** §6 #357 标记已合并；§9 PHPUnit **442**/**949**；`scripts/README.md` 补全 preflight `verify-*` 索引。
