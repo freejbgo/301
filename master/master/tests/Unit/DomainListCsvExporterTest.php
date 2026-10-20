@@ -125,4 +125,11 @@ class DomainListCsvExporterTest extends TestCase
         [, $ok] = DomainListCsvExporter::dnsExportColumnsForDomain($domain);
         $this->assertSame('unknown', $ok);
     }
+
+    public function test_csv_safe_cell_prefixes_formula_like_values(): void
+    {
+        $this->assertSame("'=cmd", DomainListCsvExporter::csvSafeCell('=cmd'));
+        $this->assertSame("'+cmd", DomainListCsvExporter::csvSafeCell('+cmd'));
+        $this->assertSame('example.com', DomainListCsvExporter::csvSafeCell('example.com'));
+    }
 }

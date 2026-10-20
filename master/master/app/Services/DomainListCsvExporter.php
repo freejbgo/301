@@ -41,14 +41,14 @@ class DomainListCsvExporter
                 [$cnameTarget, $dnsOk] = self::dnsExportColumnsForDomain($domain);
                 fputcsv($handle, [
                     $domain->id,
-                    $domain->original_url,
-                    $domain->skip_url,
+                    self::csvSafeCell((string) $domain->original_url),
+                    self::csvSafeCell((string) $domain->skip_url),
                     (int) $domain->status === 1 ? 'enabled' : 'disabled',
                     $domain->group_id,
-                    $domain->admin_name,
+                    self::csvSafeCell((string) ($domain->admin_name ?? '')),
                     $cert ? $cert->status : 'none',
                     $cert && $cert->expires_at ? $cert->expires_at->format('Y-m-d') : '',
-                    $cnameTarget,
+                    self::csvSafeCell($cnameTarget),
                     $dnsOk,
                     $domain->force_https ? '1' : '0',
                     $domain->skip_num,
@@ -108,5 +108,16 @@ class DomainListCsvExporter
         $ok = CnamePrecheckService::pointsToEdgeCached($host, $edge);
 
         return [$edge, $ok ? 'yes' : 'no'];
+    }
+
+    /** 防止 Excel/Numbers 将单元格当作公式执行（CSV 注入）。 */
+    public static function csvSafeCell(string $value): string
+    {
+        if ($value === '') {
+            return $value;
+        }
+        $first = $value[0];
+
+        return in_array($first, ['=', '+', '-', '@', "\t", "\r"], true) ? "'".$value : $value;
     }
 }
