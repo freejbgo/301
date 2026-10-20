@@ -148,7 +148,7 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 深度扫（#345，待合并）：** Edge DNS `syncAll` 无启用 IPv4 时先失败、不调厂商 API；F2/验收文档与 `verify-edge-dns-invariants` / `verify-acceptance-edge-pool-doc`。
+**2026-10-20 深度扫（#345 已合并）：** Edge DNS `syncAll` 无启用 IPv4 时先失败、不调厂商 API；F2/验收文档与 `verify-edge-dns-invariants` / `verify-acceptance-edge-pool-doc`。
 
 **2026-10-20 深度扫（#344 已合并）：** `IssueDomainCertificateJob` 非法 `original_url` 时清空 `domain_name`（不再写入 `normalizeOriginalUrl` 的 IPv4 等）；`verify-acme-code-invariants.sh`。
 
