@@ -17,7 +17,11 @@ if [[ "${ID:-}" != "centos" || "${VERSION_ID:-}" != 7* ]]; then
   exit 1
 fi
 
-echo "[1] 部署脚本语法"
+echo "[1] 部署脚本语法与模板校验"
+bash -n "${REPO_ROOT}/scripts/verify-master-cron-templates.sh"
+bash -n "${REPO_ROOT}/scripts/verify-node-deploy-templates.sh"
+bash "${REPO_ROOT}/scripts/verify-master-cron-templates.sh"
+bash "${REPO_ROOT}/scripts/verify-node-deploy-templates.sh"
 bash -n "${SCRIPT_DIR}/lib.sh"
 bash -n "${SCRIPT_DIR}/deploy-master.sh"
 bash -n "${SCRIPT_DIR}/deploy-node.sh"
