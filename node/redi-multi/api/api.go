@@ -253,13 +253,13 @@ func GetSkipUrl(Db *sqlx.DB, Url string) string {
 	if Db == nil {
 		return ""
 	}
-	Url = host.CanonicalLookupHost(Url)
-	if Url == "" {
+	hostKey := host.AcmeHostKey(Url)
+	if hostKey == "" {
 		return ""
 	}
 
 	run := func(db *sqlx.DB) (sql.NullString, error) {
-		rows, err := db.Query("CALL redi_node_bump_skip(?)", Url)
+		rows, err := db.Query("CALL redi_node_bump_skip(?)", hostKey)
 		if err != nil {
 			return sql.NullString{}, err
 		}
