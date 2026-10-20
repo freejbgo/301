@@ -59,6 +59,19 @@ func TestReplaceAllSkipsEmptyResponseBody(t *testing.T) {
 	}
 }
 
+func TestReplaceAllSkipsIPv4LiteralDomain(t *testing.T) {
+	ReplaceAll([]Item{{
+		DomainName:   "1.2.3.4",
+		Token:        "tok123",
+		ResponseBody: "body",
+	}})
+
+	_, ok := ResponseForPath("1.2.3.4", "/.well-known/acme-challenge/tok123")
+	if ok {
+		t.Fatal("IPv4 literal must not be stored as ACME challenge host")
+	}
+}
+
 func TestReplaceAllSkipsInvalidDomain(t *testing.T) {
 	ReplaceAll([]Item{{
 		DomainName:   "evil\t.com",

@@ -3,7 +3,6 @@ package certs
 import (
 	"crypto/tls"
 	"fmt"
-	"strings"
 	"sync"
 
 	hostutil "redi-multi/util/host"
@@ -66,7 +65,7 @@ func upsertIntoMaps(hostMap map[string]Entry, idMap map[int]Entry, list []Entry)
 		if hostutil.ContainsControlChars(e.Domain) {
 			continue
 		}
-		d := strings.ToLower(strings.TrimSpace(e.Domain))
+		d := hostutil.AcmeHostKey(e.Domain)
 		if d == "" {
 			continue
 		}
@@ -79,7 +78,7 @@ func ForceHTTPS(host string) bool {
 	if hostutil.ContainsControlChars(host) {
 		return false
 	}
-	host = hostutil.CanonicalLookupHost(host)
+	host = hostutil.AcmeHostKey(host)
 	if host == "" {
 		return false
 	}
@@ -93,7 +92,7 @@ func GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	if hello == nil || hostutil.ContainsControlChars(hello.ServerName) {
 		return nil, fmt.Errorf("no certificate for invalid host")
 	}
-	host := hostutil.CanonicalLookupHost(hello.ServerName)
+	host := hostutil.AcmeHostKey(hello.ServerName)
 	if host == "" {
 		return nil, fmt.Errorf("no certificate for invalid host")
 	}
@@ -120,7 +119,7 @@ func InstallEntry(e Entry) error {
 		mu.Unlock()
 		return fmt.Errorf("invalid domain")
 	}
-	d := strings.ToLower(strings.TrimSpace(e.Domain))
+	d := hostutil.AcmeHostKey(e.Domain)
 	if d == "" {
 		mu.Unlock()
 		return fmt.Errorf("invalid domain")

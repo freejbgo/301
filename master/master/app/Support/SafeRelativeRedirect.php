@@ -11,6 +11,8 @@ class SafeRelativeRedirect
             && $path !== ''
             && ! str_contains($path, "\r")
             && ! str_contains($path, "\n")
+            && ! str_contains($path, "\0")
+            && ! str_contains($path, "\t")
             && str_starts_with($path, '/')
             && ! str_starts_with($path, '//')
             && ! str_contains($path, '\\');

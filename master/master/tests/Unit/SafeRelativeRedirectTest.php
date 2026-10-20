@@ -37,4 +37,10 @@ class SafeRelativeRedirectTest extends TestCase
     {
         $this->assertFalse(SafeRelativeRedirect::isSafe("/admin\r\n/evil"));
     }
+
+    public function test_rejects_null_and_tab_in_path(): void
+    {
+        $this->assertFalse(SafeRelativeRedirect::isSafe("/admin\x00/evil"));
+        $this->assertFalse(SafeRelativeRedirect::isSafe("/admin\t/evil"));
+    }
 }
