@@ -2,16 +2,13 @@ package lagran
 
 import (
 	"context"
-	"net"
-	"redi-multi/config"
 	"regexp"
+	"redi-multi/config"
 	"sync"
 	"time"
 
 	"github.com/coreos/go-iptables/iptables"
 	"github.com/florianl/go-nfqueue"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
 	"github.com/panjf2000/ants/v2"
 	"github.com/sirupsen/logrus"
 )
@@ -105,64 +102,32 @@ func setIptable(sport string) {
 		logrus.Errorf("[lagran] iptables new error:%v\n", err)
 		return
 	}
+	appendLagranRules(ipt, sport, "iptables")
 
-	// 仅追加本程序所需 NFQUEUE 规则，不再清空整个 OUTPUT 链，避免影响服务器其它出站策略
-	if config.LagranBool("syn_ack", true) {
-		err = ipt.AppendUnique("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "SYN,ACK", "-j", "NFQUEUE", "--queue-balance", "1000:1127", "--queue-bypass")
-		if err != nil {
-			logrus.Errorf("[lagran] failed to set iptables OUTPUT chain, err: %v\n", err)
-		}
+	ip6, err := iptables.New(iptables.IPFamily(iptables.ProtocolIPv6))
+	if err != nil {
+		logrus.Errorf("[lagran] ip6tables new error: %v", err)
+		return
 	}
-	if config.LagranBool("ack", true) {
-		err = ipt.AppendUnique("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "ACK", "-j", "NFQUEUE", "--queue-balance", "2000:2127", "--queue-bypass")
-		if err != nil {
-			logrus.Errorf("[lagran] failed to set iptables OUTPUT chain, err: %v\n", err)
-		}
-	}
-	if config.LagranBool("psh_ack", true) {
-		err = ipt.AppendUnique("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "PSH,ACK", "-j", "NFQUEUE", "--queue-balance", "3000:3127", "--queue-bypass")
-		if err != nil {
-			logrus.Errorf("[lagran] failed to set iptables OUTPUT chain, err: %v\n", err)
-		}
-	}
-	if config.LagranBool("fin_ack", true) {
-		err = ipt.AppendUnique("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "FIN,ACK", "-j", "NFQUEUE", "--queue-balance", "4000:4127", "--queue-bypass")
-		if err != nil {
-			logrus.Errorf("[lagran] failed to set iptables OUTPUT chain, err: %v\n", err)
-		}
-	}
+	appendLagranRules(ip6, sport, "ip6tables")
 }
+
 func UnsetIptable(sport string) {
 	ipt, err := iptables.New()
 	if err != nil {
 		logrus.Errorf("[lagran] failed to new iptables, err: %v\n", err)
+	} else {
+		deleteLagranRules(ipt, sport, "iptables")
+	}
+
+	ip6, err := iptables.New(iptables.IPFamily(iptables.ProtocolIPv6))
+	if err != nil {
+		logrus.Errorf("[lagran] failed to new ip6tables, err: %v\n", err)
 		return
 	}
-	if config.LagranBool("syn_ack", true) {
-		err = ipt.Delete("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "SYN,ACK", "-j", "NFQUEUE", "--queue-balance", "1000:1127", "--queue-bypass")
-		if err != nil {
-			logrus.Errorf("[lagran] failed to delete iptables OUTPUT chain, err: %v\n", err)
-		}
-	}
-	if config.LagranBool("ack", true) {
-		err = ipt.Delete("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "ACK", "-j", "NFQUEUE", "--queue-balance", "2000:2127", "--queue-bypass")
-		if err != nil {
-			logrus.Errorf("[lagran] failed to delete iptables OUTPUT chain, err: %v\n", err)
-		}
-	}
-	if config.LagranBool("psh_ack", true) {
-		err = ipt.Delete("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "PSH,ACK", "-j", "NFQUEUE", "--queue-balance", "3000:3127", "--queue-bypass")
-		if err != nil {
-			logrus.Errorf("[lagran] failed to delete iptables OUTPUT chain, err: %v\n", err)
-		}
-	}
-	if config.LagranBool("fin_ack", true) {
-		err = ipt.Delete("filter", "OUTPUT", "-p", "tcp", "-m", "multiport", "--sport", sport, "--tcp-flags", "SYN,RST,ACK,FIN,PSH", "FIN,ACK", "-j", "NFQUEUE", "--queue-balance", "4000:4127", "--queue-bypass")
-		if err != nil {
-			logrus.Errorf("[lagran] failed to delete iptables OUTPUT chain, err: %v\n", err)
-		}
-	}
+	deleteLagranRules(ip6, sport, "ip6tables")
 }
+
 func packetHandle(queueNum int) {
 	nfqconfig := nfqueue.Config{
 		NfQueue:      uint16(queueNum),
@@ -184,94 +149,29 @@ func packetHandle(queueNum int) {
 	defer cancelFunc()
 
 	fn := func(a nfqueue.Attribute) int {
-		id := *a.PacketID
-		var srcIP net.IP
-		var dstIP net.IP
-		logrus.Debugf("[lagran] PKT[%03d]\t\n", id)
-
-		packet := gopacket.NewPacket(*a.Payload, layers.LayerTypeIPv4, gopacket.Default)
-
-		// Get the IP layer from this packet
-		if ipLayer := packet.Layer(layers.LayerTypeIPv4); ipLayer != nil {
-			// Get actual IP data from this layer
-			ip, _ := ipLayer.(*layers.IPv4)
-			srcIP = ip.SrcIP
-			dstIP = ip.DstIP
-			logrus.Debugf("[lagran] %15s > %-15s \n", srcIP, dstIP)
-		}
-		if tcpLayer := packet.Layer(layers.LayerTypeTCP); tcpLayer != nil {
-			tcp, ok := tcpLayer.(*layers.TCP)
-			if !ok || tcp == nil {
-				_ = nf.SetVerdict(id, nfqueue.NfAccept)
-				return 0
-			}
-			sportSet := config.LagranPortSet()
-			sport := portDigitRe.FindString(tcp.SrcPort.String())
-			matchedPort := sport != "" && sportSet[sport]
-			if matchedPort {
-				var ok1 bool = config.LagranBool("syn_ack", true) && tcp.SYN && tcp.ACK
-				var ok2 bool = config.LagranBool("ack", true) && tcp.ACK && !tcp.PSH && !tcp.FIN && !tcp.SYN && !tcp.RST
-				var ok3 bool = config.LagranBool("psh_ack", true) && tcp.PSH && tcp.ACK
-				var ok4 bool = config.LagranBool("fin_ack", true) && tcp.FIN && tcp.ACK
-				var windowSize uint16
-				if ok1 || ok2 || ok3 || ok4 {
-					if ok1 {
-						windowSize = windowSa
-						logrus.Debugln("[lagran] Handle SYN=1 and ACK=1")
-					}
-					if ok2 {
-						windowSize = windowA
-						logrus.Debugln("[lagran] Handle ACK=1")
-					}
-					if ok3 {
-						windowSize = windowPa
-						logrus.Debugln("[lagran] Handle PSH=1 and ACK=1")
-					}
-					if ok4 {
-						windowSize = windowFa
-						logrus.Debugln("[lagran] Handle FIN=1 and ACK=1")
-					}
-					tcp.Window = windowSize
-					err := tcp.SetNetworkLayerForChecksum(packet.NetworkLayer())
-					if err != nil {
-						logrus.Errorf("[lagran] failed to SetNetworkLayerForChecksum, err: %v\n", err)
-					}
-					buffer := gopacket.NewSerializeBuffer()
-					options := gopacket.SerializeOptions{
-						ComputeChecksums: true,
-						FixLengths:       true,
-					}
-					if err := gopacket.SerializePacket(buffer, options, packet); err != nil {
-						logrus.Errorf("[lagran] failed to SerializePacket, err: %v\n", err)
-					}
-					packetBytes := buffer.Bytes()
-					logrus.Debugf("[lagran] Set TCP window size to %d\n", windowSize)
-					err = nf.SetVerdictModPacket(id, nfqueue.NfAccept, packetBytes)
-					if err != nil {
-						logrus.Errorf("[lagran] failed to SetVerdictModified error: %v\n", err)
-					}
-					return 0
-				}
-				err := nf.SetVerdict(id, nfqueue.NfAccept)
-				if err != nil {
-					logrus.Errorf("[lagran] failed to SetVerdict, err: %v\n", err)
-				}
-				return 0
-			}
-			err := nf.SetVerdict(id, nfqueue.NfAccept)
-			if err != nil {
-				logrus.Errorf("[lagran] failed to SetVerdict, err: %v\n", err)
+		if a.PacketID == nil || a.Payload == nil || len(*a.Payload) == 0 {
+			if a.PacketID != nil {
+				_ = nf.SetVerdict(*a.PacketID, nfqueue.NfAccept)
 			}
 			return 0
 		}
-		err := nf.SetVerdict(id, nfqueue.NfAccept)
-		if err != nil {
+		id := *a.PacketID
+		raw := *a.Payload
+		logrus.Debugf("[lagran] PKT[%03d]\t\n", id)
+
+		if out, ok := tryRewriteOutboundTCP(raw); ok {
+			logrus.Debugf("[lagran] Set TCP window on outbound packet len=%d\n", len(out))
+			if err := nf.SetVerdictModPacket(id, nfqueue.NfAccept, out); err != nil {
+				logrus.Errorf("[lagran] failed to SetVerdictModified error: %v\n", err)
+			}
+			return 0
+		}
+		if err := nf.SetVerdict(id, nfqueue.NfAccept); err != nil {
 			logrus.Errorf("[lagran] failed to SetVerdict, err: %v\n", err)
 		}
 		return 0
 	}
 
-	// Register your function to listen on nflqueue queue 100
 	err = nf.RegisterWithErrorFunc(ctx, fn, func(e error) int {
 		if e != nil {
 			logrus.Errorf("[lagran] failed to RegisterWithErrorFunc, err: %v\n", e)
