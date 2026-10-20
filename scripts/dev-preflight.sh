@@ -27,6 +27,9 @@ echo "==> PHPUnit (master/master, PHP $(php -r 'echo PHP_VERSION;'))"
   ./vendor/bin/phpunit --testsuite Unit,Feature
 )
 
+echo "==> 运维 artisan 命令（Cron 对齐）"
+bash scripts/verify-redi-artisan-cron.sh
+
 echo "==> 仓库脚本语法 + CentOS 7 部署脚本"
 for f in \
   scripts/dev-preflight.sh \
@@ -39,6 +42,7 @@ for f in \
   scripts/verify-node-deploy-templates.sh \
   scripts/verify-grant-nodes-templates.sh \
   scripts/verify-acceptance-centos7-doc.sh \
+  scripts/verify-redi-artisan-cron.sh \
   scripts/centos7/*.sh; do
   bash -n "$f"
 done

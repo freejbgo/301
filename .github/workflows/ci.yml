@@ -36,6 +36,8 @@ jobs:
       - name: PHPUnit
         working-directory: master/master
         run: ./vendor/bin/phpunit --testsuite Unit,Feature
+      - name: Cron artisan commands registered
+        run: bash scripts/verify-redi-artisan-cron.sh
 
   master-phpunit-php80:
     runs-on: ubuntu-latest

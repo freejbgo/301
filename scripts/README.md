@@ -11,6 +11,7 @@
 | [verify-node-deploy-templates.sh](verify-node-deploy-templates.sh) | 静态校验 `deploy-node`、`vars.example.env`、`env.example` 与 lagran 脚本（HTTPS Agent、静态 ldd、`redi_node`、setcap、lagran_ports.py、`REDI_DB_PASSWORD`） |
 | [verify-grant-nodes-templates.sh](verify-grant-nodes-templates.sh) | 静态校验 `grant-nodes-from-vars` 与 `deploy-master` 共用 `redi_sync_node_ips_access`、`vars.example` 的 `NODE_IPS`/`MYSQL_ROOT_PASS`/`DB_PASS` |
 | [verify-acceptance-centos7-doc.sh](verify-acceptance-centos7-doc.sh) | 静态校验 [ACCEPTANCE-CENTOS7-DEPLOY.md](../docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 含 Cron webhook/`--task`、grant-nodes、`redi_node` 等关键表述 |
+| [verify-redi-artisan-cron.sh](verify-redi-artisan-cron.sh) | `php artisan … --help` 确认 Cron/运维引用的 `redi:*` 命令已注册（含 `redi:health --notify`） |
 | [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | 已上线主控：升级 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`；可传参 `bash …/patch-master-cron-ops-webhook.sh <artisan目录>`）；结束会打印 Cron / `redi:health --notify` 验收提示 |
 | [centos7/vars.example.env](centos7/vars.example.env) | 部署变量模板（`vars.env`）；Webhook URL 写在主控 `.env`，见文件内注释 |
 | [centos7/deploy-master.sh](centos7/deploy-master.sh) / [deploy-node.sh](centos7/deploy-node.sh) | CentOS 7 主控/节点一键部署 |
