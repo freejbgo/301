@@ -58,4 +58,33 @@ class SafeRelativeRedirectTest extends TestCase
         $this->assertFalse(SafeRelativeRedirect::isSafe('https://evil.example/phish'));
         $this->assertNull(SafeRelativeRedirect::normalizeForRedirect('https://evil.example/phish'));
     }
+
+    public function test_rejects_absolute_url_with_userinfo(): void
+    {
+        config(['app.url' => 'https://master.example.com']);
+        $this->assertFalse(SafeRelativeRedirect::isSafe('https://user:pass@master.example.com/admin'));
+        $this->assertNull(SafeRelativeRedirect::normalizeForRedirect('https://user@master.example.com/admin'));
+    }
+
+    public function test_accepts_same_host_absolute_url_with_non_default_port(): void
+    {
+        config(['app.url' => 'https://master.example.com:8443']);
+        $absolute = 'https://master.example.com:8443/admin/nodes?x=1';
+        $this->assertTrue(SafeRelativeRedirect::isSafe($absolute));
+        $this->assertSame('/admin/nodes?x=1', SafeRelativeRedirect::normalizeForRedirect($absolute));
+    }
+
+    public function test_rejects_same_host_absolute_url_without_path(): void
+    {
+        config(['app.url' => 'https://master.example.com']);
+        $this->assertFalse(SafeRelativeRedirect::isSafe('https://master.example.com'));
+        $this->assertNull(SafeRelativeRedirect::normalizeForRedirect('https://master.example.com'));
+    }
+
+    public function test_accepts_same_host_absolute_url_with_trailing_slash_only(): void
+    {
+        config(['app.url' => 'https://master.example.com']);
+        $this->assertTrue(SafeRelativeRedirect::isSafe('https://master.example.com/'));
+        $this->assertSame('/', SafeRelativeRedirect::normalizeForRedirect('https://master.example.com/'));
+    }
 }

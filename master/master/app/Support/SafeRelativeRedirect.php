@@ -28,7 +28,7 @@ class SafeRelativeRedirect
             if ($parsed === false || ! isset($parsed['host'])) {
                 return null;
             }
-            if (parse_url($target, PHP_URL_USER) !== null || parse_url($target, PHP_URL_PASS) !== null) {
+            if (isset($parsed['user']) || isset($parsed['pass'])) {
                 return null;
             }
             $appHost = parse_url((string) config('app.url'), PHP_URL_HOST);
