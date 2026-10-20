@@ -115,6 +115,55 @@ class EdgeDnsSyncServiceTest extends TestCase
         $this->assertNull(\DB::table('redi_tenant_edge')->where('id', 2)->value('dns_synced_at'));
     }
 
+    public function test_sync_aborts_before_dns_api_when_no_enabled_ipv4(): void
+    {
+        \DB::table('redi_platform_dns')->insert([
+            'edge_zone' => 'example.com',
+            'pool_host' => 'pool',
+            'dns_mode' => 'api',
+            'dns_driver' => 'cloudflare',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_tenant_edge')->insert([
+            'edge_fqdn' => 'tok.edge.example.com',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $provider = new class implements DnsProviderInterface
+        {
+            public int $connectionTests = 0;
+
+            public int $aCalls = 0;
+
+            public function testConnection(): void
+            {
+                $this->connectionTests++;
+            }
+
+            public function upsertARecords(string $fqdn, array $ipv4): void
+            {
+                $this->aCalls++;
+            }
+
+            public function upsertCname(string $name, string $zone, string $targetFqdn): void
+            {
+            }
+        };
+
+        try {
+            app(EdgeDnsSyncService::class)->syncAll($provider);
+            $this->fail('expected exception');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('没有启用的节点公网 IPv4', $e->getMessage());
+        }
+
+        $this->assertSame(0, $provider->connectionTests);
+        $this->assertSame(0, $provider->aCalls);
+    }
+
     public function test_aborts_before_pool_when_all_tenant_edges_outside_zone(): void
     {
         \DB::table('redi_platform_dns')->insert([
@@ -328,9 +377,16 @@ class EdgeDnsSyncServiceTest extends TestCase
         config(['redi.publish_pool_aaaa' => true]);
         $this->seedPlatformAndNode();
         $this->addIpv6Columns();
-        \DB::table('redi_nodes')->update([
+        \DB::table('redi_nodes')->where('id', 1)->update([
             'enabled' => 0,
             'public_ipv6' => 'fe80::1',
+        ]);
+        \DB::table('redi_nodes')->insert([
+            'public_ip' => '5.6.7.8',
+            'public_ipv6' => '2001:db8::1',
+            'enabled' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $provider = $this->trackingProvider(true);

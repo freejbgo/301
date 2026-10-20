@@ -33,6 +33,12 @@ bash scripts/verify-redi-artisan-cron.sh
 echo "==> ACME 主机名键约定"
 bash scripts/verify-acme-code-invariants.sh
 
+echo "==> Edge DNS 同步约定"
+bash scripts/verify-edge-dns-invariants.sh
+
+echo "==> Edge Pool 验收清单文档"
+bash scripts/verify-acceptance-edge-pool-doc.sh
+
 echo "==> 仓库脚本语法 + CentOS 7 部署脚本"
 for f in \
   scripts/dev-preflight.sh \
@@ -47,6 +53,8 @@ for f in \
   scripts/verify-acceptance-centos7-doc.sh \
   scripts/verify-redi-artisan-cron.sh \
   scripts/verify-acme-code-invariants.sh \
+  scripts/verify-edge-dns-invariants.sh \
+  scripts/verify-acceptance-edge-pool-doc.sh \
   scripts/centos7/*.sh; do
   bash -n "$f"
 done

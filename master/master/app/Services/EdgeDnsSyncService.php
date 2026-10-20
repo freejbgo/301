@@ -43,9 +43,6 @@ class EdgeDnsSyncService
             throw new RuntimeException('当前为手动解析模式：请在「DNS 与节点池」参考表中到 DNS 服务商自行配置，勿调用 API 同步。');
         }
 
-        $provider = $providerOverride ?? DnsProviderFactory::make($platform);
-        $provider->testConnection();
-
         $edges = RediTenantEdge::query()->where('edge_fqdn', '!=', '')->get();
         $eligible = $this->eligibleTenantEdges($edges, $zone);
         $withFqdn = $edges->filter(function ($edge) {
@@ -68,6 +65,13 @@ class EdgeDnsSyncService
         }
 
         $ips = RediNode::enabledPublicIps();
+        if ($ips === []) {
+            throw new RuntimeException('没有启用的节点公网 IPv4，无法同步 Pool A 记录');
+        }
+
+        $provider = $providerOverride ?? DnsProviderFactory::make($platform);
+        $provider->testConnection();
+
         $aaaaInvoked = false;
         $aaaaCount = 0;
 
