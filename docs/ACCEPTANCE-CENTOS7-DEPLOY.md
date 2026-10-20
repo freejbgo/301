@@ -287,6 +287,7 @@ curl -6 -k -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "https://[20
 | 后台 502/空白 | `systemctl status php-fpm nginx`；`/opt/301/master/storage` 权限属 `nginx` |
 | 重复跑主控脚本后 HTTPS 没了 | 是否曾去掉 `301-master-managed`；HTTPS 建议单独 `conf.d` 文件 |
 | `yum` 很慢或 IPv6 失败 | 脚本已尝试 `ip_resolve=4`；检查机器 IPv4 出口 |
+| 已开 `REDI_PUBLISH_POOL_AAAA` 后 HTTP-01 / 签发超时 | 主控探测客户域可能走 IPv6；在主控对每个节点公网 IPv6 做 `curl -6` 通 80，见 §7 与 DEPLOY-centos7 §12 |
 
 ---
 
