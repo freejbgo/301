@@ -24,6 +24,9 @@ func TestGetSkipUrlRejectsInvalidHostWithoutDb(t *testing.T) {
 	if GetSkipUrl(nil, "https://evil.com/path") != "" {
 		t.Fatal("expected empty for host with path")
 	}
+	if GetSkipUrl(nil, "evil\r\n.com") != "" {
+		t.Fatal("expected empty for control chars in host")
+	}
 }
 
 func TestApiJsSourceRejectsControlChars(t *testing.T) {

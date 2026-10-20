@@ -19,6 +19,7 @@ echo "==> Go vet + test (node/redi-multi)"
   go vet ./...
   go test ./...
 )
+bash scripts/verify-node-skip-api-invariants.sh
 
 echo "==> PHPUnit (master/master, PHP $(php -r 'echo PHP_VERSION;'))"
 (
@@ -44,6 +45,7 @@ bash scripts/verify-acme-prune-requeue-invariants.sh
 
 echo "==> Edge DNS 同步约定"
 bash scripts/verify-edge-dns-invariants.sh
+bash scripts/verify-dns-providers-invariants.sh
 
 echo "==> CNAME 预检 / ACME Job 约定"
 bash scripts/verify-cname-cert-job-invariants.sh
@@ -79,6 +81,8 @@ for f in \
   scripts/verify-renew-ops-invariants.sh \
   scripts/verify-acme-prune-requeue-invariants.sh \
   scripts/verify-edge-dns-invariants.sh \
+  scripts/verify-dns-providers-invariants.sh \
+  scripts/verify-node-skip-api-invariants.sh \
   scripts/verify-cname-cert-job-invariants.sh \
   scripts/verify-acceptance-edge-pool-doc.sh \
   scripts/verify-tenant-edge-queue-invariants.sh \

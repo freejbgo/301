@@ -148,7 +148,9 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 深度扫（#353，待合并）：** `verify-cname-cert-job-invariants`、`verify-ci-preflight-parity`；CI 对齐 dev-preflight；ACME Job 停用域单测。
+**2026-10-20 深度扫（#354，待合并）：** `verify-dns-providers-invariants`、`verify-node-skip-api-invariants`；AUDIT §9 与 preflight/440 基线同步。
+
+**2026-10-20 深度扫（#353 已合并）：** `verify-cname-cert-job-invariants`、`verify-ci-preflight-parity`；CI 对齐 dev-preflight；ACME Job 停用域单测。
 
 **2026-10-20 深度扫（#352 已合并）：** `verify-acme-prune-requeue-invariants`；ACME purge 控制字符、requeue 停用节点单测；CentOS 验收文档补 `requeue`。
 
@@ -861,24 +863,18 @@
 bash scripts/dev-preflight.sh
 ```
 
-分步：
+分步（与 `dev-preflight.sh` 等价，仅调试时拆开跑）：
 
 ```bash
-# Go
-cd node/redi-multi && go test ./...
-
-# PHP（需 8.0+ 与 composer）
-cd master/master && composer install && ./vendor/bin/phpunit --testsuite Unit,Feature
-
-# 部署脚本语法（= CI job centos7-scripts 核心步骤）
-for f in scripts/centos7/*.sh scripts/patch-master-cron-ops-webhook.sh scripts/verify-master-cron-templates.sh; do bash -n "$f"; done
-python3 scripts/centos7/lagran_ports.py node/redi-multi/config.json.example | grep -q '80'
-bash scripts/verify-master-cron-templates.sh
-bash scripts/verify-node-deploy-templates.sh
+cd node/redi-multi && go vet ./... && go test ./...
+cd master/master && composer install && composer audit --no-interaction && ./vendor/bin/phpunit --testsuite Unit,Feature
+bash scripts/verify-redi-artisan-cron.sh
+# 其余 scripts/verify-*-invariants.sh、verify-*-doc.sh 见 dev-preflight.sh
 php scripts/verify-redi-node-procedure-sync.php
-bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳过，CI 无 docker 则失败
+bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 时 dev-preflight 会跳过
+bash scripts/verify-ci-preflight-parity.sh
 ```
 
-`verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` 路径一致）。
+`verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` / 节点 `GetSkipUrl` 路径一致）。发版 tar 见 `scripts/ensure-release-tarballs.sh`（`build-master-tar.sh` / `build-node-tar.sh`）。
 
-PHPUnit 当前 **436** 条 Feature/Unit（**939** assertions）；以 `phpunit` 退出码为准。GitHub Actions 配额有限时，在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **440** 条 Feature/Unit（**947** assertions）；以 `phpunit` 退出码为准。GitHub Actions 的 `master-phpunit` 含 `composer audit` 与 `verify-ci-preflight-parity`；配额有限时在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
