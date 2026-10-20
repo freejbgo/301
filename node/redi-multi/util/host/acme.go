@@ -1,6 +1,7 @@
 package host
 
 import (
+	"net"
 	"strings"
 )
 
@@ -34,6 +35,9 @@ func AcmeHostKey(raw string) string {
 
 func isAcmeHostLabel(host string) bool {
 	if host == "" || len(host) > 253 {
+		return false
+	}
+	if net.ParseIP(host) != nil {
 		return false
 	}
 	if strings.Contains(host, " ") {

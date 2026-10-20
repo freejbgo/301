@@ -80,11 +80,7 @@ func allowRate(ip string) bool {
 		}
 	}
 	if len(kept) >= rateLimit {
-		if len(kept) == 0 {
-			delete(rateHits, ip)
-		} else {
-			rateHits[ip] = kept
-		}
+		rateHits[ip] = kept
 		return false
 	}
 	kept = append(kept, now)
