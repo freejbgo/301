@@ -65,6 +65,13 @@ else
   echo "[iptables] 未安装 iptables"
 fi
 
+if command -v ip6tables >/dev/null 2>&1; then
+  echo "==> ip6tables OUTPUT 中 NFQUEUE（redi-multi lagran）"
+  ip6tables -L OUTPUT -n -v 2>/dev/null | grep -E 'NFQUEUE|queue-balance' || echo "(无匹配规则)"
+else
+  echo "[ip6tables] 未安装 ip6tables"
+fi
+
 if command -v systemctl >/dev/null 2>&1 && systemctl list-unit-files redi-multi.service &>/dev/null; then
   echo "==> systemctl is-active redi-multi: $(systemctl is-active redi-multi 2>/dev/null || echo unknown)"
   echo "==> 最近 journal 含 lagran 的行"
