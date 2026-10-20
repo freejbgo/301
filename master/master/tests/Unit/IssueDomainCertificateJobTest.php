@@ -60,4 +60,21 @@ class IssueDomainCertificateJobTest extends TestCase
         $this->assertSame(RediDomainCert::STATUS_FAILED, $cert->status);
         $this->assertStringContainsString('无效', (string) $cert->last_error);
     }
+
+    public function test_skips_issue_when_domain_disabled(): void
+    {
+        $domainId = (int) \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'off.example',
+            'status' => 2,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $issuer = $this->createMock(CertificateIssuer::class);
+        $issuer->expects($this->never())->method('issue');
+
+        (new IssueDomainCertificateJob($domainId))->handle($issuer);
+
+        $this->assertNull(RediDomainCert::query()->where('domain_id', $domainId)->first());
+    }
 }

@@ -23,4 +23,8 @@ grep -q 'enabledPublicIps' "$sync" || fail "EdgeDnsSyncService must use enabledP
 grep -q '没有启用的节点公网 IPv4' "$sync" || fail "EdgeDnsSyncService must fail fast without pool IPv4"
 grep -q 'orangeCloudAaaaIds' "$cf" || fail "Cloudflare must strip proxied AAAA before reconcile"
 
+grep -q 'invalidateAllDnsSyncedAt' "${REPO_ROOT}/master/master/app/Services/TenantEdgeService.php" \
+  || fail "pool_host change must invalidate tenant dns_synced_at"
+grep -q 'testConnection' "$sync" || fail "EdgeDnsSync must test DNS provider before upsert"
+
 echo "verify-edge-dns-invariants: OK"
