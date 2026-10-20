@@ -51,6 +51,9 @@ bash scripts/verify-dns-providers-invariants.sh
 echo "==> CNAME 预检 / ACME Job 约定"
 bash scripts/verify-cname-cert-job-invariants.sh
 
+echo "==> 跳转 URL / 平台 DNS / force HTTPS 约定"
+bash scripts/verify-redirect-platform-invariants.sh
+
 echo "==> Edge Pool 验收清单文档"
 bash scripts/verify-acceptance-edge-pool-doc.sh
 
@@ -92,6 +95,7 @@ for f in \
   scripts/verify-node-skip-api-invariants.sh \
   scripts/verify-node-api-js-invariants.sh \
   scripts/verify-cname-cert-job-invariants.sh \
+  scripts/verify-redirect-platform-invariants.sh \
   scripts/verify-acceptance-edge-pool-doc.sh \
   scripts/verify-tenant-edge-queue-invariants.sh \
   scripts/verify-health-tenant-invariants.sh \
