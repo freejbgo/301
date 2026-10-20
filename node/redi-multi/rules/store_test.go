@@ -44,6 +44,19 @@ func TestReplaceForceHTTPSSkipsTrailingNewlineHost(t *testing.T) {
 	}
 }
 
+func TestReplaceForceHTTPSSkipsIPv4Literal(t *testing.T) {
+	ReplaceForceHTTPS(map[string]bool{
+		"good.example": true,
+		"1.2.3.4":      true,
+	})
+	if !ForceHTTPS("good.example") {
+		t.Fatal("expected good.example")
+	}
+	if ForceHTTPS("1.2.3.4") {
+		t.Fatal("IPv4 literal must not enable force HTTPS")
+	}
+}
+
 func TestForceHTTPSRejectsLookupWithControlChars(t *testing.T) {
 	ReplaceForceHTTPS(map[string]bool{"good.example": true})
 	if ForceHTTPS("good.example\n") {

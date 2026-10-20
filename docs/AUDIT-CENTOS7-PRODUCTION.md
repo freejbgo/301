@@ -148,7 +148,7 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 全库深度扫（节点主机名校验）：** Go `AcmeHostKey` 拒 IPv4 字面量（与 `HostNameValidator` / 主控 ACME 一致）；TLS `GetCertificate` / `ForceHTTPS` 用 `CanonicalLookupHost` 查表；`api` 限流去掉不可达分支；门禁 PHPUnit **416**（**891** assertions）。
+**2026-10-20 全库深度扫（#331 + 续扫）：** 已合并 #331（Go `AcmeHostKey` 拒 IPv4、TLS 查表规范化）；续扫统一 `rules`/证书映射 `CanonicalLookupHost`，`SafeRelativeRedirect` 拒 `\0`/`\t`；门禁 PHPUnit **417+**（以 preflight 为准）。
 
 **2026-10-16 全库复核（#83 后）：** `go test ./...` + PHPUnit **80** + `dev-preflight` 通过；`scripts/` 与 `centos7/` 脚本均有文档或 CI 引用；`public/vendor/dcat-admin` 为 Dcat 静态资源，**不删**；移除 `inspire` 示例；根 `.gitignore` 补充本地缓存。
 
