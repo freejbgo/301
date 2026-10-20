@@ -148,6 +148,8 @@
 
 ## 6. 全面复核记录（2026-10）
 
+**2026-10-20 全库深度扫（#338 Cron 模板）：** 新增 `scripts/verify-master-cron-templates.sh`（CI + preflight）：禁止 Cron 内 `schedule:run` / `master/master`；校验 renew/prune/health + `ops-webhook` 兜底与 `queue:work --max-time=3600`。
+
 **2026-10-20 全库深度扫（#336 续）：** Dcat 运营表单 `_redirect` 改为 `admin_base_path` 直出相对路径；`/certificates` 的 `domain` 字段用 `acmeHostKey`（与 Go 拉证一致）；Dcat 其它 POST 无用户可控跳转；DNS 厂商分页上限与 Cloudflare 分页单测复核通过。
 
 **2026-10-20 全库深度扫（#334 续）：** `SafeRelativeRedirect` 接受同域 `admin_url()` 绝对 URL 并规范为相对路径（修复运营「重试失败部署」`_redirect` 失效）；`redirect-rules` / `rules_revision` 主机名键改为 `acmeHostKey`（与 Go `AcmeHostKey` 一致）。

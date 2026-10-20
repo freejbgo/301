@@ -35,6 +35,7 @@ for f in \
   scripts/build-master-tar.sh \
   scripts/build-node-tar.sh \
   scripts/patch-master-cron-ops-webhook.sh \
+  scripts/verify-master-cron-templates.sh \
   scripts/centos7/*.sh; do
   bash -n "$f"
 done
@@ -62,6 +63,9 @@ h2, _ = lp.apply_listen_env_overrides("0.0.0.0:80", "0.0.0.0:443")
 assert h2 == ""
 del os.environ["REDI_HTTP_LISTEN"]
 PY
+
+echo "==> 主控 Cron / queue unit 模板"
+bash scripts/verify-master-cron-templates.sh
 
 echo "==> SQL 与节点存储过程校验"
 php scripts/verify-redi-node-procedure-sync.php
