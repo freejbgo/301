@@ -1,6 +1,6 @@
 # 绿场安装说明（无历史数据）
 
-本仓库按 **全新部署** 设计：没有「从旧版 301 升级」的路径，也 **不要** 再执行已删除的一次性清理迁移（原 `100010_cleanup_tenant_edge_admin_zero`）。
+本仓库按 **全新部署（绿场）** 设计：你从未装过这套系统时，**不必**单独研究 Laravel 迁移编号；按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 跑脚本并 **一次导入** `db/redi_admin.sql` 即可。日后跟新发布包见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（与绿场首装无关）。
 
 ## 文档索引
 
@@ -14,17 +14,16 @@
 | [docs/PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) | 上线验收与 `redi:health` |
 | [SECURITY.md](../SECURITY.md) | 密码、端口、节点权限 |
 | [docs/AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §9 | 开发机发版前 `dev-preflight.sh` |
+| [scripts/README.md](../scripts/README.md) | `verify-*` 门禁与 CentOS 辅助脚本索引 |
 
 ## 数据库：绿场一次导入即可
 
 | 步骤 | 命令 / 动作 | 内容 |
 |------|-------------|------|
 | 1 建库 | `db/mysql_setup.example.sql` 或 `deploy-master.sh` | 创建 `redi_admin` 库与 `redi_admin` 应用账号 |
-| 2 导入 | **`mysql … redi_admin < db/redi_admin.sql`** | Dcat 菜单/权限、业务表、默认超管 `admin`、节点存储过程 **`redi_node_bump_skip`**、节点 IPv6 列、`migrations` 表登记至 **`100010_add_node_ipv6_columns`** |
+| 2 导入 | **`mysql … redi_admin < db/redi_admin.sql`**（`deploy-master.sh` 空库时会自动导入） | Dcat 菜单/权限、业务表、默认超管 `admin`、节点存储过程 **`redi_node_bump_skip`**、节点 IPv6 列；`migrations` 表已与当前发布包对齐 |
 
-**绿场不需要**为了节点跳转再单独跑一遍 migrate。导入完成后节点即可 `CALL redi_node_bump_skip`。
-
-主控代码解压、`key:generate`、`storage:link` 后，部署脚本仍会执行 **`php artisan migrate --force`**：在绿场通常是 **无待执行迁移**；以后发版若仓库增加了 **`100011+`** 迁移，在同一台主控上再执行 migrate 即可。
+**绿场不需要**手工执行 `php artisan migrate`。`deploy-master.sh` 解压主控后仍会跑 **`migrate --force`**（导入 SQL 后一般为 **无待执行迁移**）；你只需确认存储过程存在即可。导入完成后节点即可 `CALL redi_node_bump_skip`。
 
 **验证（主控本机，导入 SQL 后）：**
 
@@ -35,9 +34,7 @@ mysql -u redi_admin -p redi_admin -e \
 
 CentOS 的 `deploy-master.sh` 在 `migrate` 之后会检查该过程是否存在。
 
-### 仅空库 migrate（不推荐绿场）
-
-若 **不** 导入 `redi_admin.sql`，只对空库执行 `php artisan migrate`，会得到表结构（含 IPv6 列）与至 `100010` 的迁移，但 **缺 Dcat 菜单与默认管理员**，需另做 seed 或自行导入 admin 部分。绿场请用 **`redi_admin.sql` 一次导入**。
+**不要**只对空库跑 `migrate` 而不导入 `redi_admin.sql`（会缺菜单与默认管理员）。绿场请始终 **`redi_admin.sql` 一次导入**（或交给 `deploy-master.sh`）。
 
 ## 主控首次登录
 
@@ -50,16 +47,9 @@ CentOS 的 `deploy-master.sh` 在 `migrate` 之后会检查该过程是否存在
 - `deploy-node.sh` 会 `setcap cap_net_admin`，并在应开启 lagran 时检查 capability 与日志。`REDI_MASTER_URL` 生产须 **https://**；主控尚无证书时 lab 可 `REDI_MASTER_INSECURE=1` + `http://`（见 `vars.example.env`）。
 - 跳转配置通过访客域名上的 **`/api.js`** 从 MySQL 拉取（见 [node/README.md](../node/README.md)）。
 
-## 更新主控代码后（仍非「旧版升级」）
+## 首装之后若要换发布包
 
-拉新主控代码后在本机执行：
-
-```bash
-cd /opt/301/master   # 或你的程序目录
-php artisan migrate --force
-```
-
-若仓库新增了 `100011+` 迁移，这一步会改库；绿场初次安装若已导入当前版 `redi_admin.sql`，通常显示无待执行迁移。节点 MySQL 账号为 **`redi_node`** 时，在主控更新 `vars.env` 的 `NODE_IPS` 后执行 `grant-nodes-from-vars.sh` 或 `deploy-master.sh`；单 IP 可用 `grant-node-mysql.sh`（仅 `EXECUTE` 存储过程）。
+绿场 **首装完成** 后，一般只需按验收文档运营；**换 tar / 跟仓库新版本** 才需要 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（含何时再跑 `migrate`）。节点 MySQL 账号为 **`redi_node`** 时，在主控更新 `vars.env` 的 `NODE_IPS` 后执行 `grant-nodes-from-vars.sh` 或 `deploy-master.sh`；单 IP 可用 `grant-node-mysql.sh`（仅 `EXECUTE` 存储过程）。
 
 主控 cron（`deploy-master.sh` 写入 `/etc/cron.d/redi-renew`）：**03:10** 证书续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`（需 `REDI_HEALTH_WEBHOOK_URL` 方能在有 issues 时静默退出 0；勿配置 `php artisan schedule:run`）。节点 `GetSkipUrl` 与主控一致对 Host 做 **punycode** 归一。
 
