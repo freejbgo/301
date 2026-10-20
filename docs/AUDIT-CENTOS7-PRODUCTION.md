@@ -841,8 +841,9 @@ cd node/redi-multi && go test ./...
 cd master/master && composer install && ./vendor/bin/phpunit --testsuite Unit,Feature
 
 # 部署脚本语法（= CI job centos7-scripts 核心步骤）
-for f in scripts/centos7/*.sh scripts/patch-master-cron-ops-webhook.sh; do bash -n "$f"; done
+for f in scripts/centos7/*.sh scripts/patch-master-cron-ops-webhook.sh scripts/verify-master-cron-templates.sh; do bash -n "$f"; done
 python3 scripts/centos7/lagran_ports.py node/redi-multi/config.json.example | grep -q '80'
+bash scripts/verify-master-cron-templates.sh
 php scripts/verify-redi-node-procedure-sync.php
 bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳过，CI 无 docker 则失败
 ```
