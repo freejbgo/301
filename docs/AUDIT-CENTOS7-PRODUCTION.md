@@ -148,6 +148,8 @@
 
 ## 6. 全面复核记录（2026-10）
 
+**2026-10-20 全库深度扫（#339 节点模板）：** 新增 `scripts/verify-node-deploy-templates.sh`（CI + preflight + 容器冒烟 [1]）：校验 `deploy-node` HTTPS/静态二进制/`redi_node`/setcap/lagran 与 `env.example` 键对齐。
+
 **2026-10-20 全库深度扫（#338 Cron 模板）：** 新增 `scripts/verify-master-cron-templates.sh`（CI + preflight）：禁止 Cron 内 `schedule:run` / `master/master`；校验 renew/prune/health + `ops-webhook` 兜底与 `queue:work --max-time=3600`。
 
 **2026-10-20 全库深度扫（#336 续）：** Dcat 运营表单 `_redirect` 改为 `admin_base_path` 直出相对路径；`/certificates` 的 `domain` 字段用 `acmeHostKey`（与 Go 拉证一致）；Dcat 其它 POST 无用户可控跳转；DNS 厂商分页上限与 Cloudflare 分页单测复核通过。
@@ -844,6 +846,7 @@ cd master/master && composer install && ./vendor/bin/phpunit --testsuite Unit,Fe
 for f in scripts/centos7/*.sh scripts/patch-master-cron-ops-webhook.sh scripts/verify-master-cron-templates.sh; do bash -n "$f"; done
 python3 scripts/centos7/lagran_ports.py node/redi-multi/config.json.example | grep -q '80'
 bash scripts/verify-master-cron-templates.sh
+bash scripts/verify-node-deploy-templates.sh
 php scripts/verify-redi-node-procedure-sync.php
 bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；本地无 docker 跳过，CI 无 docker 则失败
 ```

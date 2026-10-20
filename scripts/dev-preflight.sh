@@ -36,6 +36,7 @@ for f in \
   scripts/build-node-tar.sh \
   scripts/patch-master-cron-ops-webhook.sh \
   scripts/verify-master-cron-templates.sh \
+  scripts/verify-node-deploy-templates.sh \
   scripts/centos7/*.sh; do
   bash -n "$f"
 done
@@ -66,6 +67,9 @@ PY
 
 echo "==> 主控 Cron / queue unit 模板"
 bash scripts/verify-master-cron-templates.sh
+
+echo "==> 节点 deploy / lagran 模板"
+bash scripts/verify-node-deploy-templates.sh
 
 echo "==> SQL 与节点存储过程校验"
 php scripts/verify-redi-node-procedure-sync.php

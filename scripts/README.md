@@ -8,6 +8,7 @@
 | [verify-redi-db-deploy-path.sh](verify-redi-db-deploy-path.sh) | Docker 临时 MariaDB：建库 collation + `redi_admin.sql` + `CALL redi_node_bump_skip`（CI/`VERIFY_REDI_REQUIRE_DOCKER=1` 时无 docker 会失败） |
 | [verify-redi-node-procedure-sync.php](verify-redi-node-procedure-sync.php) | SQL dump 与迁移 `100009` 存储过程一致 |
 | [verify-master-cron-templates.sh](verify-master-cron-templates.sh) | 静态校验 `deploy-master` / `patch-master-cron` 的 Cron 模板（无 `schedule:run`、无 `master/master` 路径、三条任务 + `ops-webhook` 兜底、`--max-time=3600`） |
+| [verify-node-deploy-templates.sh](verify-node-deploy-templates.sh) | 静态校验 `deploy-node`、`vars.example.env`、`env.example` 与 lagran 脚本（HTTPS Agent、静态 ldd、`redi_node`、setcap、lagran_ports.py） |
 | [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | 已上线主控：升级 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`；可传参 `bash …/patch-master-cron-ops-webhook.sh <artisan目录>`）；结束会打印 Cron / `redi:health --notify` 验收提示 |
 | [centos7/vars.example.env](centos7/vars.example.env) | 部署变量模板（`vars.env`）；Webhook URL 写在主控 `.env`，见文件内注释 |
 | [centos7/deploy-master.sh](centos7/deploy-master.sh) / [deploy-node.sh](centos7/deploy-node.sh) | CentOS 7 主控/节点一键部署 |
