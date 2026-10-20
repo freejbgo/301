@@ -129,7 +129,7 @@ sudo bash scripts/centos7/lagran-cleanup-iptables.sh /opt/redi-multi/redi-multi
 sudo systemctl start redi-multi
 ```
 
-`lagran-cleanup-iptables.sh` 通过 `scripts/centos7/lagran_ports.py` 合并 `addr` / `tls_addr` 与 `lagran.port`，与节点进程写入 iptables 的 sport 一致。
+`lagran-cleanup-iptables.sh` 会 `source` 节点 `env.sh`（若存在），并通过 `lagran_ports.py` 合并 `addr` / `tls_addr` / `lagran.port`，且读取 `REDI_HTTP_LISTEN`、`REDI_TLS_LISTEN`，与节点进程 `config.Init()` 后的 lagran sport 一致。
 
 ## 9. 节点连主控 MySQL 的 TLS（可选）
 

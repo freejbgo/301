@@ -51,6 +51,12 @@ assert lp.merge_listener_ports("", "0.0.0.0:80", lp.resolve_tls_addr({})) == "80
 assert lp.merge_listener_ports("", "0.0.0.0:80", lp.resolve_tls_addr({"tls_addr": None})) == "80"
 assert lp.port_from_listen("::80") == "80"
 assert lp.merge_listener_ports("", "::80", "") == "80"
+import os
+os.environ["REDI_TLS_LISTEN"] = "0.0.0.0:8443"
+h, t = lp.apply_listen_env_overrides("0.0.0.0:80", "0.0.0.0:443")
+assert h == "0.0.0.0:80" and t == "0.0.0.0:8443"
+del os.environ["REDI_TLS_LISTEN"]
+assert lp.merge_listener_ports("", h, t) == "80,8443"
 PY
 
 echo "==> SQL 与节点存储过程校验"

@@ -7,6 +7,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP="${1:-/opt/redi-multi/redi-multi}"
 CFG="${APP}/config.json"
+ENV_FILE="${APP}/env.sh"
 
 if [[ "$(id -u)" -ne 0 ]]; then
   echo "请用 root 执行: sudo bash scripts/centos7/lagran-cleanup-iptables.sh [/opt/redi-multi/redi-multi]" >&2
@@ -16,6 +17,11 @@ fi
 command -v iptables >/dev/null 2>&1 || { echo "需要 iptables" >&2; exit 1; }
 command -v python3 >/dev/null 2>&1 || { echo "需要 python3" >&2; exit 1; }
 [[ -f "$CFG" ]] || { echo "找不到 ${CFG}" >&2; exit 1; }
+
+if [[ -f "$ENV_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$ENV_FILE" 2>/dev/null || true
+fi
 
 read -r SPORT SYN_ACK ACK PSH_ACK FIN_ACK < <(python3 "${SCRIPT_DIR}/lagran_ports.py" "$CFG")
 

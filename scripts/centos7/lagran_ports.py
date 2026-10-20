@@ -3,10 +3,12 @@
 
 tls_addr 与 resolveTlsAddrFromJSON 一致：缺这个键时默认 0.0.0.0:443；
 JSON null 或空字符串表示关闭 HTTPS，不并入 443。
+环境变量 REDI_HTTP_LISTEN / REDI_TLS_LISTEN 覆盖 config.json（与 Go applyEnvOverrides 一致）。
 """
 from __future__ import annotations
 
 import json
+import os
 import sys
 
 
@@ -14,6 +16,10 @@ def port_from_listen(addr: str) -> str:
     addr = (addr or "").strip()
     if not addr:
         return ""
+    if addr.startswith("::"):
+        rest = addr[2:]
+        if rest and ":" not in rest:
+            return rest
     if addr.startswith(":"):
         return addr[1:]
     if ":" in addr:
@@ -65,13 +71,25 @@ def lagran_bool(lag: dict, key: str, default: bool = True) -> bool:
     return v not in (False, 0, "0", "false")
 
 
+def apply_listen_env_overrides(http_addr: str, tls_addr: str) -> tuple[str, str]:
+    """与 config.applyEnvOverrides 一致：REDI_HTTP_LISTEN / REDI_TLS_LISTEN 覆盖 config.json。"""
+    if v := os.environ.get("REDI_HTTP_LISTEN", "").strip():
+        http_addr = v
+    if "REDI_TLS_LISTEN" in os.environ:
+        tls_addr = os.environ.get("REDI_TLS_LISTEN", "").strip()
+    return http_addr, tls_addr
+
+
 def main() -> None:
     path = sys.argv[1]
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
     lag = data.get("lagran") or {}
     lag_port = lag.get("port", "")
-    sport = merge_listener_ports(lag_port, data.get("addr", ""), resolve_tls_addr(data))
+    http_addr = data.get("addr", "") or ""
+    tls_addr = resolve_tls_addr(data)
+    http_addr, tls_addr = apply_listen_env_overrides(http_addr, tls_addr)
+    sport = merge_listener_ports(lag_port, http_addr, tls_addr)
     flags = (
         "1" if lagran_bool(lag, "syn_ack") else "0",
         "1" if lagran_bool(lag, "ack") else "0",
