@@ -38,6 +38,8 @@ jobs:
         run: ./vendor/bin/phpunit --testsuite Unit,Feature
       - name: Cron artisan commands registered
         run: bash scripts/verify-redi-artisan-cron.sh
+      - name: ACME code invariants
+        run: bash scripts/verify-acme-code-invariants.sh
 
   master-phpunit-php80:
     runs-on: ubuntu-latest
