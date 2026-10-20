@@ -42,6 +42,8 @@ jobs:
         run: bash scripts/verify-acme-code-invariants.sh
       - name: Edge DNS invariants
         run: bash scripts/verify-edge-dns-invariants.sh
+      - name: Tenant edge / ACME queue invariants
+        run: bash scripts/verify-tenant-edge-queue-invariants.sh
 
   master-phpunit-php80:
     runs-on: ubuntu-latest
@@ -64,7 +66,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Deploy script syntax (CentOS 7)
         run: |
-          for f in scripts/dev-preflight.sh scripts/ensure-release-tarballs.sh scripts/verify-redi-db-deploy-path.sh scripts/verify-master-cron-templates.sh scripts/verify-node-deploy-templates.sh scripts/verify-grant-nodes-templates.sh scripts/verify-acceptance-centos7-doc.sh scripts/verify-edge-dns-invariants.sh scripts/verify-acceptance-edge-pool-doc.sh scripts/build-master-tar.sh scripts/build-node-tar.sh scripts/patch-master-cron-ops-webhook.sh scripts/centos7/*.sh; do bash -n "$f" || exit 1; done
+          for f in scripts/dev-preflight.sh scripts/ensure-release-tarballs.sh scripts/verify-redi-db-deploy-path.sh scripts/verify-master-cron-templates.sh scripts/verify-node-deploy-templates.sh scripts/verify-grant-nodes-templates.sh scripts/verify-acceptance-centos7-doc.sh scripts/verify-edge-dns-invariants.sh scripts/verify-acceptance-edge-pool-doc.sh scripts/verify-tenant-edge-queue-invariants.sh scripts/build-master-tar.sh scripts/build-node-tar.sh scripts/patch-master-cron-ops-webhook.sh scripts/centos7/*.sh; do bash -n "$f" || exit 1; done
           python3 scripts/centos7/lagran_ports.py node/redi-multi/config.json.example | grep -q '80'
           bash scripts/verify-master-cron-templates.sh
           bash scripts/verify-node-deploy-templates.sh
@@ -72,6 +74,7 @@ jobs:
           bash scripts/verify-acceptance-centos7-doc.sh
           bash scripts/verify-edge-dns-invariants.sh
           bash scripts/verify-acceptance-edge-pool-doc.sh
+          bash scripts/verify-tenant-edge-queue-invariants.sh
           php scripts/verify-redi-node-procedure-sync.php
           bash scripts/verify-redi-db-deploy-path.sh
 

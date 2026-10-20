@@ -59,4 +59,20 @@ class TenantEdgeServiceTest extends TestCase
 
         $this->assertSame('tok.example.com', RediTenantEdge::query()->first()->edge_fqdn);
     }
+
+    public function test_invalidate_all_dns_synced_at_clears_timestamps(): void
+    {
+        $edge = new RediTenantEdge();
+        $edge->forceFill([
+            'admin_id' => 1,
+            'token' => 'tok',
+            'edge_fqdn' => 'tok.example.com',
+            'dns_synced_at' => now(),
+        ]);
+        $edge->save();
+
+        TenantEdgeService::invalidateAllDnsSyncedAt();
+
+        $this->assertNull(RediTenantEdge::query()->first()->dns_synced_at);
+    }
 }

@@ -72,6 +72,12 @@ class TenantEdgeService
         });
     }
 
+    /** Pool 主机名或解析目标变更后，避免仍显示「已同步」。 */
+    public static function invalidateAllDnsSyncedAt(): void
+    {
+        RediTenantEdge::query()->update(['dns_synced_at' => null]);
+    }
+
     protected static function generateToken(): string
     {
         do {

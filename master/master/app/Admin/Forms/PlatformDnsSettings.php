@@ -6,6 +6,7 @@ use App\Models\RediPlatformDns;
 use App\Services\Dns\DnsProviderFactory;
 use App\Services\TenantEdgeService;
 use App\Support\HostNameValidator;
+use App\Support\OpsDisplaySanitizer;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Contracts\LazyRenderable;
 use Dcat\Admin\Traits\LazyWidget;
@@ -39,11 +40,12 @@ class PlatformDnsSettings extends Form implements LazyRenderable
 
         $platform = RediPlatformDns::instance();
         $oldZone = trim($platform->edge_zone ?? '');
+        $oldPoolHost = strtolower(trim((string) ($platform->pool_host ?: 'pool')));
         $edgeZone = strtolower(trim((string) ($input['edge_zone'] ?? '')));
         $poolHost = strtolower(trim((string) ($input['pool_host'] ?? 'pool') ?: 'pool'));
-        if (str_contains($edgeZone, "\r") || str_contains($edgeZone, "\n")
-            || str_contains($poolHost, "\r") || str_contains($poolHost, "\n")) {
-            return $this->response()->error('域名配置不能包含换行符');
+        if (OpsDisplaySanitizer::containsControlChars($edgeZone)
+            || OpsDisplaySanitizer::containsControlChars($poolHost)) {
+            return $this->response()->error('域名配置不能包含控制字符');
         }
         $edgeZone = HostNameValidator::toCanonicalAscii($edgeZone);
         if ($edgeZone === '' || ! HostNameValidator::isValidHostLabel($edgeZone)) {
@@ -76,6 +78,9 @@ class PlatformDnsSettings extends Form implements LazyRenderable
         if ($oldZone !== $newZone && $newZone !== '') {
             TenantEdgeService::rebuildAllEdgeFqdn($newZone);
         }
+        if ($oldZone === $newZone && $oldPoolHost !== $poolHost) {
+            TenantEdgeService::invalidateAllDnsSyncedAt();
+        }
 
         return $this->response()->success('已保存')->refresh();
     }
@@ -83,7 +88,7 @@ class PlatformDnsSettings extends Form implements LazyRenderable
     public function form()
     {
         $this->text('edge_zone', '平台主域名')->required()->help('例：123.com（你拥有 DNS 解析权的域名）');
-        $this->text('pool_host', 'Pool 主机名')->default('pool')->help('最终 FQDN：pool.平台主域名');
+        $this->text('pool_host', 'Pool 主机名')->default('pool')->help('最终 FQDN：pool.平台主域名；修改后须重新 API 同步（租户 CNAME 指向会变）');
         $this->radio('dns_mode', '解析模式')->options(['manual' => '手动', 'api' => 'API 自动'])->default('manual')
             ->help('手动：在下方「解析参考」表按记录在 DNS 服务商面板自行添加，无需点同步。API 自动：保存凭证后可一键同步 pool A 与各租户 token→pool CNAME。');
         $this->select('dns_driver', 'DNS 驱动')->options([
