@@ -42,7 +42,11 @@ for script in lagran-cleanup-iptables.sh lagran-diagnose.sh; do
   f="${REPO_ROOT}/scripts/centos7/${script}"
   [[ -f "$f" ]] || fail "missing ${script}"
   grep -q 'lagran_ports.py' "$f" || fail "${script}: must invoke lagran_ports.py"
+  grep -q 'NFQUEUE' "$f" || fail "${script}: must reference NFQUEUE rules"
 done
+
+grep -q 'nfnetlink_queue' "${REPO_ROOT}/scripts/centos7/deploy-node.sh" \
+  || fail "deploy-node: must attempt nfnetlink_queue for lagran"
 
 grep -q 'redi_ensure_lagran_enabled' "$LIB" || fail "lib.sh: missing redi_ensure_lagran_enabled"
 

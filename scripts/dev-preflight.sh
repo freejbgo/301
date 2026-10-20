@@ -63,6 +63,12 @@ echo "==> 证书部署 / 上线文档约定"
 bash scripts/verify-cert-deploy-invariants.sh
 bash scripts/verify-production-readiness-doc.sh
 
+echo "==> 后台 / 节点 API 限速约定"
+bash scripts/verify-admin-api-invariants.sh
+
+echo "==> release.yml / 发布包约定"
+bash scripts/verify-release-workflow-invariants.sh
+
 echo "==> 仓库脚本语法 + CentOS 7 部署脚本"
 for f in \
   scripts/dev-preflight.sh \
@@ -89,6 +95,8 @@ for f in \
   scripts/verify-health-tenant-invariants.sh \
   scripts/verify-cert-deploy-invariants.sh \
   scripts/verify-production-readiness-doc.sh \
+  scripts/verify-admin-api-invariants.sh \
+  scripts/verify-release-workflow-invariants.sh \
   scripts/verify-ci-preflight-parity.sh \
   scripts/centos7/*.sh; do
   bash -n "$f"

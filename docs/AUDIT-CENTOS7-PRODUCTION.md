@@ -17,7 +17,7 @@
 | 项 | 结论 |
 |----|------|
 | 范围 | **76** 个 PR（#145–#220 已合并 `main`）；相对 #144 合并点约 **98** 文件、+4326/-425 行 |
-| 门禁 | `bash scripts/dev-preflight.sh`：**440** tests / **947** assertions；Go 测试通过 |
+| 门禁 | `bash scripts/dev-preflight.sh`：**441** tests / **948** assertions；Go 测试通过 |
 | A. 节点 API / Agent（#145–#174, #198–#200） | ack 校验、控制字符过滤、`redirect-rules` / challenges 出站域名校验；与 Go `AcmeHostKey` 对齐 |
 | B. ACME / 主机名（#175–#197） | `acmeHostKey`、`nodePublishableRow`、`originalUrlIfValid` 收敛；purge 先增后删与 legacy 键兼容 |
 | C. 证书漂移与 realign（#187–#240） | 只读扫描 + `freshCertWithPersistedRealign` 落库；`saveQuietly` + 显式 `reconcile`；节点 `ack` 行锁内对齐 |
@@ -148,7 +148,9 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 深度扫（#354，待合并）：** `verify-dns-providers-invariants`、`verify-node-skip-api-invariants`；AUDIT §9 与 preflight/440 基线同步。
+**2026-10-20 深度扫（#355，待合并）：** `release.yml` 对齐 CI 门禁；`verify-admin-api-invariants` / `verify-release-workflow-invariants`；lagran NFQUEUE 模板校验。
+
+**2026-10-20 深度扫（#354 已合并）：** `verify-dns-providers-invariants`、`verify-node-skip-api-invariants`；AUDIT §9 与 preflight/440 基线同步。
 
 **2026-10-20 深度扫（#353 已合并）：** `verify-cname-cert-job-invariants`、`verify-ci-preflight-parity`；CI 对齐 dev-preflight；ACME Job 停用域单测。
 
@@ -877,4 +879,4 @@ bash scripts/verify-ci-preflight-parity.sh
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` / 节点 `GetSkipUrl` 路径一致）。发版 tar 见 `scripts/ensure-release-tarballs.sh`（`build-master-tar.sh` / `build-node-tar.sh`）。
 
-PHPUnit 当前 **440** 条 Feature/Unit（**947** assertions）；以 `phpunit` 退出码为准。GitHub Actions 的 `master-phpunit` 含 `composer audit` 与 `verify-ci-preflight-parity`；配额有限时在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **441** 条 Feature/Unit（**948** assertions）；以 `phpunit` 退出码为准。GitHub Actions 的 `master-phpunit` 含 `composer audit` 与 `verify-ci-preflight-parity`；打 `v*` 标签时 **release.yml** 与 CI 同套 `centos7-scripts` 校验；配额有限时在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
