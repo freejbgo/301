@@ -39,6 +39,17 @@ for f in \
   bash -n "$f"
 done
 python3 scripts/centos7/lagran_ports.py node/redi-multi/config.json.example | grep -q '80'
+python3 - <<'PY'
+import sys
+sys.path.insert(0, "scripts/centos7")
+import lagran_ports as lp
+assert lp.resolve_tls_addr({}) == "0.0.0.0:443"
+assert lp.resolve_tls_addr({"tls_addr": None}) == ""
+assert lp.resolve_tls_addr({"tls_addr": ""}) == ""
+assert lp.resolve_tls_addr({"tls_addr": "0.0.0.0:8443"}) == "0.0.0.0:8443"
+assert lp.merge_listener_ports("", "0.0.0.0:80", lp.resolve_tls_addr({})) == "80,443"
+assert lp.merge_listener_ports("", "0.0.0.0:80", lp.resolve_tls_addr({"tls_addr": None})) == "80"
+PY
 
 echo "==> SQL 与节点存储过程校验"
 php scripts/verify-redi-node-procedure-sync.php
