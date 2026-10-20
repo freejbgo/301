@@ -16,6 +16,8 @@
 | [verify-edge-dns-invariants.sh](verify-edge-dns-invariants.sh) | Edge `syncAll` 无 IPv4 快速失败、A/AAAA reconcile、Cloudflare 橙云 AAAA 清理 |
 | [verify-acceptance-edge-pool-doc.sh](verify-acceptance-edge-pool-doc.sh) | 静态校验 [ACCEPTANCE-EDGE-POOL.md](../docs/ACCEPTANCE-EDGE-POOL.md) F 项与 Cron/Pool AAAA 表述 |
 | [verify-tenant-edge-queue-invariants.sh](verify-tenant-edge-queue-invariants.sh) | 租户 `pool_host` 变更失效 `dns_synced_at`、`IssueDomainCertificateJob` 双锁、CNAME 预检与 OPS 文档 |
+| [verify-cert-deploy-invariants.sh](verify-cert-deploy-invariants.sh) | `reconcileCertDeployStatus` / `certIsNodePullable`、启用守卫、`csvSafeCell` |
+| [verify-production-readiness-doc.sh](verify-production-readiness-doc.sh) | 静态校验 [PRODUCTION-READINESS.md](../docs/PRODUCTION-READINESS.md) 关键验收表述 |
 | [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | 已上线主控：升级 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`；可传参 `bash …/patch-master-cron-ops-webhook.sh <artisan目录>`）；结束会打印 Cron / `redi:health --notify` 验收提示 |
 | [centos7/vars.example.env](centos7/vars.example.env) | 部署变量模板（`vars.env`）；Webhook URL 写在主控 `.env`，见文件内注释 |
 | [centos7/deploy-master.sh](centos7/deploy-master.sh) / [deploy-node.sh](centos7/deploy-node.sh) | CentOS 7 主控/节点一键部署 |
