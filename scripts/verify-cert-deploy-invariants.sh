@@ -26,5 +26,22 @@ grep -q 'assertCanEnable' "$guard" || fail "DomainDnsPointingGuard must assertCa
 grep -q 'originalUrlIfValid' "$guard" || fail "enable guard must use originalUrlIfValid"
 grep -q 'csvSafeCell' "$exporter" || fail "CSV export must sanitize formula cells"
 grep -q 'DISABLE_DEPLOY_CANCEL_MSG' "$domain" || fail "domain disable deploy message constant"
+grep -q 'function markNodeAck' "$deploy" || fail "missing markNodeAck"
+grep -q 'refreshCertStatusFromDeployments' "$deploy" || fail "missing refreshCertStatusFromDeployments"
+grep -q 'handleDomainReenabledFromDisabled' "$deploy" || fail "missing handleDomainReenabledFromDisabled"
+grep -q 'handleNodeDisabled' "$deploy" || fail "missing handleNodeDisabled"
+
+ack="${APP}/Http/Controllers/Api/NodeAgentController.php"
+queue="${APP}/Services/DomainCertificateQueue.php"
+redeploy="${APP}/Services/DomainCertificateRedeployQueue.php"
+[[ -f "$ack" ]] || fail "missing NodeAgentController"
+[[ -f "$queue" ]] || fail "missing DomainCertificateQueue"
+[[ -f "$redeploy" ]] || fail "missing DomainCertificateRedeployQueue"
+
+grep -q 'ack not applied' "$ack" || fail "ack must return 409 when not applied"
+grep -q 'containsControlChars' "$ack" || fail "ack must reject control chars in error"
+grep -q 'ignored' "$ack" || fail "ack must ignore missing deployment row"
+grep -q "where('status', 1)" "$queue" || fail "batch apply queue must only enqueue enabled domains"
+grep -q 'certIsEligibleForDeployQueue' "$redeploy" || fail "redeploy must check eligible certs"
 
 echo "verify-cert-deploy-invariants: OK"
