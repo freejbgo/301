@@ -31,6 +31,8 @@ bash -n "${SCRIPT_DIR}/revoke-node-mysql.sh"
 bash -n "${SCRIPT_DIR}/firewalld-revoke-mysql-from-node.sh"
 bash -n "${SCRIPT_DIR}/grant-nodes-from-vars.sh"
 bash -n "${SCRIPT_DIR}/apply-mysql-skip-name-resolve.sh"
+bash -n "${SCRIPT_DIR}/lagran-cleanup-iptables.sh"
+bash -n "${SCRIPT_DIR}/lagran-diagnose.sh"
 bash -n "${SCRIPT_DIR}/run-on-centos7-host.sh"
 
 echo "[2] 发布包"
