@@ -48,7 +48,7 @@ func Run() {
 			packetHandle(i.(int))
 		})
 		if err != nil {
-			logrus.Errorf("[lagran] %s pool: %v", spec.label, err)
+			logrus.Errorf("[lagran] %s pool: %v (aborting lagran startup; no iptables rules)", spec.label, err)
 			return
 		}
 		pools = append(pools, p)

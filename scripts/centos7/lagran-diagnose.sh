@@ -19,6 +19,12 @@ fi
 if [[ "${REDI_LAGRAN_DISABLED:-}" == "1" ]]; then
   echo "[env] REDI_LAGRAN_DISABLED=1 → 进程应跳过 lagran"
 fi
+if [[ -n "${REDI_HTTP_LISTEN+set}" ]]; then
+  echo "[env] REDI_HTTP_LISTEN=${REDI_HTTP_LISTEN:-}（覆盖 config.json addr；lagran --sport 与 cleanup 脚本一致）"
+fi
+if [[ -n "${REDI_TLS_LISTEN+set}" ]]; then
+  echo "[env] REDI_TLS_LISTEN=${REDI_TLS_LISTEN:-}（覆盖 tls_addr；空值表示关闭 HTTPS）"
+fi
 
 if [[ -f "$CFG" ]] && command -v python3 >/dev/null 2>&1; then
   if LAGRAN_SPORT=$(python3 "${SCRIPT_DIR}/lagran_ports.py" "$CFG" 2>/dev/null | awk '{print $1}'); then
