@@ -45,6 +45,9 @@ bash scripts/verify-acme-prune-requeue-invariants.sh
 echo "==> Edge DNS 同步约定"
 bash scripts/verify-edge-dns-invariants.sh
 
+echo "==> CNAME 预检 / ACME Job 约定"
+bash scripts/verify-cname-cert-job-invariants.sh
+
 echo "==> Edge Pool 验收清单文档"
 bash scripts/verify-acceptance-edge-pool-doc.sh
 
@@ -76,11 +79,13 @@ for f in \
   scripts/verify-renew-ops-invariants.sh \
   scripts/verify-acme-prune-requeue-invariants.sh \
   scripts/verify-edge-dns-invariants.sh \
+  scripts/verify-cname-cert-job-invariants.sh \
   scripts/verify-acceptance-edge-pool-doc.sh \
   scripts/verify-tenant-edge-queue-invariants.sh \
   scripts/verify-health-tenant-invariants.sh \
   scripts/verify-cert-deploy-invariants.sh \
   scripts/verify-production-readiness-doc.sh \
+  scripts/verify-ci-preflight-parity.sh \
   scripts/centos7/*.sh; do
   bash -n "$f"
 done
@@ -124,5 +129,8 @@ bash scripts/verify-acceptance-centos7-doc.sh
 echo "==> SQL 与节点存储过程校验"
 php scripts/verify-redi-node-procedure-sync.php
 bash scripts/verify-redi-db-deploy-path.sh
+
+echo "==> CI 与 dev-preflight 门禁一致"
+bash scripts/verify-ci-preflight-parity.sh
 
 echo "dev-preflight: OK"
