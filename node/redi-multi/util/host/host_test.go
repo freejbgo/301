@@ -28,6 +28,9 @@ func TestAcmeHostKeyStripsScheme(t *testing.T) {
 	if AcmeHostKey("not a host!!!") != "" {
 		t.Fatal("expected empty for invalid host")
 	}
+	if AcmeHostKey("1.2.3.4") != "" {
+		t.Fatal("expected empty for IPv4 literal (aligned with HostNameValidator)")
+	}
 }
 
 func TestCanonicalLookupHostRejectsCRLF(t *testing.T) {

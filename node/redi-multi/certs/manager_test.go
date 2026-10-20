@@ -44,6 +44,18 @@ func TestReplaceAllSkipsTrailingNewlineDomain(t *testing.T) {
 	mu.RUnlock()
 }
 
+func TestForceHTTPSUsesCanonicalHost(t *testing.T) {
+	ReplaceAll([]Entry{
+		{CertID: 1, Domain: "foo.test", Certificate: []byte("c"), PrivateKey: []byte("k"), ForceHTTPS: true},
+	})
+	if !ForceHTTPS("FOO.TEST") {
+		t.Fatal("expected canonical host lookup for force HTTPS")
+	}
+	if ForceHTTPS("1.2.3.4") {
+		t.Fatal("expected false for IP literal")
+	}
+}
+
 func TestSyncFromMasterDropsRetiredIDs(t *testing.T) {
 	ReplaceAll([]Entry{
 		{CertID: 1, Domain: "a.test", Certificate: []byte("c"), PrivateKey: []byte("k")},

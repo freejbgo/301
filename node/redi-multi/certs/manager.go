@@ -79,7 +79,10 @@ func ForceHTTPS(host string) bool {
 	if hostutil.ContainsControlChars(host) {
 		return false
 	}
-	host = strings.ToLower(strings.TrimSpace(host))
+	host = hostutil.CanonicalLookupHost(host)
+	if host == "" {
+		return false
+	}
 	mu.RLock()
 	e, ok := entries[host]
 	mu.RUnlock()
@@ -90,7 +93,10 @@ func GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	if hello == nil || hostutil.ContainsControlChars(hello.ServerName) {
 		return nil, fmt.Errorf("no certificate for invalid host")
 	}
-	host := strings.ToLower(strings.TrimSpace(hello.ServerName))
+	host := hostutil.CanonicalLookupHost(hello.ServerName)
+	if host == "" {
+		return nil, fmt.Errorf("no certificate for invalid host")
+	}
 	mu.RLock()
 	e, ok := entries[host]
 	mu.RUnlock()
