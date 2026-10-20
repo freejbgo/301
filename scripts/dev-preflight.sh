@@ -30,6 +30,9 @@ echo "==> PHPUnit (master/master, PHP $(php -r 'echo PHP_VERSION;'))"
 echo "==> 运维 artisan 命令（Cron 对齐）"
 bash scripts/verify-redi-artisan-cron.sh
 
+echo "==> masteragent ack / 证书拉取约定"
+bash scripts/verify-masteragent-invariants.sh
+
 echo "==> ACME 主机名键约定"
 bash scripts/verify-acme-code-invariants.sh
 
@@ -59,6 +62,7 @@ for f in \
   scripts/verify-grant-nodes-templates.sh \
   scripts/verify-acceptance-centos7-doc.sh \
   scripts/verify-redi-artisan-cron.sh \
+  scripts/verify-masteragent-invariants.sh \
   scripts/verify-acme-code-invariants.sh \
   scripts/verify-edge-dns-invariants.sh \
   scripts/verify-acceptance-edge-pool-doc.sh \
