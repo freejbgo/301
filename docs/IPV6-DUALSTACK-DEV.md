@@ -1,8 +1,8 @@
 # IPv4 / IPv6 双栈 — 开发设计
 
-**状态：** 第一期 **V6-01–V6-27** 与第二期 **V6-30**（lagran IPv6 与 IPv4 相同）已在 `main` 落地。默认仍 **不** 发布 Pool AAAA。配置字符串仍是 `0.0.0.0`，Linux 上进程已经双栈监听（见 §8 V6-29）。控制面（`NODE_IPS`、MySQL 3306）仍 IPv4；lagran 按出站 TCP 源端口匹配，iptables 与 ip6tables 共用队列号。真机双栈打勾见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7。本文不是已上线说明。
+**状态：** 第一期 **V6-01–V6-27** 与第二期 **V6-28–V6-31**（含 lagran IPv6 与 IPv4 相同、部署/验收文档）已在 `main` 落地。默认仍 **不** 发布 Pool AAAA。配置字符串仍是 `0.0.0.0`，Linux 上进程已经双栈监听（见 §8 V6-29）。控制面（`NODE_IPS`、MySQL 3306）仍 IPv4；lagran 按出站 TCP 源端口匹配，iptables 与 ip6tables 共用队列号。真机双栈打勾见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7。本文不是已上线说明。
 
-**读者：** Composer 2.5。第一期 **V6-01–V6-27** 已做完。第二期按 **§8** 一次一行；§7 仍约束未列出的范围。
+**读者：** Composer 2.5。第一期与第二期 **§8** 编号行已在 `main` 做完；§7 仍约束未列出的范围。新需求另开编号，不要回改已合并行。
 
 **配套：** [IPV6-DUALSTACK-IMPLEMENTATION.md](IPV6-DUALSTACK-IMPLEMENTATION.md)。
 
@@ -30,7 +30,7 @@
 
 AAAA **默认不写**。主控 `.env` 里 `REDI_PUBLISH_POOL_AAAA=true` 之后，已经实现 `SupportsPoolAAAA` 的厂商才按地址列表增删 AAAA。节点配置字符串仍是 `0.0.0.0`，在有 IPv6 的 Linux 上已经双栈接听。发布前要确认的是网卡上的公网地址和主控 `curl -6`，不是把字符串改成 `[::]`。只有 AAAA、主控又访问不到节点 IPv6 时，签发和续期的 HTTP-01 会超时。
 
-控制面（Agent、MySQL、`NODE_IPS`、lagran）保持 IPv4。
+控制面（Agent、MySQL、`NODE_IPS`）保持 IPv4。访客数据面的 lagran 在 OUTPUT 按源端口处理 IPv4/IPv6 出站（见 §8 V6-30）。
 
 ---
 
@@ -209,10 +209,8 @@ CentOS 7 的内核是 3.10。从 3.8 起内核忽略 `NFQNL_CFG_CMD_PF_BIND` 和
 
 顺序是：节点已有 IPv4、后台再填 IPv6（含其他 IPv6）、确认没有把 `addr` 改成具体 IPv4、主控对 `enabledPublicIpv6s()` 里的每个地址 `curl -6` 通 80、全部通过之后，再把 `REDI_PUBLISH_POOL_AAAA` 设为 true。不要要求先改 `config.json` 或设置部署变量。分别用 IPv4 和 IPv6 访问客户域名，跳转都要成立。`ip6tables -L OUTPUT` 与 iptables 成对，队列号相同（`1000:1127` 这一组），不是另一段号码；规则不是挂在某一条连接上。
 
-`DEPLOY-centos7.md` §12 删掉「`bindv6only` 为 1 就不要改监听」和「应把 `addr` / `tls_addr` 写成 `[::]`」。默认字符串不用改，保留「不要在部署脚本或默认 `config.json` 里改监听」。删掉「除非你已按下列规则手工改配置并验收」，否则读起来仍像是默认 `0.0.0.0` 不算双栈。删掉「回退 IPv4-only 监听时，改回 `0.0.0.0`」：改回 `0.0.0.0` 不会关掉 IPv6，只有写成某个具体 IPv4 才是只听 IPv4。步骤 1 不要再写「见下文监听」去要求改 `config.json`。同一节里「lagran 与 iptables 规则仍按 IPv4 节点地址工作，不因 Pool AAAA 而自动处理 IPv6」改成与 V6-30 一致：同一组队列号，不按节点地址匹配。`::80` 仍然不行；不要同时绑 `0.0.0.0` 和 `[::]`；`api_listen` 仍是 `127.0.0.1:8080`。
-
-`ACCEPTANCE-CENTOS7-DEPLOY.md` §7.2 删掉「若节点尚未听 IPv6，须先按 DEPLOY §12 改 `config.json`」。两份文档的 `curl` 例子都只写「换成主 IPv6」。要改成 `enabledPublicIpv6s()` 里的每一个地址，包括其他 IPv6。只 `curl -6` 80 不能证明 443。缺 `tls_addr` 键时与写了 `0.0.0.0:443` 一样，HTTPS 是开的，443 也要 `curl -6 -k`。只有 JSON `null` 或空字符串才只测 80。
+**V6-31 文档（已在 `main`）。** 运维与验收以 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12 与 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7 为准：默认 `0.0.0.0` 已双栈、不必为 IPv6 改监听；主控对 `enabledPublicIpv6s()` 每个地址 `curl -6`（HTTPS 未关时再测 443）；lagran 的 iptables/ip6tables 同队列号。
 
 不要做「检测节点是否已听 `[::]`」的 health hint。心跳只上报版本，主控读不到节点 `config.json`；按「已填 IPv6 且开关为真」提示会在监听正确时也一直出现。
 
-V6-29 没有代码。先做 V6-30，再做 V6-31。节点始终保留 IPv4。
+第二期 **V6-28–V6-31** 已在 `main` 落地。节点始终保留 IPv4。
