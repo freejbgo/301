@@ -70,6 +70,53 @@ class RequeueFailedDeploymentsCommandTest extends TestCase
         $this->assertStringContainsString('正整数', Artisan::output());
     }
 
+    public function test_command_rejects_invalid_cert_id(): void
+    {
+        $exit = Artisan::call('redi:requeue-failed-deployments', ['--cert' => '0']);
+        $this->assertSame(1, $exit);
+        $this->assertStringContainsString('正整数', Artisan::output());
+    }
+
+    public function test_command_skips_failed_on_disabled_node(): void
+    {
+        $nodeId = \DB::table('redi_nodes')->insertGetId([
+            'enabled' => false,
+            'public_ip' => '1.2.3.4',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $certId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_FAILED,
+            'certificate' => \Illuminate\Support\Facades\Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
+            'private_key' => \Illuminate\Support\Facades\Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $certId,
+            'node_id' => $nodeId,
+            'status' => 'failed',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $exit = Artisan::call('redi:requeue-failed-deployments');
+        $this->assertSame(0, $exit);
+        $this->assertStringContainsString('没有 failed', Artisan::output());
+        $this->assertDatabaseHas('redi_cert_deployments', [
+            'cert_id' => $certId,
+            'status' => 'failed',
+        ]);
+    }
+
     public function test_command_requeues_failed_deployments(): void
     {
         $nodeId = \DB::table('redi_nodes')->insertGetId([
