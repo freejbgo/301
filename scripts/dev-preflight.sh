@@ -39,6 +39,9 @@ bash scripts/verify-edge-dns-invariants.sh
 echo "==> Edge Pool 验收清单文档"
 bash scripts/verify-acceptance-edge-pool-doc.sh
 
+echo "==> 租户 edge / ACME 队列约定"
+bash scripts/verify-tenant-edge-queue-invariants.sh
+
 echo "==> 仓库脚本语法 + CentOS 7 部署脚本"
 for f in \
   scripts/dev-preflight.sh \
@@ -55,6 +58,7 @@ for f in \
   scripts/verify-acme-code-invariants.sh \
   scripts/verify-edge-dns-invariants.sh \
   scripts/verify-acceptance-edge-pool-doc.sh \
+  scripts/verify-tenant-edge-queue-invariants.sh \
   scripts/centos7/*.sh; do
   bash -n "$f"
 done
