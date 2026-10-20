@@ -68,4 +68,23 @@ class DomainCertificateQueueTest extends TestCase
         });
         Bus::assertDispatchedTimes(IssueDomainCertificateJob::class, 1);
     }
+
+    public function test_dispatch_owned_skips_disabled_domains(): void
+    {
+        Bus::fake();
+
+        \DB::table('redi_admin_domain')->insert([
+            'id' => 3,
+            'admin_id' => 10,
+            'original_url' => 'off.com',
+            'status' => 2,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $count = DomainCertificateQueue::dispatchOwned([1, 3], 10, false);
+
+        $this->assertSame(1, $count);
+        Bus::assertDispatchedTimes(IssueDomainCertificateJob::class, 1);
+    }
 }

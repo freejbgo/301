@@ -27,7 +27,7 @@
 | 队列积压 / failed_jobs 健康检查 | ✅ |
 | 多机 `queue:work` + `CACHE_DRIVER=redis` 文档与自检 | ✅ `redi:health --json` 的 `hints` + summary 含 queue/cache |
 | ACME 续期全状态（validating 等）边界 | ✅ 续期跳过进行中 validating；卡住可重试；health `cert_validating_stuck` |
-| CentOS 7.9 真机验收清单自动化 | 📋 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) + CI 容器冒烟 |
+| CentOS 7.9 真机验收清单自动化 | 📋 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) + CI 容器冒烟 + `scripts/verify-*-doc.sh` / `verify-*-invariants.sh`（`dev-preflight`） |
 
 ## P2 — 架构与合规（未阻塞首单）
 
