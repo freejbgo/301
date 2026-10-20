@@ -187,6 +187,55 @@ class RenewDomainCertificatesCommandTest extends TestCase
         Bus::assertDispatched(IssueDomainCertificateJob::class);
     }
 
+    public function test_renew_skips_disabled_domain(): void
+    {
+        Bus::fake();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'off.example',
+            'status' => 2,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => 'off.example',
+            'status' => RediDomainCert::STATUS_ACTIVE,
+            'expires_at' => now()->addDays(10),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertSame(0, Artisan::call('redi:renew-certificates', ['--days' => 25]));
+        $this->assertStringContainsString('没有需要续期的证书', Artisan::output());
+        Bus::assertNothingDispatched();
+    }
+
+    public function test_renew_queues_failed_status_cert(): void
+    {
+        Bus::fake();
+
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'failed.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => $domainId,
+            'domain_name' => 'failed.example',
+            'status' => RediDomainCert::STATUS_FAILED,
+            'expires_at' => now()->addDays(10),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertSame(0, Artisan::call('redi:renew-certificates', ['--days' => 25]));
+        Bus::assertDispatched(IssueDomainCertificateJob::class);
+    }
+
     public function test_renew_queues_stuck_validating_cert(): void
     {
         Bus::fake();
