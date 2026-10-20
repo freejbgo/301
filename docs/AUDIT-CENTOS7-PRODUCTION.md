@@ -148,7 +148,9 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 两轮复核（#341，待合并）：** `SafeRelativeRedirect` 单次 `parse_url` + userinfo/端口/无 path 单测；Cron `ops-webhook --task=` 与 artisan 命令对齐校验；`env.example`/`deploy-node` 的 `REDI_DB_PASSWORD`；新增 `verify-grant-nodes-templates.sh`。
+**2026-10-20 验收文档（#342，待合并）：** 真机清单 §2 补 `ops-webhook`/`--task` grep；`verify-acceptance-centos7-doc.sh` 防漂移。
+
+**2026-10-20 两轮复核（#341 已合并）：** `SafeRelativeRedirect` 单次 `parse_url` + userinfo/端口/无 path 单测；Cron `ops-webhook --task=` 与 artisan 命令对齐校验；`env.example`/`deploy-node` 的 `REDI_DB_PASSWORD`；新增 `verify-grant-nodes-templates.sh`。
 
 **2026-10-20 全库深度扫（#340 容器冒烟）：** `container-integration-test` 对 lagran 脚本增加 `bash -n`。
 

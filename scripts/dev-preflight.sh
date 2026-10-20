@@ -38,6 +38,7 @@ for f in \
   scripts/verify-master-cron-templates.sh \
   scripts/verify-node-deploy-templates.sh \
   scripts/verify-grant-nodes-templates.sh \
+  scripts/verify-acceptance-centos7-doc.sh \
   scripts/centos7/*.sh; do
   bash -n "$f"
 done
@@ -74,6 +75,9 @@ bash scripts/verify-node-deploy-templates.sh
 
 echo "==> grant-nodes / vars 模板"
 bash scripts/verify-grant-nodes-templates.sh
+
+echo "==> CentOS7 真机验收清单文档"
+bash scripts/verify-acceptance-centos7-doc.sh
 
 echo "==> SQL 与节点存储过程校验"
 php scripts/verify-redi-node-procedure-sync.php
