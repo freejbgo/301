@@ -26,4 +26,14 @@ class RediPlatformDnsTest extends TestCase
 
         $this->assertSame('', $platform->poolFqdn());
     }
+
+    public function test_pool_fqdn_empty_when_edge_zone_missing(): void
+    {
+        $platform = new RediPlatformDns([
+            'edge_zone' => '',
+            'pool_host' => 'pool',
+        ]);
+
+        $this->assertSame('', $platform->poolFqdn());
+    }
 }

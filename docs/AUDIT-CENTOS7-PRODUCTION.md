@@ -17,7 +17,7 @@
 | 项 | 结论 |
 |----|------|
 | 范围 | **76** 个 PR（#145–#220 已合并 `main`）；相对 #144 合并点约 **98** 文件、+4326/-425 行 |
-| 门禁 | `bash scripts/dev-preflight.sh`：**441** tests / **948** assertions；Go 测试通过 |
+| 门禁 | `bash scripts/dev-preflight.sh`：**442** tests / **949** assertions；Go 测试通过 |
 | A. 节点 API / Agent（#145–#174, #198–#200） | ack 校验、控制字符过滤、`redirect-rules` / challenges 出站域名校验；与 Go `AcmeHostKey` 对齐 |
 | B. ACME / 主机名（#175–#197） | `acmeHostKey`、`nodePublishableRow`、`originalUrlIfValid` 收敛；purge 先增后删与 legacy 键兼容 |
 | C. 证书漂移与 realign（#187–#240） | 只读扫描 + `freshCertWithPersistedRealign` 落库；`saveQuietly` + 显式 `reconcile`；节点 `ack` 行锁内对齐 |
@@ -148,7 +148,9 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 深度扫（#356，待合并）：** `verify-node-api-js-invariants`；dcat-api/ops 路由门禁；§7 基线 #340–#356；节点空 IP 限速单测。
+**2026-10-20 边角收口（#357，待合并）：** `verify-redirect-platform-invariants`（PHP/Go 跳转 URL、force HTTPS、平台 DNS 表单）；`redirecturl` 协议相对/FTP 单测。
+
+**2026-10-20 深度扫（#356 已合并）：** `verify-node-api-js-invariants`；dcat-api/ops 路由门禁；§7 基线 #340–#356；节点空 IP 限速单测。
 
 **2026-10-20 深度扫（#355 已合并）：** `release.yml` 对齐 CI 门禁；`verify-admin-api-invariants` / `verify-release-workflow-invariants`；lagran NFQUEUE 模板校验。
 
@@ -836,7 +838,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**。历史合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#101](https://github.com/freejbgo/301/pull/101)。**2026-10-20 深度扫收口** [#340](https://github.com/freejbgo/301/pull/340)–[#356](https://github.com/freejbgo/301/pull/356)（主机名对齐、租户/health、ACME/续期/prune、Edge DNS、CI/release 与 `verify-*` 门禁）；明细见 §6。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**。历史合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#101](https://github.com/freejbgo/301/pull/101)。**2026-10-20 深度扫收口** [#340](https://github.com/freejbgo/301/pull/340)–[#357](https://github.com/freejbgo/301/pull/357)（主机名对齐、租户/health、ACME/续期/prune、Edge DNS、CI/release 与 `verify-*` 门禁）；明细见 §6。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 
