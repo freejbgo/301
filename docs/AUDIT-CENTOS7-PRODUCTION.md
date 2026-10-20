@@ -148,7 +148,9 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-20 边角收口（#357，待合并）：** `verify-redirect-platform-invariants`（PHP/Go 跳转 URL、force HTTPS、平台 DNS 表单）；`redirecturl` 协议相对/FTP 单测。
+**2026-10-20 复核（doc 同步，待合并）：** §6 #357 标记已合并；§9 PHPUnit **442**/**949**；`scripts/README.md` 补全 preflight `verify-*` 索引。
+
+**2026-10-20 边角收口（#357 已合并）：** `verify-redirect-platform-invariants`（PHP/Go 跳转 URL、force HTTPS、平台 DNS 表单）；`redirecturl` 协议相对/FTP 单测。
 
 **2026-10-20 深度扫（#356 已合并）：** `verify-node-api-js-invariants`；dcat-api/ops 路由门禁；§7 基线 #340–#356；节点空 IP 限速单测。
 
@@ -883,4 +885,4 @@ bash scripts/verify-ci-preflight-parity.sh
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 10.6 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用（与 `deploy-master` / 节点 `GetSkipUrl` 路径一致）。发版 tar 见 `scripts/ensure-release-tarballs.sh`（`build-master-tar.sh` / `build-node-tar.sh`）。
 
-PHPUnit 当前 **441** 条 Feature/Unit（**948** assertions）；以 `phpunit` 退出码为准。GitHub Actions 的 `master-phpunit` 含 `composer audit` 与 `verify-ci-preflight-parity`；打 `v*` 标签时 **release.yml** 与 CI 同套 `centos7-scripts` 校验；配额有限时在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。
+PHPUnit 当前 **442** 条 Feature/Unit（**949** assertions）；以 `phpunit` 退出码为准。GitHub Actions 的 `master-phpunit` 含 `composer audit` 与 `verify-ci-preflight-parity`；打 `v*` 标签时 **release.yml** 与 CI 同套 `centos7-scripts` 校验；配额有限时在开发机执行 `bash scripts/dev-preflight.sh` 即可作为同等门禁。

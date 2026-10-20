@@ -12,12 +12,24 @@
 | [verify-grant-nodes-templates.sh](verify-grant-nodes-templates.sh) | 静态校验 `grant-nodes-from-vars` 与 `deploy-master` 共用 `redi_sync_node_ips_access`、`vars.example` 的 `NODE_IPS`/`MYSQL_ROOT_PASS`/`DB_PASS` |
 | [verify-acceptance-centos7-doc.sh](verify-acceptance-centos7-doc.sh) | 静态校验 [ACCEPTANCE-CENTOS7-DEPLOY.md](../docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 含 Cron webhook/`--task`、grant-nodes、`redi_node` 等关键表述 |
 | [verify-redi-artisan-cron.sh](verify-redi-artisan-cron.sh) | `php artisan … --help` 确认 Cron/运维引用的 `redi:*` 命令已注册（含 `redi:health --notify`） |
+| [verify-node-skip-api-invariants.sh](verify-node-skip-api-invariants.sh) | 节点数据面 `skip_url` / `bump_skip` 与主机名键约定 |
+| [verify-node-api-js-invariants.sh](verify-node-api-js-invariants.sh) | 节点 `/c.js`、`/api.js` 限速与 redirector 出站 URL 约定 |
+| [verify-masteragent-invariants.sh](verify-masteragent-invariants.sh) | Go masteragent：证书拉取、ack 与注册状态约定 |
 | [verify-acme-code-invariants.sh](verify-acme-code-invariants.sh) | 静态校验 ACME 签发/HTTP-01/挑战 upsert 与节点 `GetSkipUrl` 使用 `acmeHostKey`/`AcmeHostKey` |
+| [verify-renew-ops-invariants.sh](verify-renew-ops-invariants.sh) | 证书续期 cron 与 ops-webhook 脱敏约定 |
+| [verify-acme-prune-requeue-invariants.sh](verify-acme-prune-requeue-invariants.sh) | ACME 挑战清理、prune cron 与 failed 部署重排队约定 |
 | [verify-edge-dns-invariants.sh](verify-edge-dns-invariants.sh) | Edge `syncAll` 无 IPv4 快速失败、A/AAAA reconcile、Cloudflare 橙云 AAAA 清理 |
+| [verify-dns-providers-invariants.sh](verify-dns-providers-invariants.sh) | DNS API 驱动与 Edge 同步工厂约定 |
+| [verify-cname-cert-job-invariants.sh](verify-cname-cert-job-invariants.sh) | CNAME 预检与 `IssueDomainCertificateJob` 签发链约定 |
+| [verify-redirect-platform-invariants.sh](verify-redirect-platform-invariants.sh) | PHP/Go 跳转 URL、`force HTTPS` 与平台 DNS 表单约定 |
 | [verify-acceptance-edge-pool-doc.sh](verify-acceptance-edge-pool-doc.sh) | 静态校验 [ACCEPTANCE-EDGE-POOL.md](../docs/ACCEPTANCE-EDGE-POOL.md) F 项与 Cron/Pool AAAA 表述 |
 | [verify-tenant-edge-queue-invariants.sh](verify-tenant-edge-queue-invariants.sh) | 租户 `pool_host` 变更失效 `dns_synced_at`、`IssueDomainCertificateJob` 双锁、CNAME 预检与 OPS 文档 |
+| [verify-health-tenant-invariants.sh](verify-health-tenant-invariants.sh) | `redi:health` / 租户首页 / 批量域名跨租户与展示安全约定 |
 | [verify-cert-deploy-invariants.sh](verify-cert-deploy-invariants.sh) | `reconcileCertDeployStatus` / `certIsNodePullable`、启用守卫、`csvSafeCell` |
 | [verify-production-readiness-doc.sh](verify-production-readiness-doc.sh) | 静态校验 [PRODUCTION-READINESS.md](../docs/PRODUCTION-READINESS.md) 关键验收表述 |
+| [verify-admin-api-invariants.sh](verify-admin-api-invariants.sh) | 后台登录与节点 Agent API 限速约定 |
+| [verify-release-workflow-invariants.sh](verify-release-workflow-invariants.sh) | `release.yml` 与 `build-*-tar` / 冒烟门禁约定 |
+| [verify-ci-preflight-parity.sh](verify-ci-preflight-parity.sh) | `dev-preflight` 中的 `verify-*.sh` 须在 `ci.yml` / `release.yml` 出现 |
 | [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | 已上线主控：升级 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`；可传参 `bash …/patch-master-cron-ops-webhook.sh <artisan目录>`）；结束会打印 Cron / `redi:health --notify` 验收提示 |
 | [centos7/vars.example.env](centos7/vars.example.env) | 部署变量模板（`vars.env`）；Webhook URL 写在主控 `.env`，见文件内注释 |
 | [centos7/deploy-master.sh](centos7/deploy-master.sh) / [deploy-node.sh](centos7/deploy-node.sh) | CentOS 7 主控/节点一键部署 |
