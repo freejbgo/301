@@ -20,7 +20,10 @@ for needle in \
   'redi:health --notify' \
   '--max-time=3600' \
   'REDI_PUBLISH_POOL_AAAA' \
-  '没有启用的节点公网 IPv4'; do
+  '没有启用的节点公网 IPv4' \
+  'dns_api_tenants_unsynced' \
+  '同步失败后的检查' \
+  'ACCEPTANCE-CENTOS7-DEPLOY.md'; do
   grep -qF -- "$needle" "$DOC" || fail "ACCEPTANCE-EDGE-POOL doc missing: ${needle}"
 done
 

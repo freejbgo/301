@@ -236,7 +236,7 @@ NS 委托；多节点池；**逐域 TXT 主流程**；客户 DNS API；主控替
 ### F. 验收（8）
 
 - [ ] F1 手动 DNS：pool 多 A + token→pool  
-- [ ] F2 API 同步 pool（≥1 家 DNS 驱动可用）  
+- [ ] F2 API 同步 pool（≥1 家 DNS 驱动可用；失败重试见 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) F2.6 与 [CONSOLE.md](CONSOLE.md) §2）  
 - [ ] F3 客户域 CNAME 后 HTTP 跳转正常  
 - [ ] F4 单域 HTTP-01 → HTTPS 跳转  
 - [ ] F5 批量 ≥10 域名证书队列成功  
@@ -257,6 +257,7 @@ NS 委托；多节点池；**逐域 TXT 主流程**；客户 DNS API；主控替
 | 根域 CNAME | 部分厂商不支持；E3 文档写 ALIAS/ANAME，不走 TXT 产品流程 |
 | `www` | 一期建议：**每条记录一个 host**；`foo.com` 与 `www.foo.com` 各加一行、各申请证书（或文档说明客户自行 CNAME www→@） |
 | 六家 DNS 驱动 | 接口统一（B1）后驱动可并行开发；**验收 F2 仅需 1 家可用**，其余驱动仍在一期清单内逐项勾选 |
+| DNS API 部分失败 | 厂商可能已写入 Pool A 或部分 CNAME，`dns_synced_at` 不前进；**不回滚**，按 CONSOLE「同步失败后的检查」修正后重试 |
 | 多证书内存 | 节点 SNI 证书数量大时需关注磁盘与加载策略（实现时评估） |
 
 ---

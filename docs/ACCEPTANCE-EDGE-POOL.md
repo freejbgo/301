@@ -24,6 +24,7 @@
 3. 在厂商面板确认 pool A 与 token CNAME 与节点列表一致。
 4. 若租户 `edge_fqdn` 与当前平台主域名不一致，同步应 **失败** 且 `dns_synced_at` 不前进（全部不一致时不应写入厂商；见 [CONSOLE.md](CONSOLE.md)）。
 5. **无启用节点公网 IPv4** 时同步应 **失败**（提示含「没有启用的节点公网 IPv4」，不调用厂商 API）；开启 `REDI_PUBLISH_POOL_AAAA` 时须先修正节点 IPv6（见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12）。
+6. （**可选复盘**）若同步曾失败或 `dns_synced_at` 未前进：按 [CONSOLE.md](CONSOLE.md) §2 **「同步失败后的检查」** 核对厂商侧记录并重试；`php artisan redi:health --json` 可出现 hint `dns_api_tenants_unsynced`（不单独作为 F2 失败项，退出码仍可为 0）。
 
 ## F3 HTTP 跳转
 
@@ -54,3 +55,14 @@
 
 1. 新增节点 IP，同步 pool（手动或 API）。
 2. 新节点配置 Token 后，确认拉取**全量**证书且 ACK 成功；旧节点仍正常。
+
+---
+
+## 运维交叉引用
+
+| 主题 | 文档 |
+|------|------|
+| DNS API 同步失败 | [CONSOLE.md](CONSOLE.md) §2「同步失败后的检查」 |
+| 真机 CentOS 安装与 Cron | [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) |
+| 上线命令与 health | [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) |
+| 节点 Agent 退避 / 空证书防抖 | [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) §3、`node/README.md` |
