@@ -28,6 +28,8 @@ grep -q 'apiJsQueryValid' "$API" || fail "api.js query must be validated"
 grep -q 'redirecturl.IsAllowed' "$API" || fail "skip_url must pass redirecturl.IsAllowed"
 grep -q 'ContainsControlChars' "$API" || fail "REDI_API_LISTEN must reject control chars"
 grep -q 'allowRate' "$ASSET" || fail "asset handler must rate limit"
+grep -q 'allowApiJsDomainRate' "$ASSET" || fail "WriteAsset /api.js must use allowApiJsDomainRate"
+grep -q 'rateLimitMiddleware' "$ASSET" && fail "WriteAsset must not use Echo rateLimitMiddleware"
 grep -q 'TestApiJsSourceRejectsControlChars' "$TEST" || fail "api tests must cover control chars in query"
 
 echo "verify-node-api-js-invariants: OK"

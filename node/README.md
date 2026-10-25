@@ -25,7 +25,7 @@
 | `REDI_DB_HOST` | 主控 MySQL 地址 |
 | `REDI_DB_PORT` | 端口，默认 `3306` |
 | `REDI_DB_USER` | 用户，生产应为 `redi_node`（仅 EXECUTE `redi_node_bump_skip`） |
-| `REDI_DB_PASSWORD` | 密码。只放在服务器上，不要写入仓库 |
+| `REDI_DB_PASSWORD` | 密码。只放在服务器上，不要写入仓库。经 `mysql.NewConnector` 建池，可含 `@`、`:`；写入 `env.sh` 时仍须避免 shell 特殊字符 |
 | `REDI_DB_NAME` | 库名，默认 `redi_admin` |
 | `REDI_DB_TLS` | 可选：`1`/`true` 启用 TLS 并校验证书；`skip-verify` 仅加密不校验（内网自签） |
 | `REDI_MASTER_URL` | 主控地址，须 `https://`（lab 可 `REDI_MASTER_INSECURE=1` 允许 `http://`） |

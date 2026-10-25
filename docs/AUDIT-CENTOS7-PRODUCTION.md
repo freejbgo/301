@@ -148,7 +148,9 @@
 
 ## 6. 全面复核记录（2026-10）
 
-**2026-10-25 边角修复：** 节点 Echo `8080` 上 `/api.js` 去掉与 `allowApiJsDomainRate` 重复的 `rateLimitMiddleware`（与 80/443 `WriteAsset` 一致，120 次/分钟/IP）；`mysqlconnect` 经 `mysql.NewConnector` 建池（密码可含 `@`/`:` 等 DSN 分隔符）；`Reconnect` 先建新池再替换旧池。
+**2026-10-25 边角修复（#361）：** 节点 Echo `8080` 上 `/api.js` 去掉与 `allowApiJsDomainRate` 重复的 `rateLimitMiddleware`（与 80/443 `WriteAsset` 一致，120 次/分钟/IP）；`mysqlconnect` 经 `mysql.NewConnector` 建池（密码可含 `@`/`:` 等 DSN 分隔符）；`Reconnect` 先建新池再替换旧池。
+
+**2026-10-25 边角修复（#362，待合并）：** `lagran` `setIptable` 以 IPv4 规则是否装全为准返回值；`mysqlconnect.Init` 与 `Reconnect` 共用 `replacePool`；`verify-lagran-iptables-invariants` / `verify-node-api-js` 加强；部署文档补节点库密码说明。
 
 **2026-10-20 按模块深度扫（#360 已合并）：** 全库门禁 442/949 + 25×`verify-*`；修复 `release.yml` `master-phpunit` 与 CI 同跑 artisan/ACME 门禁；`verify-redi-artisan-cron` 含 `redi:normalize-domain-hosts`；`verify-admin-api` 含 `PlatformSettings` 超管约束。剩余：真机 ACME/HTTP-01、P2 租户全表隔离、intl DNS mock 单测。
 

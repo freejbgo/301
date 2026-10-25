@@ -32,7 +32,7 @@ chmod 600 scripts/centos7/vars.env
 vi scripts/centos7/vars.env
 ```
 
-密码、Token 和 URL 不要包含空格、引号、反引号、`$`、`#` 或反斜杠。`vars.env` 不要提交。
+密码、Token 和 URL 不要包含空格、引号、反引号、`$`、`#` 或反斜杠（`vars.env` 由 shell 解析）。节点 `REDI_DB_PASSWORD` 经 MySQL 驱动连接器写入，可含 `@`、`:` 等 DSN 字符，但仍应避免上述 shell 麻烦字符。`vars.env` 不要提交。
 
 主控至少要填 `MASTER_IP`、`DB_PASS`、`MYSQL_ROOT_PASS`、`MASTER_URL`、`ADMIN_HTTPS`。还没有证书、只用 IP 访问时：`MASTER_URL="http://主控IP"`，`ADMIN_HTTPS="false"`。已知节点 IP 就写进 `NODE_IPS`，空格分隔。
 
