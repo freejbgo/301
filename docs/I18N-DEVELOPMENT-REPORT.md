@@ -1,6 +1,6 @@
 # 301 跳转系统 — 多语言（简 / 繁 / 英）开发报告
 
-**版本**：2026-10-25（阶段 16：系统外观多语 JSON）  
+**版本**：2026-10-25（阶段 18：菜单 URI 翻译回退）  
 **范围**：主控 `master/master/` 管理后台**可见操作界面**（Laravel + Dcat Admin）；节点与运维文档不在本期。  
 **产品目标（已定）**：让使用后台的**超级管理员与租户账号**在 **简体中文 / 繁体中文 / English** 下方便操作；不要求节点 API、CLI、Webhook、库内历史 `last_error` 原文多语。  
 **结论摘要**：自研后台可见界面已接入 `redi-*` 语言包与 Dcat `menu`/`global`/`extension`（英）；顶栏与**登录页**可切换简/繁/英，`admin_users.locale` 持久化。「系统外观」支持 per-locale 名称/标题（旧单语 JSON 兼容）。**未做**：Service/CLI 异常；`last_error` 正文仍为库内原文（仅标签三语）。
@@ -26,6 +26,7 @@
 | 15 | **已做** | `CONSOLE.md` 语言切换运维说明；文档索引更新 |
 | 16 | **已做** | `PlatformBranding` `locales` JSON、系统外观按语言 Tab、缓存 `v2`、单测 |
 | 17 | **已做** | 域名列表 CSV 导出表头随 `SetAdminLocale`（`DomainListCsvExporter::headerRow`） |
+| 18 | **已做** | `menu.uris.*` + `AdminMenuTitle` / `LocalizedMenu`（DB title 无键时按 URI 回退） |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；Service 层仍单语 |
 
 ### 运维速览
@@ -314,7 +315,7 @@ Laravel 自定义属性名与规则消息可放在 `redi.php` 的 `validation` �
 | 后台可见界面是否三语？ | **是（阶段 16 止）**。`redi-*` + Dcat 语言包；系统外观 per-locale；`RediLangParityTest` + `verify-admin-i18n-invariants.sh` 防回退。 |
 | 部署注意 | 执行 `php artisan migrate`（`admin_users.locale`）；顶栏或登录页切换语言；系统外观按语言 Tab 填写品牌名。 |
 | 仍未三语 | Service/CLI/节点 API、`last_error` 正文、库内历史数据。 |
-| 后续可选 | 错误码 + `redi.errors.*`；菜单 title 与语言包单源化；CSV **数据列**仍用英文枚举（便于脚本解析）。 |
+| 后续可选 | 错误码 + `redi.errors.*`；菜单 DB title 改为 URI 键（绿场 SQL）；CSV **数据列**仍用英文枚举（便于脚本解析）。 |
 
 ---
 
