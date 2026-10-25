@@ -59,6 +59,7 @@ jobs:
             verify-node-skip-api-invariants.sh \
             verify-admin-api-invariants.sh \
             verify-admin-i18n-invariants.sh \
+            verify-ops-english-invariants.sh \
             verify-release-workflow-invariants.sh \
             verify-node-api-js-invariants.sh \
             verify-redirect-platform-invariants.sh; do
