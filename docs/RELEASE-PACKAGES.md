@@ -2,7 +2,7 @@
 
 生产部署使用 **`master.tar.gz`**（主控）与 **`redi-multi.tar.gz`**（节点）。仓库 **不提交** tar（已 gitignore）。
 
-**推荐路径：** 在开发机本地打 tar → `scp` 到机房 → 在 `vars.env` 设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` → 跑 `deploy-*.sh`。不依赖 GitHub Actions 配额或已有 Release。
+**推荐路径：** 在发版机本地打 tar → `scp` 到 **CentOS 7.9（或其它 7.x）裸机** → 在 `vars.env` 设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` → 跑 `deploy-*.sh`。机房**不需要 Docker**；不依赖 GitHub Actions 配额或已有 Release。
 
 ## 1. 开发机打包并上传（默认）
 

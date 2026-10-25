@@ -6,7 +6,7 @@
 
 主控源码在 `master/master/`。**仓库内不提交发布包**（`*.tar.gz` 已 gitignore）。上线推荐开发机 `bash scripts/dev-preflight.sh` 后 `bash scripts/build-release-tarballs.sh`，`scp` 到机房并在 `vars.env` 配置 `REDI_MASTER_TAR` / `REDI_NODE_TAR`（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)）。可选从 [GitHub Releases](https://github.com/freejbgo/301/releases) 取同结构 tar（`v*` tag + Actions）。
 
-**生产环境仅支持 CentOS 7.9（及其他 7.x）**。主控与节点使用 [scripts/centos7/deploy-master.sh](scripts/centos7/deploy-master.sh) 与 [scripts/centos7/deploy-node.sh](scripts/centos7/deploy-node.sh)，步骤见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。
+**生产环境仅支持 CentOS 7.9（及其他 7.x）裸机**，用 `yum` + `deploy-*.sh`，**无需 Docker**。主控与节点脚本见 [scripts/centos7/deploy-master.sh](scripts/centos7/deploy-master.sh)、[scripts/centos7/deploy-node.sh](scripts/centos7/deploy-node.sh)，步骤见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。
 
 | 文档 | 内容 |
 |------|------|

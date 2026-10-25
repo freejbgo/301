@@ -2,11 +2,11 @@
 
 仓库布局：**主控** `master/master/`（Laravel + Dcat）、**节点** `node/redi-multi/`（Go）、**库表** `db/redi_admin.sql`、**CentOS 7 部署** `scripts/centos7/`。
 
-平台能力与 API 说明见 [PLATFORM-ARCHITECTURE.md](PLATFORM-ARCHITECTURE.md)。真机验收见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md)、[ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)。
+平台能力与 API 说明见 [PLATFORM-ARCHITECTURE.md](PLATFORM-ARCHITECTURE.md)。**生产只在 CentOS 7.x 裸机**跑 `deploy-*.sh`，不需要 Docker。真机验收见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md)、[ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)。
 
 ## 发版前一键检查
 
-与 GitHub **CI** / **`v*` release** 核心门禁对齐：`node` + `master-phpunit`（8.4/8.0）+ `centos7-scripts`（含 `verify-*`）+ 可选 CentOS 7 容器冒烟。
+在**发版机**（任意 Linux，有 composer + Go；无 Docker 也可以）执行。与 GitHub **CI** / **`v*` release** 核心门禁对齐：`node` + `master-phpunit`（8.4/8.0）+ `centos7-scripts`（含 `verify-*`）；Docker 仅用于可选的 DB 容器校验与 CentOS 7 容器冒烟，**跳过不影响在 7.9 真机上线**。
 
 ```bash
 bash scripts/dev-preflight.sh

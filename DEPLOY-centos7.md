@@ -2,6 +2,8 @@
 
 **推荐系统：CentOS 7.9**（`7.9.2009` 等 7.x 小版本均可）。内核小版本可以不同，脚本不按内核编译，也不编译内核模块。部署脚本会校验 `VERSION_ID` 为 `7` 开头。
 
+**生产路径是裸机 CentOS 7.x**：主控/节点用 `yum` + `systemd` + `deploy-*.sh` 即可，**不需要 Docker / Podman**。文档里的容器冒烟（§7）与 `dev-preflight` 里的 Docker 库校验仅给开发机或 CI 选用；你在 7.9 真机上按本文部署时不用装容器。
+
 | 机器 | 脚本 | 装好之后 |
 |------|------|----------|
 | 主控 | `scripts/centos7/deploy-master.sh` | 程序在 `/opt/301/master`，网站根目录 `/opt/301/master/public` |
@@ -19,7 +21,7 @@
 
 ## 开发机 / 发版前（与 CI 一致）
 
-在本地打 `v*` 标签或上传 tar 到服务器之前，建议在仓库根目录执行 **`bash scripts/dev-preflight.sh`**（或按 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) 分步跑）。与 GitHub `ci.yml` / `release.yml` 核心门禁相同；本机无 Docker 时 DB 校验脚本会跳过，有 Docker 时才会真正起 MariaDB 容器。`verify-*` 脚本索引见 [scripts/README.md](scripts/README.md)；本文与 `deploy-*.sh` / `redi_admin.sql` 的对齐由 **`bash scripts/verify-deploy-centos7-doc.sh`** 静态校验。
+在**有 composer + Go 的发版机**（可以是 CentOS 7.9，也可以是别的 Linux）上打 tar 前，建议执行 **`bash scripts/dev-preflight.sh`**（或按 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) 分步跑）。与 GitHub `ci.yml` / `release.yml` 核心门禁相同；**无 Docker 时照常可用**（仅跳过临时 MariaDB 容器校验，不影响在 7.9 真机上 `deploy-master` / `deploy-node`）。`verify-*` 索引见 [scripts/README.md](scripts/README.md)；本文与 `deploy-*.sh` / `redi_admin.sql` 的对齐由 **`bash scripts/verify-deploy-centos7-doc.sh`** 静态校验。
 
 ## 1. 准备变量
 
@@ -95,20 +97,22 @@ Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证�
 
 ## 6. 重新打包
 
-改了主控依赖或节点源码后，在开发机执行：
+改了主控依赖或节点源码后，在**发版机**（不必是 Docker；常见为带 composer/Go 的 Linux，或单独一台非生产的 7.9）执行：
 
 ```bash
-./scripts/build-master-tar.sh
-./scripts/build-node-tar.sh
+bash scripts/dev-preflight.sh
+bash scripts/build-release-tarballs.sh
 ```
+
+再 `scp` 到各台 **CentOS 7.9 生产机** 并设置 `REDI_*_TAR`（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)）。也可单独 `./scripts/build-master-tar.sh` / `./scripts/build-node-tar.sh`。
 
 节点包内含静态 `bin/redi-multi`（含 80/443 上 `/c.js`、`/api.js` 限速等逻辑）。只更新主控 PHP 时重跑 `deploy-master.sh`；改过 `node/redi-multi` 后必须重新打包并在各节点 `deploy-node.sh` 或至少替换二进制并重启 `redi-multi`。
 
 在需要部署时本地打包（或打 tag 发 Release），勿把 tar 提交进 git。节点打包会拒绝仍然动态链接 libc 的二进制。
 
-## 7. 开发机用 CentOS 7 容器做冒烟（可选）
+## 7. 开发机用 CentOS 7 容器做冒烟（可选，生产不用）
 
-在**非 CentOS 的开发机**上可用 podman/docker 拉起 **CentOS 7.9.2009** 镜像，校验发布包、yum 源、MariaDB 与 `php artisan migrate`（不替代真实 7.9 虚拟机上的 systemd / firewalld 验收）：
+若你**已经在 CentOS 7.9 真机**上部署，可跳过本节。仅在**非 CentOS 的开发机**上、且已安装 podman/docker 时，可拉起 **CentOS 7.9.2009** 镜像做辅助校验（发布包、yum 源、MariaDB、`php artisan migrate`）；**不能替代**真机上的 systemd / firewalld 验收：
 
 ```bash
 # 安装 podman 后执行（包管理器因宿主机而异）

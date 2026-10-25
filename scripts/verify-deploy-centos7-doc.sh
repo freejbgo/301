@@ -32,6 +32,7 @@ for needle in \
   'docs/UPGRADE-IN-PLACE.md' \
   'build-release-tarballs.sh' \
   'REDI_MASTER_TAR' \
+  '不需要 Docker' \
   '同步失败后的检查' \
   'redi_node_bump_skip' \
   '不必手工 migrate' \
