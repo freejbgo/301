@@ -143,4 +143,8 @@ return [
         'requeue_none' => 'No failed deployment rows to retry.',
         'requeue_done' => 'Re-queued :count failed deployment row(s).',
     ],
+    'node_api' => [
+        'agent_version_required' => 'Node agent must send a version field; upgrade redi-multi and retry',
+        'agent_version_too_low' => 'Node agent version is too old; upgrade redi-multi and retry',
+    ],
 ];
