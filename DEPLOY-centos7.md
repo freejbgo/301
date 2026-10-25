@@ -15,7 +15,7 @@
 
 源码在仓库的 `master/master/`。那是给开发和重新打包用的。自动安装不要把仓库克隆到 `/opt/301`，否则会和发布包解压出来的 `/opt/301/master` 叠在一起。
 
-填好 IP 的示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。**真机 CentOS 7.9 逐步验收**见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)。**主控已在跑、只跟上新发布包**见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md)。后台操作见 [docs/CONSOLE.md](docs/CONSOLE.md)。
+填好 IP 的示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。**真机 CentOS 7.9 逐步验收**见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)。**边缘池 F1–F8**见 [docs/ACCEPTANCE-EDGE-POOL.md](docs/ACCEPTANCE-EDGE-POOL.md)。**主控已在跑、只跟上新发布包**见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md)。后台操作见 [docs/CONSOLE.md](docs/CONSOLE.md)（DNS API 同步失败见 §2「同步失败后的检查」）。
 
 ## 开发机 / 发版前（与 CI 一致）
 
