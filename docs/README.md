@@ -32,6 +32,7 @@
 |------|------|
 | [PLATFORM-ARCHITECTURE.md](PLATFORM-ARCHITECTURE.md) | DNS 模型、节点 API、数据表 |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | `dev-preflight` 与发版 |
+| [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md) | `v*` tag → GitHub Releases 双 tar |
 | [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md) | 长期限制与计划中的增强 |
 | [SECURITY.md](../SECURITY.md) | 密码、端口、Agent |
 | [scripts/README.md](../scripts/README.md) | verify 脚本 |

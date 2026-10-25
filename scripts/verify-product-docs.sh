@@ -17,7 +17,8 @@ for f in \
   docs/PLATFORM-ARCHITECTURE.md \
   docs/NETWORKING-IPv6.md \
   docs/PRODUCTION-READINESS.md \
-  docs/LAUNCH-CHECKLIST.md; do
+  docs/LAUNCH-CHECKLIST.md \
+  docs/RELEASE-PACKAGES.md; do
   [[ -f "$REPO_ROOT/$f" ]] || fail "missing $f"
 done
 
@@ -40,6 +41,8 @@ if grep -rE 'AUDIT-CENTOS7-PRODUCTION|DEVELOPMENT-EDGE-POOL-HTTPS|IPV6-DUALSTACK
 fi
 
 grep -qF 'docs/README.md' "$REPO_ROOT/README.md" || fail 'README must link docs/README.md'
+grep -qF 'RELEASE-PACKAGES.md' "$REPO_ROOT/docs/DEVELOPMENT.md" \
+  || fail 'DEVELOPMENT must link RELEASE-PACKAGES'
 grep -qF 'CONSOLE.md' "$REPO_ROOT/docs/README.md" || fail 'docs/README must link CONSOLE'
 grep -qF '## 8. 平台边界与运营约定' "$REPO_ROOT/docs/CONSOLE.md" \
   || fail 'CONSOLE must document platform boundaries (§8)'

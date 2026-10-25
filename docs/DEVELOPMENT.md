@@ -26,6 +26,8 @@ bash scripts/verify-redi-db-deploy-path.sh   # 需 Docker；无 docker 时 dev-p
 bash scripts/verify-ci-preflight-parity.sh
 ```
 
-`verify-redi-db-deploy-path.sh` 用临时 MariaDB 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用。发版 tar：`scripts/ensure-release-tarballs.sh`（`build-master-tar.sh` / `build-node-tar.sh`）。
+`verify-redi-db-deploy-path.sh` 用临时 MariaDB 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用。
+
+**打 GitHub Release（推荐上线取包方式）：** 见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md)（`v*` tag → `master.tar.gz` + `redi-multi.tar.gz`）。本地仅构建时用 `scripts/ensure-release-tarballs.sh` / `build-*-tar.sh`。
 
 PHPUnit 以 `phpunit` **退出码**为准；条数随 `main` 演进，勿手抄固定数字。
