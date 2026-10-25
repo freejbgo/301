@@ -89,7 +89,7 @@ cd /opt/301/master && sudo -u nginx php artisan list | grep redi:
 
 ## 5. 运营验收
 
-见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) 与 [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)。
+见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)。
 
 ## 6. 回滚要点
 

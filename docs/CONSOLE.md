@@ -201,3 +201,28 @@ php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修�
 ```
 
 `issues` 非空时命令退出码为 1，适合告警；`hints` 不影响退出码。CentOS 生产续期/清理/health 仅由 `/etc/cron.d/redi-renew` 触发，验收 `grep` 见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)。Cron 写入 `storage/logs/renew.log`、`prune-acme.log`、`health.log`（排障续期/清理/health 失败）。Webhook 与多 worker 说明见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)；health 各 `code` 见 [HEALTH-REFERENCE.md](HEALTH-REFERENCE.md)。
+
+## 8. 平台边界与运营约定
+
+架构与节点 API 表见 [PLATFORM-ARCHITECTURE.md](PLATFORM-ARCHITECTURE.md)。本节是后台与运维常用的「能做什么 / 不能做什么」。
+
+### 不提供
+
+- NS 委托、多节点池（多 pool）、逐域 TXT 验证书主流程  
+- 客户自带 DNS API、由主控替代 MySQL 提供跳转规则  
+
+### 产品行为（非缺陷）
+
+- 跳转页为 **HTTP 200 + JS**，不是业务层 301；**强制 HTTPS** 才在 TLS 层 **301**。  
+- 「抢注」指平台内 `original_url` 唯一；缓解手段为 **默认停用 + 启用前 DNS 预检**，与注册商抢注无关。  
+
+### 运营注意
+
+| 项 | 说明 |
+|----|------|
+| Let's Encrypt | 批量申请会排队；全局同时只跑一个 ACME 任务 |
+| 主控队列 | `QUEUE_CONNECTION` 须 **database** 或 **redis**，勿长期 `sync` 跑批量 ACME |
+| HTTP-01 | `/.well-known/` 必须优先于跳转（与 lagran 联调） |
+| 根域 CNAME | 部分厂商不支持；见 [CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md)（ALIAS/ANAME） |
+| DNS API 部分失败 | 厂商可能已写入部分 Pool/CNAME；按上文 §2「同步失败后的检查」修正后重试 |
+| 长期限制 | [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md) |
