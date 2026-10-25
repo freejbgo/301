@@ -1,10 +1,5 @@
 @php
     $current = app()->getLocale();
-    $labels = [
-        'zh_CN' => '简体中文',
-        'zh_TW' => '繁體中文',
-        'en' => 'English',
-    ];
     $switchUrl = admin_url('locale');
     $switchFailedMsg = __('redi-locale.switch_failed');
 @endphp
@@ -12,9 +7,9 @@
     <span class="text-muted small">{{ __('redi-locale.login_choose') }}</span>
     @foreach (App\Http\Middleware\SetAdminLocale::supported() as $code)
         @if ($code === $current)
-            <span class="badge badge-primary mx-1">{{ $labels[$code] ?? $code }}</span>
+            <span class="badge badge-primary mx-1">{{ __('redi-locale.names.'.$code) }}</span>
         @else
-            <a href="javascript:void(0)" class="redi-admin-locale badge badge-light mx-1" data-locale="{{ $code }}">{{ $labels[$code] ?? $code }}</a>
+            <a href="javascript:void(0)" class="redi-admin-locale badge badge-light mx-1" data-locale="{{ $code }}">{{ __('redi-locale.names.'.$code) }}</a>
         @endif
     @endforeach
 </div>
