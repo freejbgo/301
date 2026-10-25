@@ -11,7 +11,7 @@
 |------|------|
 | 域名占坑 | 默认 **新建为停用**；租户启用前须 CNAME 到 edge 或 **A 到启用节点公网 IP**（`REDI_REQUIRE_DNS_POINTING_TO_ENABLE`，平台管理员可跳过） |
 | 后台安全 | 默认密码拦截不再放行 `dcat-api`；`dcat-api` 须已登录后台；登录 10 次/分钟限速；域名列表分组名 HTML 转义 |
-| 证书下发 | 节点 register / 重新启用时 `syncDeploymentsForNode` 补齐 `redi_cert_deployments`；主控空证书列表时节点清空内存证书 |
+| 证书下发 | 节点 register / 重新启用时 `syncDeploymentsForNode` 补齐 `redi_cert_deployments`；主控**连续**空证书列表达阈值后节点清空内存证书（默认 3 次拉取，`REDI_AGENT_EMPTY_CERT_CLEAR_AFTER=1` 为立即清空） |
 | 节点 Agent | 心跳优先于拉取；拉取失败不阻断后续心跳；ack 403/409 不触发重新 register；Agent ≥ `0.1.3`（`REDI_MIN_AGENT_VERSION`） |
 | API 限流 | 节点 API 在认证后按 `node_id` 限流（`throttle:redi-node`） |
 | ACME / 生产配置 | `redi:health` 在生产下检查：`app_debug_enabled`、`acme_email_missing`、`acme_staging_enabled`、`edge_zone_missing`、`dns_driver_invalid`、`dns_api_credentials_missing`、`dns_zone_id_missing` |

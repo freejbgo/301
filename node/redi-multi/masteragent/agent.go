@@ -61,11 +61,20 @@ func loop(cfg config) {
 	client := &http.Client{Timeout: 30 * time.Second}
 	registered := false
 	revs := revisionState{}
+	sleep := basePollInterval
 	for {
-		if err := tick(client, cfg, &registered, &revs); err != nil {
-			logrus.Errorf("[masteragent] %v", err)
+		err := tick(client, cfg, &registered, &revs)
+		if err != nil {
+			if isAgentUpgradeRequired(err) {
+				logrus.Errorf("[masteragent] %v — 请升级节点 redi-multi（当前 %s），或请主控管理员调整 REDI_MIN_AGENT_VERSION", err, agentVersion)
+			} else {
+				logrus.Errorf("[masteragent] %v", err)
+			}
+			sleep = nextPollIntervalAfterError(sleep, err)
+		} else {
+			sleep = basePollInterval
 		}
-		time.Sleep(5 * time.Second)
+		time.Sleep(sleep)
 	}
 }
 
@@ -218,10 +227,14 @@ func pullCertificates(client *http.Client, cfg config, registered *bool) error {
 		return err
 	}
 	if len(out.Certificates) == 0 {
+		if err := noteEmptyCertificateList(); err != nil {
+			return err
+		}
 		// Master returned no pullable assigned certs; drop in-memory TLS material (see NodeAgentController certificates).
 		certs.ReplaceAll(nil)
 		return nil
 	}
+	resetEmptyCertificateStreak()
 	list := make([]certs.Entry, 0, len(out.Certificates))
 	remoteIDs := make([]int, 0, len(out.Certificates))
 	failed := false
@@ -295,7 +308,7 @@ func getJSON(client *http.Client, cfg config, path string, dest interface{}, reg
 	}
 	if res.StatusCode == http.StatusUpgradeRequired {
 		b, _ := io.ReadAll(io.LimitReader(res.Body, maxMasterJSONBytes))
-		logrus.Warnf("主控要求升级 redi-multi Agent (426): %s", masterBodySnippet(b))
+		logrus.Warnf("主控要求升级 redi-multi Agent (426)，当前 %s: %s", agentVersion, masterBodySnippet(b))
 		return fmt.Errorf("GET %s: agent upgrade required (426)", path)
 	}
 	if res.StatusCode >= 300 {
@@ -329,7 +342,7 @@ func postJSON(client *http.Client, cfg config, path string, body interface{}, de
 	}
 	if res.StatusCode == http.StatusUpgradeRequired {
 		b, _ := io.ReadAll(io.LimitReader(res.Body, maxMasterJSONBytes))
-		logrus.Warnf("主控要求升级 redi-multi Agent (426): %s", masterBodySnippet(b))
+		logrus.Warnf("主控要求升级 redi-multi Agent (426)，当前 %s: %s", agentVersion, masterBodySnippet(b))
 		return fmt.Errorf("POST %s: agent upgrade required (426)", path)
 	}
 	if res.StatusCode >= 300 {
