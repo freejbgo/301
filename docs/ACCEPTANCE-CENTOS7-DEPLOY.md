@@ -231,6 +231,7 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 
 快速冒烟（可选，需已添加测试域名并指向节点）：
 
+- [ ] （**DNS API 自动**）若曾出现同步失败或 `dns_synced_at` 未前进：按 [CONSOLE.md](CONSOLE.md) §2 **「同步失败后的检查」** 核对厂商记录并重试同步；`redi:health --json` 可出现 hint `dns_api_tenants_unsynced`（退出码仍可为 0）。
 - [ ] 客户域 CNAME 预检「已指向」。
 - [ ] 单域「申请证书」后状态到「已生效」。
 - [ ] `https://客户域/` 证书与跳转正常。

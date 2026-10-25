@@ -24,7 +24,9 @@ for needle in \
   'grant-nodes-from-vars' \
   'redi_node' \
   'dev-preflight.sh' \
-  '--max-time=3600'; do
+  '--max-time=3600' \
+  'dns_api_tenants_unsynced' \
+  '同步失败后的检查'; do
   grep -qF -- "$needle" "$DOC" || fail "ACCEPTANCE doc missing: ${needle}"
 done
 

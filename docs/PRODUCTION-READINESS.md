@@ -44,6 +44,7 @@ cd /opt/301/master && php artisan redi:health
 php artisan redi:health --json
 # JSON 含 summary（queue/cache 驱动、health/renew validating 与队列阈值）、hints（多 worker 时请 redis 缓存）、issues（非空则退出码 1）
 # issues/hints 各 code 含义见 AUDIT-CENTOS7-PRODUCTION.md §3
+# DNS API 同步曾失败或 edge 未 dns_synced_at：hints 可出现 dns_api_tenants_unsynced；运维步骤见 docs/CONSOLE.md「同步失败后的检查」
 
 # 有问题时通知 Webhook（.env 配置 REDI_HEALTH_WEBHOOK_URL，POST JSON，含 text 摘要）
 # --notify：webhook 发送成功（或无 issues）时退出 0；未配置 URL 且有 issues 时退出 1，Cron 行 || ops-webhook 兜底
@@ -64,6 +65,11 @@ curl -fsS "http://127.0.0.1:<node-port>/revision"
 # DB 部署路径（CI 同款；在仓库根目录执行）
 bash scripts/verify-redi-db-deploy-path.sh
 ```
+
+## DNS API 同步（运营）
+
+- 使用 **API 自动** 解析时，同步失败请按 [CONSOLE.md](CONSOLE.md) §2 **「同步失败后的检查」** 核对厂商侧是否已部分写入，修正后再点同步；`dns_synced_at` 仅在全步成功后才前进。
+- 监控/巡检：`php artisan redi:health --json` 的 `hints` 中 `dns_api_tenants_unsynced` 表示仍有租户 edge 未记录成功同步（非阻塞退出码）。
 
 ## 后台操作（运营）
 

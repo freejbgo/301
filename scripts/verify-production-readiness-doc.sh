@@ -21,7 +21,9 @@ for needle in \
   'max-time=3600' \
   'redi:requeue-failed-deployments' \
   'verify-redi-db-deploy-path.sh' \
-  '导出 CSV'; do
+  '导出 CSV' \
+  '同步失败后的检查' \
+  'dns_api_tenants_unsynced'; do
   grep -qF -- "$needle" "$DOC" || fail "PRODUCTION-READINESS missing: ${needle}"
 done
 
