@@ -35,7 +35,7 @@ class RediAdminGroup extends Model
             $name = trim($name);
             if ($name === '') {
                 throw ValidationException::withMessages([
-                    'name' => '分组名称不能为空',
+                    'name' => __('redi-admin-group.validation.name_required'),
                 ]);
             }
             if (mb_strlen($name) > 120) {
@@ -52,7 +52,7 @@ class RediAdminGroup extends Model
 
             if ($count > 0) {
                 throw ValidationException::withMessages([
-                    'name' => "该分组下还有 {$count} 条域名，请先迁移或删除域名后再删分组。",
+                    'name' => __('redi-admin-group.validation.delete_has_domains', ['count' => $count]),
                 ]);
             }
         });

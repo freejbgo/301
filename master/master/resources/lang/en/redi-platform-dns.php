@@ -86,5 +86,6 @@ return [
         'control_chars'       => 'Domain settings cannot contain control characters',
         'invalid_edge_zone'   => 'Invalid platform apex domain',
         'invalid_pool_host'   => 'Invalid pool hostname (single label, no dots)',
+        'api_credentials_decrypt' => 'DNS API credentials cannot be decrypted (check APP_KEY or re-save API keys in admin)',
     ],
 ];
