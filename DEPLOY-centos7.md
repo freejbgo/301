@@ -1,5 +1,7 @@
 # CentOS 7 部署
 
+**第一次部署请按教程逐步做：** [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md)（步骤 1–7：打 tar → 主控 → 节点 → 后台 → 验收）。本文是同一流程的**完整说明与可选章节**。
+
 **推荐系统：CentOS 7.9**（`7.9.2009` 等 7.x 小版本均可）。内核小版本可以不同，脚本不按内核编译，也不编译内核模块。部署脚本会校验 `VERSION_ID` 为 `7` 开头。
 
 **生产路径是裸机 CentOS 7.x**：主控/节点用 `yum` + `systemd` + `deploy-*.sh` 即可，**不需要 Docker / Podman**。文档里的容器冒烟（§7）与 `dev-preflight` 里的 Docker 库校验仅给开发机或 CI 选用；你在 7.9 真机上按本文部署时不用装容器。

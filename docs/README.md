@@ -4,12 +4,14 @@
 
 ## 新环境上线
 
-1. [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md) — 导入 `redi_admin.sql`  
-2. [DEPLOY-centos7.md](../DEPLOY-centos7.md) — 主控/节点脚本  
-3. [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) — 真机打勾  
-4. [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) — 业务 F1–F8  
-5. [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) — **一页上线打勾**（详细说明见 PRODUCTION-READINESS）  
-6. [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) — 阻塞项与验收命令  
+1. **[DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md)** — **分步教程（打 tar → 主控 → 节点 → 后台）**  
+2. [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md) — 绿场 `redi_admin.sql`  
+3. [DEPLOY-centos7.md](../DEPLOY-centos7.md) — 脚本细节与可选配置  
+4. [DEPLOY-centos7-example.md](../DEPLOY-centos7-example.md) — `vars.env` 填空示例  
+5. [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) — 真机打勾  
+6. [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) — 业务 F1–F8  
+7. [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) — **一页上线打勾**（详细说明见 PRODUCTION-READINESS）  
+8. [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) — 阻塞项与验收命令  
 
 ## 已上线升级
 

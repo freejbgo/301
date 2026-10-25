@@ -3,7 +3,7 @@
 # 产物：master/master.tar.gz、node/redi-multi.tar.gz（已 gitignore，勿提交）。
 #
 # 建议先：bash scripts/dev-preflight.sh
-# 部署：scp 到服务器后在 vars.env 设置 REDI_MASTER_TAR / REDI_NODE_TAR，见 docs/RELEASE-PACKAGES.md
+# 部署：见 docs/DEPLOY-TUTORIAL-CENTOS7.md 步骤 1–2（scp + vars.env 的 REDI_*_TAR）
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -24,4 +24,4 @@ echo ""
 echo "完成。上传机房示例："
 echo "  scp master/master.tar.gz node/redi-multi.tar.gz root@<主机>:/tmp/"
 echo "  # vars.env: REDI_MASTER_TAR=/tmp/master.tar.gz  REDI_NODE_TAR=/tmp/redi-multi.tar.gz"
-echo "详见 docs/RELEASE-PACKAGES.md"
+echo "下一步：docs/DEPLOY-TUTORIAL-CENTOS7.md（步骤 2 起 scp 与 deploy）"

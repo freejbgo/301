@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # CentOS 7.x（推荐 7.9）节点全自动部署。程序是静态二进制，内核不需要重编，也不编译内核模块。
 #
-# 主控上 NODE_IPS 已含本机公网 IP（deploy-master.sh 或 grant-nodes-from-vars.sh）之后再执行。
-#   cp scripts/centos7/vars.example.env scripts/centos7/vars.env
-#   chmod 600 scripts/centos7/vars.env
-#   填 NODE_PUBLIC_IP、REDI_MASTER_URL、REDI_NODE_TOKEN
-#   sudo bash scripts/centos7/deploy-node.sh
+# 分步教程：docs/DEPLOY-TUTORIAL-CENTOS7.md（步骤 4–5）
+# 主控 NODE_IPS 已含本机公网 IP，且后台已创建节点并拿到 Token 后再执行：
+#   1) scp redi-multi.tar.gz 到本机 /tmp/，vars.env 设 REDI_NODE_TAR=/tmp/redi-multi.tar.gz
+#   2) cp scripts/centos7/vars.example.env scripts/centos7/vars.env && chmod 600 scripts/centos7/vars.env
+#   3) 填 NODE_PUBLIC_IP、REDI_MASTER_URL、REDI_NODE_TOKEN
+#   4) sudo bash scripts/centos7/deploy-node.sh
 #
 # 发布包：vars.env 的 REDI_NODE_TAR（推荐，见 docs/RELEASE-PACKAGES.md），否则 node/redi-multi.tar.gz、/tmp/redi-multi.tar.gz。
 # 重复执行会按 vars.env 重写 env.sh，并更新 config.json 的 server_ip 和 default_redirect_url。

@@ -5,7 +5,7 @@
 
 按这个顺序做：先主控和数据库，再节点，最后到后台把 DNS、节点和域名配好。控制台里每一步点哪里，见 [docs/CONSOLE.md](docs/CONSOLE.md)。
 
-**生产仅支持 CentOS 7.9（7.x）**：两个全自动脚本见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。真机验收见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)；上线清单见 [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md)。
+**生产仅支持 CentOS 7.9（7.x）裸机**：**从零部署按** [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md) **步骤 1–7** 做。脚本说明见 [DEPLOY-centos7.md](DEPLOY-centos7.md)，填空示例 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。真机验收 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)；上线清单 [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md)。
 
 **主控已在跑、只想跟上新发布包**：见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md)。文档索引见 [docs/README.md](docs/README.md)。
 

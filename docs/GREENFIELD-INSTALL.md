@@ -7,7 +7,8 @@
 | 文档 | 用途 |
 |------|------|
 | [DEPLOY.md](../DEPLOY.md) | 通用部署说明（手工步骤；生产一键脚本仅 CentOS 7） |
-| [DEPLOY-centos7.md](../DEPLOY-centos7.md) | CentOS 7 一键 `deploy-master.sh` / `deploy-node.sh` |
+| [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) | **从零分步教程（推荐）** |
+| [DEPLOY-centos7.md](../DEPLOY-centos7.md) | CentOS 7 `deploy-master.sh` / `deploy-node.sh` 说明 |
 | [DEPLOY-centos7-example.md](../DEPLOY-centos7-example.md) | `vars.env` 填 IP 示例 |
 | [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) | 真机逐步验收 |
 | [docs/ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) | 边缘池 F1–F8（DNS、证书、跳转） |

@@ -50,4 +50,4 @@
 | [centos7/lagran_ports.py](centos7/lagran_ports.py) | 从 `config.json` 解析 lagran/监听端口（含 `REDI_HTTP_LISTEN` / `REDI_TLS_LISTEN`；cleanup/diagnose 在 `source env.sh` 后与进程一致） |
 | [systemd/](systemd/) | `redi-queue` unit 示例 |
 
-CentOS 生产路径见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)。
+CentOS 生产路径：**分步教程** [docs/DEPLOY-TUTORIAL-CENTOS7.md](../docs/DEPLOY-TUTORIAL-CENTOS7.md)；脚本说明 [DEPLOY-centos7.md](../DEPLOY-centos7.md)。

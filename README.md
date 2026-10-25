@@ -11,7 +11,8 @@
 | 文档 | 内容 |
 |------|------|
 | [docs/README.md](docs/README.md) | **文档索引**（按上线 / 运营 / 开发场景） |
-| [DEPLOY-centos7.md](DEPLOY-centos7.md) | CentOS 7 一键部署（生产唯一路径） |
+| [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md) | **CentOS 7 分步部署教程（从零开始）** |
+| [DEPLOY-centos7.md](DEPLOY-centos7.md) | CentOS 7 脚本说明与可选章节 |
 | [docs/LAUNCH-CHECKLIST.md](docs/LAUNCH-CHECKLIST.md) | 一页上线检查单（可打勾） |
 | [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md) | 上线说明与验收命令（详情） |
 | [docs/CONSOLE.md](docs/CONSOLE.md) | 控制台操作与平台边界 §8 |

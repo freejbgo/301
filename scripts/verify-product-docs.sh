@@ -18,7 +18,8 @@ for f in \
   docs/NETWORKING-IPv6.md \
   docs/PRODUCTION-READINESS.md \
   docs/LAUNCH-CHECKLIST.md \
-  docs/RELEASE-PACKAGES.md; do
+  docs/RELEASE-PACKAGES.md \
+  docs/DEPLOY-TUTORIAL-CENTOS7.md; do
   [[ -f "$REPO_ROOT/$f" ]] || fail "missing $f"
 done
 
@@ -45,6 +46,10 @@ grep -qF 'RELEASE-PACKAGES.md' "$REPO_ROOT/docs/DEVELOPMENT.md" \
   || fail 'DEVELOPMENT must link RELEASE-PACKAGES'
 grep -qF 'build-release-tarballs.sh' "$REPO_ROOT/docs/RELEASE-PACKAGES.md" \
   || fail 'RELEASE-PACKAGES must document local build-release-tarballs.sh'
+grep -qF 'DEPLOY-TUTORIAL-CENTOS7.md' "$REPO_ROOT/DEPLOY-centos7.md" \
+  || fail 'DEPLOY-centos7 must link DEPLOY-TUTORIAL-CENTOS7'
+grep -qF 'deploy-master.sh' "$REPO_ROOT/docs/DEPLOY-TUTORIAL-CENTOS7.md" \
+  || fail 'DEPLOY-TUTORIAL must document deploy-master.sh'
 grep -qF 'CONSOLE.md' "$REPO_ROOT/docs/README.md" || fail 'docs/README must link CONSOLE'
 grep -qF '## 8. 平台边界与运营约定' "$REPO_ROOT/docs/CONSOLE.md" \
   || fail 'CONSOLE must document platform boundaries (§8)'
