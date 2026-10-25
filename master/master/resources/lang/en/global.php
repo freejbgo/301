@@ -32,6 +32,7 @@ return [
         'scaffold' => 'Scaffold',
     ],
     'options' => [
-        //
+        'permissions' => [
+        ],
     ],
 ];
