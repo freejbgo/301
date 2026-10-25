@@ -11,7 +11,7 @@ class PruneExpiredAcmeChallenges extends Command
 {
     protected $signature = 'redi:prune-acme-challenges';
 
-    protected $description = '删除已过期的 ACME 挑战行、空 token/响应体或畸形 HTTP-01 内容及对应节点同步记录';
+    protected $description = 'Prune expired ACME challenges, empty tokens, malformed HTTP-01 rows, and node sync rows';
 
     public function handle(): int
     {

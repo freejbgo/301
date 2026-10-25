@@ -190,7 +190,7 @@ trait ReconcilesDnsRecords
             }
         }
         if ($failed !== []) {
-            throw new \RuntimeException('DNS 删除陈旧记录失败: '.implode('; ', $failed));
+            throw new \RuntimeException(RediErrorMessage::get('dns.delete_stale_failed', ['detail' => implode('; ', $failed)]));
         }
     }
 }

@@ -3,15 +3,16 @@
 namespace App\Console\Commands;
 
 use App\Services\CertificateDeployService;
+use App\Support\RediErrorMessage;
 use Illuminate\Console\Command;
 
 class RequeueFailedDeploymentsCommand extends Command
 {
     protected $signature = 'redi:requeue-failed-deployments
-                            {--node= : 仅重试指定节点 ID}
-                            {--cert= : 仅重试指定证书 ID}';
+                            {--node= : Only retry deployments for this node ID}
+                            {--cert= : Only retry deployments for this certificate ID}';
 
-    protected $description = '将全部 failed 证书部署行改回 pending（可限定节点或证书）';
+    protected $description = 'Requeue all failed certificate deployments as pending (optional node or cert filter)';
 
     public function handle(CertificateDeployService $deployService): int
     {
@@ -22,7 +23,7 @@ class RequeueFailedDeploymentsCommand extends Command
         if ($nodeId !== null && $nodeId !== '') {
             $nodeFilter = (int) $nodeId;
             if ($nodeFilter < 1) {
-                $this->error('节点 ID 须为正整数');
+                $this->error(RediErrorMessage::get('cli.requeue_node_id'));
 
                 return self::FAILURE;
             }
@@ -32,7 +33,7 @@ class RequeueFailedDeploymentsCommand extends Command
         if ($certId !== null && $certId !== '') {
             $certFilter = (int) $certId;
             if ($certFilter < 1) {
-                $this->error('证书 ID 须为正整数');
+                $this->error(RediErrorMessage::get('cli.requeue_cert_id'));
 
                 return self::FAILURE;
             }
@@ -41,12 +42,12 @@ class RequeueFailedDeploymentsCommand extends Command
         $count = $deployService->requeueFailedDeployments($nodeFilter, $certFilter);
 
         if ($count === 0) {
-            $this->info('没有 failed 部署记录需要重试。');
+            $this->info(RediErrorMessage::get('cli.requeue_none'));
 
             return self::SUCCESS;
         }
 
-        $this->info("已重新排队 {$count} 条 failed 部署。");
+        $this->info(RediErrorMessage::get('cli.requeue_done', ['count' => $count]));
 
         return self::SUCCESS;
     }

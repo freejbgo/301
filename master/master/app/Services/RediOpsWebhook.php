@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Support\OpsDisplaySanitizer;
+use App\Support\RediErrorMessage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -98,7 +99,7 @@ class RediOpsWebhook
         $task = OpsDisplaySanitizer::field($task, 'redi:ops', 120);
         $message = OpsDisplaySanitizer::field($message, '', 4000);
         if ($message === '' || $message === '—') {
-            $message = "定时任务失败：{$task}";
+            $message = RediErrorMessage::get('ops.cron_failed', ['task' => $task]);
         }
 
         return self::post([
