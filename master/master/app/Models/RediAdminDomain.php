@@ -6,7 +6,6 @@ use App\Models\Concerns\BelongsToAdminTenant;
 use App\Services\AcmeChallengeCleanup;
 use App\Services\CertificateDeployService;
 use App\Services\DomainRecordNormalizer;
-use App\Support\RediErrorMessage;
 use Illuminate\Validation\ValidationException;
 use Dcat\Admin\Traits\HasDateTimeFormatter;
 use Illuminate\Database\Eloquent\Model;
@@ -26,8 +25,8 @@ class RediAdminDomain extends Model
                 $attempt = DomainRecordNormalizer::normalizeOriginalUrl($domain->original_url);
                 throw ValidationException::withMessages([
                     'original_url' => $attempt === ''
-                        ? RediErrorMessage::get('domain.original_empty')
-                        : RediErrorMessage::get('domain.original_invalid'),
+                        ? __('redi-admin-domain.validation.original_empty')
+                        : __('redi-admin-domain.validation.original_invalid'),
                 ]);
             }
             $domain->original_url = $norm;
@@ -36,7 +35,7 @@ class RediAdminDomain extends Model
             $skip = DomainRecordNormalizer::normalizeSkipUrl($domain->skip_url);
             if ($skip === '') {
                 throw ValidationException::withMessages([
-                    'skip_url' => RediErrorMessage::get('domain.skip_url_invalid'),
+                    'skip_url' => __('redi-admin-domain.validation.skip_url_invalid'),
                 ]);
             }
             $domain->skip_url = $skip;

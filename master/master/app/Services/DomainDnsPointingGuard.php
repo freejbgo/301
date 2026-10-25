@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Support\AdminTenantContext;
-use App\Support\RediErrorMessage;
-
 class DomainDnsPointingGuard
 {
     public static function mustPointToEdgeBeforeEnable(): bool
@@ -43,8 +41,8 @@ class DomainDnsPointingGuard
         $edgeFqdn = TenantEdgeService::cnameTargetForAdmin($adminId);
 
         throw \Illuminate\Validation\ValidationException::withMessages([
-            'status' => RediErrorMessage::get('domain.dns_enable_status', ['edge' => $edgeFqdn]),
-            'original_url' => RediErrorMessage::get('domain.dns_enable_url'),
+            'status' => __('redi-admin-domain.validation.dns_enable_status', ['edge' => $edgeFqdn]),
+            'original_url' => __('redi-admin-domain.validation.dns_enable_url'),
         ]);
     }
 }

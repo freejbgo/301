@@ -2,7 +2,7 @@
 
 **版本**：2026-10-25（阶段 31：运维门禁 + DNSPod 配置）  
 **范围**：主控 `master/master/` 管理后台**可见操作界面**（Laravel + Dcat Admin）；仓库 `docs/` 运维手册仍为中文。  
-**产品目标（已定）**：让使用后台的**超级管理员与租户账号**在 **简体中文 / 繁体中文 / English** 下方便操作；库内历史 `last_error` 不要求翻译。  
+**产品目标（已定）**：让使用后台的**超级管理员与租户账号**在 **简体中文 / 繁体中文 / English** 下方便操作；证书 `last_error` 列展示库内原文（不翻译），绿场新写入为英文。  
 **结论摘要**：自研 Admin 可见 UI 已三语化（`redi-*`、Dcat `menu`/`global`/`extension`、顶栏/登录切换、`PlatformBranding` per-locale）。**运维层**：新写入的 `last_error`、Artisan、Webhook、`redi:health` JSON、节点 API 门控等以 **`en/redi-errors` 英文 canonical** 为主；后台仍可能展示库内旧中文 `last_error` 原文。
 
 ### 实施进度（代码）
@@ -41,6 +41,7 @@
 | 30 | **已做** | `verify-ops-english-invariants.sh` 门禁；接入 `dev-preflight` / CI |
 | 31 | **已做** | DNSPod 中国 `record_line` 迁至 `redi.dnspod_cn_record_line`；`Services` 门禁无例外 |
 | 32 | **已做** | `DEVELOPMENT.md` 补充 i18n/ops 门禁；`verify-dns-providers-invariants` 校验 DNSPod 配置约定 |
+| 33 | **已做** | 域名保存/启用/批量导入校验改 `redi-admin-domain` / `redi-batch-domains`（修复后台英文校验漏洞） |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维/节点 API 新消息英文 canonical |
 
 ### 运维速览
@@ -56,7 +57,7 @@
 | `app/Admin/**` 用户可见字符串 | 已走 `__` / `admin_trans` / `redi-*`（仅注释含中文） |
 | `resources/lang/en` | 含 `menu`、`global`、`extension` 及全部 `redi-*` |
 | 语言解析 | `SetAdminLocale`（在 `admin` 前）+ 顶栏/登录切换 + `admin_users.locale` + 登录事件同步 |
-| 仍单语 / 非三语 | 证书 `last_error` 正文（历史库数据）；`docs/` 中文文档 |
+| 仍单语 / 非三语 | 证书 `last_error` 正文（库内原文，绿场为英文）；`docs/` 中文文档 |
 
 ---
 

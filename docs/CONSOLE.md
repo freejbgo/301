@@ -10,7 +10,7 @@
 - **记忆**：选择会写入浏览器 session；**登录后**会写入管理员账号的 `locale` 字段，下次登录自动沿用（需已执行 `php artisan migrate`，见升级文档）。
 - **系统外观**：在 **站点配置 → 系统外观** 按 **简体中文 / 繁體中文 / English** 三个选项卡分别填写名称与标题；Logo、Favicon 共用。旧版单语 JSON 无需迁移，保存一次即写入多语结构。未保存过时，表单与各语言界面会显示语言包默认品牌名。
 - **侧栏菜单**：业务项与 `Admin` 子菜单优先按库内 title 映射；若 title 无翻译键，则按菜单 URI（如 `group`、`auth/users`）回退到语言包。
-- **仍可能显示中文的界面元素**：证书列表里**历史** `last_error` 正文（库内原文，未迁移）；新运维消息与 CLI/Webhook 为英文。详见 [I18N-DEVELOPMENT-REPORT.md](I18N-DEVELOPMENT-REPORT.md)。
+- **证书 `last_error` 列**：展示库内保存的运维说明（**不随界面语言翻译**）。全新安装写入的为英文；仅当从很旧版本升级且库里已有中文记录时，才可能看到中文正文。CLI/Webhook 仍为英文。详见 [I18N-DEVELOPMENT-REPORT.md](I18N-DEVELOPMENT-REPORT.md)。
 
 ## 菜单
 
