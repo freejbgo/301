@@ -2,6 +2,8 @@
 
 namespace App\Services\Dns;
 
+use App\Support\RediErrorMessage;
+
 use App\Models\RediNode;
 use App\Models\RediPlatformDns;
 use App\Services\Dns\Concerns\EnsuresValidDnsNames;
@@ -31,7 +33,7 @@ class DnsComDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
         $this->apiKey = trim($creds['api_key'] ?? '');
         $this->apiSecret = trim($creds['api_secret'] ?? '');
         if ($this->apiKey === '' || $this->apiSecret === '') {
-            throw new RuntimeException('dns.com API Key / Secret 未配置');
+            throw new RuntimeException(RediErrorMessage::get('dns.dnscom_keys_missing'));
         }
         $this->http = new Client([
             'base_uri' => 'https://openapi.dns.com/',
@@ -104,7 +106,7 @@ class DnsComDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
     public function upsertCname(string $name, string $zone, string $targetFqdn): void
     {
         $zone = $this->requireDnsFqdn($zone, 'DNS zone');
-        $targetFqdn = $this->requireDnsFqdn($targetFqdn, 'CNAME 目标');
+        $targetFqdn = $this->requireDnsFqdn($targetFqdn, 'CNAME target');
         $name = strtolower(rtrim($name, '.'));
         if ($name === $zone) {
             $name = '@';
@@ -185,7 +187,7 @@ class DnsComDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
             }
             $page++;
             if ($page > 100) {
-                throw new RuntimeException('dns.com 记录分页超过上限，请手工清理重复记录后重试');
+                throw new RuntimeException(RediErrorMessage::get('dns.dnscom_page_limit'));
             }
         } while (count($list) === 100);
 
@@ -219,10 +221,10 @@ class DnsComDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
         $response = $this->http->post($path, ['form_params' => $params]);
         $body = json_decode((string) $response->getBody(), true);
         if (! is_array($body)) {
-            throw new RuntimeException('dns.com 响应无效');
+            throw new RuntimeException(RediErrorMessage::get('dns.dnscom_response_invalid'));
         }
         if (isset($body['code']) && (int) $body['code'] !== 0) {
-            throw new RuntimeException($body['message'] ?? 'dns.com API 错误');
+            throw new RuntimeException($body['message'] ?? RediErrorMessage::get('dns.dnscom_api_error'));
         }
 
         return $body;
@@ -232,7 +234,7 @@ class DnsComDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
     {
         $zone = trim($this->platform->edge_zone, '.');
         if ($zone === '') {
-            throw new RuntimeException('平台主域名未配置');
+            throw new RuntimeException(RediErrorMessage::get('dns.platform_zone_missing'));
         }
 
         return strtolower($zone);

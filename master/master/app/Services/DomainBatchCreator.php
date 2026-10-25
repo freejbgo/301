@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Support\OpsDisplaySanitizer;
+use App\Support\RediErrorMessage;
 use App\Models\RediAdminDomain;
 use App\Models\RediAdminGroup;
 use Illuminate\Database\QueryException;
@@ -30,7 +31,7 @@ class DomainBatchCreator
         ];
 
         if (! in_array($status, [1, 2], true)) {
-            $result['errors'][] = '状态只能是启用或停用';
+            $result['errors'][] = RediErrorMessage::get('batch.status_invalid');
 
             return $result;
         }
@@ -41,7 +42,7 @@ class DomainBatchCreator
             ->exists();
 
         if (! $groupOk) {
-            $result['errors'][] = '分组无效或不属于当前账号';
+            $result['errors'][] = RediErrorMessage::get('batch.group_invalid');
 
             return $result;
         }
@@ -50,12 +51,15 @@ class DomainBatchCreator
 
         $dataLineCount = $this->countDataLines($lines);
         if ($dataLineCount === 0) {
-            $result['errors'][] = '请至少填写一行域名';
+            $result['errors'][] = RediErrorMessage::get('batch.no_lines');
 
             return $result;
         }
         if ($dataLineCount > self::MAX_LINES_PER_BATCH) {
-            $result['errors'][] = '单次最多添加 '.self::MAX_LINES_PER_BATCH.' 条域名，当前为 '.$dataLineCount.' 条，请分批提交。';
+            $result['errors'][] = RediErrorMessage::get('batch.too_many_lines', [
+                'max' => self::MAX_LINES_PER_BATCH,
+                'count' => $dataLineCount,
+            ]);
 
             return $result;
         }
@@ -86,17 +90,23 @@ class DomainBatchCreator
             if ($originalUrl === '') {
                 $attempt = DomainRecordNormalizer::normalizeOriginalUrl($rawOriginal);
                 if ($attempt === '') {
-                    $result['errors'][] = "第 {$rowIndex} 行：原始域名不能为空或含路径";
+                    $result['errors'][] = RediErrorMessage::get('batch.row_original_empty', ['row' => $rowIndex]);
                 } else {
                     $label = OpsDisplaySanitizer::field($attempt, '—', 253);
-                    $result['errors'][] = "第 {$rowIndex} 行（{$label}）：原始域名格式无效";
+                    $result['errors'][] = RediErrorMessage::get('batch.row_original_invalid', [
+                        'row' => $rowIndex,
+                        'label' => $label,
+                    ]);
                 }
                 continue;
             }
 
             if ($skipUrl === '') {
                 $label = OpsDisplaySanitizer::field($originalUrl, '—', 253);
-                $result['errors'][] = "第 {$rowIndex} 行（{$label}）：缺少跳转地址，请填写「统一跳转地址」或在本行写「域名,跳转地址」";
+                $result['errors'][] = RediErrorMessage::get('batch.row_skip_missing', [
+                    'row' => $rowIndex,
+                    'label' => $label,
+                ]);
                 continue;
             }
 
@@ -111,7 +121,11 @@ class DomainBatchCreator
                 $edge = TenantEdgeService::cnameTargetForAdmin($adminId);
                 $label = OpsDisplaySanitizer::field($originalUrl, '—', 253);
                 $edgeLabel = OpsDisplaySanitizer::field($edge, '—', 253);
-                $result['errors'][] = "第 {$rowIndex} 行（{$label}）：启用前须 CNAME 到 {$edgeLabel} 或 A 到节点公网 IP";
+                $result['errors'][] = RediErrorMessage::get('batch.row_dns_required', [
+                    'row' => $rowIndex,
+                    'label' => $label,
+                    'edge' => $edgeLabel,
+                ]);
                 continue;
             }
 
@@ -133,7 +147,10 @@ class DomainBatchCreator
                     $result['skipped']++;
                 } else {
                     $label = OpsDisplaySanitizer::field($originalUrl, '—', 253);
-                    $result['errors'][] = "第 {$rowIndex} 行（{$label}）：写入失败";
+                    $result['errors'][] = RediErrorMessage::get('batch.row_write_failed', [
+                        'row' => $rowIndex,
+                        'label' => $label,
+                    ]);
                 }
             }
         }

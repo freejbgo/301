@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Support\AdminTenantContext;
+use App\Support\RediErrorMessage;
 
 class DomainDnsPointingGuard
 {
@@ -20,7 +21,7 @@ class DomainDnsPointingGuard
 
         TenantEdgeService::ensureForAdmin($adminId);
         $edgeFqdn = TenantEdgeService::cnameTargetForAdmin($adminId);
-        if ($edgeFqdn === '' || strncmp($edgeFqdn, '（', 3) === 0) {
+        if ($edgeFqdn === '' || TenantEdgeService::isPlaceholderCnameTarget($edgeFqdn)) {
             return false;
         }
 
@@ -42,8 +43,8 @@ class DomainDnsPointingGuard
         $edgeFqdn = TenantEdgeService::cnameTargetForAdmin($adminId);
 
         throw \Illuminate\Validation\ValidationException::withMessages([
-            'status' => '启用前须将域名 CNAME 到 '.$edgeFqdn.'（或直接 A 记录到平台节点公网 IP）。解析生效后再启用。',
-            'original_url' => '启用前须将域名解析指向平台（CNAME 或 A 到节点池）',
+            'status' => RediErrorMessage::get('domain.dns_enable_status', ['edge' => $edgeFqdn]),
+            'original_url' => RediErrorMessage::get('domain.dns_enable_url'),
         ]);
     }
 }

@@ -101,7 +101,7 @@ class RediAdminDomainController extends AdminController
             });
             $grid->column('cname_target', admin_trans_field('cname_target'))->display(function () {
                 $target = TenantEdgeService::cnameTargetForAdmin((int) $this->admin_id);
-                if ($target === '' || strncmp($target, '（', 3) === 0) {
+                if ($target === '' || TenantEdgeService::isPlaceholderCnameTarget($target)) {
                     return $target;
                 }
                 $safe = OpsDisplaySanitizer::field($target, '', 253);
@@ -111,7 +111,7 @@ class RediAdminDomainController extends AdminController
             });
             $grid->column('cname_ok', admin_trans_field('cname_ok'))->display(function () {
                 $edgeFqdn = TenantEdgeService::cnameTargetForAdmin((int) $this->admin_id);
-                if ($edgeFqdn === '' || strncmp($edgeFqdn, '（', 3) === 0) {
+                if ($edgeFqdn === '' || TenantEdgeService::isPlaceholderCnameTarget($edgeFqdn)) {
                     return '—';
                 }
                 $ok = CnamePrecheckService::pointsToEdgeCached($this->original_url, $edgeFqdn);

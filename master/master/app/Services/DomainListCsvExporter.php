@@ -123,7 +123,7 @@ class DomainListCsvExporter
 
         TenantEdgeService::ensureForAdmin((int) $domain->admin_id);
         $edge = TenantEdgeService::cnameTargetForAdmin((int) $domain->admin_id);
-        if ($edge === '' || strncmp($edge, '（', 3) === 0) {
+        if ($edge === '' || TenantEdgeService::isPlaceholderCnameTarget($edge)) {
             return ['', 'unknown'];
         }
 

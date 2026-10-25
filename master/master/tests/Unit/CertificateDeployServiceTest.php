@@ -626,7 +626,7 @@ class CertificateDeployServiceTest extends TestCase
 
         $this->assertFalse($queued);
         $this->assertDatabaseCount('redi_cert_deployments', 0);
-        $this->assertStringContainsString('证书材料不可用', (string) $cert->fresh()->last_error);
+        $this->assertStringContainsString('Certificate material unavailable', (string) $cert->fresh()->last_error);
         $this->assertSame(RediDomainCert::STATUS_ISSUED, $cert->fresh()->status);
     }
 
@@ -660,7 +660,7 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertTrue($queued);
         $this->assertDatabaseCount('redi_cert_deployments', 0);
         $this->assertSame(RediDomainCert::STATUS_DEPLOYING, $cert->fresh()->status);
-        $this->assertStringContainsString('无启用节点', (string) $cert->fresh()->last_error);
+        $this->assertStringContainsString('No enabled nodes', (string) $cert->fresh()->last_error);
     }
 
     public function test_queue_deploy_skips_when_domain_disabled(): void
@@ -685,7 +685,7 @@ class CertificateDeployServiceTest extends TestCase
 
         $this->assertFalse($queued);
         $this->assertDatabaseCount('redi_cert_deployments', 0);
-        $this->assertStringContainsString('域名已停用', (string) $cert->fresh()->last_error);
+        $this->assertStringContainsString('Domain disabled', (string) $cert->fresh()->last_error);
     }
 
     public function test_mark_node_ack_updates_last_error_when_deployment_already_failed(): void
@@ -1053,7 +1053,7 @@ class CertificateDeployServiceTest extends TestCase
             'domain_id' => $domainId,
             'domain_name' => 'edge.example',
             'status' => RediDomainCert::STATUS_DEPLOYING,
-            'last_error' => '等待节点拉取证书',
+            'last_error' => 'Waiting for nodes to pull certificate',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

@@ -19,7 +19,7 @@ class RediAcmeChallengeTest extends TestCase
     public function test_upsert_rejects_invalid_domain(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('域名无效');
+        $this->expectExceptionMessage('Invalid hostname');
 
         RediAcmeChallenge::upsertForDomain('1.2.3.4', 'ok-token', 'body', now()->addHour());
     }

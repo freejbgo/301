@@ -2,6 +2,7 @@
 
 namespace App\Services\Acme;
 
+use App\Support\RediErrorMessage;
 use App\Models\RediAcmeChallengeNodeSync;
 use App\Models\RediNode;
 use App\Services\AcmeChallengeQuery;
@@ -21,17 +22,17 @@ class Http01PropagationWaiter
         $maxSeconds = min(600, max(10, $maxSeconds));
         $domain = DomainRecordNormalizer::acmeHostKey($domain);
         if ($domain === '') {
-            throw new RuntimeException('HTTP-01 域名无效');
+            throw new RuntimeException(RediErrorMessage::get('acme.http01_host_invalid'));
         }
         try {
             $token = AcmeHttp01Token::normalize($token);
         } catch (\InvalidArgumentException $e) {
-            throw new RuntimeException('HTTP-01 token 无效', 0, $e);
+            throw new RuntimeException(RediErrorMessage::get('acme.http01_token_invalid'), 0, $e);
         }
         $path = '/.well-known/acme-challenge/'.$token;
         $publicUrl = 'http://'.$domain.$path;
         if (! AcmeChallengeQuery::http01ContentValid($token, $expectedBody)) {
-            throw new RuntimeException('HTTP-01 响应体无效');
+            throw new RuntimeException(RediErrorMessage::get('acme.http01_body_invalid'));
         }
         $expectedBody = trim($expectedBody);
         $deadline = time() + max(0, $maxSeconds);
@@ -62,10 +63,10 @@ class Http01PropagationWaiter
 
     protected function timeoutMessage(string $domain, string $path, int $maxSeconds): string
     {
-        $msg = 'HTTP-01 未在 '.$maxSeconds.' 秒内就绪：请确认至少一台在线节点已同步挑战、CNAME 已生效，且公网 80 可访问 '
+        $msg = RediErrorMessage::get('acme.http01_timeout', ['seconds' => $maxSeconds])
             .OpsDisplaySanitizer::field($domain, $domain, 253).$path;
         if (filter_var(config('redi.publish_pool_aaaa', false), FILTER_VALIDATE_BOOLEAN)) {
-            $msg .= '。已发布 Pool AAAA 时主控探测可能优先走 IPv6，请确认主控有 IPv6 出口且节点公网 IPv6 的 80 可达（DEPLOY-centos7 §12）';
+            $msg .= RediErrorMessage::get('acme.http01_timeout_ipv6');
         }
 
         return $msg;

@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToAdminTenant;
 use App\Services\AcmeChallengeCleanup;
 use App\Services\CertificateDeployService;
 use App\Services\DomainRecordNormalizer;
+use App\Support\RediErrorMessage;
 use Illuminate\Validation\ValidationException;
 use Dcat\Admin\Traits\HasDateTimeFormatter;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ class RediAdminDomain extends Model
     use BelongsToAdminTenant;
     use HasDateTimeFormatter;
 
-    public const DISABLE_DEPLOY_CANCEL_MSG = '域名已停用，已取消节点证书部署排队';
+    public const DISABLE_DEPLOY_CANCEL_MSG = 'Domain disabled; cancelled certificate deploy queue on nodes';
 
     protected static function booted(): void
     {
@@ -25,8 +26,8 @@ class RediAdminDomain extends Model
                 $attempt = DomainRecordNormalizer::normalizeOriginalUrl($domain->original_url);
                 throw ValidationException::withMessages([
                     'original_url' => $attempt === ''
-                        ? '原始域名不能为空或含路径'
-                        : '原始域名格式无效',
+                        ? RediErrorMessage::get('domain.original_empty')
+                        : RediErrorMessage::get('domain.original_invalid'),
                 ]);
             }
             $domain->original_url = $norm;
@@ -35,7 +36,7 @@ class RediAdminDomain extends Model
             $skip = DomainRecordNormalizer::normalizeSkipUrl($domain->skip_url);
             if ($skip === '') {
                 throw ValidationException::withMessages([
-                    'skip_url' => '跳转链接无效（须为 http/https 完整 URL）',
+                    'skip_url' => RediErrorMessage::get('domain.skip_url_invalid'),
                 ]);
             }
             $domain->skip_url = $skip;

@@ -1432,7 +1432,7 @@ class NodeAgentApiTest extends TestCase
             ->assertOk();
 
         $this->assertSame(
-            '部分节点安装失败，其余节点仍保留该证书',
+            'Some nodes failed; certificate remains on successful nodes',
             \DB::table('redi_domain_certs')->where('id', $certId)->value('last_error')
         );
         $this->assertSame('ok', \DB::table('redi_cert_deployments')->where('cert_id', $certId)->where('node_id', $nodeOk->id)->value('status'));
@@ -2283,7 +2283,7 @@ class NodeAgentApiTest extends TestCase
             'domain_id' => $domainId,
             'domain_name' => 'edge.example',
             'status' => 'deploying',
-            'last_error' => '等待节点拉取证书',
+            'last_error' => 'Waiting for nodes to pull certificate',
             'certificate' => null,
             'private_key' => null,
             'created_at' => now(),

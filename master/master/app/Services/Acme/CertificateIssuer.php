@@ -2,6 +2,7 @@
 
 namespace App\Services\Acme;
 
+use App\Support\RediErrorMessage;
 use Afosto\Acme\Client;
 use App\Models\RediAcmeChallenge;
 use App\Models\RediAdminDomain;
@@ -27,13 +28,13 @@ class CertificateIssuer
         $this->assertDomainIssuable($cert);
 
         if (! class_exists(Client::class)) {
-            throw new RuntimeException('请先在主控执行 composer require afosto/yaac');
+            throw new RuntimeException(RediErrorMessage::get('acme.yaac_missing'));
         }
 
         $platform = RediPlatformDns::instance();
         $email = trim($platform->acme_contact_email ?? '');
         if ($email === '') {
-            throw new RuntimeException('请在 DNS 与节点池 配置 ACME 联系邮箱');
+            throw new RuntimeException(RediErrorMessage::get('acme.contact_email_missing'));
         }
 
         $storagePath = storage_path('app/acme');
@@ -49,7 +50,7 @@ class CertificateIssuer
 
         $domain = DomainRecordNormalizer::acmeHostKey((string) $cert->domain_name);
         if ($domain === '') {
-            throw new RuntimeException('域名主机名无效，无法签发证书');
+            throw new RuntimeException(RediErrorMessage::get('cert.invalid_hostname'));
         }
         if ($cert->domain_name !== $domain) {
             $cert->domain_name = $domain;
@@ -84,7 +85,7 @@ class CertificateIssuer
             $token = AcmeHttp01Token::normalize(basename($file->getFilename()));
             $body = trim($file->getContents());
             if (! AcmeChallengeQuery::http01ContentValid($token, $body)) {
-                throw new RuntimeException('ACME HTTP-01 响应体无效');
+                throw new RuntimeException(RediErrorMessage::get('acme.http01_body_invalid'));
             }
             AcmeChallengeCleanup::purgeForHosts([$domain]);
             RediAcmeChallenge::upsertForDomain(
@@ -100,11 +101,11 @@ class CertificateIssuer
         }
 
         if (! $authorized) {
-            throw new RuntimeException('ACME 未返回域名 '.$domain.' 的 HTTP-01 授权');
+            throw new RuntimeException(RediErrorMessage::get('acme.http01_auth_missing', ['domain' => $domain]));
         }
 
         if (! $client->isReady($order)) {
-            throw new RuntimeException('ACME 验证未完成，请确认 CNAME 已生效且节点可访问 HTTP-01');
+            throw new RuntimeException(RediErrorMessage::get('acme.http01_not_ready'));
         }
 
         $certificate = $client->getCertificate($order);
@@ -126,15 +127,15 @@ class CertificateIssuer
     {
         $domain = RediAdminDomain::query()->find($cert->domain_id);
         if (! $domain) {
-            throw new RuntimeException('域名已删除，已中止证书签发');
+            throw new RuntimeException(RediErrorMessage::get('acme.domain_deleted'));
         }
         if ((int) $domain->status !== 1) {
-            throw new RuntimeException('域名已停用，已中止证书签发');
+            throw new RuntimeException(RediErrorMessage::get('acme.domain_disabled'));
         }
         $cert->setRelation('domain', $domain);
         $fresh = CertificateDeployService::freshCertWithPersistedRealign($cert);
         if (! $fresh || ! DomainRecordNormalizer::certMatchesAdminDomain($fresh)) {
-            throw new RuntimeException('域名主机名无效，无法签发证书');
+            throw new RuntimeException(RediErrorMessage::get('cert.invalid_hostname'));
         }
         $cert->refresh();
         $cert->loadMissing('domain');

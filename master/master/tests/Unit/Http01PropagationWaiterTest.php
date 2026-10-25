@@ -111,7 +111,7 @@ class Http01PropagationWaiterTest extends TestCase
     public function test_wait_rejects_invalid_domain(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('域名无效');
+        $this->expectExceptionMessage('Invalid hostname');
 
         app(Http01PropagationWaiter::class)->wait('not a host', 'tok', 'body', 0);
     }

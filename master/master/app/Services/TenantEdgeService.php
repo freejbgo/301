@@ -5,10 +5,16 @@ namespace App\Services;
 use App\Models\RediPlatformDns;
 use App\Models\RediTenantEdge;
 use App\Support\HostNameValidator;
+use App\Support\RediErrorMessage;
 use Illuminate\Support\Str;
 
 class TenantEdgeService
 {
+    public static function isPlaceholderCnameTarget(string $target): bool
+    {
+        return $target !== '' && isset($target[0]) && $target[0] === '(';
+    }
+
     public static function ensureForAdmin(int $adminId): RediTenantEdge
     {
         $existing = RediTenantEdge::where('admin_id', $adminId)->first();
@@ -18,13 +24,10 @@ class TenantEdgeService
 
         $platform = RediPlatformDns::instance();
         $zone = trim($platform->edge_zone, '.');
-        if ($zone === '') {
-            $zone = '请先在 DNS 与节点池 配置平台主域名';
-        }
 
         $token = self::generateToken();
         $fqdn = '';
-        if ($zone !== '请先在 DNS 与节点池 配置平台主域名') {
+        if ($zone !== '') {
             $candidate = HostNameValidator::toCanonicalAscii(strtolower($token.'.'.$zone));
             if ($candidate !== '' && HostNameValidator::isValidHostLabel($candidate)) {
                 $fqdn = $candidate;
@@ -51,10 +54,10 @@ class TenantEdgeService
 
         $platform = RediPlatformDns::instance();
         if (trim($platform->edge_zone) === '') {
-            return '（请先配置平台主域名）';
+            return RediErrorMessage::get('edge.configure_zone_first');
         }
 
-        return '（保存域名后将自动生成）';
+        return RediErrorMessage::get('edge.generated_after_save');
     }
 
     public static function rebuildAllEdgeFqdn(string $zone): void

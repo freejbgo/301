@@ -3,6 +3,7 @@
 return [
     'titles' => [
         'index'         => 'Home',
+        'site-config'   => 'Site settings',
         'admin'         => 'Admin',
         'users'         => 'Users',
         'roles'         => 'Roles',
