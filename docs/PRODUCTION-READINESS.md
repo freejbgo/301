@@ -4,27 +4,19 @@
 
 - **已上线升级（不重装）**：[UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（含 `scripts/patch-master-cron-ops-webhook.sh`）
 - **已知限制与未来工作**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)
+- **一页打勾清单**：[LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)（[Canvas 可勾选副本](https://cursor.com/canvas/store-0707e8bc-7570-4527-8e26-d32c04eb4d4e/e877d821-4edb-4d1f-9d65-4e1382e20da4)）
 
-## 阻塞上线（P0，本仓库已加固）
+## 阻塞上线（P0 摘要）
 
 | 领域 | 要求 |
 |------|------|
-| 域名占坑 | 默认 **新建为停用**；租户启用前须 CNAME 到 edge 或 **A 到启用节点公网 IP**（`REDI_REQUIRE_DNS_POINTING_TO_ENABLE`，平台管理员可跳过） |
-| 后台安全 | 默认密码拦截不再放行 `dcat-api`；`dcat-api` 须已登录后台；登录 10 次/分钟限速；域名列表分组名 HTML 转义 |
-| 证书下发 | 节点 register / 重新启用时 `syncDeploymentsForNode` 补齐 `redi_cert_deployments`；主控**连续**空证书列表达阈值后节点清空内存证书（默认 3 次拉取，`REDI_AGENT_EMPTY_CERT_CLEAR_AFTER=1` 为立即清空） |
-| 节点 Agent | 心跳优先于拉取；拉取失败不阻断后续心跳；ack 403/409 不触发重新 register；Agent ≥ `0.1.3`（`REDI_MIN_AGENT_VERSION`） |
-| API 限流 | 节点 API 在认证后按 `node_id` 限流（`throttle:redi-node`） |
-| ACME / 生产配置 | `redi:health` 在生产下检查：`app_debug_enabled`、`acme_email_missing`、`acme_staging_enabled`、`edge_zone_missing`、`dns_driver_invalid`、`dns_api_credentials_missing`、`dns_zone_id_missing` |
-| 节点池 | `redi:health` 告警 `node_pool_empty` / `node_no_public_ip`；pool A 仅使用合法 IPv4（节点模型 + DNS reconcile 双层过滤） |
-| 证书续期/下发 | `redi:renew-certificates` 与 `syncDeploymentsForNode` 跳过非法主机名的证书记录，避免无效 ACME 入队 |
+| 域名占坑 | 默认 **新建为停用**；启用前 DNS（CNAME 或 A 到池）；`REDI_REQUIRE_DNS_POINTING_TO_ENABLE` |
+| 后台安全 | 默认密码拦截；`dcat-api` 须登录；登录限速；列表 XSS 转义 |
+| 证书与 Agent | 部署行补齐；空证书列表默认 3 次拉取后清空节点内存证；Agent ≥ `0.1.3` |
+| 生产配置 | `redi:health` 检查 debug、ACME、edge_zone、DNS 驱动与凭证等（见 [HEALTH-REFERENCE.md](HEALTH-REFERENCE.md)） |
+| 节点池 | 启用节点公网 IP；pool A 仅合法 IPv4 |
 
-## 部署前
-
-1. 修改后台默认密码（种子文档密码在 `config/redi.php` 的 `known_default_admin_passwords` 中会被拦截）。
-2. 确认 `APP_KEY` 稳定且已备份（证书密文依赖它）。
-3. 主控仅 HTTPS 暴露；节点 `REDI_MASTER_URL` 使用 `https://`（实验环境才用 `REDI_MASTER_INSECURE=1`）。
-4. 按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 执行主控/节点脚本，并准备 `release` 包（见 `scripts/ensure-release-tarballs.sh`）。主控 `NODE_IPS` 变更后须 `deploy-master.sh` 或 `grant-nodes-from-vars.sh` 同步 MySQL/firewalld。
-5. **在开发机打 tar 或发 `v*` tag 前**：`bash scripts/dev-preflight.sh`（见 [DEVELOPMENT.md](DEVELOPMENT.md)）。
+逐项勾选见 **[LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)** §A–E。
 
 ## 验收命令（真机）
 

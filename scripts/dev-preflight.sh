@@ -156,6 +156,7 @@ bash scripts/verify-acceptance-centos7-doc.sh
 echo "==> CentOS7 部署教程与脚本"
 bash scripts/verify-deploy-centos7-doc.sh
 bash scripts/verify-product-docs.sh
+bash scripts/verify-launch-checklist-doc.sh
 
 echo "==> SQL 与节点存储过程校验"
 php scripts/verify-redi-node-procedure-sync.php
