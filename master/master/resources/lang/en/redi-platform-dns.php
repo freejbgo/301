@@ -30,7 +30,6 @@ return [
         'failed'           => 'DNS sync failed. See storage/logs/laravel.log for details.',
         'success'          => 'DNS synced to provider',
         'manual_mode_info' => 'Manual DNS mode: configure records from the pool / tenant tables at your provider; no sync needed.',
-        'failed_prefix'    => 'DNS sync failed: ',
     ],
     'fields' => [
         'edge_zone'                 => 'Platform apex domain',
