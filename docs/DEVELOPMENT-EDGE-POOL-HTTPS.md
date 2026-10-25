@@ -131,7 +131,7 @@ DNS 解析模式：
 - **HTTP 跳转**：`config.json` 的 `addr`（默认 `0.0.0.0:80`）；可用环境变量 `REDI_HTTP_LISTEN` 覆盖。
 - **HTTPS**：`tls_addr`（默认 `0.0.0.0:443`）；设为 `""` / `null` 或 `REDI_TLS_LISTEN=` 可关闭；证书由 Agent 拉取后 **SNI** 热加载。
 - **lagran**：`lagran.port` 建议 **`80,443`**（可与 `addr` / `tls_addr` 自动合并）；需 root/CAP_NET_ADMIN。
-- **管理 API**：`8080` 仍可直接访问 `api.js` / `c.js`（明文）。跳转页改为**当前域名相对路径** `/c.js`、`/api.js`，由 80/443 直接输出，HTTPS 不再请求 `https://IP:8080`。
+- **管理 API**：`8080` 仍可直接访问 `api.js` / `c.js`（明文）；限速规则与 80/443 一致（`/c.js` 经 Echo 中间件；`/api.js` 仅在 handler 内双档限速，避免重复计次）。跳转页改为**当前域名相对路径** `/c.js`、`/api.js`，由 80/443 直接输出，HTTPS 不再请求 `https://IP:8080`。
 
 ### 5.2 Master Agent（`REDI_MASTER_URL` + `REDI_NODE_TOKEN`）
 
