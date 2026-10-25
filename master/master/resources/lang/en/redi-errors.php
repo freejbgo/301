@@ -79,7 +79,6 @@ return [
         'pool_fqdn_invalid' => 'Invalid pool FQDN',
         'manual_mode_no_api' => 'Manual DNS mode: use the reference table under DNS & node pool; do not call API sync.',
         'tenant_zone_skew' => 'All tenant edge hostnames are outside platform zone :zone; fix edge_fqdn or platform zone before sync (vendor DNS not updated).',
-        'pool_fqdn_invalid' => 'Invalid pool FQDN',
         'delete_stale_failed' => 'Failed to delete stale DNS records: :detail',
         'pool_cname_invalid' => 'Invalid pool CNAME target',
         'no_enabled_ipv4' => 'No enabled node public IPv4 addresses; cannot sync pool A records',
