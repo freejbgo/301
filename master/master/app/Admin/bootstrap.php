@@ -12,6 +12,20 @@ app('view')->prependNamespace('admin', resource_path('views/admin'));
 
 Admin::booting(function () {
     PlatformBranding::applyAdminConfig();
+
+    $prefix = trim((string) config('admin.route.prefix', 'admin'), '/');
+    $loginPath = ($prefix !== '' ? $prefix.'/' : '').'auth/login';
+    if (request()->is($loginPath)) {
+        $inline = view('admin::partials.locale-switcher-inline')->render();
+        Admin::style('.redi-login-locale .badge { cursor: pointer; }');
+        Admin::script(
+            'Dcat.ready(function () {'
+            .'var $card = $(".login-box-body, .login-card, .card-body").first();'
+            .'if (!$card.length) { $card = $("form").filter(function(){ return (this.action||"").indexOf("login")>=0; }).first().parent(); }'
+            .'if ($card.length) { $card.append('.json_encode($inline).'); }'
+            .'});'
+        );
+    }
 });
 
 Admin::navbar(function (Navbar $navbar) {
