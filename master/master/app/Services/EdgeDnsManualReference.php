@@ -28,7 +28,7 @@ class EdgeDnsManualReference
         if ($poolFqdn !== '') {
             $ips = RediNode::enabledPublicIps();
             if ($ips === []) {
-                $pool[] = ['A', $poolFqdn, '（请先在节点管理添加启用节点 IP）'];
+                $pool[] = ['A', $poolFqdn, __('redi-platform-dns.reference.pool_no_nodes')];
             } else {
                 foreach ($ips as $ip) {
                     $pool[] = ['A', $poolFqdn, $ip];
@@ -45,7 +45,11 @@ class EdgeDnsManualReference
                 ->orderBy('admin_id')
                 ->get();
             if ($edges->isEmpty()) {
-                $tenant[] = ['CNAME', '（租户 token）', $poolTarget.'（租户登录并添加域名后生成）'];
+                $tenant[] = [
+                    'CNAME',
+                    __('redi-platform-dns.reference.tenant_token_host'),
+                    __('redi-platform-dns.reference.tenant_pool_pending', ['target' => $poolTarget]),
+                ];
             } else {
                 foreach ($edges as $edge) {
                     $fqdn = HostNameValidator::toCanonicalAscii((string) $edge->edge_fqdn);
@@ -56,7 +60,11 @@ class EdgeDnsManualReference
                     if ($fqdn !== '' && Str::endsWith($fqdn, '.'.$zone)) {
                         $rr = substr($fqdn, 0, -strlen('.'.$zone));
                     }
-                    $tenant[] = ['CNAME', $rr.'（'.$fqdn.'）', $poolTarget];
+                    $tenant[] = [
+                        'CNAME',
+                        __('redi-platform-dns.reference.tenant_rr_fqdn', ['rr' => $rr, 'fqdn' => $fqdn]),
+                        $poolTarget,
+                    ];
                 }
             }
         }
@@ -90,7 +98,7 @@ class EdgeDnsManualReference
             }
         }
         if ($hasUnreadable) {
-            $rows[] = ['AAAA', $poolFqdn, '（部分启用节点 IPv6 无法解析，请先在后台修正）'];
+            $rows[] = ['AAAA', $poolFqdn, __('redi-platform-dns.reference.pool_ipv6_unreadable')];
         }
 
         return $rows;

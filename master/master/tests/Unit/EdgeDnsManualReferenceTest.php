@@ -12,6 +12,7 @@ class EdgeDnsManualReferenceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        app()->setLocale('zh_CN');
         config(['database.default' => 'sqlite']);
         config(['database.connections.sqlite' => [
             'driver' => 'sqlite',
@@ -103,7 +104,7 @@ class EdgeDnsManualReferenceTest extends TestCase
         $pool = EdgeDnsManualReference::tables()['pool'];
 
         $this->assertSame(
-            ['A', 'pool.example.com', '（请先在节点管理添加启用节点 IP）'],
+            ['A', 'pool.example.com', __('redi-platform-dns.reference.pool_no_nodes')],
             $pool[0]
         );
         $this->assertCount(1, $pool);

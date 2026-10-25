@@ -27,7 +27,9 @@ class HomeController extends Controller
                 : '<ul class="mb-0">'.implode('', array_map(function ($row) {
                     $class = $row['level'] === 'critical' ? 'text-danger' : 'text-warning';
 
-                    return '<li class="'.e($class).'">'.e(OpsDisplaySanitizer::field($row['message'] ?? '', '—', 300)).'</li>';
+                    $text = RediHealthReport::issueMessage($row);
+
+                    return '<li class="'.e($class).'">'.e(OpsDisplaySanitizer::field($text, '—', 300)).'</li>';
                 }, array_slice($issues, 0, 8))).'</ul>';
 
             if (count($issues) > 8) {
