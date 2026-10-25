@@ -142,6 +142,14 @@ sudo systemctl start redi-multi
 
 在 `scripts/centos7/vars.env` 设置 `REDI_DB_TLS="skip-verify"` 或 `REDI_DB_TLS="1"` 后重跑 `deploy-node.sh` 即可写入 `env.sh`。主控 MariaDB 侧需自行配置 SSL 监听与证书；跨公网连库 **强烈建议** TLS + 安全组仅放行节点 IP。
 
+节点 Agent 其它可选键（**不**由 `deploy-node.sh` 从 `vars.env` 写入，升级后按需编辑 `${NODE_INSTALL_ROOT}/redi-multi/env.sh` 并 `systemctl restart redi-multi`）：
+
+| 键 | 含义 |
+|----|------|
+| `REDI_AGENT_EMPTY_CERT_CLEAR_AFTER` | 主控连续返回空证书列表多少次后才清空本机 TLS 内存（默认 **3**；`1` = 立即清空，与旧版相同） |
+
+详见 [node/redi-multi/env.example](node/redi-multi/env.example) 与 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) §3。
+
 ## 10. 多机 / 多 worker 队列（可选）
 
 默认 `QUEUE_CONNECTION=database` + `CACHE_DRIVER=file` 适合 **单台主控、单个 `redi-queue`**。若要多进程或多台跑 `queue:work`：

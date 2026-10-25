@@ -36,6 +36,7 @@ for needle in \
   'UPGRADE-IN-PLACE.md' \
   'REDI_MASTER_INSECURE' \
   'REDI_DB_TLS' \
+  'REDI_AGENT_EMPTY_CERT_CLEAR_AFTER' \
   '--max-time=3600' \
   '03:10' \
   '04:10' \
