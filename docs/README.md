@@ -8,7 +8,8 @@
 2. [DEPLOY-centos7.md](../DEPLOY-centos7.md) — 主控/节点脚本  
 3. [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) — 真机打勾  
 4. [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) — 业务 F1–F8  
-5. [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) — 阻塞项与验收命令  
+5. [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) — **一页上线打勾**（详细说明见 PRODUCTION-READINESS）  
+6. [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) — 阻塞项与验收命令  
 
 ## 已上线升级
 
@@ -18,6 +19,7 @@
 
 | 文档 | 用途 |
 |------|------|
+| [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) | 上线打勾（可配合 Canvas 检查单） |
 | [CONSOLE.md](CONSOLE.md) | 后台操作、DNS 同步排障、平台边界 §8 |
 | [CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md) | 发给客户的 CNAME 说明 |
 | [HEALTH-REFERENCE.md](HEALTH-REFERENCE.md) | `redi:health` 各 code |

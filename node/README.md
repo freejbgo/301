@@ -2,7 +2,7 @@
 
 本仓库的跳转节点面向 **被干扰、被重置、访问不稳的域名**（需要改 TCP 窗口的 **lagran** 配合 80/443 跳转），不是给「完全正常、无干扰」的纯 301 场景设计的。部署时请保持 **lagran 开启**，并给二进制 `CAP_NET_ADMIN`（见 [../DEPLOY.md](../DEPLOY.md)）。
 
-生产 CentOS 7 见 [../DEPLOY-centos7.md](../DEPLOY-centos7.md)；通用说明见 [../DEPLOY.md](../DEPLOY.md)。这里只说明节点包本身。
+**文档：** 生产 [DEPLOY-centos7.md](../DEPLOY-centos7.md) · 架构 [../docs/PLATFORM-ARCHITECTURE.md](../docs/PLATFORM-ARCHITECTURE.md) · 平台边界 [../docs/CONSOLE.md](../docs/CONSOLE.md) §8 · 上线清单 [../docs/LAUNCH-CHECKLIST.md](../docs/LAUNCH-CHECKLIST.md)
 
 发布包是 **`redi-multi.tar.gz`**。解压后目录为 `redi-multi/`，里面有源码、`config.json.example`、`env.example` 和编译好的 `bin/redi-multi`。首次部署从 example 复制 `config.json`（`deploy-node.sh` 会自动复制）。**`redirector` 字段不参与运行**，跳转来自 MySQL 与 `default_redirect_url`。线上运行这个二进制，不要 `go run main.go`。
 
@@ -30,6 +30,7 @@
 | `REDI_DB_TLS` | 可选：`1`/`true` 启用 TLS 并校验证书；`skip-verify` 仅加密不校验（内网自签） |
 | `REDI_MASTER_URL` | 主控地址，须 `https://`（lab 可 `REDI_MASTER_INSECURE=1` 允许 `http://`） |
 | `REDI_NODE_TOKEN` | 后台「节点管理」创建节点时只显示一次的 Token |
+| `REDI_AGENT_EMPTY_CERT_CLEAR_AFTER` | 可选，默认 `3`；主控连续空证书列表 N 次后才清空本机 TLS 内存（`1` = 立即清空） |
 
 `config.json` 里把 `server_ip` 改成这台机器的主公网 IPv4，`default_redirect_url` 改成未命中域名时的默认页。示例见 `redi-multi/config.json.example`。
 
@@ -41,29 +42,22 @@
 
 | 配置 | 含义 |
 |------|------|
-| `addr` | HTTP，默认 `0.0.0.0:80`。可用 `REDI_HTTP_LISTEN` 覆盖 |
-| `tls_addr` | HTTPS，默认 `0.0.0.0:443`。`""` 或 JSON `null` 关闭 HTTPS。可用 `REDI_TLS_LISTEN` 覆盖 |
+| `addr` | HTTP，默认 `0.0.0.0:80`（Linux 上已双栈）。可用 `REDI_HTTP_LISTEN` 覆盖 |
+| `tls_addr` | HTTPS，默认 `0.0.0.0:443`。`""` 或 JSON `null` 关闭 HTTPS |
 | `api_listen` | 默认 `127.0.0.1:8080`（仅本机调试 Echo）；生产跳转走 80/443 同源 `/api.js` |
-| `lagran.port` | 出站 TCP 源端口，给 iptables `--sport` 用。字符串 `"80,443"` 或数字 `80`。逗号分隔，不要空格 |
-| `lagran.enabled` | 默认 **true**（被干扰域名场景）；仅本地调试可 `REDI_LAGRAN_DISABLED=1` 或设为 false |
-| `lagran` | 可整段省略。不要写成空对象后再指望程序猜开关 |
+| `lagran.port` | 出站 TCP 源端口，给 iptables `--sport` 用。字符串 `"80,443"` 或数字 `80` |
+| `lagran.enabled` | 默认 **true**；仅本地调试可 `REDI_LAGRAN_DISABLED=1` 或设为 false |
 
-启动时会把 `addr` 和 `tls_addr` 里的非空端口并进 `lagran.port`。关掉 HTTPS 时不会并入 443。
+lagran 需要 root 或 `CAP_NET_ADMIN`（`deploy-node.sh` 会 `setcap`）。
 
-lagran 需要 root 或 `CAP_NET_ADMIN`：
+## 跳转与产品行为
 
-```bash
-sudo setcap cap_net_admin+ep bin/redi-multi
-```
-
-## 跳转次数
-
-访客在 80/443 打开跳转页时请求同域名的 `/api.js?d=...`（HTTP、HTTPS 逻辑相同）。节点直连 MySQL：仅当该 **原始域名** 在后台为启用（`status=1`）时，`skip_num` 加 1 并返回跳转地址；否则只给默认跳转、**不加** 次数。开启「强制 HTTPS」时，HTTP 301 到 HTTPS 本身不计数，HTTPS 页加载 `api.js` 后计 1 次。
-
-`/c.js`、`/api.js` 在 **80/443**（`api.WriteAsset`）与 **8080**（Echo）上均有 IP 级限速；`/api.js` 另有按域名参数的限速，防止刷计数（数值见 `node/redi-multi/api/api.go`，[SECURITY.md](../SECURITY.md)）。
+- 正常跳转：**HTTP 200 + 页面内 JS**，不是业务层 301；**强制 HTTPS** 才在 TLS 层 **301**（见 [CONSOLE.md](../docs/CONSOLE.md) §8）。
+- 访客在 80/443 请求 `/api.js?d=...`；仅 **启用** 域名会增加 `skip_num`。强制 HTTPS 时 HTTP→HTTPS 本身不计数。
+- `/c.js`、`/api.js` 在 80/443 与 8080 均有 IP 限速；`/api.js` 另有按域名限速（见 [SECURITY.md](../SECURITY.md)）。
 
 ## 和主控的连接
 
-配置了 `REDI_MASTER_URL` 和 `REDI_NODE_TOKEN` 之后，进程会向主控注册、拉取跳转规则、同步 HTTP-01 挑战并安装证书。两个变量缺一，Agent 不启动，只剩本机跳转。主控连续失败时轮询会退避至最长 60s；主控返回空证书列表时默认连续 3 次后才清空本机 TLS 内存（`REDI_AGENT_EMPTY_CERT_CLEAR_AFTER`，设为 `1` 则与旧版相同）。
+配置 `REDI_MASTER_URL` + `REDI_NODE_TOKEN` 后，Agent 向主控注册、拉规则与挑战、安装证书；缺一则 Agent 不启动。主控故障时轮询退避至 60s。API 与 revision 行为见 [PLATFORM-ARCHITECTURE.md](../docs/PLATFORM-ARCHITECTURE.md)。
 
-证书申请要求每台启用节点都在线并完成挑战同步。Let's Encrypt 访问客户域名时可能落到 pool 里任意一个 A 记录。
+证书 HTTP-01 要求启用节点在线并完成挑战同步；LE 访问客户域时可能落到 pool 任意 A 记录。

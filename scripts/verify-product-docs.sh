@@ -16,7 +16,8 @@ for f in \
   docs/HEALTH-REFERENCE.md \
   docs/PLATFORM-ARCHITECTURE.md \
   docs/NETWORKING-IPv6.md \
-  docs/PRODUCTION-READINESS.md; do
+  docs/PRODUCTION-READINESS.md \
+  docs/LAUNCH-CHECKLIST.md; do
   [[ -f "$REPO_ROOT/$f" ]] || fail "missing $f"
 done
 

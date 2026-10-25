@@ -12,7 +12,8 @@
 |------|------|
 | [docs/README.md](docs/README.md) | **文档索引**（按上线 / 运营 / 开发场景） |
 | [DEPLOY-centos7.md](DEPLOY-centos7.md) | CentOS 7 一键部署（生产唯一路径） |
-| [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md) | 上线阻塞项与验收命令 |
+| [docs/LAUNCH-CHECKLIST.md](docs/LAUNCH-CHECKLIST.md) | 一页上线检查单（可打勾） |
+| [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md) | 上线说明与验收命令（详情） |
 | [docs/CONSOLE.md](docs/CONSOLE.md) | 控制台操作与平台边界 §8 |
 | [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) | 已上线环境增量升级 |
 | [SECURITY.md](SECURITY.md) | 密码、端口、Agent |
