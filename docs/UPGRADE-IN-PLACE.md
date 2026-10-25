@@ -7,7 +7,7 @@
 在开发机或 CI 产物准备：
 
 ```bash
-bash scripts/dev-preflight.sh   # 或见 AUDIT-CENTOS7-PRODUCTION.md §9 分步
+bash scripts/dev-preflight.sh   # 或见 docs/DEVELOPMENT.md 分步
 ./scripts/build-master-tar.sh
 ./scripts/build-node-tar.sh
 ```
@@ -81,7 +81,7 @@ grep -E 'renew|prune|health' /etc/cron.d/redi-renew
 ! grep -q 'schedule:run' /etc/cron.d/redi-renew
 ! grep -q 'master/master' /etc/cron.d/redi-renew
 cd /opt/301/master && sudo -u nginx php artisan redi:health
-cd /opt/301/master && sudo -u nginx php artisan redi:health --json   # 监控用；issues/hints code 见 AUDIT §3
+cd /opt/301/master && sudo -u nginx php artisan redi:health --json   # 监控用；issues/hints code 见 HEALTH-REFERENCE.md
 cd /opt/301/master && sudo -u nginx php artisan list | grep redi:
 ```
 

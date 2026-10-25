@@ -5,11 +5,11 @@
 
 按这个顺序做：先主控和数据库，再节点，最后到后台把 DNS、节点和域名配好。控制台里每一步点哪里，见 [docs/CONSOLE.md](docs/CONSOLE.md)。
 
-**生产仅支持 CentOS 7.9（7.x）**：两个全自动脚本见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。真机验收见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)；能力复核见 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md)。
+**生产仅支持 CentOS 7.9（7.x）**：两个全自动脚本见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。变量示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。真机验收见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)；上线清单见 [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md)。
 
 **主控已在跑、只想跟上新能力（Agent 0.1.3、cron Webhook、运营命令等）**：见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md)。能力分级见 [docs/ROADMAP-PRODUCTION.md](docs/ROADMAP-PRODUCTION.md)。
 
-开发阶段 [GitHub Releases](https://github.com/freejbgo/301/releases) 可能暂无包；需部署时在仓库根目录执行 `scripts/build-*-tar.sh`，或发 **`v*` tag** 由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 在通过 Go/PHPUnit（8.4 与 8.0）、`composer audit`、CentOS 7 脚本与容器冒烟后上传 Release（发布前对解压后的主控树再跑 audit + PHPUnit）。本地发版前执行 `bash scripts/dev-preflight.sh`（分步说明见 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) §9）。
+开发阶段 [GitHub Releases](https://github.com/freejbgo/301/releases) 可能暂无包；需部署时在仓库根目录执行 `scripts/build-*-tar.sh`，或发 **`v*` tag** 由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 在通过 Go/PHPUnit（8.4 与 8.0）、`composer audit`、CentOS 7 脚本与容器冒烟后上传 Release（发布前对解压后的主控树再跑 audit + PHPUnit）。本地发版前执行 `bash scripts/dev-preflight.sh`（分步说明见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)）。
 
 **绿场（无旧数据）** 时数据库以 **一次导入 `redi_admin.sql`** 为准（含节点存储过程），见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。下面是通用步骤；CentOS 7 不要按克隆目录手工装，直接跑脚本。
 
