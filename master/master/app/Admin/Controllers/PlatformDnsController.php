@@ -109,7 +109,7 @@ HTML;
 
             return response()->json([
                 'status' => false,
-                'message' => __('redi-platform-dns.sync.failed_prefix').OpsDisplaySanitizer::logSnippet($e->getMessage(), 500),
+                'message' => __('redi-platform-dns.sync.failed'),
             ], 422);
         }
 

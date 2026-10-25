@@ -27,7 +27,7 @@ return [
     'sync' => [
         'button'           => 'Sync pool / tenant CNAMEs to DNS provider',
         'not_run'          => 'Sync was not run',
-        'failed'           => 'Sync failed',
+        'failed'           => 'DNS sync failed. See storage/logs/laravel.log for details.',
         'success'          => 'DNS synced to provider',
         'manual_mode_info' => 'Manual DNS mode: configure records from the pool / tenant tables at your provider; no sync needed.',
         'failed_prefix'    => 'DNS sync failed: ',
