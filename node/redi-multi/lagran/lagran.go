@@ -78,15 +78,15 @@ func setIptable(sport string) bool {
 		logrus.Errorf("[lagran] iptables new error:%v\n", err)
 		return false
 	}
-	appendLagranRules(ipt, sport, "iptables")
+	v4ok := appendLagranRules(ipt, sport, "iptables")
 
 	ip6, err := iptables.New(iptables.IPFamily(iptables.ProtocolIPv6))
 	if err != nil {
-		logrus.Errorf("[lagran] ip6tables new error: %v", err)
-	} else {
-		appendLagranRules(ip6, sport, "ip6tables")
+		logrus.Warnf("[lagran] ip6tables new error (IPv4 rules still apply): %v", err)
+	} else if !appendLagranRules(ip6, sport, "ip6tables") {
+		logrus.Warnf("[lagran] ip6tables OUTPUT rules were not fully installed (IPv4 rules still apply)")
 	}
-	return true
+	return v4ok
 }
 
 func UnsetIptable(sport string) {

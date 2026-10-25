@@ -83,6 +83,7 @@ for f in \
   scripts/patch-master-cron-ops-webhook.sh \
   scripts/verify-master-cron-templates.sh \
   scripts/verify-node-deploy-templates.sh \
+  scripts/verify-lagran-iptables-invariants.sh \
   scripts/verify-grant-nodes-templates.sh \
   scripts/verify-acceptance-centos7-doc.sh \
   scripts/verify-deploy-centos7-doc.sh \
@@ -138,6 +139,7 @@ bash scripts/verify-master-cron-templates.sh
 
 echo "==> 节点 deploy / lagran 模板"
 bash scripts/verify-node-deploy-templates.sh
+bash scripts/verify-lagran-iptables-invariants.sh
 
 echo "==> grant-nodes / vars 模板"
 bash scripts/verify-grant-nodes-templates.sh

@@ -20,7 +20,8 @@ var lagranNFQueueRules = []lagranNFQueueRule{
 	{boolKey: "fin_ack", tcpMatch: "FIN,ACK", queue: "4000:4127"},
 }
 
-func appendLagranRules(ipt *iptables.IPTables, sport string, familyLabel string) {
+func appendLagranRules(ipt *iptables.IPTables, sport string, familyLabel string) bool {
+	ok := true
 	for _, rule := range lagranNFQueueRules {
 		if !config.LagranBool(rule.boolKey, true) {
 			continue
@@ -30,9 +31,11 @@ func appendLagranRules(ipt *iptables.IPTables, sport string, familyLabel string)
 			"--tcp-flags", "SYN,RST,ACK,FIN,PSH", rule.tcpMatch,
 			"-j", "NFQUEUE", "--queue-balance", rule.queue, "--queue-bypass")
 		if err != nil {
+			ok = false
 			logrus.Errorf("[lagran] failed to set %s OUTPUT chain (%s): %v", familyLabel, rule.tcpMatch, err)
 		}
 	}
+	return ok
 }
 
 func deleteLagranRules(ipt *iptables.IPTables, sport string, familyLabel string) {

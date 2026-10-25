@@ -126,22 +126,32 @@ func openPool() (*sqlx.DB, error) {
 	return conn, nil
 }
 
+func replacePool(conn *sqlx.DB) {
+	mu.Lock()
+	old := db
+	db = conn
+	mu.Unlock()
+	if old != nil {
+		_ = old.Close()
+	}
+}
+
 // Init 建立连接池并在启动时探测一次。失败时返回错误，进程仍可启动（仅跳转页依赖库）。
 func Init() error {
 	mu.Lock()
-	defer mu.Unlock()
 	if db != nil {
 		if err := db.Ping(); err == nil {
+			mu.Unlock()
 			return nil
 		}
-		_ = db.Close()
-		db = nil
 	}
+	mu.Unlock()
+
 	conn, err := openPool()
 	if err != nil {
 		return err
 	}
-	db = conn
+	replacePool(conn)
 	return nil
 }
 
@@ -159,13 +169,7 @@ func Reconnect() error {
 		logrus.Errorf("[mysql] reconnect failed: %v", err)
 		return err
 	}
-	mu.Lock()
-	old := db
-	db = conn
-	mu.Unlock()
-	if old != nil {
-		_ = old.Close()
-	}
+	replacePool(conn)
 	return nil
 }
 
