@@ -26,4 +26,11 @@ class AdminMenuTitleTest extends TestCase
         $this->assertSame('domain', AdminMenuTitle::uriLangSlug('/domain'));
         $this->assertSame('auth.users', AdminMenuTitle::uriLangSlug('auth/users'));
     }
+
+    public function test_resolves_auth_menu_by_uri_when_title_unknown(): void
+    {
+        app()->setLocale('en');
+
+        $this->assertSame('Permissions', AdminMenuTitle::resolve('Perm', 'auth/permissions'));
+    }
 }

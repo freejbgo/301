@@ -27,5 +27,10 @@ return [
         'platform-settings' => 'Branding',
         'platform-dns'      => 'DNS & node pool',
         'nodes'             => 'Nodes',
+        'auth.users'        => 'Users',
+        'auth.roles'        => 'Roles',
+        'auth.permissions'  => 'Permissions',
+        'auth.menu'         => 'Menu',
+        'auth.extensions'   => 'Extensions',
     ],
 ];

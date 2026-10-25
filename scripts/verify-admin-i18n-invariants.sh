@@ -10,6 +10,7 @@ PARITY_TEST="${REPO_ROOT}/master/master/tests/Unit/RediLangParityTest.php"
 EVENTS="${REPO_ROOT}/master/master/app/Providers/EventServiceProvider.php"
 APP_PROVIDER="${REPO_ROOT}/master/master/app/Providers/AppServiceProvider.php"
 MENU_PARTIAL="${REPO_ROOT}/master/master/resources/views/admin/partials/menu.blade.php"
+LOCALE_SWITCHER_DIR="${REPO_ROOT}/master/master/resources/views/admin/partials"
 
 fail() {
   echo "verify-admin-i18n-invariants: $*" >&2
@@ -34,6 +35,14 @@ grep -q 'SyncAdminLocaleOnLogin' "$EVENTS" || fail 'Login listener SyncAdminLoca
 
 grep -q 'LocalizedMenu' "$APP_PROVIDER" || fail 'AppServiceProvider must register LocalizedMenu as admin.menu'
 grep -q 'translateMenuItem' "$MENU_PARTIAL" || fail 'admin menu partial must use translateMenuItem'
+
+for switcher in "$LOCALE_SWITCHER_DIR"/locale-switcher*.blade.php; do
+  [[ -f "$switcher" ]] || continue
+  if rg -n 'redi-locale\.names' "$switcher" >/dev/null; then
+    continue
+  fi
+  fail "locale switcher must use redi-locale.names: $switcher"
+done
 
 if rg -n "('|\")([^'\"\\]|\\.)*[\x{4e00}-\x{9fff}]" "$ADMIN_APP" -g '*.php' 2>/dev/null; then
   fail 'app/Admin must not contain Han characters inside PHP string literals (use language files)'
