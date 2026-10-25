@@ -20,6 +20,7 @@ return [
         'owner_admin_id' => '超级管理员建分组时必须指定租户，避免分组挂在超管账号下。',
     ],
     'validation' => [
+        'name_required'      => '分组名称不能为空',
         'delete_has_domains' => '该分组下还有 :count 条域名，请先迁移或删除域名后再删分组。',
         'owner_invalid'      => '请选择有效的租户账号',
         'owner_not_tenant'   => '不能将分组挂在超级管理员账号下',

@@ -34,6 +34,7 @@
 | 23 | **已做** | `redi:health` issue/hint 在 CLI/JSON/webhook 固定 `en`；补齐 `ops-webhook` / renew 选项英文 |
 | 24 | **已做** | 节点 API `RediAgentVersionGate` 426 响应走 `redi-errors.node_api`（英文） |
 | 25 | **已做** | `RediAcmeChallenge::upsertForDomain` 校验异常走 `redi-errors.acme.*` |
+| 26 | **已做** | `RediNode` / `RediAdminGroup` 模型校验走 `redi-admin-*`；平台 DNS 凭证解密文案三语 |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维/节点 API 消息以英文 canonical 为主 |
 
 ### 运维速览

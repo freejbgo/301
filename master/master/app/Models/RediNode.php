@@ -367,7 +367,7 @@ class RediNode extends Model
             }
             if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === false) {
                 throw ValidationException::withMessages([
-                    'extra_ips' => '请填写 IPv4，一行一个。无效：'.$ip,
+                    'extra_ips' => __('redi-admin-node.form.validation.extra_ipv4_invalid', ['value' => $ip]),
                 ]);
             }
             $ips[] = $ip;
@@ -387,7 +387,7 @@ class RediNode extends Model
         }
         if (! self::isValidPublicIpv6($value)) {
             throw ValidationException::withMessages([
-                'public_ipv6' => '主公网 IPv6 必须是可发布的全球单播地址',
+                'public_ipv6' => __('redi-admin-node.form.validation.public_ipv6_global'),
             ]);
         }
 
@@ -413,13 +413,13 @@ class RediNode extends Model
             }
             if (! self::isValidPublicIpv6($ip)) {
                 throw ValidationException::withMessages([
-                    'extra_ipv6' => '请填写 IPv6，一行一个。无效：'.$original,
+                    'extra_ipv6' => __('redi-admin-node.form.validation.extra_ipv6_invalid', ['value' => $original]),
                 ]);
             }
             $canonical = self::canonicalPublicIpv6($ip);
             if ($canonical === '') {
                 throw ValidationException::withMessages([
-                    'extra_ipv6' => '请填写 IPv6，一行一个。无效：'.$original,
+                    'extra_ipv6' => __('redi-admin-node.form.validation.extra_ipv6_invalid', ['value' => $original]),
                 ]);
             }
             $bytes = self::ipv6ToBytes($ip);
@@ -467,7 +467,7 @@ class RediNode extends Model
             }
             $canonical = self::canonicalPublicIpv6($ip);
             throw ValidationException::withMessages([
-                ($ip === $primary ? 'public_ipv6' : 'extra_ipv6') => 'IPv6 已被其他节点使用：'.$canonical,
+                ($ip === $primary ? 'public_ipv6' : 'extra_ipv6') => __('redi-admin-node.form.validation.ipv6_in_use', ['value' => $canonical]),
             ]);
         }
     }
@@ -491,7 +491,7 @@ class RediNode extends Model
         foreach ($ips as $ip) {
             if (isset($taken[$ip])) {
                 throw ValidationException::withMessages([
-                    ($ip === $primary ? 'public_ip' : 'extra_ips') => 'IP 已被其他节点使用：'.$ip,
+                    ($ip === $primary ? 'public_ip' : 'extra_ips') => __('redi-admin-node.form.validation.ipv4_in_use', ['value' => $ip]),
                 ]);
             }
         }

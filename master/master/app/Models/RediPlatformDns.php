@@ -91,7 +91,7 @@ class RediPlatformDns extends Model
             ]);
 
             throw new \RuntimeException(
-                '平台 DNS API 凭证无法解密（请确认 APP_KEY 未变更，或在后台重新保存 API 密钥）',
+                __('redi-platform-dns.messages.api_credentials_decrypt'),
                 0,
                 $e
             );

@@ -20,6 +20,7 @@ return [
         'owner_admin_id' => 'Platform admins must assign a tenant when creating a group.',
     ],
     'validation' => [
+        'name_required'      => 'Group name cannot be empty',
         'delete_has_domains' => 'This group still has :count domain(s). Move or delete them first.',
         'owner_invalid'      => 'Select a valid tenant account',
         'owner_not_tenant'   => 'Groups cannot be owned by the platform administrator account',

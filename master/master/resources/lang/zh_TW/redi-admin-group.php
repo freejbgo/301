@@ -20,6 +20,7 @@ return [
         'owner_admin_id' => '超級管理員建分組時必須指定租戶，避免分組掛在超管帳號下。',
     ],
     'validation' => [
+        'name_required'      => '分組名稱不能為空',
         'delete_has_domains' => '該分組下還有 :count 條域名，請先遷移或刪除域名後再刪分組。',
         'owner_invalid'      => '請選擇有效的租戶帳號',
         'owner_not_tenant'   => '不能將分組掛在超級管理員帳號下',

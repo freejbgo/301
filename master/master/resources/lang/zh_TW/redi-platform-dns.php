@@ -85,6 +85,7 @@ return [
         'unsupported_driver'  => '不支持的 DNS API 驅動: :driver',
         'control_chars'       => '域名配置不能包含控制字符',
         'invalid_edge_zone'   => '平台主域名格式無效',
-        'invalid_pool_host'   => 'Pool 主機名格式無效（單段主機名，不含點）',
+        'invalid_pool_host'       => 'Pool 主機名格式無效（單段主機名，不含點）',
+        'api_credentials_decrypt' => '平台 DNS API 憑證無法解密（請確認 APP_KEY 未變更，或在後台重新保存 API 密鑰）',
     ],
 ];
