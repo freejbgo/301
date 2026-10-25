@@ -6,6 +6,7 @@ use App\Services\AcmeChallengeCleanup;
 use App\Services\AcmeChallengeQuery;
 use App\Services\DomainRecordNormalizer;
 use App\Support\AcmeHttp01Token;
+use App\Support\RediErrorMessage;
 use Illuminate\Database\Eloquent\Model;
 
 class RediAcmeChallenge extends Model
@@ -27,12 +28,12 @@ class RediAcmeChallenge extends Model
     {
         $domainName = DomainRecordNormalizer::acmeHostKey($domainName);
         if ($domainName === '') {
-            throw new \InvalidArgumentException('ACME 挑战域名无效');
+            throw new \InvalidArgumentException(RediErrorMessage::get('acme.http01_host_invalid'));
         }
 
         $token = AcmeHttp01Token::normalize($token);
         if (! AcmeChallengeQuery::http01ContentValid($token, $responseBody)) {
-            throw new \InvalidArgumentException('ACME 挑战响应体无效');
+            throw new \InvalidArgumentException(RediErrorMessage::get('acme.http01_body_invalid'));
         }
         $responseBody = trim($responseBody);
 
