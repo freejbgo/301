@@ -9,15 +9,18 @@ use Illuminate\Http\Request;
 
 class ApplyCertificate extends RowAction
 {
-    protected $title = '申请证书';
+    public function title()
+    {
+        return __('redi-admin-domain.actions.apply_cert.title');
+    }
 
     public function handle(Request $request)
     {
         $count = DomainCertificateQueue::dispatchOwned([(int) $this->getKey()], (int) Admin::user()->id);
         if ($count === 0) {
-            return $this->response()->error('域名不存在或无权申请');
+            return $this->response()->error(__('redi-admin-domain.actions.apply_cert.error'));
         }
 
-        return $this->response()->success('已加入证书申请队列')->refresh();
+        return $this->response()->success(__('redi-admin-domain.actions.apply_cert.success'))->refresh();
     }
 }

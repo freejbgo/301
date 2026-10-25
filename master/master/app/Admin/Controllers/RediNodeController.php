@@ -18,6 +18,8 @@ class RediNodeController extends AdminController
 {
     use EnsuresAdministrator;
 
+    protected $translation = 'redi-admin-node';
+
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
@@ -29,7 +31,7 @@ class RediNodeController extends AdminController
 
     public function title()
     {
-        return '节点管理';
+        return admin_trans_label('title');
     }
 
     protected function grid()
@@ -40,13 +42,13 @@ class RediNodeController extends AdminController
 
         return Grid::make(new RediNode(), function (Grid $grid) use ($deployByNode) {
             $grid->column('id')->sortable();
-            $grid->column('name', '名称')->display(function ($value) {
+            $grid->column('name', admin_trans_field('name'))->display(function ($value) {
                 return e(OpsDisplaySanitizer::field($value, '—', 120));
             });
-            $grid->column('public_ip', '公网 IP')->display(function () {
+            $grid->column('public_ip', admin_trans_field('public_ip'))->display(function () {
                 return implode('<br>', array_map('e', $this->publicIps()));
             });
-            $grid->column('public_ipv6s', '公网 IPv6')->display(function () {
+            $grid->column('public_ipv6s', admin_trans_field('public_ipv6s'))->display(function () {
                 $ips = $this->publicIpv6s();
                 if ($ips === []) {
                     return '—';
@@ -54,23 +56,23 @@ class RediNodeController extends AdminController
 
                 return implode('<br>', array_map('e', $ips));
             });
-            $grid->column('enabled', '启用')->switch();
-            $grid->column('last_heartbeat_at', '最后心跳')->display(function ($value) {
+            $grid->column('enabled', admin_trans_field('enabled'))->switch();
+            $grid->column('last_heartbeat_at', admin_trans_field('last_heartbeat_at'))->display(function ($value) {
                 if (! $this->enabled) {
                     return $value ? e((string) $value) : '—';
                 }
                 if (! $value) {
-                    return '<span class="text-danger">从未</span>';
+                    return '<span class="text-danger">'.e(admin_trans_label('heartbeat_never')).'</span>';
                 }
                 $at = \Illuminate\Support\Carbon::parse($value);
                 $label = e($at->format('Y-m-d H:i'));
                 if ($at->gte(now()->subMinutes(15))) {
-                    return $label.' <span class="text-success">在线</span>';
+                    return $label.' <span class="text-success">'.e(admin_trans_label('online')).'</span>';
                 }
 
-                return $label.' <span class="text-warning">离线</span>';
+                return $label.' <span class="text-warning">'.e(admin_trans_label('offline')).'</span>';
             });
-            $grid->column('cert_deploy', '证书部署')->display(function () use ($deployByNode) {
+            $grid->column('cert_deploy', admin_trans_field('cert_deploy'))->display(function () use ($deployByNode) {
                 $row = $deployByNode->get($this->id);
                 if (! $row) {
                     return '—';
@@ -78,31 +80,32 @@ class RediNodeController extends AdminController
                 $pending = (int) ($row->pending_count ?? 0);
                 $failed = (int) ($row->failed_count ?? 0);
                 if ($pending === 0 && $failed === 0) {
-                    return '<span class="text-success">正常</span>';
+                    return '<span class="text-success">'.e(admin_trans_label('deploy_ok')).'</span>';
                 }
                 $parts = [];
                 if ($pending > 0) {
-                    $parts[] = '<span class="text-warning">待部署 '.$pending.'</span>';
+                    $parts[] = '<span class="text-warning">'.e(__('redi-admin-node.labels.deploy_pending', ['count' => $pending])).'</span>';
                 }
                 if ($failed > 0) {
-                    $parts[] = '<span class="text-danger">失败 '.$failed.'</span>';
+                    $parts[] = '<span class="text-danger">'.e(__('redi-admin-node.labels.deploy_failed', ['count' => $failed])).'</span>';
                 }
 
                 return implode('<br>', $parts);
             });
-            $grid->column('agent_version', 'Agent 版本')->display(function ($version) {
+            $grid->column('agent_version', admin_trans_field('agent_version'))->display(function ($version) {
                 return e(OpsDisplaySanitizer::field($version, '—', 32));
             });
-            $grid->column('updated_at', '更新时间');
+            $grid->column('updated_at', admin_trans_field('updated_at'));
 
-            $grid->tools(function (Grid\Tools $tools) {
+            $requeueConfirm = json_encode(admin_trans_label('requeue_confirm'), JSON_UNESCAPED_UNICODE);
+            $grid->tools(function (Grid\Tools $tools) use ($requeueConfirm) {
                 $requeueUrl = admin_url('ops/requeue-failed-deployments');
                 $token = csrf_token();
                 $tools->append(
-                    '<form method="post" action="'.e($requeueUrl).'" style="display:inline-block;margin-right:6px" onsubmit="return confirm(\'将全部 failed 证书部署改回 pending？\');">'
+                    '<form method="post" action="'.e($requeueUrl).'" style="display:inline-block;margin-right:6px" onsubmit="return confirm('.$requeueConfirm.');">'
                     .'<input type="hidden" name="_token" value="'.e($token).'">'
                     .'<input type="hidden" name="_redirect" value="'.e(admin_base_path('nodes')).'">'
-                    .'<button type="submit" class="btn btn-warning btn-sm">重试全部失败部署</button></form>'
+                    .'<button type="submit" class="btn btn-warning btn-sm">'.e(admin_trans_label('requeue_btn')).'</button></form>'
                 );
             });
 

@@ -44,7 +44,7 @@ class RejectDefaultAdminPassword
         foreach ((array) config('redi.known_default_admin_passwords', []) as $plain) {
             $plain = (string) $plain;
             if ($plain !== '' && Hash::check($plain, $password)) {
-                admin_toastr('检测到仍为安装默认密码，请先修改密码后再使用后台。', 'error', ['timeOut' => 0]);
+                admin_toastr(__('redi-auth.default_password_blocked'), 'error', ['timeOut' => 0]);
 
                 return redirect(admin_url('auth/setting'));
             }
