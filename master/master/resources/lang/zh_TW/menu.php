@@ -26,5 +26,10 @@ return [
         'platform-settings' => '系統外觀',
         'platform-dns'      => 'DNS 與節點池',
         'nodes'             => '節點管理',
+        'auth.users'        => '管理員',
+        'auth.roles'        => '角色',
+        'auth.permissions'  => '權限',
+        'auth.menu'         => '菜單',
+        'auth.extensions'   => '擴展',
     ],
 ];
