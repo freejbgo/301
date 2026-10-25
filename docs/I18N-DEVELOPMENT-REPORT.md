@@ -20,7 +20,8 @@
 | 9 | **已做** | 登录 `Login` 事件同步 session ↔ `admin_users.locale` |
 | 10 | **已做** | 登录页内联语言切换、`zh_CN/menu.php` 业务菜单键对齐 |
 | 11 | **已做** | `redi-branding` 默认品牌三语、`cert_last_error` 标签、`SetAdminLocale` 先于 `admin` 中间件 |
-| 12 | **已做（PR 待合并）** | 补齐 `zh_TW` `cert_last_error`、文档进度表与 §快照 |
+| 12 | **已做** | 补齐 `zh_TW` `cert_last_error`、文档进度表与 §快照 |
+| 13 | **已做（PR 待合并）** | `RediLangParityTest` 覆盖 `menu`/`global`/`extension`；`global.php` 键对齐 |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；已存品牌 JSON / Service 层仍单语 |
 
 ### 阶段 10 后快照（相对 §2 历史审计）
@@ -301,13 +302,14 @@ Laravel 自定义属性名与规则消息可放在 `redi.php` 的 `validation` �
 
 ---
 
-## 8. 结论
+## 8. 结论（2026-10-25 更新）
 
 | 问题 | 答案 |
 |------|------|
-| 现在是否中英双语全覆盖？ | **否**。业务代码未使用 `__()`/`trans()`，自研界面 practically 全中文。 |
-| 能否做简 / 繁 / 英？ | **能**。框架已有简繁英壳；需自建 `redi` 语言包 + locale 中间件 + 菜单策略 + 全量抽取。 |
-| 优先做什么？ | 阶段 1 语言开关与菜单映射，再按域名模块纵向打通一条链路作模板，避免一次性大爆炸式改完难以 review。 |
+| 后台可见界面是否三语？ | **是（阶段 13 止）**。`app/Admin` 用户可见文案已走 `redi-*` / Dcat 语言包；`tests/Unit/RediLangParityTest.php` 约束键对齐。 |
+| 部署注意 | 执行 `php artisan migrate`（`admin_users.locale`）；顶栏或登录页切换语言。 |
+| 仍未三语 | 已保存的系统外观 JSON、Service/CLI/节点 API、`last_error` 正文、库内历史数据。 |
+| 后续可选 | 多语品牌 JSON、Admin CI 禁止新增硬编码中文（`rg` 门禁）。 |
 
 ---
 
