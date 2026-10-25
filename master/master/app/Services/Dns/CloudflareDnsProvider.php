@@ -2,6 +2,8 @@
 
 namespace App\Services\Dns;
 
+use App\Support\RediErrorMessage;
+
 use App\Models\RediNode;
 use App\Models\RediPlatformDns;
 use App\Services\Dns\Concerns\EnsuresValidDnsNames;
@@ -25,11 +27,11 @@ class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
         $creds = $platform->getApiCredentialsArray();
         $token = trim($creds['api_key'] ?? '');
         if ($token === '') {
-            throw new RuntimeException('Cloudflare API Token 未配置');
+            throw new RuntimeException(RediErrorMessage::get('dns.cloudflare_token_missing'));
         }
         $zoneId = trim($platform->dns_zone_id ?? '');
         if ($zoneId === '') {
-            throw new RuntimeException('Cloudflare Zone ID 未配置');
+            throw new RuntimeException(RediErrorMessage::get('dns.cloudflare_zone_missing'));
         }
 
         $this->http = new Client([
@@ -47,7 +49,7 @@ class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
         $zoneId = $this->zoneId();
         $res = $this->decode($this->http->get("zones/{$zoneId}"));
         if (empty($res['result']['id'])) {
-            throw new RuntimeException('Cloudflare Zone 校验失败');
+            throw new RuntimeException(RediErrorMessage::get('dns.cloudflare_zone_invalid'));
         }
     }
 
@@ -119,7 +121,7 @@ class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
     public function upsertCname(string $name, string $zone, string $targetFqdn): void
     {
         $zone = $this->requireDnsFqdn($zone, 'DNS zone');
-        $targetFqdn = $this->requireDnsFqdn($targetFqdn, 'CNAME 目标');
+        $targetFqdn = $this->requireDnsFqdn($targetFqdn, 'CNAME target');
         $name = strtolower(rtrim($name, '.'));
         if ($name === $zone) {
             $name = '@';
@@ -173,7 +175,7 @@ class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
     {
         $zoneId = trim($this->platform->dns_zone_id ?? '');
         if ($zoneId === '') {
-            throw new RuntimeException('Cloudflare Zone ID 未配置');
+            throw new RuntimeException(RediErrorMessage::get('dns.cloudflare_zone_missing'));
         }
 
         return $zoneId;
@@ -258,7 +260,7 @@ class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                 break;
             }
             if ($page >= 100 && $totalPages > 100) {
-                throw new RuntimeException('Cloudflare DNS 记录分页超过上限，请手工清理重复记录后重试');
+                throw new RuntimeException(RediErrorMessage::get('dns.cloudflare_page_limit'));
             }
         }
 
@@ -270,7 +272,7 @@ class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
         $body = json_decode((string) $response->getBody(), true);
         if (! is_array($body) || empty($body['success'])) {
             $errors = $body['errors'] ?? [];
-            $msg = $errors[0]['message'] ?? 'Cloudflare API 错误';
+            $msg = $errors[0]['message'] ?? RediErrorMessage::get('dns.cloudflare_api_error');
             throw new RuntimeException($msg);
         }
 

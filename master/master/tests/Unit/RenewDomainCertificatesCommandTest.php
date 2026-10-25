@@ -89,8 +89,8 @@ class RenewDomainCertificatesCommandTest extends TestCase
 
         $this->assertSame(0, Artisan::call('redi:renew-certificates', ['--days' => 25]));
         $output = Artisan::output();
-        $this->assertStringContainsString('跳过非法域名', $output);
-        $this->assertStringContainsString('没有需要续期的证书', $output);
+        $this->assertStringContainsString('Skipping invalid hostname', $output);
+        $this->assertStringContainsString('No certificates due for renewal', $output);
 
         Bus::assertNothingDispatched();
     }
@@ -100,7 +100,7 @@ class RenewDomainCertificatesCommandTest extends TestCase
         Bus::fake();
 
         $this->assertSame(0, Artisan::call('redi:renew-certificates', ['--days' => 25]));
-        $this->assertStringContainsString('没有需要续期的证书', Artisan::output());
+        $this->assertStringContainsString('No certificates due for renewal', Artisan::output());
 
         Bus::assertNothingDispatched();
     }
@@ -208,7 +208,7 @@ class RenewDomainCertificatesCommandTest extends TestCase
         ]);
 
         $this->assertSame(0, Artisan::call('redi:renew-certificates', ['--days' => 25]));
-        $this->assertStringContainsString('没有需要续期的证书', Artisan::output());
+        $this->assertStringContainsString('No certificates due for renewal', Artisan::output());
         Bus::assertNothingDispatched();
     }
 

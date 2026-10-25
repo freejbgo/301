@@ -157,7 +157,7 @@ class EdgeDnsSyncServiceTest extends TestCase
             app(EdgeDnsSyncService::class)->syncAll($provider);
             $this->fail('expected exception');
         } catch (RuntimeException $e) {
-            $this->assertStringContainsString('没有启用的节点公网 IPv4', $e->getMessage());
+            $this->assertStringContainsString('No enabled node public IPv4', $e->getMessage());
         }
 
         $this->assertSame(0, $provider->connectionTests);
@@ -203,7 +203,7 @@ class EdgeDnsSyncServiceTest extends TestCase
             app(EdgeDnsSyncService::class)->syncAll($provider);
             $this->fail('expected exception');
         } catch (RuntimeException $e) {
-            $this->assertStringContainsString('均不在当前平台主域名', $e->getMessage());
+            $this->assertStringContainsString('are outside platform zone', $e->getMessage());
         }
 
         $this->assertSame(0, $provider->poolCalls);
@@ -251,7 +251,7 @@ class EdgeDnsSyncServiceTest extends TestCase
             app(EdgeDnsSyncService::class)->syncAll($provider);
             $this->fail('expected exception');
         } catch (RuntimeException $e) {
-            $this->assertStringContainsString('不在平台域名', $e->getMessage());
+            $this->assertStringContainsString('outside platform zone', $e->getMessage());
         }
 
         $this->assertNull(\DB::table('redi_tenant_edge')->where('id', 1)->value('dns_synced_at'));

@@ -11,6 +11,7 @@ use App\Services\Dns\DnsProviderInterface;
 use App\Services\Dns\SupportsPoolAAAA;
 use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
+use App\Support\RediErrorMessage;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -29,18 +30,18 @@ class EdgeDnsSyncService
         $platform = RediPlatformDns::instance();
         $zone = trim($platform->edge_zone, '.');
         if ($zone === '') {
-            throw new RuntimeException('请先配置平台主域名');
+            throw new RuntimeException(RediErrorMessage::get('dns.configure_platform_zone'));
         }
         $zoneLabel = OpsDisplaySanitizer::field($zone, $zone, 253);
 
         $poolFqdn = $platform->poolFqdn();
         $poolCanonical = HostNameValidator::toCanonicalAscii($poolFqdn);
         if ($poolFqdn === '' || ! HostNameValidator::isValidHostLabel($poolCanonical)) {
-            throw new RuntimeException('Pool FQDN 无效');
+            throw new RuntimeException(RediErrorMessage::get('dns.pool_fqdn_invalid'));
         }
 
         if (! $platform->isDnsApiMode()) {
-            throw new RuntimeException('当前为手动解析模式：请在「DNS 与节点池」参考表中到 DNS 服务商自行配置，勿调用 API 同步。');
+            throw new RuntimeException(RediErrorMessage::get('dns.manual_mode_no_api'));
         }
 
         $edges = RediTenantEdge::query()->where('edge_fqdn', '!=', '')->get();
@@ -50,14 +51,14 @@ class EdgeDnsSyncService
         });
         if ($withFqdn->isNotEmpty() && $eligible->isEmpty()) {
             throw new RuntimeException(
-                '租户 edge 主机名均不在当前平台主域名 '.$zoneLabel.' 下，请修正 edge_fqdn 或平台主域名后再同步（尚未写入厂商 DNS）。'
+                RediErrorMessage::get('dns.tenant_zone_skew', ['zone' => $zoneLabel])
             );
         }
 
         $poolHost = strtolower(trim($platform->pool_host, '.'));
         $poolTarget = HostNameValidator::toCanonicalAscii($poolHost.'.'.$zone);
         if ($poolTarget === '' || ! HostNameValidator::isValidHostLabel($poolTarget)) {
-            throw new RuntimeException('Pool CNAME 目标 无效');
+            throw new RuntimeException(RediErrorMessage::get('dns.cname_target_invalid'));
         }
         $publishAaaa = $this->publishPoolAaaaEnabled();
         if ($publishAaaa) {
@@ -66,7 +67,7 @@ class EdgeDnsSyncService
 
         $ips = RediNode::enabledPublicIps();
         if ($ips === []) {
-            throw new RuntimeException('没有启用的节点公网 IPv4，无法同步 Pool A 记录');
+            throw new RuntimeException(RediErrorMessage::get('dns.no_enabled_ipv4'));
         }
 
         $provider = $providerOverride ?? DnsProviderFactory::make($platform);
@@ -79,7 +80,9 @@ class EdgeDnsSyncService
             $provider->upsertARecords($poolFqdn, $ips);
         } catch (Throwable $e) {
             throw new RuntimeException(
-                'Pool A 记录同步失败：'.OpsDisplaySanitizer::logSnippet($e->getMessage(), 500),
+                RediErrorMessage::get('dns.pool_a_sync_failed', [
+                    'detail' => OpsDisplaySanitizer::logSnippet($e->getMessage(), 500),
+                ]),
                 0,
                 $e
             );
@@ -94,7 +97,7 @@ class EdgeDnsSyncService
                     $aaaaInvoked = true;
                 } catch (Throwable $e) {
                     throw new RuntimeException(
-                        'Pool AAAA 记录同步失败（Pool A 可能已在厂商侧更新，请修正后重试）：'
+                        RediErrorMessage::get('dns.pool_aaaa_sync_failed')
                             .OpsDisplaySanitizer::logSnippet($e->getMessage(), 500),
                         0,
                         $e
@@ -130,10 +133,10 @@ class EdgeDnsSyncService
             }
         } catch (Throwable $e) {
             $poolHint = $aaaaInvoked
-                ? 'Pool A 与 AAAA 可能已在厂商侧更新，请修正后重试'
-                : 'Pool A 可能已在厂商侧更新，请修正后重试';
+                ? RediErrorMessage::get('dns.pool_partial_hint_a_aaaa')
+                : RediErrorMessage::get('dns.pool_partial_hint_a');
             throw new RuntimeException(
-                '租户 CNAME 同步失败（'.$poolHint.'）：'
+                RediErrorMessage::get('dns.tenant_sync_failed_pool', ['hint' => $poolHint])
                     .OpsDisplaySanitizer::logSnippet($e->getMessage(), 500),
                 0,
                 $e
@@ -142,10 +145,14 @@ class EdgeDnsSyncService
 
         if ($skipped > 0) {
             $poolHint = $aaaaInvoked
-                ? 'Pool A 与 AAAA 可能已在厂商侧更新，请修正后重试'
-                : 'Pool A 与已成功的 CNAME 可能已在厂商侧更新，请修正后重试';
+                ? RediErrorMessage::get('dns.pool_partial_hint_a_aaaa')
+                : RediErrorMessage::get('dns.pool_partial_hint_cname');
             throw new RuntimeException(
-                "有 {$skipped} 条租户 edge 不在平台域名 {$zoneLabel} 下，已中止（{$poolHint}）。"
+                RediErrorMessage::get('dns.tenant_sync_aborted', [
+                    'count' => $skipped,
+                    'zone' => $zoneLabel,
+                    'hint' => $poolHint,
+                ])
             );
         }
 
@@ -183,12 +190,12 @@ class EdgeDnsSyncService
     {
         if (! Schema::hasColumn('redi_nodes', 'public_ipv6')
             || ! Schema::hasColumn('redi_nodes', 'extra_ipv6')) {
-            throw new RuntimeException('节点 IPv6 字段尚未迁移，无法发布 Pool AAAA');
+            throw new RuntimeException(RediErrorMessage::get('dns.ipv6_migration_required'));
         }
 
         foreach (RediNode::enabled()->get() as $node) {
             if ($node->hasUnreadableIpv6()) {
-                throw new RuntimeException('启用节点存在无法发布的 IPv6 地址，请先修正后台节点配置');
+                throw new RuntimeException(RediErrorMessage::get('dns.invalid_node_ipv6'));
             }
         }
     }

@@ -2,6 +2,8 @@
 
 namespace App\Services\Dns\Support;
 
+use App\Support\RediErrorMessage;
+
 use GuzzleHttp\Client;
 use RuntimeException;
 
@@ -47,7 +49,7 @@ class AliyunDnsClient
         $response = $this->http->get($this->endpoint.'/', ['query' => $query]);
         $body = json_decode((string) $response->getBody(), true);
         if (! is_array($body)) {
-            throw new RuntimeException('阿里云 DNS 响应无效');
+            throw new RuntimeException(RediErrorMessage::get('dns.aliyun_response_invalid'));
         }
         if (! empty($body['Code'])) {
             throw new RuntimeException($body['Message'] ?? $body['Code']);

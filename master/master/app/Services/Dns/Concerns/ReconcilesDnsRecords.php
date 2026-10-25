@@ -2,6 +2,8 @@
 
 namespace App\Services\Dns\Concerns;
 
+use App\Support\RediErrorMessage;
+
 use App\Models\RediNode;
 use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
@@ -24,7 +26,7 @@ trait ReconcilesDnsRecords
             $desired[strtolower($ip)] = $ip;
         }
         if ($desired === []) {
-            throw new \RuntimeException('没有可同步的节点 IP');
+            throw new \RuntimeException(RediErrorMessage::get('dns.no_node_ips'));
         }
 
         $kept = [];
@@ -64,12 +66,12 @@ trait ReconcilesDnsRecords
                 continue;
             }
             if (! RediNode::isValidPublicIpv6($original)) {
-                throw new \RuntimeException('Pool AAAA 期望地址无效：'.$original);
+                throw new \RuntimeException(RediErrorMessage::get('dns.pool_aaaa_invalid', ['value' => $original]));
             }
             $canonical = RediNode::canonicalPublicIpv6($original);
             $bytes = RediNode::ipv6ToBytes($canonical);
             if ($bytes === '') {
-                throw new \RuntimeException('Pool AAAA 期望地址无效：'.$original);
+                throw new \RuntimeException(RediErrorMessage::get('dns.pool_aaaa_invalid', ['value' => $original]));
             }
             if (! isset($desired[$bytes])) {
                 $desired[$bytes] = $canonical;
@@ -125,7 +127,7 @@ trait ReconcilesDnsRecords
     {
         $target = HostNameValidator::toCanonicalAscii($targetFqdn);
         if ($target === '' || ! HostNameValidator::isValidHostLabel($target)) {
-            throw new \RuntimeException('CNAME 目标 无效');
+            throw new \RuntimeException(RediErrorMessage::get('dns.cname_target_invalid'));
         }
         $target = strtolower(rtrim($target, '.'));
 

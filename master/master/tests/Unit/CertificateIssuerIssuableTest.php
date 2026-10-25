@@ -54,7 +54,7 @@ class CertificateIssuerIssuableTest extends TestCase
         ]);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('域名主机名无效');
+        $this->expectExceptionMessage('Invalid domain hostname');
 
         app(CertificateIssuer::class)->issue($cert);
     }

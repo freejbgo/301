@@ -2,6 +2,8 @@
 
 namespace App\Services\Dns;
 
+use App\Support\RediErrorMessage;
+
 use App\Models\RediPlatformDns;
 
 class DnsProviderFactory
@@ -57,7 +59,7 @@ class DnsProviderFactory
             case 'manual':
                 return new ManualDnsProvider();
             default:
-                throw new \InvalidArgumentException('未知 DNS API 驱动: '.$driver);
+                throw new \InvalidArgumentException(RediErrorMessage::get('dns.unknown_driver', ['driver' => $driver]));
         }
     }
 }

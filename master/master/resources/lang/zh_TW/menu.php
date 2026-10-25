@@ -3,6 +3,7 @@
 return [
     'titles' => [
         'index'         => '首頁',
+        'site-config'   => '站點設定',
         'admin'         => '系統',
         'users'         => '管理員',
         'roles'         => '角色',

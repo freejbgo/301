@@ -2,6 +2,8 @@
 
 namespace App\Services\Dns;
 
+use App\Support\RediErrorMessage;
+
 use App\Models\RediNode;
 use App\Models\RediPlatformDns;
 use App\Services\Dns\Concerns\EnsuresValidDnsNames;
@@ -31,7 +33,7 @@ class DnspodDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
         $id = trim($creds['api_key'] ?? '');
         $token = trim($creds['api_secret'] ?? '');
         if ($id === '' || $token === '') {
-            throw new RuntimeException('DNSPod API ID / Token 未配置（填在 API Key / Secret）');
+            throw new RuntimeException(RediErrorMessage::get('dns.dnspod_keys_missing'));
         }
         $this->loginToken = $id.','.$token;
         $this->recordLine = $recordLine;
@@ -108,7 +110,7 @@ class DnspodDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
     public function upsertCname(string $name, string $zone, string $targetFqdn): void
     {
         $zone = $this->requireDnsFqdn($zone, 'DNS zone');
-        $targetFqdn = $this->requireDnsFqdn($targetFqdn, 'CNAME 目标');
+        $targetFqdn = $this->requireDnsFqdn($targetFqdn, 'CNAME target');
         $name = strtolower(rtrim($name, '.'));
         if ($name === $zone) {
             $name = '@';
@@ -164,7 +166,7 @@ class DnspodDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
         do {
             $page++;
             if ($page > 100) {
-                throw new RuntimeException('DNSPod 记录分页超过上限，请手工清理重复记录后重试');
+                throw new RuntimeException(RediErrorMessage::get('dns.dnspod_page_limit'));
             }
             $res = $this->request('Record.List', [
                 'domain' => $domain,
@@ -205,10 +207,10 @@ class DnspodDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
         $response = $this->http->post('', ['query' => ['action' => $action], 'form_params' => $params]);
         $body = json_decode((string) $response->getBody(), true);
         if (! is_array($body)) {
-            throw new RuntimeException('DNSPod 响应无效');
+            throw new RuntimeException(RediErrorMessage::get('dns.dnspod_response_invalid'));
         }
         if (isset($body['status']['code']) && (string) $body['status']['code'] !== '1') {
-            throw new RuntimeException($body['status']['message'] ?? 'DNSPod API 错误');
+            throw new RuntimeException($body['status']['message'] ?? RediErrorMessage::get('dns.dnspod_api_error'));
         }
 
         return $body;
@@ -218,7 +220,7 @@ class DnspodDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
     {
         $zone = trim($this->platform->edge_zone, '.');
         if ($zone === '') {
-            throw new RuntimeException('平台主域名未配置');
+            throw new RuntimeException(RediErrorMessage::get('dns.platform_zone_missing'));
         }
 
         return strtolower($zone);

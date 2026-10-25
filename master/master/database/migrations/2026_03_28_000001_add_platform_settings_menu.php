@@ -17,7 +17,7 @@ class AddPlatformSettingsMenu extends Migration
             'id' => 11,
             'parent_id' => 8,
             'order' => 5,
-            'title' => '系统外观',
+            'title' => 'platform-settings',
             'icon' => 'fa-paint-brush',
             'uri' => 'platform-settings',
             'extension' => '',

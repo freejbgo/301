@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\CertificateDeployService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
+use App\Support\RediErrorMessage;
 use Illuminate\Support\Facades\Log;
 
 class RediDomainCert extends Model
@@ -125,7 +126,7 @@ class RediDomainCert extends Model
         if (! $this->storedCredentialsUnreadable()) {
             return;
         }
-        $msg = '证书或私钥无法解密（APP_KEY 变更或数据损坏），请重新申请证书';
+        $msg = RediErrorMessage::get('cert.credential_unreadable');
         if ($this->last_error === $msg) {
             return;
         }

@@ -7,6 +7,7 @@ use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use App\Support\OpsDisplaySanitizer;
+use App\Support\RediErrorMessage;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -237,7 +238,7 @@ class CertificateDeployService
                 && ! self::certIsNodePullable($cert)) {
                 $this->reconcileCertWithNoDeploymentRows(
                     $cert,
-                    '证书当前不可下发，请检查 PEM 或域名一致性'
+                    RediErrorMessage::get('cert.not_deployable_pem')
                 );
             }
 
@@ -247,7 +248,7 @@ class CertificateDeployService
         $this->refreshCertStatusFromDeployments($cert);
     }
 
-    public const NODE_DISABLED_DEPLOY_CLEAR_MSG = '节点已停用，相关部署记录已清除';
+    public const NODE_DISABLED_DEPLOY_CLEAR_MSG = 'Node disabled; related deployment rows cleared';
 
     /**
      * 节点 `enabled=false`：删除该节点部署行并回写受影响证书状态。
@@ -483,7 +484,7 @@ class CertificateDeployService
             $this->reconcileCertDeployStatus($cert);
             $cert = $cert->fresh();
             if ($cert && $cert->status === RediDomainCert::STATUS_DEPLOYING) {
-                $cert->last_error = '已重新排队失败节点的证书部署，等待节点拉取';
+                $cert->last_error = RediErrorMessage::get('cert.redeploy_requeued');
                 $cert->save();
             }
         }
@@ -498,16 +499,16 @@ class CertificateDeployService
         $cert->loadMissing('domain');
         $fresh = self::freshCertWithPersistedRealign($cert);
         if (! $fresh || ! DomainRecordNormalizer::certMatchesAdminDomain($fresh)) {
-            return $this->refuseQueueDeploy($fresh ?? $cert, '域名主机名无效或与证书不一致，已跳过部署排队');
+            return $this->refuseQueueDeploy($fresh ?? $cert, RediErrorMessage::get('cert.hostname_mismatch_skip'));
         }
         $cert = $fresh;
 
         if (! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem()) {
-            return $this->refuseQueueDeploy($cert, '证书材料不可用，已跳过部署排队');
+            return $this->refuseQueueDeploy($cert, RediErrorMessage::get('cert.material_unavailable_skip'));
         }
 
         if (! $cert->domain || (int) $cert->domain->status !== 1) {
-            return $this->refuseQueueDeploy($cert, '域名已停用，已跳过部署排队');
+            return $this->refuseQueueDeploy($cert, RediErrorMessage::get('cert.domain_disabled_skip'));
         }
 
         $cert->status = RediDomainCert::STATUS_DEPLOYING;
@@ -535,7 +536,7 @@ class CertificateDeployService
 
         if ($nodes->isEmpty()) {
             $cert->status = RediDomainCert::STATUS_DEPLOYING;
-            $cert->last_error = '无启用节点，证书已签发但尚未部署到边缘';
+            $cert->last_error = RediErrorMessage::get('cert.no_enabled_nodes');
             $cert->save();
         }
 
@@ -564,19 +565,19 @@ class CertificateDeployService
             if ($ok && ! DomainRecordNormalizer::certMatchesAdminDomain($cert)) {
                 $ok = false;
                 if ($error === null || $error === '') {
-                    $error = '证书域名与后台域名不一致，已拒绝确认';
+                    $error = RediErrorMessage::get('cert.domain_mismatch_reject');
                 }
             }
             if ($ok && (! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem())) {
                 $ok = false;
                 if ($error === null || $error === '') {
-                    $error = '主控证书材料不可用，已拒绝确认';
+                    $error = RediErrorMessage::get('cert.master_material_reject');
                 }
             }
             if ($ok && (! $cert->domain || (int) $cert->domain->status !== 1)) {
                 $ok = false;
                 if ($error === null || $error === '') {
-                    $error = '域名已停用或已删除，已拒绝确认';
+                    $error = RediErrorMessage::get('cert.domain_disabled_reject');
                 }
             }
 
@@ -638,7 +639,7 @@ class CertificateDeployService
         if ($livePending) {
             $cert->status = RediDomainCert::STATUS_DEPLOYING;
             if (! $domainActive && $cert->domain) {
-                $cert->last_error = '域名已停用：等待剩余在线节点响应，不会标记为「已生效」';
+                $cert->last_error = RediErrorMessage::get('cert.domain_disabled_pending');
             }
             $cert->save();
 
@@ -654,19 +655,19 @@ class CertificateDeployService
 
         if ($okCount === 0 && $failedCount > 0) {
             $cert->status = RediDomainCert::STATUS_FAILED;
-            $cert->last_error = '全部已响应节点安装失败';
+            $cert->last_error = RediErrorMessage::get('cert.all_nodes_failed');
         } elseif ($okCount > 0) {
             if ($domainActive) {
                 if (self::certIsNodePullable($cert)) {
                     $cert->status = RediDomainCert::STATUS_ACTIVE;
-                    $cert->last_error = $failedCount > 0 ? '部分节点安装失败，其余节点仍保留该证书' : null;
+                    $cert->last_error = $failedCount > 0 ? RediErrorMessage::get('cert.partial_nodes_failed') : null;
                 } else {
                     $cert->status = RediDomainCert::STATUS_ISSUED;
-                    $cert->last_error = '节点已确认安装但证书当前不可下发，请检查 PEM 或域名一致性';
+                    $cert->last_error = RediErrorMessage::get('cert.ack_not_deployable');
                 }
             } else {
                 $cert->status = RediDomainCert::STATUS_ISSUED;
-                $cert->last_error = '域名已停用：节点已安装证书，但不会标记为「已生效」';
+                $cert->last_error = RediErrorMessage::get('cert.domain_disabled_installed');
             }
         } else {
             $cert->status = RediDomainCert::STATUS_DEPLOYING;
@@ -674,8 +675,8 @@ class CertificateDeployService
                 ->where('status', 'pending')
                 ->exists();
             $cert->last_error = $pendingAny
-                ? '等待在线节点安装证书（15 分钟内无心跳的节点不阻塞状态）'
-                : '等待节点拉取证书';
+                ? RediErrorMessage::get('cert.waiting_online_install')
+                : RediErrorMessage::get('cert.waiting_pull');
         }
         $cert->save();
     }

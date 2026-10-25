@@ -2,6 +2,8 @@
 
 namespace App\Services\Dns;
 
+use App\Support\RediErrorMessage;
+
 use App\Models\RediNode;
 use App\Models\RediPlatformDns;
 use App\Services\Dns\Concerns\EnsuresValidDnsNames;
@@ -27,7 +29,7 @@ class AliyunDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
         $id = trim($creds['api_key'] ?? '');
         $secret = trim($creds['api_secret'] ?? '');
         if ($id === '' || $secret === '') {
-            throw new RuntimeException('阿里云 AccessKey ID / Secret 未配置');
+            throw new RuntimeException(RediErrorMessage::get('dns.aliyun_keys_missing'));
         }
         $this->client = new AliyunDnsClient($id, $secret, $endpoint);
     }
@@ -94,7 +96,7 @@ class AliyunDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
     public function upsertCname(string $name, string $zone, string $targetFqdn): void
     {
         $zone = $this->requireDnsFqdn($zone, 'DNS zone');
-        $targetFqdn = $this->requireDnsFqdn($targetFqdn, 'CNAME 目标');
+        $targetFqdn = $this->requireDnsFqdn($targetFqdn, 'CNAME target');
         $name = strtolower(rtrim($name, '.'));
         if ($name === $zone) {
             $name = '@';
@@ -169,7 +171,7 @@ class AliyunDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
             }
             $page++;
             if ($page > 100) {
-                throw new RuntimeException('阿里云 DNS 记录分页超过上限，请手工清理重复记录后重试');
+                throw new RuntimeException(RediErrorMessage::get('dns.aliyun_page_limit'));
             }
         } while (count($records) === 100);
 
@@ -180,7 +182,7 @@ class AliyunDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
     {
         $zone = trim($this->platform->edge_zone, '.');
         if ($zone === '') {
-            throw new RuntimeException('平台主域名未配置');
+            throw new RuntimeException(RediErrorMessage::get('dns.platform_zone_missing'));
         }
 
         return strtolower($zone);

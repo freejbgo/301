@@ -16,7 +16,7 @@ class RenewDomainCertificatesCommand extends Command
                             {--days=25 : 到期多少天内触发续期排队}
                             {--dry-run : 只列出将续期的域名，不入队}';
 
-    protected $description = '续期即将过期的域名证书（HTTP-01）';
+    protected $description = 'Queue renewal for domain certificates expiring soon (HTTP-01)';
 
     public function handle(): int
     {
@@ -43,7 +43,7 @@ class RenewDomainCertificatesCommand extends Command
                     (string) optional($cert->domain)->original_url ?? ''
                 );
                 if ($host === '') {
-                    $this->warn('跳过非法域名 cert #'.$cert->id);
+                    $this->warn('Skipping invalid hostname cert #'.$cert->id);
                     continue;
                 }
             } else {
@@ -53,7 +53,7 @@ class RenewDomainCertificatesCommand extends Command
                         'cert_id' => $cert->id,
                         'domain_id' => $cert->domain_id,
                     ]);
-                    $this->warn('跳过非法域名 cert #'.$cert->id);
+                    $this->warn('Skipping invalid hostname cert #'.$cert->id);
                     continue;
                 }
                 $cert = $fresh;
@@ -86,7 +86,7 @@ class RenewDomainCertificatesCommand extends Command
         );
         Log::info($summary);
         if ($queued === 0 && ! $dryRun) {
-            $this->info('没有需要续期的证书。');
+            $this->info('No certificates due for renewal。');
         } else {
             $this->info($summary);
         }

@@ -210,7 +210,7 @@ class RediAdminDomainModelTest extends TestCase
 
         $this->assertSame(0, \DB::table('redi_cert_deployments')->count());
         $this->assertSame(RediDomainCert::STATUS_ISSUED, RediDomainCert::query()->find($certId)->status);
-        $this->assertStringContainsString('域名已停用', (string) RediDomainCert::query()->find($certId)->last_error);
+        $this->assertStringContainsString('Domain disabled', (string) RediDomainCert::query()->find($certId)->last_error);
     }
 
     public function test_changing_original_url_prunes_non_pullable_deployments(): void
@@ -265,7 +265,7 @@ class RediAdminDomainModelTest extends TestCase
             'domain_id' => $domain->id,
             'domain_name' => 'failed-off.example',
             'status' => RediDomainCert::STATUS_FAILED,
-            'last_error' => '全部已响应节点安装失败',
+            'last_error' => 'All responding nodes failed',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
