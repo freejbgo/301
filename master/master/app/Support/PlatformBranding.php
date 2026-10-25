@@ -15,9 +15,9 @@ class PlatformBranding
     public static function defaults(): array
     {
         return [
-            'system_name' => '301 跳转系统',
-            'page_title' => '301 跳转系统',
-            'login_title' => '301 跳转系统',
+            'system_name' => __('redi-branding.default_system_name'),
+            'page_title' => __('redi-branding.default_page_title'),
+            'login_title' => __('redi-branding.default_login_title'),
             'logo' => '',
             'logo_mini' => '',
             'favicon' => '',

@@ -130,7 +130,8 @@ class RediAdminDomainController extends AdminController
                 if ($cert->storedCredentialsUnreadable()) {
                     $label .= '<br><span class="text-danger">'.e(admin_trans_label('cert_decrypt_fail')).'</span>';
                 } elseif ($cert->last_error) {
-                    $label .= '<br><span class="text-danger">'.e(OpsDisplaySanitizer::field($cert->last_error, '—', 500)).'</span>';
+                    $label .= '<br><span class="text-danger">'.e(admin_trans_label('cert_last_error')).' '
+                        .e(OpsDisplaySanitizer::field($cert->last_error, '—', 500)).'</span>';
                 }
                 if ($cert->expires_at) {
                     $exp = $cert->expires_at;

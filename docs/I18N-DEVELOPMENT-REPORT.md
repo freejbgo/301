@@ -3,7 +3,7 @@
 **版本**：2026-10-25（阶段 10 收尾：登录页语言切换 + 文档更新）  
 **范围**：主控 `master/master/` 管理后台**可见操作界面**（Laravel + Dcat Admin）；节点与运维文档不在本期。  
 **产品目标（已定）**：让使用后台的**超级管理员与租户账号**在 **简体中文 / 繁体中文 / English** 下方便操作；不要求节点 API、CLI、Webhook、库内历史 `last_error` 原文多语。  
-**结论摘要**：自研后台可见界面已接入 `redi-*` 语言包与 Dcat `menu`/`global`/`extension`（英）；顶栏与**登录页**可切换简/繁/英，`admin_users.locale` 持久化。**未做**：系统外观品牌文案仍单语 JSON、Service/CLI 异常、库内 `last_error` 原文。
+**结论摘要**：自研后台可见界面已接入 `redi-*` 语言包与 Dcat `menu`/`global`/`extension`（英）；顶栏与**登录页**可切换简/繁/英，`admin_users.locale` 持久化。未保存品牌时默认标题随语言包变化；已保存的「系统外观」JSON 仍为单语。**未做**：Service/CLI 异常；`last_error` 正文仍为库内原文（仅标签三语）。
 
 ### 实施进度（代码）
 
