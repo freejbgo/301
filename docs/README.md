@@ -36,5 +36,6 @@
 | [DEVELOPMENT.md](DEVELOPMENT.md) | `dev-preflight` 与发版 |
 | [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md) | 本地双 tar + scp；可选 GitHub Release |
 | [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md) | 长期限制与计划中的增强 |
+| [I18N-DEVELOPMENT-REPORT.md](I18N-DEVELOPMENT-REPORT.md) | 后台简 / 繁 / 英多语言现状与开发方案 |
 | [SECURITY.md](../SECURITY.md) | 密码、端口、Agent |
 | [scripts/README.md](../scripts/README.md) | verify 脚本 |

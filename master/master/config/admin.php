@@ -74,6 +74,7 @@ return [
         'middleware' => [
             'web',
             'admin',
+            \App\Http\Middleware\SetAdminLocale::class,
             \App\Http\Middleware\RequireAdminSessionForDcatApi::class,
             \App\Http\Middleware\RejectDefaultAdminPassword::class,
         ],
