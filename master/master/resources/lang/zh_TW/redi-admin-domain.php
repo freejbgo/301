@@ -86,6 +86,22 @@ return [
             'success_skipped' => '，跳過 :skipped 個',
         ],
     ],
+    'export' => [
+        'headers' => [
+            'id'                     => 'ID',
+            'original_url'           => '原始域名',
+            'skip_url'               => '跳轉地址',
+            'status'                 => '狀態',
+            'group_id'               => '分組 ID',
+            'admin_name'             => '添加人',
+            'cert_status'            => '憑證狀態',
+            'cert_expires_at'        => '憑證到期日',
+            'cname_target'           => 'CNAME 目標',
+            'dns_points_to_platform' => '解析預檢',
+            'force_https'            => '強制 HTTPS',
+            'skip_num'               => '跳轉次數',
+        ],
+    ],
     'validation' => [
         'original_skip_required' => '原始域名與跳轉連結不能為空',
         'original_empty'         => '原始域名不能為空或含路徑',
