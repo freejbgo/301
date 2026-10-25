@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 编出 CentOS 7 可运行的节点发布包 node/redi-multi.tar.gz（linux/amd64）。
 # CGO_ENABLED=0 静态链接，不依赖 GLIBC_2.32 / 2.34，内核小版本不同也不用重编。
-# 产物勿提交 git；发 v* tag 时 release.yml 在测试通过后会打相同包并上传 Release。
+# 产物勿提交 git；上线常与 build-master-tar 一并执行 build-release-tarballs.sh；可选 v* tag → GitHub Release。
 # 打包前建议 bash scripts/dev-preflight.sh（见 docs/DEVELOPMENT.md）。
 # 节点跳转/限速/Agent 逻辑均在此二进制；更新 node/redi-multi 后须重新打包并部署各节点。
 set -euo pipefail

@@ -30,6 +30,8 @@ for needle in \
   'docs/ACCEPTANCE-CENTOS7-DEPLOY.md' \
   'docs/ACCEPTANCE-EDGE-POOL.md' \
   'docs/UPGRADE-IN-PLACE.md' \
+  'build-release-tarballs.sh' \
+  'REDI_MASTER_TAR' \
   '同步失败后的检查' \
   'redi_node_bump_skip' \
   '不必手工 migrate' \

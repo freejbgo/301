@@ -9,7 +9,7 @@
 
 **主控已在跑、只想跟上新发布包**：见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md)。文档索引见 [docs/README.md](docs/README.md)。
 
-开发阶段 [GitHub Releases](https://github.com/freejbgo/301/releases) 可能暂无包；需部署时在仓库根目录执行 `scripts/build-*-tar.sh`，或发 **`v*` tag** 由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 在通过 Go/PHPUnit（8.4 与 8.0）、`composer audit`、CentOS 7 脚本与容器冒烟后上传 Release（发布前对解压后的主控树再跑 audit + PHPUnit）。本地发版前执行 `bash scripts/dev-preflight.sh`（分步说明见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)）。
+部署前在开发机执行 `bash scripts/dev-preflight.sh`，再 `bash scripts/build-release-tarballs.sh`，将 tar 传到服务器并在 `vars.env` 设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR`（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)）。可选：对 `main` 打 **`v*` tag** 由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 上传 [GitHub Releases](https://github.com/freejbgo/301/releases)（Actions 不可用时用本地 tar 即可）。
 
 **绿场（无旧数据）** 时数据库以 **一次导入 `redi_admin.sql`** 为准（含节点存储过程），见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。下面是通用步骤；CentOS 7 不要按克隆目录手工装，直接跑脚本。
 
@@ -28,7 +28,7 @@
 | 机器 | 要装的 | 对公网开放 | 不对公网开放 |
 |------|--------|------------|----------------|
 | 主控 | Nginx、PHP 8.0.2+、MySQL/MariaDB、队列 | 22、80、443 | 3306 |
-| 每台节点 | 节点发布包（本地 `build-node-tar.sh` 或 Release 的 `redi-multi.tar.gz`） | 22、80、443 | 3306、8080 |
+| 每台节点 | 节点发布包（`build-release-tarballs.sh` / `build-node-tar.sh` 或 Release 的 `redi-multi.tar.gz`） | 22、80、443 | 3306、8080 |
 
 节点仍直连主控上的 MySQL，所以 3306 只允许主控本机和各节点的出口 IP。8080 是调试监听（默认 `127.0.0.1:8080`）；生产跳转走客户域名 **80/443** 上的 `/api.js`、`/c.js`，不必对访客开放 8080。`/api.js` 对公网开放是业务需要，节点侧有 **按 IP** 与 **按 IP+域名参数** 限速（见 [SECURITY.md](SECURITY.md)）。
 

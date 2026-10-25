@@ -7,11 +7,11 @@
 | 主控 | `scripts/centos7/deploy-master.sh` | 程序在 `/opt/301/master`，网站根目录 `/opt/301/master/public` |
 | 每台节点 | `scripts/centos7/deploy-node.sh` | 程序在 `/opt/redi-multi/redi-multi` |
 
-开发阶段 [GitHub Releases](https://github.com/freejbgo/301/releases) 可能为空；发版流程见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)。需要部署时在仓库根目录执行 `scripts/build-master-tar.sh` / `scripts/build-node-tar.sh`，或发 **`v*` tag** 后从 Releases 下载（打 tag 会触发 `.github/workflows/release.yml`：Go 测试、PHPUnit **8.4 + 8.0**、`composer audit`、CentOS 7 脚本校验与容器冒烟通过后，才构建 tar 并上传；发布树上还会再跑 audit + PHPUnit）。也可在 `vars.env` 里设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` 指向打包结果的绝对路径：
+**发布包（推荐）：** 开发机 `bash scripts/dev-preflight.sh` 后 `bash scripts/build-release-tarballs.sh`，`scp` 双 tar 到服务器，在 `vars.env` 设 `REDI_MASTER_TAR` / `REDI_NODE_TAR`（如 `/tmp/master.tar.gz`、`/tmp/redi-multi.tar.gz`）。步骤见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)。可选：对 `main` 打 **`v*` tag** 从 [GitHub Releases](https://github.com/freejbgo/301/releases) 下载（Actions 配额不足时用本地 tar 即可）。
 
-- 主控包：本地 `scripts/build-master-tar.sh` → `master/master.tar.gz`（含 `vendor`，无 `.env`），或 GitHub Release 的 `master.tar.gz`。
-- 节点包：本地 `scripts/build-node-tar.sh` → `node/redi-multi.tar.gz`（CentOS 7 静态 `bin/redi-multi`），或 Release 的 `redi-multi.tar.gz`。
-- 仓库 **不跟踪** 上述 tar；`deploy-*.sh` 默认找同路径下的文件，也可用 `vars.env` 的 `REDI_MASTER_TAR` / `REDI_NODE_TAR` 指向 `/tmp` 等。
+- 主控包：`master/master.tar.gz`（含 `vendor`，无 `.env`）。
+- 节点包：`node/redi-multi.tar.gz`（CentOS 7 静态 `bin/redi-multi`）。
+- 仓库 **不跟踪** tar。`deploy-*.sh` 默认找仓库内上述路径或 `/tmp`；**生产机应上传 tar 并写 `REDI_*_TAR`**，勿在机房依赖 composer/Go 自动打包。
 
 源码在仓库的 `master/master/`。那是给开发和重新打包用的。自动安装不要把仓库克隆到 `/opt/301`，否则会和发布包解压出来的 `/opt/301/master` 叠在一起。
 

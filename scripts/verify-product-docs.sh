@@ -43,6 +43,8 @@ fi
 grep -qF 'docs/README.md' "$REPO_ROOT/README.md" || fail 'README must link docs/README.md'
 grep -qF 'RELEASE-PACKAGES.md' "$REPO_ROOT/docs/DEVELOPMENT.md" \
   || fail 'DEVELOPMENT must link RELEASE-PACKAGES'
+grep -qF 'build-release-tarballs.sh' "$REPO_ROOT/docs/RELEASE-PACKAGES.md" \
+  || fail 'RELEASE-PACKAGES must document local build-release-tarballs.sh'
 grep -qF 'CONSOLE.md' "$REPO_ROOT/docs/README.md" || fail 'docs/README must link CONSOLE'
 grep -qF '## 8. 平台边界与运营约定' "$REPO_ROOT/docs/CONSOLE.md" \
   || fail 'CONSOLE must document platform boundaries (§8)'

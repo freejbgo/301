@@ -2,6 +2,7 @@
 # CentOS 7.x（推荐 7.9）主控全自动部署。内核小版本不同不用重编：主控是 PHP，节点包是静态二进制。
 #
 # 在仓库里执行（不要把仓库克隆到 MASTER_INSTALL_ROOT，默认 /opt/301）：
+#   开发机先 build-release-tarballs.sh 并 scp tar；vars.env 设 REDI_MASTER_TAR（见 docs/RELEASE-PACKAGES.md）
 #   cp scripts/centos7/vars.example.env scripts/centos7/vars.env
 #   chmod 600 scripts/centos7/vars.env && vi scripts/centos7/vars.env
 #   sudo bash scripts/centos7/deploy-master.sh
@@ -70,6 +71,7 @@ for ip in $NODE_IPS; do
   redi_is_ipv4 "$ip" || die "NODE_IPS 里有非法 IPv4: $ip"
 done
 redi_ensure_master_tar "$REPO_ROOT" "$TAR" die
+echo "使用主控发布包: $TAR"
 [[ -f "${REPO_ROOT}/db/redi_admin.sql" ]] || die "找不到 db/redi_admin.sql"
 
 APP="${MASTER_INSTALL_ROOT}/master"

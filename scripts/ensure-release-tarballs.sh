@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # 部署脚本共用：若 vars 未指定 tar 且默认路径不存在，则在仓库内尝试构建发布包。
+# 生产机房应先在开发机执行 scripts/build-release-tarballs.sh 并 scp 上传，再设 REDI_*_TAR（见 docs/RELEASE-PACKAGES.md）。
 # 开发机打 tar 前建议先跑 scripts/dev-preflight.sh（见 docs/DEVELOPMENT.md）。
 # shellcheck shell=bash
 
@@ -14,11 +15,11 @@ redi_ensure_master_tar() {
   echo "未找到主控发布包: $tar_path"
   echo "尝试在仓库内执行 scripts/build-master-tar.sh（需 composer 与网络）…"
   if [[ ! -x "${repo_root}/scripts/build-master-tar.sh" ]]; then
-    [[ -n "$die_fn" ]] && "$die_fn" "请先在开发机执行 scripts/build-master-tar.sh，将 master/master.tar.gz 放到服务器并设置 REDI_MASTER_TAR"
+    [[ -n "$die_fn" ]] && "$die_fn" "请先在开发机执行 scripts/build-release-tarballs.sh（或 build-master-tar.sh），scp master.tar.gz 到本机并设置 REDI_MASTER_TAR"
     return 1
   fi
   if ! command -v composer >/dev/null 2>&1; then
-    [[ -n "$die_fn" ]] && "$die_fn" "本机无 composer，无法自动打包。请上传 master/master.tar.gz 或设置 REDI_MASTER_TAR"
+    [[ -n "$die_fn" ]] && "$die_fn" "本机无 composer，无法自动打包。请从开发机上传 master.tar.gz 并设置 REDI_MASTER_TAR（见 docs/RELEASE-PACKAGES.md）"
     return 1
   fi
   if [[ ! -f "${repo_root}/master/master/vendor/autoload.php" ]]; then
@@ -43,11 +44,11 @@ redi_ensure_node_tar() {
   echo "未找到节点发布包: $tar_path"
   echo "尝试在仓库内执行 scripts/build-node-tar.sh（需 Go 工具链）…"
   if [[ ! -x "${repo_root}/scripts/build-node-tar.sh" ]]; then
-    [[ -n "$die_fn" ]] && "$die_fn" "请先在开发机执行 scripts/build-node-tar.sh，上传 node/redi-multi.tar.gz 并设置 REDI_NODE_TAR"
+    [[ -n "$die_fn" ]] && "$die_fn" "请先在开发机执行 scripts/build-release-tarballs.sh（或 build-node-tar.sh），scp redi-multi.tar.gz 并设置 REDI_NODE_TAR"
     return 1
   fi
   if ! command -v go >/dev/null 2>&1; then
-    [[ -n "$die_fn" ]] && "$die_fn" "本机无 go，无法自动打包节点。请上传 redi-multi.tar.gz 或设置 REDI_NODE_TAR"
+    [[ -n "$die_fn" ]] && "$die_fn" "本机无 go，无法自动打包节点。请从开发机上传 redi-multi.tar.gz 并设置 REDI_NODE_TAR（见 docs/RELEASE-PACKAGES.md）"
     return 1
   fi
   (cd "$repo_root" && bash scripts/build-node-tar.sh)

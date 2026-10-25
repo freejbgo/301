@@ -4,7 +4,7 @@
 
 客户域名 CNAME 到 `{token}.平台主域名`，再 CNAME 到 `pool.平台主域名`。pool 的 A 记录指向启用节点的公网 IP。
 
-主控源码在 `master/master/`。**仓库内不提交发布包**（`*.tar.gz` 已 gitignore）。上线推荐从 [GitHub Releases](https://github.com/freejbgo/301/releases) 下载 `master.tar.gz` / `redi-multi.tar.gz`（维护者对 `main` 打 **`v*` tag** 后由 Actions 构建，见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)）。本地调试可先 `bash scripts/dev-preflight.sh` 再 `scripts/build-*-tar.sh`。
+主控源码在 `master/master/`。**仓库内不提交发布包**（`*.tar.gz` 已 gitignore）。上线推荐开发机 `bash scripts/dev-preflight.sh` 后 `bash scripts/build-release-tarballs.sh`，`scp` 到机房并在 `vars.env` 配置 `REDI_MASTER_TAR` / `REDI_NODE_TAR`（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)）。可选从 [GitHub Releases](https://github.com/freejbgo/301/releases) 取同结构 tar（`v*` tag + Actions）。
 
 **生产环境仅支持 CentOS 7.9（及其他 7.x）**。主控与节点使用 [scripts/centos7/deploy-master.sh](scripts/centos7/deploy-master.sh) 与 [scripts/centos7/deploy-node.sh](scripts/centos7/deploy-node.sh)，步骤见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。
 

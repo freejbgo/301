@@ -24,7 +24,7 @@
 - [ ] Cron 行尾含 `|| redi:ops-webhook --task=…`（或已跑 `patch-master-cron-ops-webhook.sh`）
 - [ ] 节点：`redi-multi` active；`setcap cap_net_admin`；防火墙仅 22/80/443
 - [ ] 主控 `NODE_IPS` 与节点公网 IP 一致；已 `deploy-master` 或 `grant-nodes-from-vars`
-- [ ] 发版包来自 [GitHub Releases](https://github.com/freejbgo/301/releases) 某 `v*` 版本（或本地 `dev-preflight` 后自建 tar，见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md)）
+- [ ] 发版包为本地 `dev-preflight` + `build-release-tarballs.sh`（或等价 tar），并已 `scp` / 配置 `REDI_*_TAR`（可选：GitHub Releases 某 `v*`，见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md)）
 
 ## C. 运营自检（命令）
 
