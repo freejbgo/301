@@ -48,4 +48,8 @@ if rg -n "('|\")([^'\"\\]|\\.)*[\x{4e00}-\x{9fff}]" "$ADMIN_APP" -g '*.php' 2>/d
   fail 'app/Admin must not contain Han characters inside PHP string literals (use language files)'
 fi
 
+if rg -n "('|\")([^'\"\\]|\\.)*[\x{4e00}-\x{9fff}]" "$ADMIN_CFG" 2>/dev/null; then
+  fail 'config/admin.php must not contain Han in string literals (use English file fallback; PlatformBranding applies per locale)'
+fi
+
 echo "verify-admin-i18n-invariants: ok"

@@ -11,7 +11,7 @@ return [
     | login page.
     |
     */
-    'name' => '301 跳转系统',
+    'name' => '301 Redirect',
 
     /*
     |--------------------------------------------------------------------------
@@ -22,7 +22,7 @@ return [
     | `img` tag, eg '<img src="http://logo-url" alt="Admin logo">'.
     |
     */
-    'logo' => '<img src="/vendor/dcat-admin/images/logo.png" width="35"> &nbsp;301 跳转系统',
+    'logo' => '<img src="/vendor/dcat-admin/images/logo.png" width="35"> &nbsp;301 Redirect',
 
     /*
     |--------------------------------------------------------------------------
@@ -102,7 +102,7 @@ return [
     | Html title for all pages.
     |
     */
-    'title' => '301 跳转系统',
+    'title' => '301 Redirect',
 
     /*
     |--------------------------------------------------------------------------

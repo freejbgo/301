@@ -35,6 +35,7 @@
 | 24 | **已做** | 节点 API `RediAgentVersionGate` 426 响应走 `redi-errors.node_api`（英文） |
 | 25 | **已做** | `RediAcmeChallenge::upsertForDomain` 校验异常走 `redi-errors.acme.*` |
 | 26 | **已做** | `RediNode` / `RediAdminGroup` 模型校验走 `redi-admin-*`；平台 DNS 凭证解密文案三语 |
+| 27 | **已做** | `config/admin.php` 英文文件回退（与 `en/redi-branding` 一致）；门禁禁止 config 内硬编码中文 |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维/节点 API 消息以英文 canonical 为主 |
 
 ### 运维速览
@@ -50,7 +51,7 @@
 | `app/Admin/**` 用户可见字符串 | 已走 `__` / `admin_trans` / `redi-*`（仅注释含中文） |
 | `resources/lang/en` | 含 `menu`、`global`、`extension` 及全部 `redi-*` |
 | 语言解析 | `SetAdminLocale`（在 `admin` 前）+ 顶栏/登录切换 + `admin_users.locale` + 登录事件同步 |
-| 仍单语 | `config/admin.php` 文件内回退、证书 `last_error` 正文、Service/CLI |
+| 仍单语 / 非三语 | 证书 `last_error` 正文（历史库数据）；`docs/` 中文文档 |
 
 ---
 
@@ -71,7 +72,7 @@
 | 项 | 现状 | 问题 |
 |----|------|------|
 | `config/app.php` | `locale` = `zh_CN`，`fallback_locale` = `zh_CN` | 阶段 1 已修正原 `zh_Cn` 笔误。 |
-| `config/admin.php` | 名称/标题写死「301 跳转系统」 | 未走语言包；可被「系统外观」覆盖，但仍为**单语**字符串。 |
+| `config/admin.php` | 文件内 `name`/`title`/`logo` 为英文回退 | 请求内由 `PlatformBranding::applyAdminConfig()` 按当前语言与库内设置覆盖。 |
 | 语言目录 | `resources/lang/zh_CN`、`zh_TW`：`admin.php`、`global.php`、`menu.php`、`extension.php`；`en`：仅有框架向的 `admin.php`、`auth`、`validation` 等 | **`en` 缺少** `global.php` / `menu.php` / `extension.php`（与简繁不对齐）。 |
 | 业务翻译文件 | **不存在** `redi.php`（或等价命名空间） | 全部业务文案在 PHP 源码中硬编码。 |
 
