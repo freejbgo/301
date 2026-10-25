@@ -157,6 +157,8 @@
 
 **2026-10-25 边角修复（#364）：** 80/443 accept 前预占连接槽；`masteragent` 相同错误日志 1 分钟节流；`redi:health` hints 增加 `dns_api_tenants_unsynced`。
 
+**2026-10-25 边角修复（#365）：** `masteragent` pull 失败 Warn 按类型 1 分钟节流；`CONSOLE.md` DNS 同步失败检查单 + `verify-console-dns-sync-doc.sh`。
+
 **2026-10-20 按模块深度扫（#360 已合并）：** 全库门禁 442/949 + 25×`verify-*`；修复 `release.yml` `master-phpunit` 与 CI 同跑 artisan/ACME 门禁；`verify-redi-artisan-cron` 含 `redi:normalize-domain-hosts`；`verify-admin-api` 含 `PlatformSettings` 超管约束。剩余：真机 ACME/HTTP-01、P2 租户全表隔离、intl DNS mock 单测。
 
 **2026-10-20 部署文档复核（#359 已合并）：** `verify-deploy-centos7-doc`；绿场弱化迁移编号；`DEPLOY-centos7` 与 `deploy-master` Cron 对齐。
