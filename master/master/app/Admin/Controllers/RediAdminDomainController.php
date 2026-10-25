@@ -34,9 +34,11 @@ use Illuminate\Validation\ValidationException;
 
 class RediAdminDomainController extends AdminController
 {
+    protected $translation = 'redi-admin-domain';
+
     public function title()
     {
-        return '域名管理';
+        return admin_trans_label('title');
     }
 
     public function exportCsv(Request $request)
@@ -63,7 +65,8 @@ class RediAdminDomainController extends AdminController
                 ));
                 $exportUrl = admin_url('domain/export'.($exportQuery !== '' ? '?'.$exportQuery : ''));
                 $tools->append(
-                    '<a href="'.e($exportUrl).'" class="btn btn-default btn-sm" style="margin-left:6px"><i class="feather icon-download"></i> 导出 CSV</a>'
+                    '<a href="'.e($exportUrl).'" class="btn btn-default btn-sm" style="margin-left:6px"><i class="feather icon-download"></i> '
+                    .e(admin_trans_label('export_csv')).'</a>'
                 );
             });
 
@@ -88,72 +91,75 @@ class RediAdminDomainController extends AdminController
             $grid->model()->with(['group', 'certificate']);
 
             $grid->column('id')->sortable();
-            $grid->column('group_id', '分组名称')->display(function () {
+            $grid->column('group_id', admin_trans_field('group_id'))->display(function () {
                 $name = $this->group?->name;
 
-                return e(OpsDisplaySanitizer::field($name, '（分组不存在）', 120));
+                return e(OpsDisplaySanitizer::field($name, admin_trans_label('group_missing'), 120));
             });
-            $grid->column('original_url', '原始域名')->display(function ($value) {
+            $grid->column('original_url', admin_trans_field('original_url'))->display(function ($value) {
                 return e(OpsDisplaySanitizer::field($value, '—', 253));
             });
-            $grid->column('cname_target', 'CNAME 目标')->display(function () {
+            $grid->column('cname_target', admin_trans_field('cname_target'))->display(function () {
                 $target = TenantEdgeService::cnameTargetForAdmin((int) $this->admin_id);
                 if ($target === '' || strncmp($target, '（', 3) === 0) {
                     return $target;
                 }
                 $safe = OpsDisplaySanitizer::field($target, '', 253);
 
-                return e($safe).' <a href="javascript:;" class="redi-copy-cname" data-copy="'.e($safe).'">复制</a>';
+                return e($safe).' <a href="javascript:;" class="redi-copy-cname" data-copy="'.e($safe).'">'
+                    .e(admin_trans_label('copy')).'</a>';
             });
-            $grid->column('cname_ok', '解析预检')->display(function () {
+            $grid->column('cname_ok', admin_trans_field('cname_ok'))->display(function () {
                 $edgeFqdn = TenantEdgeService::cnameTargetForAdmin((int) $this->admin_id);
                 if ($edgeFqdn === '' || strncmp($edgeFqdn, '（', 3) === 0) {
                     return '—';
                 }
                 $ok = CnamePrecheckService::pointsToEdgeCached($this->original_url, $edgeFqdn);
 
-                return $ok ? '已指向' : '未检测到';
+                return $ok ? admin_trans_label('dns_pointed') : admin_trans_label('dns_not_pointed');
             });
-            $grid->column('skip_url', '跳转地址')->display(function ($value) {
+            $grid->column('skip_url', admin_trans_field('skip_url'))->display(function ($value) {
                 return e(OpsDisplaySanitizer::field($value, '—', 500));
             });
-            $grid->column('cert_status', '证书')->display(function () {
+            $grid->column('cert_status', admin_trans_field('cert_status'))->display(function () {
                 $cert = $this->certificate;
                 if (! $cert) {
-                    return '未申请';
+                    return admin_trans_option(RediDomainCert::STATUS_NONE, 'cert_status');
                 }
                 $label = e($cert->statusLabel());
                 if ($cert->storedCredentialsUnreadable()) {
-                    $label .= '<br><span class="text-danger">证书密文无法解密（检查 APP_KEY 是否变更）</span>';
+                    $label .= '<br><span class="text-danger">'.e(admin_trans_label('cert_decrypt_fail')).'</span>';
                 } elseif ($cert->last_error) {
                     $label .= '<br><span class="text-danger">'.e(OpsDisplaySanitizer::field($cert->last_error, '—', 500)).'</span>';
                 }
                 if ($cert->expires_at) {
                     $exp = $cert->expires_at;
-                    $label .= '<br><span class="text-muted">到期 '.e($exp->format('Y-m-d')).'</span>';
+                    $label .= '<br><span class="text-muted">'.e(admin_trans_label('expires')).' '.e($exp->format('Y-m-d')).'</span>';
                     if ($exp->isPast()) {
-                        $label .= ' <span class="text-danger">已过期</span>';
+                        $label .= ' <span class="text-danger">'.e(admin_trans_label('expired')).'</span>';
                     } elseif ($exp->lte(now()->addDays(14))) {
-                        $label .= ' <span class="text-warning">即将到期</span>';
+                        $label .= ' <span class="text-warning">'.e(admin_trans_label('expiring_soon')).'</span>';
                     }
                 }
 
                 return $label;
             });
-            $grid->column('skip_num', '跳转次数');
-            $grid->column('status', '状态')->using([1 => "启用", 2 => "停用"]);
-            $grid->column('admin_name', '添加人')->display(function ($value) {
+            $grid->column('skip_num', admin_trans_field('skip_num'));
+            $grid->column('status', admin_trans_field('status'))->using(admin_trans('redi-admin-domain.options.status'));
+            $grid->column('admin_name', admin_trans_field('admin_name'))->display(function ($value) {
                 return e(OpsDisplaySanitizer::field($value, '—', 120));
             });
             $grid->column('created_at');
             $grid->column('updated_at')->sortable();
 
-            Admin::script(<<<'JS'
+            $copyCnameMsg = json_encode(admin_trans_label('copy_cname_success'), JSON_UNESCAPED_UNICODE);
+            Admin::script(<<<JS
 Dcat.ready(function () {
+  var copyMsg = {$copyCnameMsg};
   $(document).off('click', '.redi-copy-cname').on('click', '.redi-copy-cname', function () {
     var text = $(this).data('copy') || '';
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () { Dcat.success('已复制 CNAME 目标'); });
+      navigator.clipboard.writeText(text).then(function () { Dcat.success(copyMsg); });
     } else {
       var ta = document.createElement('textarea');
       ta.value = text;
@@ -161,7 +167,7 @@ Dcat.ready(function () {
       ta.select();
       document.execCommand('copy');
       document.body.removeChild(ta);
-      Dcat.success('已复制 CNAME 目标');
+      Dcat.success(copyMsg);
     }
   });
 });
@@ -171,21 +177,15 @@ JS
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->panel();
 
-                $filter->equal('group_id', '分组')->select(AdminTenantContext::groupSelectOptions())->width(3);
+                $filter->equal('group_id', admin_trans_field('group_id_form'))->select(AdminTenantContext::groupSelectOptions())->width(3);
 
-                $filter->like('original_url', '原始域名')->width(4);
-                $filter->like('skip_url', '跳转地址')->width(4);
-                $filter->equal('status', '状态')->select([1 => '启用', 2 => '停用'])->width(3);
+                $filter->like('original_url', admin_trans_field('original_url'))->width(4);
+                $filter->like('skip_url', admin_trans_field('skip_url'))->width(4);
+                $filter->equal('status', admin_trans_field('status'))->select(admin_trans('redi-admin-domain.options.status'))->width(3);
 
                 $filter->where('cert_filter', function ($query) {
                     \App\Models\RediAdminDomain::applyCertificateListFilter($query, $this->input);
-                }, '证书')->select([
-                    '' => '全部',
-                    'needs_attention' => '待处理',
-                    'active' => '已生效',
-                    'expiring' => '14 天内到期',
-                    'none' => '未申请',
-                ])->width(3);
+                }, admin_trans_field('cert_status'))->select(admin_trans('redi-admin-domain.options.cert_filter'))->width(3);
 
             });
         });
@@ -232,11 +232,11 @@ JS
             $groupList = AdminTenantContext::groupSelectOptions($groupOwnerId);
 
             $form->display('id');
-            $form->select('group_id', '分组')->options($groupList);
+            $form->select('group_id', admin_trans_field('group_id_form'))->options($groupList);
             if (AdminTenantContext::isPlatformAdministrator() && $form->isCreating()) {
                 $form->html(
-                    '<div class="alert alert-info">请先选择<strong>所属租户的分组</strong>并保存。保存后在列表「CNAME 目标」列查看该租户的边缘域名。</div>',
-                    '接入说明'
+                    '<div class="alert alert-info">'.admin_trans_label('onboarding_admin_create').'</div>',
+                    admin_trans_label('onboarding')
                 );
             } else {
                 $cnameAdminId = AdminTenantContext::sessionAdminId();
@@ -245,20 +245,20 @@ JS
                 }
                 $cname = TenantEdgeService::cnameTargetForAdmin($cnameAdminId);
                 $cnameHint = AdminTenantContext::isPlatformAdministrator()
-                    ? '域名所属租户账号下所有域名共用此 CNAME 目标（改分组迁户后以保存结果为准）'
-                    : '本账号下所有域名共用';
+                    ? admin_trans_label('cname_hint_admin')
+                    : admin_trans_label('cname_hint_tenant');
                 $form->html(
-                    '<div class="alert alert-info">请将客户域名 CNAME 到：<code id="redi-cname-form">'.e($cname).'</code> '
-                    .'<a href="javascript:;" class="redi-copy-cname" data-copy="'.e($cname).'">复制</a>'
+                    '<div class="alert alert-info">'.e(admin_trans_label('cname_instruction')).'<code id="redi-cname-form">'.e($cname).'</code> '
+                    .'<a href="javascript:;" class="redi-copy-cname" data-copy="'.e($cname).'">'.e(admin_trans_label('copy')).'</a>'
                     .'（'.e($cnameHint).'）</div>',
-                    '接入说明'
+                    admin_trans_label('onboarding')
                 );
             }
-            $form->text('original_url', '原始域名')->help('客户主域名，如 foo.com（全平台唯一，供边缘节点按 Host 查询）');
-            $form->text('skip_url', '跳转链接');
-            $form->radio('status', '状态')->options([1=>'启用', 2=>'停用'])->default(2)
-                ->help('启用前须将域名 CNAME 到接入目标（或 A 到节点公网 IP）；平台管理员可跳过校验');
-            $form->switch('force_https', '强制 HTTPS')->help('证书状态为「已生效」后再打开。开启后节点对 HTTP 请求 301 到 HTTPS');
+            $form->text('original_url', admin_trans_field('original_url'))->help(admin_trans('redi-admin-domain.help.original_url'));
+            $form->text('skip_url', admin_trans_field('skip_url_form'));
+            $form->radio('status', admin_trans_field('status'))->options(admin_trans('redi-admin-domain.options.status'))->default(2)
+                ->help(admin_trans('redi-admin-domain.help.status'));
+            $form->switch('force_https', admin_trans_field('force_https'))->help(admin_trans('redi-admin-domain.help.force_https'));
             if ($form->isCreating() && ! AdminTenantContext::isPlatformAdministrator()) {
                 $form->hidden('admin_id')->value(Admin::user()->id);
                 $form->hidden('admin_name')->value(Admin::user()->username);
@@ -289,22 +289,22 @@ JS
 
                 if ($skipUrl === '') {
                     throw ValidationException::withMessages([
-                        'original_url' => '原始域名与跳转链接不能为空',
+                        'original_url' => admin_trans('redi-admin-domain.validation.original_skip_required'),
                     ]);
                 }
                 if ($originalUrl === '') {
                     $attempt = DomainRecordNormalizer::normalizeOriginalUrl($rawOriginal);
                     throw ValidationException::withMessages([
                         'original_url' => $attempt === ''
-                            ? '原始域名不能为空或含路径'
-                            : '原始域名格式无效（请填写主域名主机名，如 foo.com，不要含路径、IP 或非法字符）',
+                            ? admin_trans('redi-admin-domain.validation.original_empty')
+                            : admin_trans('redi-admin-domain.validation.original_invalid'),
                     ]);
                 }
 
                 $groupRow = DB::table('redi_admin_group')->where('id', $groupId)->first();
                 if (! $groupRow) {
                     throw ValidationException::withMessages([
-                        'group_id' => '分组无效',
+                        'group_id' => admin_trans('redi-admin-domain.validation.group_invalid'),
                     ]);
                 }
 
@@ -314,14 +314,14 @@ JS
                     $form->input('admin_name', $groupRow->admin_name);
                 } elseif ((int) $groupRow->admin_id !== $ownerAdminId) {
                     throw ValidationException::withMessages([
-                        'group_id' => '分组无效或不属于域名所属账号',
+                        'group_id' => admin_trans('redi-admin-domain.validation.group_wrong_owner'),
                     ]);
                 }
 
                 $domainId = $form->isEditing() ? (int) $form->getKey() : null;
                 if (DomainOriginalUrlGuard::isTakenGlobally($originalUrl, $domainId)) {
                     throw ValidationException::withMessages([
-                        'original_url' => '该原始域名已被其他账号或本账号使用（全平台唯一）',
+                        'original_url' => admin_trans('redi-admin-domain.validation.original_taken'),
                     ]);
                 }
 
@@ -357,7 +357,7 @@ JS
                     }
                     if (! $certActive) {
                         throw ValidationException::withMessages([
-                            'force_https' => '证书尚未生效，不能开启强制 HTTPS。请先申请证书并等到状态为「已生效」。',
+                            'force_https' => admin_trans('redi-admin-domain.validation.force_https'),
                         ]);
                     }
                 }

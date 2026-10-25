@@ -30,7 +30,7 @@
 
 | 项 | 现状 | 问题 |
 |----|------|------|
-| `config/app.php` | `locale` = `zh_Cn`，`fallback_locale` = `zh_CN` | **目录名为 `zh_CN`，大小写不一致**，可能导致部分 Laravel 翻译回退行为不符合预期。 |
+| `config/app.php` | `locale` = `zh_CN`，`fallback_locale` = `zh_CN` | 阶段 1 已修正原 `zh_Cn` 笔误。 |
 | `config/admin.php` | 名称/标题写死「301 跳转系统」 | 未走语言包；可被「系统外观」覆盖，但仍为**单语**字符串。 |
 | 语言目录 | `resources/lang/zh_CN`、`zh_TW`：`admin.php`、`global.php`、`menu.php`、`extension.php`；`en`：仅有框架向的 `admin.php`、`auth`、`validation` 等 | **`en` 缺少** `global.php` / `menu.php` / `extension.php`（与简繁不对齐）。 |
 | 业务翻译文件 | **不存在** `redi.php`（或等价命名空间） | 全部业务文案在 PHP 源码中硬编码。 |

@@ -12,12 +12,20 @@ class LocaleController extends Controller
     {
         $locale = (string) $request->input('locale', '');
         if (! in_array($locale, SetAdminLocale::supported(), true)) {
-            return response()->json(['status' => false, 'message' => 'invalid locale'], 422);
+            if ($request->expectsJson()) {
+                return response()->json(['status' => false, 'message' => 'invalid locale'], 422);
+            }
+
+            return redirect()->back();
         }
 
         session([SetAdminLocale::SESSION_KEY => $locale]);
         app()->setLocale($locale);
 
-        return response()->json(['status' => true]);
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['status' => true]);
+        }
+
+        return redirect()->back();
     }
 }
