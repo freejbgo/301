@@ -39,6 +39,7 @@
 | 28 | **已做** | 开发报告 / CONSOLE 与阶段 27 对齐；声明 Admin + ops 范围收口 |
 | 29 | **已做** | `verify-admin-i18n-invariants.sh` 扩展校验 `app/Models` 字符串字面量无汉字 |
 | 30 | **已做** | `verify-ops-english-invariants.sh` 门禁；接入 `dev-preflight` / CI |
+| 31 | **已做** | DNSPod 中国 `record_line` 迁至 `redi.dnspod_cn_record_line`；`Services` 门禁无例外 |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维/节点 API 新消息英文 canonical |
 
 ### 运维速览

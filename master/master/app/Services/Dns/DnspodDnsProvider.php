@@ -26,7 +26,7 @@ class DnspodDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
 
     protected string $recordLine;
 
-    public function __construct(RediPlatformDns $platform, string $apiBase, string $recordLine = '默认')
+    public function __construct(RediPlatformDns $platform, string $apiBase, ?string $recordLine = null)
     {
         $this->platform = $platform;
         $creds = $platform->getApiCredentialsArray();
@@ -36,7 +36,11 @@ class DnspodDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
             throw new RuntimeException(RediErrorMessage::get('dns.dnspod_keys_missing'));
         }
         $this->loginToken = $id.','.$token;
-        $this->recordLine = $recordLine;
+        $line = $recordLine ?? (string) config('redi.dnspod_cn_record_line', '');
+        if ($line === '') {
+            throw new RuntimeException(RediErrorMessage::get('dns.dnspod_record_line_missing'));
+        }
+        $this->recordLine = $line;
         $this->http = new Client([
             'base_uri' => rtrim($apiBase, '/').'/',
             'timeout' => 30,
