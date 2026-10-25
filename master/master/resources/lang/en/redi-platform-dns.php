@@ -1,0 +1,83 @@
+<?php
+
+return [
+    'page' => [
+        'title'       => 'DNS & node pool',
+        'description' => 'Model 2: customer CNAME → tenant token; token CNAME → pool; pool A records → nodes',
+    ],
+    'cards' => [
+        'settings' => 'DNS & node pool',
+        'pool'     => 'Pool: node A record reference',
+        'tenant'   => 'Tenant edge: token → pool (CNAME) reference',
+    ],
+    'alerts' => [
+        'manual_title' => 'Note',
+        'manual_body'  => '<strong>Manual DNS</strong>: copy the records below into your DNS provider (Cloudflare, Alibaba Cloud, etc.). This system does not call a DNS API.',
+        'api_title'    => 'Note',
+        'api_body'     => '<strong>API automation</strong>: after saving driver and credentials, use Sync to push pool A records and tenant CNAMEs to the provider.',
+    ],
+    'empty' => [
+        'pool'   => 'Set the platform apex domain and add nodes first.',
+        'tenant' => 'Tenant edge records appear here after the platform apex domain is configured.',
+    ],
+    'table' => [
+        'pool_headers'   => ['Type', 'Host / FQDN', 'Value'],
+        'tenant_headers' => ['Type', 'Host (FQDN)', 'Target'],
+    ],
+    'sync' => [
+        'button'           => 'Sync pool / tenant CNAMEs to DNS provider',
+        'not_run'          => 'Sync was not run',
+        'failed'           => 'Sync failed',
+        'success'          => 'DNS synced to provider',
+        'manual_mode_info' => 'Manual DNS mode: configure records from the pool / tenant tables at your provider; no sync needed.',
+        'failed_prefix'    => 'DNS sync failed: ',
+    ],
+    'fields' => [
+        'edge_zone'                 => 'Platform apex domain',
+        'pool_host'                 => 'Pool hostname',
+        'dns_mode'                  => 'Resolution mode',
+        'dns_driver'                => 'DNS driver',
+        'dns_zone_id'               => 'Zone ID',
+        'api_key'                   => 'API key / token',
+        'api_secret'                => 'API secret',
+        'clear_dns_api_credentials' => 'Clear saved API credentials',
+        'acme_contact_email'        => 'ACME contact email',
+        'acme_staging'              => 'ACME staging',
+    ],
+    'help' => [
+        'edge_zone'                 => 'e.g. example.com (a domain you control in DNS)',
+        'pool_host'                 => 'Resulting FQDN: pool.<apex>; changing this requires re-sync (tenant CNAME targets change)',
+        'dns_mode'                  => 'Manual: add records from the reference tables in your DNS console. API: save credentials then one-click sync for pool A and tenant token→pool CNAMEs.',
+        'dns_zone_id'               => 'Required for Cloudflare; optional for others',
+        'api_key'                   => 'Cloudflare=API token; Alibaba=AccessKey ID; DNSPod=API ID; dns.com=API key. Leave blank to keep existing',
+        'api_secret'                => 'Alibaba=AccessKey secret; DNSPod=token; dns.com=API secret',
+        'clear_dns_api_credentials' => 'When checked and saved, encrypted credentials are removed',
+        'acme_contact_email'        => 'Let\'s Encrypt registration email',
+        'acme_staging'              => 'Use Let\'s Encrypt staging CA when enabled',
+    ],
+    'options' => [
+        'dns_mode' => [
+            'manual' => 'Manual',
+            'api'    => 'API',
+        ],
+        'dns_driver' => [
+            'manual'      => 'Manual',
+            'cloudflare'  => 'Cloudflare',
+            'aliyun_cn'   => 'Alibaba Cloud (China)',
+            'aliyun_intl' => 'Alibaba Cloud (intl)',
+            'dnspod_cn'   => 'DNSPod (China)',
+            'dnspod_intl' => 'DNSPod (intl)',
+            'dns_com'     => 'dns.com',
+        ],
+    ],
+    'messages' => [
+        'saved'               => 'Saved',
+        'forbidden'           => 'Platform administrators only can change DNS / ACME settings',
+        'invalid_dns_mode'    => 'Invalid resolution mode',
+        'api_driver_required' => 'API mode requires a DNS driver other than manual',
+        'unsupported_driver'  => 'Unsupported DNS API driver: :driver',
+        'control_chars'       => 'Domain settings cannot contain control characters',
+        'invalid_edge_zone'   => 'Invalid platform apex domain',
+        'invalid_pool_host'   => 'Invalid pool hostname (single label, no dots)',
+    ],
+];

@@ -9,23 +9,26 @@ use Illuminate\Http\Request;
 
 class RotateNodeToken extends RowAction
 {
-    protected $title = '重置 Token';
+    public function title()
+    {
+        return __('redi-admin-node.actions.rotate_token.title');
+    }
 
     public function confirm()
     {
-        return ['重置后旧 Token 立即失效，节点需改用新 Token。继续？'];
+        return [__('redi-admin-node.actions.rotate_token.confirm')];
     }
 
     public function handle(Request $request)
     {
         $user = Admin::user();
         if (! $user || ! method_exists($user, 'isAdministrator') || ! $user->isAdministrator()) {
-            return $this->response()->error('仅超级管理员可操作');
+            return $this->response()->error(__('redi-admin-node.actions.rotate_token.error_admin'));
         }
 
         $node = RediNode::find($this->getKey());
         if (! $node) {
-            return $this->response()->error('节点不存在');
+            return $this->response()->error(__('redi-admin-node.actions.rotate_token.error_not_found'));
         }
 
         $plain = $node->issueApiTokenPlain();
@@ -36,7 +39,7 @@ class RotateNodeToken extends RowAction
             : $plain;
 
         return $this->response()
-            ->success('新 Token 已生成（完整串仅本次响应可见，请立即写入节点 REDI_NODE_TOKEN）：'.$masked)
+            ->success(__('redi-admin-node.actions.rotate_token.success', ['masked' => $masked]))
             ->data(['token' => $plain])
             ->refresh();
     }

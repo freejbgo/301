@@ -39,4 +39,25 @@ return [
             'success' => '新 Token 已生成（完整串仅本次响应可见，请立即写入节点 REDI_NODE_TOKEN）：:masked',
         ],
     ],
+    'form' => [
+        'fields' => [
+            'public_ip'   => '主公网 IP',
+            'public_ipv6' => '主公网 IPv6',
+            'extra_ipv6'  => '其他公网 IPv6',
+            'extra_ips'   => '其他公网 IP',
+            'note'        => '备注',
+        ],
+        'help' => [
+            'public_ip'   => '这台机器对外的主 IP，也是节点程序所在机器。一台机器只建一条节点。',
+            'public_ipv6' => '可选。默认不会在 Pool 发布 AAAA 记录；需开启 REDI_PUBLISH_POOL_AAAA 并同步后才会写入厂商 DNS。',
+            'extra_ipv6'  => '同一台机器上还要写入 pool 的公网 IPv6，一行一个。须先填写主公网 IPv6。',
+            'extra_ips'   => '同一台机器上还要写入 pool 的公网 IPv4，一行一个。Pool 只写 A 记录。仍然只跑一个节点进程、只用一个 Token。不要为这些 IP 再新建节点。',
+        ],
+        'validation' => [
+            'public_ip_ipv4'     => '主公网 IP 必须是 IPv4',
+            'extra_ipv6_primary' => '请先填写主公网 IPv6',
+        ],
+        'created'        => '节点已创建',
+        'created_toastr' => '节点已创建。完整 Token 仅本次响应可见（请立即写入 REDI_NODE_TOKEN）：:masked',
+    ],
 ];

@@ -10,30 +10,33 @@ use Illuminate\Http\Request;
 
 class RequeueNodeFailedCerts extends RowAction
 {
-    protected $title = '重试失败证书';
+    public function title()
+    {
+        return __('redi-admin-node.actions.requeue_failed.title');
+    }
 
     public function confirm()
     {
-        return ['将该节点上 status=failed 的证书部署重新标为 pending，节点将重新拉取。继续？'];
+        return [__('redi-admin-node.actions.requeue_failed.confirm')];
     }
 
     public function handle(Request $request, CertificateDeployService $deployService)
     {
         $user = Admin::user();
         if (! $user || ! method_exists($user, 'isAdministrator') || ! $user->isAdministrator()) {
-            return $this->response()->error('仅超级管理员可操作');
+            return $this->response()->error(__('redi-admin-node.actions.requeue_failed.error_admin'));
         }
 
         $node = RediNode::find($this->getKey());
         if (! $node) {
-            return $this->response()->error('节点不存在');
+            return $this->response()->error(__('redi-admin-node.actions.requeue_failed.error_not_found'));
         }
 
         $count = $deployService->requeueFailedDeployments((int) $node->id, null);
         if ($count === 0) {
-            return $this->response()->warning('该节点没有失败的证书部署记录');
+            return $this->response()->warning(__('redi-admin-node.actions.requeue_failed.warning_empty'));
         }
 
-        return $this->response()->success("已重新排队 {$count} 条失败部署")->refresh();
+        return $this->response()->success(__('redi-admin-node.actions.requeue_failed.success', ['count' => $count]))->refresh();
     }
 }

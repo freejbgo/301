@@ -24,4 +24,14 @@ return [
         'owner_invalid'      => '请选择有效的租户账号',
         'owner_not_tenant'   => '不能将分组挂在超级管理员账号下',
     ],
+    'url_set' => [
+        'confirm_title'   => '您确定要提交表单吗',
+        'confirm_content' => '将更新该分组内所有域名的跳转链接',
+        'field_skip_url'  => '跳转链接',
+        'success'         => '已更新分组内域名的跳转链接',
+        'error_group_id'  => '分组 id 异常',
+        'error_skip_url'  => '跳转链接异常',
+        'error_group'     => '分组无效',
+        'error_forbidden' => '分组无效或不属于当前账号',
+    ],
 ];

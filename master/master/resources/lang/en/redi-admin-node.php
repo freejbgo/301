@@ -39,4 +39,25 @@ return [
             'success' => 'New token generated (full value shown once; set REDI_NODE_TOKEN on the node): :masked',
         ],
     ],
+    'form' => [
+        'fields' => [
+            'public_ip'   => 'Primary public IPv4',
+            'public_ipv6' => 'Primary public IPv6',
+            'extra_ipv6'  => 'Additional public IPv6',
+            'extra_ips'   => 'Additional public IPv4',
+            'note'        => 'Notes',
+        ],
+        'help' => [
+            'public_ip'   => 'Main routable IP for this machine (one node per machine).',
+            'public_ipv6' => 'Optional. Pool AAAA records are off by default until REDI_PUBLISH_POOL_AAAA is enabled and DNS is synced.',
+            'extra_ipv6'  => 'Extra public IPv6 addresses for the pool, one per line. Primary IPv6 required first.',
+            'extra_ips'   => 'Extra public IPv4 for the pool, one per line. Still one agent process and one token—do not create extra nodes for these IPs.',
+        ],
+        'validation' => [
+            'public_ip_ipv4'     => 'Primary public IP must be IPv4',
+            'extra_ipv6_primary' => 'Enter primary public IPv6 first',
+        ],
+        'created'        => 'Node created',
+        'created_toastr' => 'Node created. Full token shown once—set REDI_NODE_TOKEN on the node now: :masked',
+    ],
 ];

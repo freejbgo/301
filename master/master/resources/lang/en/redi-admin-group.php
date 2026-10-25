@@ -24,4 +24,14 @@ return [
         'owner_invalid'      => 'Select a valid tenant account',
         'owner_not_tenant'   => 'Groups cannot be owned by the platform administrator account',
     ],
+    'url_set' => [
+        'confirm_title'   => 'Submit this form?',
+        'confirm_content' => 'Redirect URL will apply to all domains in this group.',
+        'field_skip_url'  => 'Redirect URL',
+        'success'         => 'Redirect URL updated for domains in this group',
+        'error_group_id'  => 'Invalid group id',
+        'error_skip_url'  => 'Invalid redirect URL',
+        'error_group'     => 'Invalid group',
+        'error_forbidden' => 'Invalid group or not owned by your account',
+    ],
 ];

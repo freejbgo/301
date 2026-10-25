@@ -16,39 +16,39 @@ class PlatformSettings extends Form implements LazyRenderable
     {
         $user = Admin::user();
         if (! $user || ! method_exists($user, 'isAdministrator') || ! $user->isAdministrator()) {
-            return $this->response()->error('仅超级管理员可修改系统外观');
+            return $this->response()->error(__('redi-platform-settings.messages.forbidden'));
         }
 
         PlatformBranding::save($input);
 
-        return $this->response()->success('系统外观已保存')->refresh();
+        return $this->response()->success(__('redi-platform-settings.messages.saved'))->refresh();
     }
 
     public function form()
     {
-        $this->text('system_name', '系统名称')
+        $this->text('system_name', __('redi-platform-settings.fields.system_name'))
             ->required()
-            ->help('侧边栏 Logo 旁显示的名称');
-        $this->text('page_title', '网页标题')
-            ->help('浏览器标签页标题，留空则与系统名称相同');
-        $this->text('login_title', '登录框标题')
-            ->help('登录页主标题，留空则与系统名称相同');
+            ->help(__('redi-platform-settings.help.system_name'));
+        $this->text('page_title', __('redi-platform-settings.fields.page_title'))
+            ->help(__('redi-platform-settings.help.page_title'));
+        $this->text('login_title', __('redi-platform-settings.fields.login_title'))
+            ->help(__('redi-platform-settings.help.login_title'));
 
-        $this->image('logo', 'Logo（展开侧栏）')
+        $this->image('logo', __('redi-platform-settings.fields.logo'))
             ->disk('public')
             ->uniqueName()
             ->move('branding')
             ->autoUpload()
-            ->help('建议 PNG，高度约 35px');
+            ->help(__('redi-platform-settings.help.logo'));
 
-        $this->image('logo_mini', 'Logo（收起侧栏）')
+        $this->image('logo_mini', __('redi-platform-settings.fields.logo_mini'))
             ->disk('public')
             ->uniqueName()
             ->move('branding')
             ->autoUpload()
-            ->help('留空则使用上方 Logo');
+            ->help(__('redi-platform-settings.help.logo_mini'));
 
-        $this->image('favicon', 'Favicon')
+        $this->image('favicon', __('redi-platform-settings.fields.favicon'))
             ->disk('public')
             ->uniqueName()
             ->move('branding')
