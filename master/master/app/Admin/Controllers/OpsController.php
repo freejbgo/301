@@ -26,9 +26,9 @@ class OpsController extends Controller
         $count = $deployService->requeueFailedDeployments(null, null);
 
         if ($count === 0) {
-            admin_toastr('没有 failed 部署记录需要重试', 'info');
+            admin_toastr(__('redi-home.ops.requeue_empty'), 'info');
         } else {
-            admin_toastr("已重新排队 {$count} 条 failed 部署", 'success');
+            admin_toastr(__('redi-home.ops.requeue_success', ['count' => $count]), 'success');
         }
 
         $redirect = SafeRelativeRedirect::normalizeForRedirect(

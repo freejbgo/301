@@ -242,24 +242,15 @@ class RediHealthReport
         $cache = (string) config('cache.default', 'file');
 
         if ($queue !== 'sync' && $cache === 'file') {
-            $hints[] = [
-                'code' => 'queue_cache_file',
-                'message' => 'QUEUE_CONNECTION 非 sync 且 CACHE_DRIVER=file：仅适合单台机器单个 queue:work；多 worker 或多机请改 CACHE_DRIVER=redis 并配置 REDIS_*（IssueDomainCertificateJob 的 WithoutOverlapping 依赖共享缓存锁）',
-            ];
+            $hints[] = self::makeHint('queue_cache_file');
         }
 
         if ($queue === 'database') {
-            $hints[] = [
-                'code' => 'queue_database_single_host',
-                'message' => '当前队列为 database：请确保 systemd redi-queue 持续运行；扩容 worker 前先将缓存改为 redis',
-            ];
+            $hints[] = self::makeHint('queue_database_single_host');
         }
 
         if (config('app.env') === 'production' && trim((string) config('redi.min_agent_version')) === '') {
-            $hints[] = [
-                'code' => 'agent_version_gate_off',
-                'message' => 'REDI_MIN_AGENT_VERSION 为空：节点 Agent 版本门控已关闭，升级节点后请改回 0.1.3',
-            ];
+            $hints[] = self::makeHint('agent_version_gate_off');
         }
 
         foreach (self::dnsApiTenantSyncHints() as $hint) {
@@ -267,7 +258,7 @@ class RediHealthReport
         }
 
         foreach ($hints as $i => $hint) {
-            $hints[$i]['message'] = OpsDisplaySanitizer::stripControlChars((string) ($hint['message'] ?? ''));
+            $hints[$i]['message'] = OpsDisplaySanitizer::stripControlChars(self::hintMessage($hint));
         }
 
         return $hints;
@@ -303,13 +294,7 @@ class RediHealthReport
             return [];
         }
 
-        return [[
-            'code' => 'dns_api_tenants_unsynced',
-            'message' => sprintf(
-                'DNS API 模式下有 %d 个租户 edge 尚未记录 dns_synced_at；若曾同步失败，厂商 DNS 可能已部分更新，请按后台报错修正后重试「同步 Pool / 租户 CNAME」（见 docs/CONSOLE.md §2）',
-                $count
-            ),
-        ]];
+        return [self::makeHint('dns_api_tenants_unsynced', ['count' => $count])];
     }
 
     /**
@@ -530,5 +515,36 @@ class RediHealthReport
         }
 
         return (string) ($issue['message'] ?? '');
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array{code: string, params: array<string, mixed>, message: string}
+     */
+    protected static function makeHint(string $code, array $params = []): array
+    {
+        return [
+            'code' => $code,
+            'params' => $params,
+            'message' => self::hintMessage(['code' => $code, 'params' => $params]),
+        ];
+    }
+
+    /**
+     * @param  array{code?: string, params?: array<string, mixed>, message?: string}  $hint
+     */
+    public static function hintMessage(array $hint): string
+    {
+        $code = (string) ($hint['code'] ?? '');
+        if ($code === '') {
+            return (string) ($hint['message'] ?? '');
+        }
+
+        $key = 'redi-health.hints.'.$code;
+        if (Lang::has($key)) {
+            return (string) __($key, (array) ($hint['params'] ?? []));
+        }
+
+        return (string) ($hint['message'] ?? '');
     }
 }

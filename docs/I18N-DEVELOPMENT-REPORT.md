@@ -14,8 +14,9 @@
 | 3 | **已做** | 首页（超管+租户）、分组管理、批量导入域名表单 |
 | 4 | **已做** | 域名/节点 Grid 行操作、节点列表、默认密码 Toast、`trans()` 修复批量状态选项 |
 | 5 | **已做** | DNS 与节点池、系统外观、节点创建/编辑表单、分组批量跳转、`redi-auth.admin_only` |
-| 6 | **已做（PR 待合并）** | `EdgeDnsManualReference` 占位三语、首页 `RediHealthReport` 告警 `redi-health` |
-| 7+ | 待做 | `collectHints` 运维提示、Dcat 内置 Admin 子页、`en/global.php` |
+| 6 | **已做** | `EdgeDnsManualReference` 占位三语、首页 `RediHealthReport` 告警 `redi-health` |
+| 7 | **已做（PR 待合并）** | `collectHints` 三语 + 首页展示、批量重试 Toast、`en/global.php`（Dcat 字段） |
+| 8+ | 待做 | `en/extension.php` 对齐、菜单 title 英文化策略、per-user `locale` 字段 |
 
 ---
 

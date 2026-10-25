@@ -23,4 +23,10 @@ return [
         'cert_domain_name_drift' => '憑證 #:id domain_name 與域名不一致且未能自動對齊：記錄 :recorded，應為 :canonical',
         'cert_validating_stuck_more' => ' …等共 :total 個',
     ],
+    'hints' => [
+        'queue_cache_file' => 'QUEUE_CONNECTION 非 sync 且 CACHE_DRIVER=file：僅適合單台機器單個 queue:work；多 worker 或多機請改 CACHE_DRIVER=redis 並配置 REDIS_*（IssueDomainCertificateJob 的 WithoutOverlapping 依賴共享緩存鎖）',
+        'queue_database_single_host' => '當前隊列為 database：請確保 systemd redi-queue 持續運行；擴容 worker 前先將緩存改為 redis',
+        'agent_version_gate_off' => 'REDI_MIN_AGENT_VERSION 為空：節點 Agent 版本門控已關閉，升級節點後請改回 0.1.3',
+        'dns_api_tenants_unsynced' => 'DNS API 模式下有 :count 個租戶 edge 尚未記錄 dns_synced_at；若曾同步失敗，廠商 DNS 可能已部分更新，請按後台報錯修正後重試「同步 Pool / 租戶 CNAME」',
+    ],
 ];
