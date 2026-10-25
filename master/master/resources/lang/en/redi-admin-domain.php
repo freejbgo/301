@@ -10,6 +10,7 @@ return [
         'dns_pointed'        => 'Pointing OK',
         'dns_not_pointed'    => 'Not detected',
         'cert_decrypt_fail'  => 'Certificate ciphertext cannot be decrypted (check whether APP_KEY changed)',
+        'cert_last_error'    => 'Last error:',
         'expires'            => 'Expires',
         'expired'            => 'Expired',
         'expiring_soon'      => 'Expiring soon',
