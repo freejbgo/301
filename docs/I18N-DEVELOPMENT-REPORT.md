@@ -46,6 +46,7 @@
 | 35 | **已做** | DNS API 同步失败提示三语（不再拼接英文异常原文） |
 | 36 | **已做** | 移除未使用的 `redi-platform-dns.sync.failed_prefix` 语言键 |
 | 37 | **已做** | `verify-redi-lang-parity.sh` + `verify-redi-errors-invariants.sh`；清理 `redi-errors` 中已迁移/重复的 `edge`/`batch`/`domain`/`deploy` 等死键；门禁禁止后台路径误用 `RediErrorMessage` |
+| 38 | **已做** | `redi_domain_certs.last_error_code` + `RediCertLastError`；分支判断用 code（兼容无 code 的旧 `last_error` 全文）；`verify-redi-cert-error-code-invariants.sh` |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维/节点 API 新消息英文 canonical |
 
 ### 运维速览

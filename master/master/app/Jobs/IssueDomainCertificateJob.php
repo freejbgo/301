@@ -11,6 +11,7 @@ use App\Services\CnamePrecheckService;
 use App\Services\TenantEdgeService;
 use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
+use App\Support\RediCertLastError;
 use App\Support\RediErrorMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -89,7 +90,7 @@ class IssueDomainCertificateJob implements ShouldQueue
         if ($publishableHost === '') {
             $cert->domain_name = '';
             $cert->status = RediDomainCert::STATUS_FAILED;
-            $cert->last_error = RediErrorMessage::get('cert.invalid_hostname');
+            RediCertLastError::apply($cert, 'cert.invalid_hostname');
             $cert->save();
 
             return;
@@ -106,7 +107,7 @@ class IssueDomainCertificateJob implements ShouldQueue
 
         if ($edgeFqdn === '') {
             $cert->status = RediDomainCert::STATUS_PENDING_DNS;
-            $cert->last_error = RediErrorMessage::get('cert.platform_edge_missing');
+            RediCertLastError::apply($cert, 'cert.platform_edge_missing');
             $cert->save();
 
             return;
@@ -115,7 +116,7 @@ class IssueDomainCertificateJob implements ShouldQueue
         $customerHost = $canonicalHost;
         if (! HostNameValidator::isNodePublishableHost($edgeFqdn)) {
             $cert->status = RediDomainCert::STATUS_PENDING_DNS;
-            $cert->last_error = RediErrorMessage::get('cert.invalid_tenant_edge');
+            RediCertLastError::apply($cert, 'cert.invalid_tenant_edge');
             $cert->save();
 
             return;
@@ -125,7 +126,7 @@ class IssueDomainCertificateJob implements ShouldQueue
 
         if (! CnamePrecheckService::pointsToEdge($customerHost, $edgeHost)) {
             $cert->status = RediDomainCert::STATUS_PENDING_DNS;
-            $cert->last_error = RediErrorMessage::get('cert.cname_not_pointing', [
+            RediCertLastError::apply($cert, 'cert.cname_not_pointing', [
                 'target' => OpsDisplaySanitizer::field($edgeHost, $edgeHost, 253),
             ]);
             $cert->save();
@@ -151,11 +152,18 @@ class IssueDomainCertificateJob implements ShouldQueue
                 RediDomainCert::STATUS_DEPLOYING,
             ], true)) {
                 $cert->status = $previousStatus;
-                $cert->last_error = RediErrorMessage::get('cert.renew_failed_keep_old')
-                    .OpsDisplaySanitizer::logSnippet($e->getMessage(), 1500);
+                RediCertLastError::applyRaw(
+                    $cert,
+                    RediErrorMessage::get('cert.renew_failed_keep_old')
+                        .OpsDisplaySanitizer::logSnippet($e->getMessage(), 1500),
+                    'cert.renew_failed_keep_old'
+                );
             } else {
                 $cert->status = RediDomainCert::STATUS_FAILED;
-                $cert->last_error = OpsDisplaySanitizer::logSnippet($e->getMessage(), 2000);
+                RediCertLastError::applyRaw(
+                    $cert,
+                    OpsDisplaySanitizer::logSnippet($e->getMessage(), 2000)
+                );
             }
             $cert->save();
             throw $e;

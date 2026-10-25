@@ -7,6 +7,7 @@ use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use App\Support\OpsDisplaySanitizer;
+use App\Support\RediCertLastError;
 use App\Support\RediErrorMessage;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -209,8 +210,8 @@ class CertificateDeployService
         }
 
         $cert->setRelation('domain', $domain);
-        if ($cert->last_error === RediAdminDomain::DISABLE_DEPLOY_CANCEL_MSG) {
-            $cert->last_error = null;
+        if (RediCertLastError::matches($cert, RediCertLastError::DOMAIN_DISABLED_CANCEL)) {
+            RediCertLastError::clear($cert);
             $cert->save();
         }
 
@@ -236,10 +237,7 @@ class CertificateDeployService
                 $this->reconcileCertWithNoDeploymentRows($cert, null);
             } elseif ($cert->status === RediDomainCert::STATUS_DEPLOYING
                 && ! self::certIsNodePullable($cert)) {
-                $this->reconcileCertWithNoDeploymentRows(
-                    $cert,
-                    RediErrorMessage::get('cert.not_deployable_pem')
-                );
+                $this->reconcileCertWithNoDeploymentRows($cert, 'cert.not_deployable_pem');
             }
 
             return;
@@ -248,6 +246,7 @@ class CertificateDeployService
         $this->refreshCertStatusFromDeployments($cert);
     }
 
+    /** @deprecated Use {@see RediCertLastError::NODE_DISABLED_CLEARED} */
     public const NODE_DISABLED_DEPLOY_CLEAR_MSG = 'Node disabled; related deployment rows cleared';
 
     /**
@@ -277,7 +276,7 @@ class CertificateDeployService
                 continue;
             }
             if (! RediCertDeployment::query()->where('cert_id', $cert->id)->exists()) {
-                $this->reconcileCertWithNoDeploymentRows($cert, self::NODE_DISABLED_DEPLOY_CLEAR_MSG);
+                $this->reconcileCertWithNoDeploymentRows($cert, RediCertLastError::NODE_DISABLED_CLEARED);
 
                 continue;
             }
@@ -288,7 +287,7 @@ class CertificateDeployService
     /**
      * 证书已无任何部署行时，将 active/deploying 降为 issued（不触碰尚无部署行的 pullable deploying 入队前状态）。
      */
-    protected function reconcileCertWithNoDeploymentRows(RediDomainCert $cert, ?string $lastError = null): void
+    protected function reconcileCertWithNoDeploymentRows(RediDomainCert $cert, ?string $errorCode = null): void
     {
         if (! in_array($cert->status, [
             RediDomainCert::STATUS_ACTIVE,
@@ -298,8 +297,8 @@ class CertificateDeployService
         }
 
         $cert->status = RediDomainCert::STATUS_ISSUED;
-        if ($lastError !== null && Schema::hasColumn($cert->getTable(), 'last_error')) {
-            $cert->last_error = $lastError;
+        if ($errorCode !== null) {
+            RediCertLastError::apply($cert, $errorCode);
         }
         $cert->save();
     }
@@ -484,7 +483,7 @@ class CertificateDeployService
             $this->reconcileCertDeployStatus($cert);
             $cert = $cert->fresh();
             if ($cert && $cert->status === RediDomainCert::STATUS_DEPLOYING) {
-                $cert->last_error = RediErrorMessage::get('cert.redeploy_requeued');
+                RediCertLastError::apply($cert, 'cert.redeploy_requeued');
                 $cert->save();
             }
         }
@@ -499,16 +498,16 @@ class CertificateDeployService
         $cert->loadMissing('domain');
         $fresh = self::freshCertWithPersistedRealign($cert);
         if (! $fresh || ! DomainRecordNormalizer::certMatchesAdminDomain($fresh)) {
-            return $this->refuseQueueDeploy($fresh ?? $cert, RediErrorMessage::get('cert.hostname_mismatch_skip'));
+            return $this->refuseQueueDeploy($fresh ?? $cert, 'cert.hostname_mismatch_skip');
         }
         $cert = $fresh;
 
         if (! $cert->getCertificatePem() || ! $cert->getPrivateKeyPem()) {
-            return $this->refuseQueueDeploy($cert, RediErrorMessage::get('cert.material_unavailable_skip'));
+            return $this->refuseQueueDeploy($cert, 'cert.material_unavailable_skip');
         }
 
         if (! $cert->domain || (int) $cert->domain->status !== 1) {
-            return $this->refuseQueueDeploy($cert, RediErrorMessage::get('cert.domain_disabled_skip'));
+            return $this->refuseQueueDeploy($cert, 'cert.domain_disabled_skip');
         }
 
         $cert->status = RediDomainCert::STATUS_DEPLOYING;
@@ -536,7 +535,7 @@ class CertificateDeployService
 
         if ($nodes->isEmpty()) {
             $cert->status = RediDomainCert::STATUS_DEPLOYING;
-            $cert->last_error = RediErrorMessage::get('cert.no_enabled_nodes');
+            RediCertLastError::apply($cert, 'cert.no_enabled_nodes');
             $cert->save();
         }
 
@@ -639,7 +638,7 @@ class CertificateDeployService
         if ($livePending) {
             $cert->status = RediDomainCert::STATUS_DEPLOYING;
             if (! $domainActive && $cert->domain) {
-                $cert->last_error = RediErrorMessage::get('cert.domain_disabled_pending');
+                RediCertLastError::apply($cert, 'cert.domain_disabled_pending');
             }
             $cert->save();
 
@@ -655,38 +654,43 @@ class CertificateDeployService
 
         if ($okCount === 0 && $failedCount > 0) {
             $cert->status = RediDomainCert::STATUS_FAILED;
-            $cert->last_error = RediErrorMessage::get('cert.all_nodes_failed');
+            RediCertLastError::apply($cert, 'cert.all_nodes_failed');
         } elseif ($okCount > 0) {
             if ($domainActive) {
                 if (self::certIsNodePullable($cert)) {
                     $cert->status = RediDomainCert::STATUS_ACTIVE;
-                    $cert->last_error = $failedCount > 0 ? RediErrorMessage::get('cert.partial_nodes_failed') : null;
+                    if ($failedCount > 0) {
+                        RediCertLastError::apply($cert, 'cert.partial_nodes_failed');
+                    } else {
+                        RediCertLastError::clear($cert);
+                    }
                 } else {
                     $cert->status = RediDomainCert::STATUS_ISSUED;
-                    $cert->last_error = RediErrorMessage::get('cert.ack_not_deployable');
+                    RediCertLastError::apply($cert, 'cert.ack_not_deployable');
                 }
             } else {
                 $cert->status = RediDomainCert::STATUS_ISSUED;
-                $cert->last_error = RediErrorMessage::get('cert.domain_disabled_installed');
+                RediCertLastError::apply($cert, 'cert.domain_disabled_installed');
             }
         } else {
             $cert->status = RediDomainCert::STATUS_DEPLOYING;
             $pendingAny = RediCertDeployment::where('cert_id', $cert->id)
                 ->where('status', 'pending')
                 ->exists();
-            $cert->last_error = $pendingAny
-                ? RediErrorMessage::get('cert.waiting_online_install')
-                : RediErrorMessage::get('cert.waiting_pull');
+            RediCertLastError::apply(
+                $cert,
+                $pendingAny ? 'cert.waiting_online_install' : 'cert.waiting_pull'
+            );
         }
         $cert->save();
     }
 
-    protected function refuseQueueDeploy(RediDomainCert $cert, string $message): bool
+    protected function refuseQueueDeploy(RediDomainCert $cert, string $errorCode, array $replace = []): bool
     {
         $this->afterCertMaterialOrHostChange($cert);
         $cert = $cert->fresh();
         $cert->loadMissing('domain');
-        $cert->last_error = $message;
+        RediCertLastError::apply($cert, $errorCode, $replace);
         $cert->save();
 
         return false;

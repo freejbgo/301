@@ -2,6 +2,7 @@
 
 namespace App\Services\Acme;
 
+use App\Support\RediCertLastError;
 use App\Support\RediErrorMessage;
 use Afosto\Acme\Client;
 use App\Models\RediAcmeChallenge;
@@ -57,7 +58,7 @@ class CertificateIssuer
             $cert->save();
         }
         $cert->status = RediDomainCert::STATUS_VALIDATING;
-        $cert->last_error = null;
+        RediCertLastError::clear($cert);
         $cert->save();
 
         try {

@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Services\CertificateDeployService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
-use App\Support\RediErrorMessage;
+use App\Support\RediCertLastError;
 use Illuminate\Support\Facades\Log;
 
 class RediDomainCert extends Model
@@ -74,6 +74,7 @@ class RediDomainCert extends Model
         'method',
         'expires_at',
         'last_error',
+        'last_error_code',
     ];
 
     protected $casts = [
@@ -126,11 +127,10 @@ class RediDomainCert extends Model
         if (! $this->storedCredentialsUnreadable()) {
             return;
         }
-        $msg = RediErrorMessage::get('cert.credential_unreadable');
-        if ($this->last_error === $msg) {
+        if (RediCertLastError::matches($this, RediCertLastError::CREDENTIAL_UNREADABLE)) {
             return;
         }
-        $this->last_error = $msg;
+        RediCertLastError::apply($this, RediCertLastError::CREDENTIAL_UNREADABLE);
         $this->saveQuietly();
         Log::warning('redi_domain_cert credential decrypt failed', ['cert_id' => $this->id]);
         $this->loadMissing('domain');

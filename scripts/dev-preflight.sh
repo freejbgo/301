@@ -75,6 +75,7 @@ bash scripts/verify-admin-api-invariants.sh
 bash scripts/verify-admin-i18n-invariants.sh
 bash scripts/verify-redi-lang-parity.sh
 bash scripts/verify-redi-errors-invariants.sh
+bash scripts/verify-redi-cert-error-code-invariants.sh
 bash scripts/verify-ops-english-invariants.sh
 
 echo "==> release.yml / 发布包约定"
@@ -117,6 +118,7 @@ for f in \
   scripts/verify-admin-i18n-invariants.sh \
   scripts/verify-redi-lang-parity.sh \
   scripts/verify-redi-errors-invariants.sh \
+  scripts/verify-redi-cert-error-code-invariants.sh \
   scripts/verify-ops-english-invariants.sh \
   scripts/verify-release-workflow-invariants.sh \
   scripts/verify-ci-preflight-parity.sh \

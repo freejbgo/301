@@ -559,6 +559,7 @@ CREATE TABLE `redi_domain_certs` (
   `certificate` text,
   `private_key` text,
   `last_error` text,
+  `last_error_code` varchar(64) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
