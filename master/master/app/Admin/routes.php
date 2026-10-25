@@ -18,6 +18,8 @@ Route::group([
 
     $router->get('/', 'HomeController@index');
 
+    $router->post('locale', 'LocaleController@switch');
+
     $router->post('ops/requeue-failed-deployments', 'OpsController@requeueFailedDeployments');
 
     $router->resource('group', 'RediAdminGroupController');

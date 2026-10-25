@@ -2,6 +2,7 @@
 
 use App\Support\PlatformBranding;
 use Dcat\Admin\Admin;
+use Dcat\Admin\Layout\Navbar;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid\Filter;
@@ -11,6 +12,10 @@ app('view')->prependNamespace('admin', resource_path('views/admin'));
 
 Admin::booting(function () {
     PlatformBranding::applyAdminConfig();
+});
+
+Admin::navbar(function (Navbar $navbar) {
+    $navbar->right(view('admin::partials.locale-switcher'));
 });
 
 /**
