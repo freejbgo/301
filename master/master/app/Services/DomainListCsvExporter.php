@@ -9,6 +9,41 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DomainListCsvExporter
 {
+    /**
+     * @return list<string>
+     */
+    public static function headerRow(): array
+    {
+        $labels = __('redi-admin-domain.export.headers');
+        $row = [];
+        foreach (self::headerColumnKeys() as $key) {
+            $row[] = is_array($labels) ? (string) ($labels[$key] ?? $key) : $key;
+        }
+
+        return $row;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function headerColumnKeys(): array
+    {
+        return [
+            'id',
+            'original_url',
+            'skip_url',
+            'status',
+            'group_id',
+            'admin_name',
+            'cert_status',
+            'cert_expires_at',
+            'cname_target',
+            'dns_points_to_platform',
+            'force_https',
+            'skip_num',
+        ];
+    }
+
     public static function streamedResponse(Request $request): StreamedResponse
     {
         $filename = 'domains-'.now()->format('Ymd-His').'.csv';
@@ -20,20 +55,7 @@ class DomainListCsvExporter
             }
 
             fwrite($handle, "\xEF\xBB\xBF");
-            fputcsv($handle, [
-                'id',
-                'original_url',
-                'skip_url',
-                'status',
-                'group_id',
-                'admin_name',
-                'cert_status',
-                'cert_expires_at',
-                'cname_target',
-                'dns_points_to_platform',
-                'force_https',
-                'skip_num',
-            ]);
+            fputcsv($handle, self::headerRow());
 
             $query = self::filteredQuery($request);
             foreach ($query->cursor() as $domain) {

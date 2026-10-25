@@ -86,6 +86,22 @@ return [
             'success_skipped' => ', skipped :skipped',
         ],
     ],
+    'export' => [
+        'headers' => [
+            'id'                     => 'ID',
+            'original_url'           => 'Origin host',
+            'skip_url'               => 'Redirect URL',
+            'status'                 => 'Status',
+            'group_id'               => 'Group ID',
+            'admin_name'             => 'Created by',
+            'cert_status'            => 'Certificate status',
+            'cert_expires_at'        => 'Certificate expires',
+            'cname_target'           => 'CNAME target',
+            'dns_points_to_platform' => 'DNS precheck',
+            'force_https'            => 'Force HTTPS',
+            'skip_num'               => 'Redirect count',
+        ],
+    ],
     'validation' => [
         'original_skip_required' => 'Origin host and redirect URL are required',
         'original_empty'         => 'Origin host cannot be empty or contain a path',

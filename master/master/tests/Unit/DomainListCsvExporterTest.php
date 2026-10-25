@@ -132,4 +132,13 @@ class DomainListCsvExporterTest extends TestCase
         $this->assertSame("'+cmd", DomainListCsvExporter::csvSafeCell('+cmd'));
         $this->assertSame('example.com', DomainListCsvExporter::csvSafeCell('example.com'));
     }
+
+    public function test_header_row_follows_admin_locale(): void
+    {
+        app()->setLocale('zh_CN');
+        $this->assertSame('原始域名', DomainListCsvExporter::headerRow()[1]);
+
+        app()->setLocale('en');
+        $this->assertSame('Origin host', DomainListCsvExporter::headerRow()[1]);
+    }
 }
