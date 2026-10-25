@@ -1,6 +1,6 @@
 # 301 跳转系统 — 多语言（简 / 繁 / 英）开发报告
 
-**版本**：2026-10-25（阶段 10 收尾：登录页语言切换 + 文档更新）  
+**版本**：2026-10-25（阶段 11 收尾；阶段 12 繁体键补齐）  
 **范围**：主控 `master/master/` 管理后台**可见操作界面**（Laravel + Dcat Admin）；节点与运维文档不在本期。  
 **产品目标（已定）**：让使用后台的**超级管理员与租户账号**在 **简体中文 / 繁体中文 / English** 下方便操作；不要求节点 API、CLI、Webhook、库内历史 `last_error` 原文多语。  
 **结论摘要**：自研后台可见界面已接入 `redi-*` 语言包与 Dcat `menu`/`global`/`extension`（英）；顶栏与**登录页**可切换简/繁/英，`admin_users.locale` 持久化。未保存品牌时默认标题随语言包变化；已保存的「系统外观」JSON 仍为单语。**未做**：Service/CLI 异常；`last_error` 正文仍为库内原文（仅标签三语）。
@@ -18,8 +18,10 @@
 | 7 | **已做** | `collectHints` 三语 + 首页展示、批量重试 Toast、`en/global.php`（Dcat 字段） |
 | 8 | **已做** | `en/extension.php`、`admin_users.locale` 持久化、`redi-locale` 壳层文案 |
 | 9 | **已做** | 登录 `Login` 事件同步 session ↔ `admin_users.locale` |
-| 10 | **已做（PR 待合并）** | 登录页内联语言切换、`zh_CN/menu.php` 业务菜单键对齐 |
-| — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~98%；品牌 JSON / 非界面层仍单语 |
+| 10 | **已做** | 登录页内联语言切换、`zh_CN/menu.php` 业务菜单键对齐 |
+| 11 | **已做** | `redi-branding` 默认品牌三语、`cert_last_error` 标签、`SetAdminLocale` 先于 `admin` 中间件 |
+| 12 | **已做（PR 待合并）** | 补齐 `zh_TW` `cert_last_error`、文档进度表与 §快照 |
+| — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；已存品牌 JSON / Service 层仍单语 |
 
 ### 阶段 10 后快照（相对 §2 历史审计）
 
@@ -27,8 +29,8 @@
 |------|------|
 | `app/Admin/**` 用户可见字符串 | 已走 `__` / `admin_trans` / `redi-*`（仅注释含中文） |
 | `resources/lang/en` | 含 `menu`、`global`、`extension` 及全部 `redi-*` |
-| 语言解析 | `SetAdminLocale` + 顶栏/登录切换 + `admin_users.locale` + 登录事件同步 |
-| 仍单语 | `PlatformBranding` 默认与库内 JSON、`config/admin.php` 回退标题、证书 `last_error` 展示原文 |
+| 语言解析 | `SetAdminLocale`（在 `admin` 前）+ 顶栏/登录切换 + `admin_users.locale` + 登录事件同步 |
+| 仍单语 | 已保存的 `PlatformBranding` JSON、`config/admin.php` 文件内回退、证书 `last_error` 正文、Service/CLI |
 
 ---
 

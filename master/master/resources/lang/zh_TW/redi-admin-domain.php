@@ -10,6 +10,7 @@ return [
         'dns_pointed'        => '已指向',
         'dns_not_pointed'    => '未偵測到',
         'cert_decrypt_fail'  => '憑證密文無法解密（請確認 APP_KEY 是否變更）',
+        'cert_last_error'    => '最近錯誤：',
         'expires'            => '到期',
         'expired'            => '已過期',
         'expiring_soon'      => '即將到期',
