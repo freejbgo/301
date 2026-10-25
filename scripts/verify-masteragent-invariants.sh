@@ -22,6 +22,8 @@ grep -q 'tls.X509KeyPair' "$AGENT" || fail "pullCertificates must validate PEM b
 grep -q '"/api/nodes/ack"' "$AGENT" || fail "pullCertificates must POST ack"
 grep -q 'sanitizeAckError' "$AGENT" || fail "failed ack must sanitize error"
 grep -q 'certs.ReplaceAll(nil)' "$AGENT" || fail "empty cert list must clear in-memory certs"
+grep -q 'noteEmptyCertificateList' "$AGENT" || fail "empty cert list must debounce before ReplaceAll(nil)"
+grep -q 'nextPollIntervalAfterError' "${REPO_ROOT}/node/redi-multi/masteragent/backoff.go" || fail "masteragent must backoff on tick errors"
 grep -q 'shouldClearRegistration' "$AGENT" || fail "missing shouldClearRegistration"
 grep -q 'ack 403 must not clear registration' "$REG" || fail "registration_test must guard ack 403"
 grep -q 'ack 409 must not clear registration' "$REG" || fail "registration_test must guard ack 409"

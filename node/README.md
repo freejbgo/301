@@ -64,6 +64,6 @@ sudo setcap cap_net_admin+ep bin/redi-multi
 
 ## 和主控的连接
 
-配置了 `REDI_MASTER_URL` 和 `REDI_NODE_TOKEN` 之后，进程会向主控注册、拉取跳转规则、同步 HTTP-01 挑战并安装证书。两个变量缺一，Agent 不启动，只剩本机跳转。
+配置了 `REDI_MASTER_URL` 和 `REDI_NODE_TOKEN` 之后，进程会向主控注册、拉取跳转规则、同步 HTTP-01 挑战并安装证书。两个变量缺一，Agent 不启动，只剩本机跳转。主控连续失败时轮询会退避至最长 60s；主控返回空证书列表时默认连续 3 次后才清空本机 TLS 内存（`REDI_AGENT_EMPTY_CERT_CLEAR_AFTER`，设为 `1` 则与旧版相同）。
 
 证书申请要求每台启用节点都在线并完成挑战同步。Let's Encrypt 访问客户域名时可能落到 pool 里任意一个 A 记录。
