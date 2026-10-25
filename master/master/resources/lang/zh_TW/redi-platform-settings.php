@@ -3,7 +3,15 @@
 return [
     'page' => [
         'title'       => '系統外觀',
-        'description' => '全平台共用一套品牌設置',
+        'description' => '按介面語言分別設置名稱與標題；Logo / Favicon 全平台共用',
+    ],
+    'tabs' => [
+        'zh_CN' => '簡體中文',
+        'zh_TW' => '繁體中文',
+        'en'    => 'English',
+    ],
+    'sections' => [
+        'shared_assets' => '共用圖片（各語言介面相同）',
     ],
     'cards' => [
         'branding' => '全平台外觀（Logo / 標題）',
@@ -17,11 +25,12 @@ return [
         'favicon'     => 'Favicon',
     ],
     'help' => [
-        'system_name' => '側邊欄 Logo 旁顯示的名稱（全平台單語；各語言介面顯示相同字串，英文站請直接填英文）',
-        'page_title'  => '瀏覽器標籤頁標題，留空則與系統名稱相同',
-        'login_title' => '登錄頁主標題，留空則與系統名稱相同',
+        'system_name' => '當前語言介面下，側邊欄 Logo 旁顯示的名稱',
+        'page_title'  => '當前語言介面下的瀏覽器標籤頁標題，留空則與系統名稱相同',
+        'login_title' => '當前語言介面下的登錄頁主標題，留空則與系統名稱相同',
         'logo'        => '建議 PNG，高度約 35px',
         'logo_mini'   => '留空則使用上方 Logo',
+        'favicon_shared' => '各語言介面共用同一圖標',
     ],
     'messages' => [
         'saved'     => '系統外觀已保存',

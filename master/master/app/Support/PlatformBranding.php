@@ -10,7 +10,13 @@ class PlatformBranding
 {
     public const SETTINGS_SLUG = 'platform_branding';
 
-    public const CACHE_KEY = 'platform_branding_v1';
+    public const CACHE_KEY = 'platform_branding_v2';
+
+    /** @return list<string> */
+    public static function brandingLocales(): array
+    {
+        return config('redi.admin_locales', ['zh_CN', 'zh_TW', 'en']);
+    }
 
     public static function defaults(): array
     {
@@ -24,41 +30,123 @@ class PlatformBranding
         ];
     }
 
-    public static function get(): array
+    /**
+     * Resolved branding for the current (or given) UI locale — used when rendering admin.
+     *
+     * @return array{system_name: string, page_title: string, login_title: string, logo: string, logo_mini: string, favicon: string}
+     */
+    public static function get(?string $locale = null): array
     {
-        return Cache::remember(self::CACHE_KEY, 3600, function () {
-            $row = DB::table('admin_settings')->where('slug', self::SETTINGS_SLUG)->first();
-            if (! $row || $row->value === '') {
-                return self::defaults();
+        return self::resolveForLocale(self::getStored(), $locale ?? app()->getLocale());
+    }
+
+    /**
+     * Values for the system-appearance form (all locale tabs + shared images).
+     *
+     * @return array<string, mixed>
+     */
+    public static function formDefaults(): array
+    {
+        $stored = self::getStored();
+        $locales = is_array($stored['locales'] ?? null) ? $stored['locales'] : [];
+
+        $legacyName = trim((string) ($stored['system_name'] ?? ''));
+        $legacyPage = trim((string) ($stored['page_title'] ?? ''));
+        $legacyLogin = trim((string) ($stored['login_title'] ?? ''));
+
+        $out = [
+            'logo' => (string) ($stored['logo'] ?? ''),
+            'logo_mini' => (string) ($stored['logo_mini'] ?? ''),
+            'favicon' => (string) ($stored['favicon'] ?? ''),
+            'locales' => [],
+        ];
+
+        $hasStoredText = $legacyName !== '' || $legacyPage !== '' || $legacyLogin !== '';
+        if (! $hasStoredText) {
+            foreach ($locales as $block) {
+                if (! is_array($block)) {
+                    continue;
+                }
+                foreach (['system_name', 'page_title', 'login_title'] as $field) {
+                    if (trim((string) ($block[$field] ?? '')) !== '') {
+                        $hasStoredText = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        foreach (self::brandingLocales() as $code) {
+            $block = is_array($locales[$code] ?? null) ? $locales[$code] : [];
+            $name = trim((string) ($block['system_name'] ?? ''));
+            $page = trim((string) ($block['page_title'] ?? ''));
+            $login = trim((string) ($block['login_title'] ?? ''));
+
+            if ($name === '' && $code === 'zh_CN' && $legacyName !== '' && $locales === []) {
+                $name = $legacyName;
+                $page = $legacyPage;
+                $login = $legacyLogin;
             }
 
-            $decoded = json_decode($row->value, true);
-            if (! is_array($decoded)) {
-                return self::defaults();
+            if (! $hasStoredText) {
+                $name = self::defaultFieldForLocale($code, 'system_name');
+                $page = self::defaultFieldForLocale($code, 'page_title');
+                $login = self::defaultFieldForLocale($code, 'login_title');
             }
 
-            return array_merge(self::defaults(), $decoded);
-        });
+            $out['locales'][$code] = [
+                'system_name' => $name,
+                'page_title' => $page,
+                'login_title' => $login,
+            ];
+        }
+
+        return $out;
     }
 
     public static function save(array $input): void
     {
+        $locales = [];
+        $rawLocales = is_array($input['locales'] ?? null) ? $input['locales'] : [];
+
+        foreach (self::brandingLocales() as $code) {
+            $block = is_array($rawLocales[$code] ?? null) ? $rawLocales[$code] : [];
+            $locales[$code] = [
+                'system_name' => trim((string) ($block['system_name'] ?? '')),
+                'page_title' => trim((string) ($block['page_title'] ?? '')),
+                'login_title' => trim((string) ($block['login_title'] ?? '')),
+            ];
+        }
+
+        $legacyName = trim((string) ($input['system_name'] ?? ''));
+        if ($legacyName !== '' && $locales['zh_CN']['system_name'] === '') {
+            $locales['zh_CN']['system_name'] = $legacyName;
+        }
+
+        $primaryName = $locales['zh_CN']['system_name'];
+        if ($primaryName === '') {
+            foreach ($locales as $block) {
+                if ($block['system_name'] !== '') {
+                    $primaryName = $block['system_name'];
+                    break;
+                }
+            }
+        }
+
         $data = [
-            'system_name' => trim((string) ($input['system_name'] ?? '')),
-            'page_title' => trim((string) ($input['page_title'] ?? '')),
-            'login_title' => trim((string) ($input['login_title'] ?? '')),
+            'system_name' => $primaryName,
+            'page_title' => $locales['zh_CN']['page_title'],
+            'login_title' => $locales['zh_CN']['login_title'],
             'logo' => (string) ($input['logo'] ?? ''),
             'logo_mini' => (string) ($input['logo_mini'] ?? ''),
             'favicon' => (string) ($input['favicon'] ?? ''),
+            'locales' => $locales,
         ];
 
-        if ($data['system_name'] === '') {
-            $data['system_name'] = self::defaults()['system_name'];
-        }
-        if ($data['page_title'] === '') {
+        if ($data['page_title'] === '' && $data['system_name'] !== '') {
             $data['page_title'] = $data['system_name'];
         }
-        if ($data['login_title'] === '') {
+        if ($data['login_title'] === '' && $data['system_name'] !== '') {
             $data['login_title'] = $data['system_name'];
         }
 
@@ -77,6 +165,7 @@ class PlatformBranding
         );
 
         Cache::forget(self::CACHE_KEY);
+        Cache::forget('platform_branding_v1');
     }
 
     public static function applyAdminConfig(): void
@@ -113,6 +202,95 @@ class PlatformBranding
         if ($loginTitle !== '') {
             config(['admin.name' => $loginTitle]);
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $stored
+     * @return array{system_name: string, page_title: string, login_title: string, logo: string, logo_mini: string, favicon: string}
+     */
+    public static function resolveForLocale(array $stored, string $locale): array
+    {
+        if (! in_array($locale, self::brandingLocales(), true)) {
+            $locale = self::brandingLocales()[0] ?? 'zh_CN';
+        }
+
+        $systemName = self::resolveField($stored, $locale, 'system_name');
+        $pageTitle = self::resolveField($stored, $locale, 'page_title');
+        $loginTitle = self::resolveField($stored, $locale, 'login_title');
+
+        if ($pageTitle === '') {
+            $pageTitle = $systemName;
+        }
+        if ($loginTitle === '') {
+            $loginTitle = $systemName;
+        }
+
+        return [
+            'system_name' => $systemName,
+            'page_title' => $pageTitle,
+            'login_title' => $loginTitle,
+            'logo' => (string) ($stored['logo'] ?? ''),
+            'logo_mini' => (string) ($stored['logo_mini'] ?? ''),
+            'favicon' => (string) ($stored['favicon'] ?? ''),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $stored
+     */
+    protected static function resolveField(array $stored, string $locale, string $field): string
+    {
+        $locales = is_array($stored['locales'] ?? null) ? $stored['locales'] : [];
+        $candidates = [];
+
+        if (is_array($locales[$locale] ?? null)) {
+            $candidates[] = trim((string) ($locales[$locale][$field] ?? ''));
+        }
+        if ($locale !== 'zh_CN' && is_array($locales['zh_CN'] ?? null)) {
+            $candidates[] = trim((string) ($locales['zh_CN'][$field] ?? ''));
+        }
+        $candidates[] = trim((string) ($stored[$field] ?? ''));
+        $candidates[] = self::defaultFieldForLocale($locale, $field);
+
+        foreach ($candidates as $value) {
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
+    protected static function defaultFieldForLocale(string $locale, string $field): string
+    {
+        $key = match ($field) {
+            'system_name' => 'redi-branding.default_system_name',
+            'page_title' => 'redi-branding.default_page_title',
+            'login_title' => 'redi-branding.default_login_title',
+            default => '',
+        };
+        if ($key === '') {
+            return '';
+        }
+
+        return trim((string) trans($key, [], $locale));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected static function getStored(): array
+    {
+        return Cache::remember(self::CACHE_KEY, 3600, function () {
+            $row = DB::table('admin_settings')->where('slug', self::SETTINGS_SLUG)->first();
+            if (! $row || $row->value === '') {
+                return [];
+            }
+
+            $decoded = json_decode($row->value, true);
+
+            return is_array($decoded) ? $decoded : [];
+        });
     }
 
     protected static function buildLogoHtml(string $path, string $systemName, bool $mini): string
