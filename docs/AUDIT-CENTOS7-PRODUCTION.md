@@ -149,6 +149,8 @@
 
 ## 6. 全面复核记录（2026-10）
 
+**2026-10-25 #361–#368 已合并 `main`：** 边角修复（api.js 限速、MySQL 连接器、lagran、Agent 退避/空证书防抖、连接槽、health hints、日志节流）与运维/验收文档交叉引用；开放 PR 无；本地 `go test ./...` 与 `dev-preflight`/`verify-*` 通过。部署模板见 `vars.example.env` / `DEPLOY-centos7` §9 Agent 可选 env。
+
 **2026-10-25 边角修复（#361）：** 节点 Echo `8080` 上 `/api.js` 去掉与 `allowApiJsDomainRate` 重复的 `rateLimitMiddleware`（与 80/443 `WriteAsset` 一致，120 次/分钟/IP）；`mysqlconnect` 经 `mysql.NewConnector` 建池（密码可含 `@`/`:` 等 DSN 分隔符）；`Reconnect` 先建新池再替换旧池。
 
 **2026-10-25 边角修复（#362）：** `lagran` `setIptable` 以 IPv4 规则是否装全为准返回值；`mysqlconnect.Init` 与 `Reconnect` 共用 `replacePool`；`verify-lagran-iptables-invariants` / `verify-node-api-js` 加强；部署文档补节点库密码说明。
@@ -861,7 +863,7 @@
 
 ## 7. 仓库合并基线
 
-跟踪 **`main`**。历史合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#101](https://github.com/freejbgo/301/pull/101)。**2026-10-20 深度扫收口** [#340](https://github.com/freejbgo/301/pull/340)–[#357](https://github.com/freejbgo/301/pull/357)（主机名对齐、租户/health、ACME/续期/prune、Edge DNS、CI/release 与 `verify-*` 门禁）；明细见 §6。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+跟踪 **`main`**。历史合并基线含 [#75](https://github.com/freejbgo/301/pull/75)–[#101](https://github.com/freejbgo/301/pull/101)。**2026-10-20 深度扫收口** [#340](https://github.com/freejbgo/301/pull/340)–[#357](https://github.com/freejbgo/301/pull/357)（主机名对齐、租户/health、ACME/续期/prune、Edge DNS、CI/release 与 `verify-*` 门禁）；**2026-10-25 边角与文档** [#361](https://github.com/freejbgo/301/pull/361)–[#368](https://github.com/freejbgo/301/pull/368)；明细见 §6。升级见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ---
 

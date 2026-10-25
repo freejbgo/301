@@ -35,6 +35,7 @@ for key in NODE_INSTALL_ROOT NODE_PUBLIC_IP DEFAULT_REDIRECT_URL REDI_MASTER_URL
   grep -q "^${key}=" "$VARS" || fail "vars.example.env: missing ${key}"
 done
 grep -q 'REDI_MASTER_INSECURE' "$VARS" || fail "vars.example.env: missing REDI_MASTER_INSECURE hint"
+grep -q 'REDI_AGENT_EMPTY_CERT_CLEAR_AFTER' "$VARS" || fail "vars.example.env: missing REDI_AGENT_EMPTY_CERT_CLEAR_AFTER hint"
 grep -q 'NODE_IPS' "$VARS" || fail "vars.example.env: missing NODE_IPS"
 
 # lagran 脚本与 lagran_ports.py 一致
@@ -57,5 +58,6 @@ for key in REDI_DB_HOST REDI_DB_USER REDI_DB_PASSWORD REDI_DB_NAME REDI_MASTER_U
   grep -q "$key" "$ENV_EX" || fail "env.example: missing ${key}"
 done
 grep -q 'REDI_DB_PASSWORD=' "$DEPLOY" || fail "deploy-node: env.sh must set REDI_DB_PASSWORD"
+grep -q 'UPGRADE-IN-PLACE' "$DEPLOY" || fail "deploy-node: must mention UPGRADE-IN-PLACE for optional Agent env"
 
 echo "verify-node-deploy-templates: OK"
