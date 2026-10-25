@@ -33,7 +33,8 @@ func Start() {
 	e.HideBanner = true
 	e.IPExtractor = echo.ExtractIPDirect()
 	e.GET("/c.js", handleCjs, rateLimitMiddleware)
-	e.GET("/api.js", handleApiJs, rateLimitMiddleware)
+	// /api.js 在 handleApiJs 内经 allowApiJsDomainRate 计入全局 IP 限速；勿再挂 rateLimitMiddleware（会双计）。
+	e.GET("/api.js", handleApiJs)
 
 	listen := os.Getenv("REDI_API_LISTEN")
 	if listen == "" {

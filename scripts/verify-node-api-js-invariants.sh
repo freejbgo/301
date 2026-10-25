@@ -16,7 +16,11 @@ for f in "$API" "$ASSET" "$TEST"; do
   [[ -f "$f" ]] || fail "missing $f"
 done
 
-grep -q 'rateLimitMiddleware' "$API" || fail "api must rate-limit /c.js and /api.js"
+grep -q 'rateLimitMiddleware' "$API" || fail "api must rate-limit /c.js"
+grep -q 'GET("/api.js", handleApiJs)' "$API" || fail "api.js route must use handleApiJs"
+if grep -E 'GET\("/api\.js".*rateLimitMiddleware' "$API" >/dev/null; then
+  fail "api.js must not use rateLimitMiddleware (allowApiJsDomainRate already counts global IP limit)"
+fi
 grep -q 'allowRate' "$API" || fail "missing allowRate"
 grep -q 'SanitizeClientIP' "$API" || fail "rate limit must sanitize client IP"
 grep -q 'allowApiJsDomainRate' "$API" || fail "api.js must have per-domain rate limit"
