@@ -2,7 +2,7 @@
 # 打主控发布包 master/master.tar.gz。
 # 包内带 composer install --no-dev 的 vendor，不带 .env，服务器上不用再跑 composer。
 # 产物勿提交 git；发 v* tag 时 release.yml 在测试通过后会打相同包并上传 Release。
-# 打包前建议 bash scripts/dev-preflight.sh（见 docs/AUDIT-CENTOS7-PRODUCTION.md §9）。
+# 打包前建议 bash scripts/dev-preflight.sh（见 docs/DEVELOPMENT.md）。
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP="$ROOT/master/master"

@@ -19,7 +19,7 @@
 
 ## 开发机 / 发版前（与 CI 一致）
 
-在本地打 `v*` 标签或上传 tar 到服务器之前，建议在仓库根目录执行 **`bash scripts/dev-preflight.sh`**（或按 [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) **§9** 分步跑）。与 GitHub `ci.yml` / `release.yml` 核心门禁相同；本机无 Docker 时 DB 校验脚本会跳过，有 Docker 时才会真正起 MariaDB 容器。`verify-*` 脚本索引见 [scripts/README.md](scripts/README.md)；本文与 `deploy-*.sh` / `redi_admin.sql` 的对齐由 **`bash scripts/verify-deploy-centos7-doc.sh`** 静态校验。
+在本地打 `v*` 标签或上传 tar 到服务器之前，建议在仓库根目录执行 **`bash scripts/dev-preflight.sh`**（或按 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) 分步跑）。与 GitHub `ci.yml` / `release.yml` 核心门禁相同；本机无 Docker 时 DB 校验脚本会跳过，有 Docker 时才会真正起 MariaDB 容器。`verify-*` 脚本索引见 [scripts/README.md](scripts/README.md)；本文与 `deploy-*.sh` / `redi_admin.sql` 的对齐由 **`bash scripts/verify-deploy-centos7-doc.sh`** 静态校验。
 
 ## 1. 准备变量
 
@@ -219,4 +219,4 @@ lagran 在 **OUTPUT** 上按 TCP **源端口**（与 `addr` / `tls_addr` 合并�
 
 开放 80/443 时继续用部署脚本已有的服务放行即可；**不要**为「只匹配 IPv4」单独加 firewalld rich rule 而把 IPv6 挡在池外（否则 `curl -6` 与 HTTP-01 会失败）。
 
-更完整的产品约定见 [docs/IPV6-DUALSTACK-DEV.md](docs/IPV6-DUALSTACK-DEV.md)。
+更完整的产品约定见 [docs/NETWORKING-IPv6.md](docs/NETWORKING-IPv6.md)。

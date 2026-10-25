@@ -15,7 +15,7 @@
 | [docs/CONSOLE.md](CONSOLE.md) | 后台操作 |
 | [docs/PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) | 上线验收与 `redi:health` |
 | [SECURITY.md](../SECURITY.md) | 密码、端口、节点权限 |
-| [docs/AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §9 | 开发机发版前 `dev-preflight.sh` |
+| [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 开发机发版前 `dev-preflight.sh` |
 | [scripts/README.md](../scripts/README.md) | `verify-*` 门禁与 CentOS 辅助脚本索引 |
 
 ## 数据库：绿场一次导入即可

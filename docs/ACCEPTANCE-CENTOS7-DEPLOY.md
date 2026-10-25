@@ -107,7 +107,7 @@ sudo firewall-cmd --list-all
 | 3306 | 监听；**不要**对 `0.0.0.0/0` 在安全组全网开放 |
 | firewalld | 含 `ssh` `http` `https`；对节点 IP 有 mysql 相关 rich rule（若已配置 `NODE_IPS`） |
 | 节点 DB 权限 | 远程账号 `redi_node` 仅 EXECUTE `redi_node_bump_skip`（`deploy-master` / `grant-nodes-from-vars` 按 `NODE_IPS` 同步，或单 IP `grant-node-mysql.sh`） |
-| `redi:health` | 退出码 **0**（可有 **hints**，见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3）；生产须已关 `APP_DEBUG` 并配好 DNS 与节点池 |
+| `redi:health` | 退出码 **0**（可有 **hints**，见 [HEALTH-REFERENCE.md](HEALTH-REFERENCE.md)）；生产须已关 `APP_DEBUG` 并配好 DNS 与节点池 |
 | 证书部署失败重试 | 超管后台或 `php artisan redi:requeue-failed-deployments`（可选 `--node=` / `--cert=`）；仅重试**启用节点**上、证书仍可下发的 failed 行 |
 
 Nginx 重复部署行为：
@@ -240,7 +240,7 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 
 ## 7. IPv4/IPv6 双栈（可选）
 
-**前提：** 主控与节点代码已含 V6-01–V6-30（`main` 默认仍 **不** 发布 Pool AAAA；节点默认 `0.0.0.0` 在 Linux 上已双栈接听；lagran 的 IPv6 与 IPv4 相同）。需要节点有 **公网 IPv6**、主控有 **IPv6 出口**；操作细节见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12 与 [IPV6-DUALSTACK-IMPLEMENTATION.md](IPV6-DUALSTACK-IMPLEMENTATION.md) §3。
+**前提：** 主控与节点代码已含 V6-01–V6-30（`main` 默认仍 **不** 发布 Pool AAAA；节点默认 `0.0.0.0` 在 Linux 上已双栈接听；lagran 的 IPv6 与 IPv4 相同）。需要节点有 **公网 IPv6**、主控有 **IPv6 出口**；操作细节见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12 与 [NETWORKING-IPv6.md](NETWORKING-IPv6.md)。
 
 在后台「节点管理」填写主 IPv6 / 其他 IPv6（**不要**写入 `vars.env` 的 `NODE_IPS`）。
 
@@ -305,7 +305,7 @@ curl -6 -k -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "https://[20
 sudo bash scripts/centos7/run-on-centos7-host.sh
 ```
 
-发版前在开发机还可跑 `bash scripts/dev-preflight.sh`（Go/PHPUnit/脚本校验，见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §9）。
+发版前在开发机还可跑 `bash scripts/dev-preflight.sh`（Go/PHPUnit/脚本校验，见 [DEVELOPMENT.md](DEVELOPMENT.md)）。
 
 见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §7。
 

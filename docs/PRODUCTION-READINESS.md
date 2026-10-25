@@ -1,9 +1,9 @@
 # 生产就绪检查（上线运营 / 全功能）
 
-本文档汇总 **阻塞上线** 与 **验收必做** 项，与 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 及 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) 配合使用。**生产环境仅维护 CentOS 7.9（7.x）部署路径。**
+本文档汇总 **阻塞上线** 与 **验收必做** 项，与 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 配合使用。**生产环境仅维护 CentOS 7.9（7.x）部署路径。**
 
 - **已上线升级（不重装）**：[UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（含 `scripts/patch-master-cron-ops-webhook.sh`）
-- **P0/P1/P2 全表**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)（合并基线见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §7）
+- **已知限制与未来工作**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)
 
 ## 阻塞上线（P0，本仓库已加固）
 
@@ -24,7 +24,7 @@
 2. 确认 `APP_KEY` 稳定且已备份（证书密文依赖它）。
 3. 主控仅 HTTPS 暴露；节点 `REDI_MASTER_URL` 使用 `https://`（实验环境才用 `REDI_MASTER_INSECURE=1`）。
 4. 按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 执行主控/节点脚本，并准备 `release` 包（见 `scripts/ensure-release-tarballs.sh`）。主控 `NODE_IPS` 变更后须 `deploy-master.sh` 或 `grant-nodes-from-vars.sh` 同步 MySQL/firewalld。
-5. **在开发机打 tar 或发 `v*` tag 前**：`bash scripts/dev-preflight.sh`（见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §9）。
+5. **在开发机打 tar 或发 `v*` tag 前**：`bash scripts/dev-preflight.sh`（见 [DEVELOPMENT.md](DEVELOPMENT.md)）。
 
 ## 验收命令（真机）
 
@@ -43,7 +43,7 @@ grep -E 'renew|prune|health' /etc/cron.d/redi-renew
 cd /opt/301/master && php artisan redi:health
 php artisan redi:health --json
 # JSON 含 summary（queue/cache 驱动、health/renew validating 与队列阈值）、hints（多 worker 时请 redis 缓存）、issues（非空则退出码 1）
-# issues/hints 各 code 含义见 AUDIT-CENTOS7-PRODUCTION.md §3
+# issues/hints 各 code 含义见 HEALTH-REFERENCE.md
 # DNS API 同步曾失败或 edge 未 dns_synced_at：hints 可出现 dns_api_tenants_unsynced；运维步骤见 docs/CONSOLE.md「同步失败后的检查」
 
 # 有问题时通知 Webhook（.env 配置 REDI_HEALTH_WEBHOOK_URL，POST JSON，含 text 摘要）
@@ -89,7 +89,7 @@ bash scripts/verify-redi-db-deploy-path.sh
 
 ## P1 运营（health 已含）
 
-`redi:health` 的 `issues` / `hints` 各 `code` 含义见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §3。摘要：
+`redi:health` 的 `issues` / `hints` 各 `code` 含义见 [HEALTH-REFERENCE.md](HEALTH-REFERENCE.md)。摘要：
 
 - 生产配置：`APP_DEBUG`、ACME 邮箱 / Staging、`edge_zone`（见 §3 表）
 - Cron **08:30** `redi:health --notify`：建议配置 `REDI_HEALTH_WEBHOOK_URL`（未配置且有 issues 时退出 1，由 `|| redi:ops-webhook` 兜底）

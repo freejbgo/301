@@ -1,53 +1,29 @@
-# 生产能力路线图（P0 / P1 / P2）
+# 已知限制与未来工作
 
-**说明：** **P0（阻塞上线）** 与 **运营必备 P1** 已合入 `main`（CentOS 7.9 单路径自 [#75](https://github.com/freejbgo/301/pull/75) 起；完整 PR 列表见 [AUDIT-CENTOS7-PRODUCTION.md](AUDIT-CENTOS7-PRODUCTION.md) §7）。下表 P1/P2 随 `main` 继续演进。
+当前 **`main`** 已具备 CentOS 7.9 单路径部署、边缘池 DNS、HTTP-01 证书、节点 Agent 与运营命令。上线阻塞项与验收命令见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)。
 
-## P0 — 阻塞首次商用上线（已合入 `main`，见 #75 等）
+## 已具备（摘要）
 
-| 项 | 状态 |
+| 领域 | 说明 |
+|------|------|
+| 部署 | `deploy-master.sh` / `deploy-node.sh`、`redi_admin.sql` 绿场、节点 `redi_node` + `redi_node_bump_skip` |
+| 安全 | 默认密码拦截、dcat-api 须登录、Agent HTTPS、`REDI_MIN_AGENT_VERSION` |
+| 证书与节点 | 部署行补齐、revision 分项拉取、续期/prune/health Cron + ops-webhook |
+| DNS | 模型 2 pool、六家 API 驱动、CNAME 预检 |
+| 运维 | `redi:health` / JSON / Webhook、队列与 validating 阈值、多 worker 文档 |
+| IPv6 数据面 | 可选 Pool AAAA、节点双栈监听、lagran ip6tables（见 [NETWORKING-IPv6.md](NETWORKING-IPv6.md)） |
+
+## 排期中的增强（不阻塞首单）
+
+| 项 | 说明 |
 |----|------|
-| 证书部署行补齐（register / 启用节点） | ✅ |
-| Agent 0.1.3 心跳/ack/空证书/限流 | ✅ |
-| 后台 dcat-api、默认密码、登录限速、XSS | ✅ |
-| 启用前 DNS 指向（CNAME/A 池） | ✅ |
-| CentOS 7 部署脚本与 DB 校验路径 | ✅（#72/#73 + #75；仅维护 CentOS） |
+| Laravel / PHP 大版本 | Dcat 锁 `2.2.3-beta`；长期升级计划 |
+| 更强租户隔离审计 | API/后台全表策略复核 |
+| CentOS 7 EOL | 继续使用 vault 源；长期换 OS |
 
-## P1 — 上线后日常运营（已合入 `main`，#75–#80 及后续 PR）
+## 产品约定
 
-| 项 | 状态 |
-|----|------|
-| `redi:health` / JSON / Webhook；生产下 APP_DEBUG、ACME 邮箱/staging、edge_zone | ✅ |
-| 续期 `renew` + dry-run；failed 纳入续期 | ✅ |
-| 超管/租户首页看板 | ✅ |
-| 节点证书部署列、重试失败（单节点/全局） | ✅ |
-| 域名筛选、批量/单行重新下发、CSV 导出（含 CNAME 预检列） | ✅ |
-| Cron 失败 `redi:ops-webhook` | ✅ |
-| 存量升级文档 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) | ✅ |
-| 开发机发版前 `dev-preflight.sh` + AUDIT §9 | ✅ |
-| 队列积压 / failed_jobs 健康检查 | ✅ |
-| 多机 `queue:work` + `CACHE_DRIVER=redis` 文档与自检 | ✅ `redi:health --json` 的 `hints` + summary 含 queue/cache |
-| ACME 续期全状态（validating 等）边界 | ✅ 续期跳过进行中 validating；卡住可重试；health `cert_validating_stuck` |
-| CentOS 7.9 真机验收清单自动化 | 📋 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) + CI 容器冒烟 + `scripts/verify-*-doc.sh` / `verify-*-invariants.sh`（`dev-preflight`） |
+- 正常跳转：**200 + JS**；仅 **force HTTPS** 为 301。
+- 平台内域名占坑：默认停用 + 启用前 DNS。
 
-## P2 — 架构与合规（未阻塞首单）
-
-| 项 | 状态 |
-|----|------|
-| Laravel / PHP 大版本升级 | 📋 Dcat 锁 `2.2.3-beta`，`minimum-stability` 暂须 `dev` |
-| MySQL 客户端 TLS | ✅ 节点 `REDI_DB_TLS` + DEPLOY-centos7 §9；主控 MariaDB SSL 需自配 |
-| lagran NFQUEUE 卸载/升级脚本化 | ✅ `lagran_ports.py` 与进程端口一致 + 诊断/清理 |
-| 多机 queue + redis | ✅ [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md) + health hints |
-| 更强租户隔离审计（API/后台） | 📋 `BelongsToAdminTenant` + `verify-health-tenant-invariants` + `verify-admin-api-invariants`（dcat-api 须登录） |
-| IPv4/IPv6 双栈（数据面） | ✅ V6-01–30 + V6-31 验收文档。配置里的 `0.0.0.0` 在 Linux 上已双栈接听；lagran IPv6 与 IPv4 相同。默认仍不发布 Pool AAAA。节点只允许「仅 v4」或「v4+v6」。控制面仍 IPv4。见 [IPV6-DUALSTACK-DEV.md](IPV6-DUALSTACK-DEV.md) §8、[ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7 |
-
-## 产品行为（非缺陷）
-
-- 正常跳转：**200 + JS**，不是 HTTP 301；仅 **force HTTPS** 为 301。
-- 「域名抢注」指 **平台内** 占 `original_url`，不是注册商；已用「默认停用 + 启用前 DNS」缓解。
-
-## 建议合并与升级顺序
-
-1. 跟踪 **main** → 主控/节点按 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) 升级。  
-2. 真机跑 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) 验收。  
-3. 配置 Webhook 与监控采集 `redi:health --json`。  
-4. 再排 P2 技术债（与业务节奏一起排期）。
+升级已上线环境：[UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。

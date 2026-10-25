@@ -1,6 +1,6 @@
 # 一期验收清单（F1–F8）
 
-在测试/预发环境按序执行，通过后在 `DEVELOPMENT-EDGE-POOL-HTTPS.md` §八 勾选 F 项。
+在测试/预发环境按序执行；架构背景见 [PLATFORM-ARCHITECTURE.md](PLATFORM-ARCHITECTURE.md)。
 
 ## 环境前提
 
