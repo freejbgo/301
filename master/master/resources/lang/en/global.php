@@ -1,0 +1,37 @@
+<?php
+
+return [
+    'fields' => [
+        'id'                    => 'ID',
+        'name'                  => 'Name',
+        'username'              => 'Username',
+        'email'                 => 'Email',
+        'http_path'             => 'HTTP path',
+        'password'              => 'Password',
+        'password_confirmation' => 'Confirm password',
+        'created_at'            => 'Created at',
+        'updated_at'            => 'Updated at',
+        'permissions'           => 'Permissions',
+        'slug'                  => 'Slug',
+        'user'                  => 'User',
+        'order'                 => 'Order',
+        'ip'                    => 'IP',
+        'method'                => 'Method',
+        'uri'                   => 'URI',
+        'roles'                 => 'Roles',
+        'path'                  => 'Path',
+        'input'                 => 'Input',
+        'type'                  => 'Type',
+    ],
+    'labels' => [
+        'list'     => 'List',
+        'edit'     => 'Edit',
+        'detail'   => 'Detail',
+        'create'   => 'Create',
+        'root'     => 'Root',
+        'scaffold' => 'Scaffold',
+    ],
+    'options' => [
+        //
+    ],
+];

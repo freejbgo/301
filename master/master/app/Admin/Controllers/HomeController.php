@@ -45,8 +45,19 @@ class HomeController extends Controller
                 $row->column(2, Card::make(__('redi-home.cards.queue_failed'), (string) $summary['queue_failed']));
             });
 
+            $hints = RediHealthReport::collectHints();
+            $hintsHtml = '';
+            if ($hints !== []) {
+                $hintsHtml = '<p class="text-muted mb-1 mt-3"><strong>'.e(__('redi-home.labels.hints_heading')).'</strong></p>'
+                    .'<ul class="text-muted mb-0">'.implode('', array_map(function ($hint) {
+                        $text = RediHealthReport::hintMessage($hint);
+
+                        return '<li>'.e(OpsDisplaySanitizer::field($text, '—', 300)).'</li>';
+                    }, $hints)).'</ul>';
+            }
+
             $requeueConfirm = json_encode(__('redi-home.labels.requeue_confirm'), JSON_UNESCAPED_UNICODE);
-            $content->row(function (Row $row) use ($issueHtml, $requeueConfirm) {
+            $content->row(function (Row $row) use ($issueHtml, $hintsHtml, $requeueConfirm) {
                 $requeueUrl = admin_url('ops/requeue-failed-deployments');
                 $token = csrf_token();
                 $opsHtml = $issueHtml
@@ -55,7 +66,8 @@ class HomeController extends Controller
                     .'<input type="hidden" name="_redirect" value="'.e(admin_base_path('/')).'">'
                     .'<button type="submit" class="btn btn-warning btn-sm">'.e(__('redi-home.labels.requeue_btn')).'</button>'
                     .'<span class="text-muted ml-2">'.e(__('redi-home.labels.requeue_hint')).'</span>'
-                    .'</form>';
+                    .'</form>'
+                    .$hintsHtml;
                 $row->column(12, Card::make(__('redi-home.labels.ops_card'), $opsHtml));
             });
         } elseif ($user) {

@@ -15,6 +15,11 @@ return [
         'tenant_stats_cert_active' => '证书已生效：:count',
         'tenant_stats_cert_pending' => '证书待处理（解析/签发/部署等）：:count',
         'tenant_stats_expiring' => '14 天内到期：:count',
+        'hints_heading'       => '配置建议（仅供参考，不影响健康结论）',
+    ],
+    'ops' => [
+        'requeue_empty'   => '没有 failed 部署记录需要重试',
+        'requeue_success' => '已重新排队 :count 条 failed 部署',
     ],
     'cards' => [
         'enabled_nodes'    => '启用节点',

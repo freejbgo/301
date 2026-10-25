@@ -23,4 +23,10 @@ return [
         'cert_domain_name_drift' => 'Cert #:id domain_name mismatch (could not auto-align): recorded :recorded, expected :canonical',
         'cert_validating_stuck_more' => ' …and :total more',
     ],
+    'hints' => [
+        'queue_cache_file' => 'QUEUE_CONNECTION is not sync and CACHE_DRIVER=file — OK for one queue:work on one host; use redis cache and REDIS_* for multiple workers or hosts (IssueDomainCertificateJob WithoutOverlapping needs a shared lock).',
+        'queue_database_single_host' => 'Queue driver is database — keep systemd redi-queue running; switch cache to redis before scaling workers.',
+        'agent_version_gate_off' => 'REDI_MIN_AGENT_VERSION is empty — agent version gate is off; set it back to 0.1.3 after upgrading nodes.',
+        'dns_api_tenants_unsynced' => 'DNS API mode: :count tenant edge(s) missing dns_synced_at; if sync failed earlier, provider DNS may be partial — fix errors in the admin console and run pool / tenant CNAME sync again.',
+    ],
 ];

@@ -15,6 +15,11 @@ return [
         'tenant_stats_cert_active' => 'Active certificates: :count',
         'tenant_stats_cert_pending' => 'Certificates needing attention: :count',
         'tenant_stats_expiring' => 'Expiring within 14 days: :count',
+        'hints_heading'       => 'Configuration hints (informational)',
+    ],
+    'ops' => [
+        'requeue_empty'   => 'No failed deployments to requeue',
+        'requeue_success' => 'Requeued :count failed deployment(s)',
     ],
     'cards' => [
         'enabled_nodes'    => 'Enabled nodes',
