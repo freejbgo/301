@@ -1,6 +1,6 @@
 # 301 跳转系统 — 多语言（简 / 繁 / 英）开发报告
 
-**版本**：2026-10-25（阶段 11 收尾；阶段 12 繁体键补齐）  
+**版本**：2026-10-25（阶段 14：CI i18n 门禁）  
 **范围**：主控 `master/master/` 管理后台**可见操作界面**（Laravel + Dcat Admin）；节点与运维文档不在本期。  
 **产品目标（已定）**：让使用后台的**超级管理员与租户账号**在 **简体中文 / 繁体中文 / English** 下方便操作；不要求节点 API、CLI、Webhook、库内历史 `last_error` 原文多语。  
 **结论摘要**：自研后台可见界面已接入 `redi-*` 语言包与 Dcat `menu`/`global`/`extension`（英）；顶栏与**登录页**可切换简/繁/英，`admin_users.locale` 持久化。未保存品牌时默认标题随语言包变化；已保存的「系统外观」JSON 仍为单语。**未做**：Service/CLI 异常；`last_error` 正文仍为库内原文（仅标签三语）。
@@ -21,7 +21,8 @@
 | 10 | **已做** | 登录页内联语言切换、`zh_CN/menu.php` 业务菜单键对齐 |
 | 11 | **已做** | `redi-branding` 默认品牌三语、`cert_last_error` 标签、`SetAdminLocale` 先于 `admin` 中间件 |
 | 12 | **已做** | 补齐 `zh_TW` `cert_last_error`、文档进度表与 §快照 |
-| 13 | **已做（PR 待合并）** | `RediLangParityTest` 覆盖 `menu`/`global`/`extension`；`global.php` 键对齐 |
+| 13 | **已做** | `RediLangParityTest` 覆盖 `menu`/`global`/`extension`；`global.php` 键对齐 |
+| 14 | **已做（PR 待合并）** | `scripts/verify-admin-i18n-invariants.sh` 接入 CI / dev-preflight |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；已存品牌 JSON / Service 层仍单语 |
 
 ### 阶段 10 后快照（相对 §2 历史审计）
@@ -298,7 +299,7 @@ Laravel 自定义属性名与规则消息可放在 `redi.php` 的 `validation` �
 - [ ] `docs/CONSOLE.md` 所列菜单页面在 **en** 下无大块中文（允许品牌自定义名称、用户填写的域名/URL）。
 - [ ] 域名列表、证书状态、DNS 表单、节点管理、批量导入域名 **help 文本** 均有三语键。
 - [ ] `php artisan redi:lang-check`（或同等脚本）通过。
-- [ ] 新增文案禁止直接写汉字/英文裸字符串于 `app/Admin`（CI `rg` 门禁可选）。
+- [x] 新增文案禁止 `app/Admin` 字符串字面量含汉字（`scripts/verify-admin-i18n-invariants.sh`）。
 
 ---
 
@@ -306,10 +307,10 @@ Laravel 自定义属性名与规则消息可放在 `redi.php` 的 `validation` �
 
 | 问题 | 答案 |
 |------|------|
-| 后台可见界面是否三语？ | **是（阶段 13 止）**。`app/Admin` 用户可见文案已走 `redi-*` / Dcat 语言包；`tests/Unit/RediLangParityTest.php` 约束键对齐。 |
+| 后台可见界面是否三语？ | **是（阶段 14 止）**。`redi-*` + Dcat 语言包；`RediLangParityTest` + `verify-admin-i18n-invariants.sh` 防回退。 |
 | 部署注意 | 执行 `php artisan migrate`（`admin_users.locale`）；顶栏或登录页切换语言。 |
 | 仍未三语 | 已保存的系统外观 JSON、Service/CLI/节点 API、`last_error` 正文、库内历史数据。 |
-| 后续可选 | 多语品牌 JSON、Admin CI 禁止新增硬编码中文（`rg` 门禁）。 |
+| 后续可选 | 多语品牌 JSON（系统外观 per-locale 字段）。 |
 
 ---
 
