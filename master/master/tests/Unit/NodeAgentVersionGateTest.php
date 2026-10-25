@@ -19,9 +19,14 @@ class NodeAgentVersionGateTest extends TestCase
     {
         config(['redi.min_agent_version' => '0.1.2']);
 
-        $this->assertNotNull(RediAgentVersionGate::rejectResponse(null));
+        $missing = RediAgentVersionGate::rejectResponse(null);
+        $this->assertNotNull($missing);
         $this->assertNotNull(RediAgentVersionGate::rejectResponse(''));
-        $this->assertSame(426, RediAgentVersionGate::rejectResponse(null)->getStatusCode());
+        $this->assertSame(426, $missing->getStatusCode());
+        $this->assertSame(
+            'Node agent must send a version field; upgrade redi-multi and retry',
+            $missing->getData(true)['message']
+        );
     }
 
     public function test_sanitize_returns_null_for_control_chars(): void
@@ -54,6 +59,10 @@ class NodeAgentVersionGateTest extends TestCase
         $response = RediAgentVersionGate::rejectResponse('0.1.0');
         $this->assertNotNull($response);
         $this->assertSame(426, $response->getStatusCode());
+        $this->assertSame(
+            'Node agent version is too old; upgrade redi-multi and retry',
+            $response->getData(true)['message']
+        );
         $this->assertNull(RediAgentVersionGate::rejectResponse('0.1.2'));
         $this->assertNull(RediAgentVersionGate::rejectResponse('0.2.0'));
     }

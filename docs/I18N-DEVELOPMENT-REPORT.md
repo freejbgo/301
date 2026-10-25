@@ -32,7 +32,8 @@
 | 21 | **已做** | `RediErrorMessage` + `en/redi-errors.php`；菜单 title slug 迁移；证书/批量/DNS/CLI 英文化 |
 | 22 | **已做** | `redi:health` 等 Artisan 输出/webhook 英文；补齐 DNS delete_stale `redi-errors` |
 | 23 | **已做** | `redi:health` issue/hint 在 CLI/JSON/webhook 固定 `en`；补齐 `ops-webhook` / renew 选项英文 |
-| — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维消息以英文 canonical 为主 |
+| 24 | **已做** | 节点 API `RediAgentVersionGate` 426 响应走 `redi-errors.node_api`（英文） |
+| — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维/节点 API 消息以英文 canonical 为主 |
 
 ### 运维速览
 
