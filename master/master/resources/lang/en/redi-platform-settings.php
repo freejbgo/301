@@ -17,7 +17,7 @@ return [
         'favicon'     => 'Favicon',
     ],
     'help' => [
-        'system_name' => 'Shown next to the sidebar logo',
+        'system_name' => 'Shown next to the sidebar logo (one string for all UI languages—type English here for English deployments)',
         'page_title'  => 'Browser tab title; defaults to system name when empty',
         'login_title' => 'Login page heading; defaults to system name when empty',
         'logo'        => 'PNG recommended, ~35px tall',

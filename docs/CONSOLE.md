@@ -4,6 +4,13 @@
 
 初始账号 `admin` / `Redi301@Install2026`。仍为默认密码时，登录后会 **强制进入改密页**（`Admin → 用户设置` / `auth/setting`），改完后才能使用其它菜单。内网演示可在主控 `.env` 设 `REDI_BLOCK_DEFAULT_ADMIN_PASSWORD=false`（见 [../DEPLOY.md](../DEPLOY.md)）。
 
+## 界面语言（简体中文 / 繁體中文 / English）
+
+- **切换**：登录页表单下方有语言选项；登录后侧栏右上角 **地球图标** 可随时切换。
+- **记忆**：选择会写入浏览器 session；**登录后**会写入管理员账号的 `locale` 字段，下次登录自动沿用（需已执行 `php artisan migrate`，见升级文档）。
+- **系统外观**：在 **站点配置 → 系统外观** 保存的名称/标题是 **全平台一套字符串**（不随语言分字段）。若从未保存过系统外观，默认侧栏/标题会随当前界面语言显示（如 English → “301 Redirect”）。英文生产环境建议在系统外观中 **手动填写英文** 品牌名。
+- **仍可能显示中文的界面元素**：证书列表里历史 `last_error` 正文（库内原文）、部分运维 CLI 输出；详见 [I18N-DEVELOPMENT-REPORT.md](I18N-DEVELOPMENT-REPORT.md)。
+
 ## 菜单
 
 | 菜单 | 谁能用 | 做什么 |
