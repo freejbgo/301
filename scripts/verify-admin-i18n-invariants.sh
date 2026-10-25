@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# 后台可见界面 i18n 约定（防重构回退硬编码中文）。
+# 后台可见界面 i18n 约定（防重构回退硬编码中文）：Admin 控制器、模型校验、config 回退。
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ADMIN_APP="${REPO_ROOT}/master/master/app/Admin"
+ADMIN_MODELS="${REPO_ROOT}/master/master/app/Models"
 ADMIN_CFG="${REPO_ROOT}/master/master/config/admin.php"
 LOCALE_MW="${REPO_ROOT}/master/master/app/Http/Middleware/SetAdminLocale.php"
 PARITY_TEST="${REPO_ROOT}/master/master/tests/Unit/RediLangParityTest.php"
@@ -46,6 +47,13 @@ done
 
 if rg -n "('|\")([^'\"\\]|\\.)*[\x{4e00}-\x{9fff}]" "$ADMIN_APP" -g '*.php' 2>/dev/null; then
   fail 'app/Admin must not contain Han characters inside PHP string literals (use language files)'
+fi
+
+if [[ ! -d "$ADMIN_MODELS" ]]; then
+  fail "missing $ADMIN_MODELS"
+fi
+if rg -n "('|\")([^'\"\\]|\\.)*[\x{4e00}-\x{9fff}]" "$ADMIN_MODELS" -g '*.php' 2>/dev/null; then
+  fail 'app/Models must not contain Han in string literals (use redi-admin-* / __() for validation messages)'
 fi
 
 if rg -n "('|\")([^'\"\\]|\\.)*[\x{4e00}-\x{9fff}]" "$ADMIN_CFG" 2>/dev/null; then
