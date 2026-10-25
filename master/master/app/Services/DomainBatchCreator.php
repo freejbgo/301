@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Support\OpsDisplaySanitizer;
-use App\Support\RediErrorMessage;
 use App\Models\RediAdminDomain;
 use App\Models\RediAdminGroup;
 use Illuminate\Database\QueryException;
@@ -31,7 +30,7 @@ class DomainBatchCreator
         ];
 
         if (! in_array($status, [1, 2], true)) {
-            $result['errors'][] = RediErrorMessage::get('batch.status_invalid');
+            $result['errors'][] = __('redi-batch-domains.errors.status_invalid');
 
             return $result;
         }
@@ -42,7 +41,7 @@ class DomainBatchCreator
             ->exists();
 
         if (! $groupOk) {
-            $result['errors'][] = RediErrorMessage::get('batch.group_invalid');
+            $result['errors'][] = __('redi-batch-domains.errors.group_invalid');
 
             return $result;
         }
@@ -51,12 +50,12 @@ class DomainBatchCreator
 
         $dataLineCount = $this->countDataLines($lines);
         if ($dataLineCount === 0) {
-            $result['errors'][] = RediErrorMessage::get('batch.no_lines');
+            $result['errors'][] = __('redi-batch-domains.errors.no_lines');
 
             return $result;
         }
         if ($dataLineCount > self::MAX_LINES_PER_BATCH) {
-            $result['errors'][] = RediErrorMessage::get('batch.too_many_lines', [
+            $result['errors'][] = __('redi-batch-domains.errors.too_many_lines', [
                 'max' => self::MAX_LINES_PER_BATCH,
                 'count' => $dataLineCount,
             ]);
@@ -90,10 +89,10 @@ class DomainBatchCreator
             if ($originalUrl === '') {
                 $attempt = DomainRecordNormalizer::normalizeOriginalUrl($rawOriginal);
                 if ($attempt === '') {
-                    $result['errors'][] = RediErrorMessage::get('batch.row_original_empty', ['row' => $rowIndex]);
+                    $result['errors'][] = __('redi-batch-domains.errors.row_original_empty', ['row' => $rowIndex]);
                 } else {
                     $label = OpsDisplaySanitizer::field($attempt, '—', 253);
-                    $result['errors'][] = RediErrorMessage::get('batch.row_original_invalid', [
+                    $result['errors'][] = __('redi-batch-domains.errors.row_original_invalid', [
                         'row' => $rowIndex,
                         'label' => $label,
                     ]);
@@ -103,7 +102,7 @@ class DomainBatchCreator
 
             if ($skipUrl === '') {
                 $label = OpsDisplaySanitizer::field($originalUrl, '—', 253);
-                $result['errors'][] = RediErrorMessage::get('batch.row_skip_missing', [
+                $result['errors'][] = __('redi-batch-domains.errors.row_skip_missing', [
                     'row' => $rowIndex,
                     'label' => $label,
                 ]);
@@ -121,7 +120,7 @@ class DomainBatchCreator
                 $edge = TenantEdgeService::cnameTargetForAdmin($adminId);
                 $label = OpsDisplaySanitizer::field($originalUrl, '—', 253);
                 $edgeLabel = OpsDisplaySanitizer::field($edge, '—', 253);
-                $result['errors'][] = RediErrorMessage::get('batch.row_dns_required', [
+                $result['errors'][] = __('redi-batch-domains.errors.row_dns_required', [
                     'row' => $rowIndex,
                     'label' => $label,
                     'edge' => $edgeLabel,
@@ -147,7 +146,7 @@ class DomainBatchCreator
                     $result['skipped']++;
                 } else {
                     $label = OpsDisplaySanitizer::field($originalUrl, '—', 253);
-                    $result['errors'][] = RediErrorMessage::get('batch.row_write_failed', [
+                    $result['errors'][] = __('redi-batch-domains.errors.row_write_failed', [
                         'row' => $rowIndex,
                         'label' => $label,
                     ]);

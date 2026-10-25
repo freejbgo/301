@@ -23,4 +23,15 @@ return [
         'summary'           => '新增 :imported 條，跳過重複 :skipped 條。',
         'partial_errors'    => "部分行未寫入：\n:errors",
     ],
+    'errors' => [
+        'status_invalid'       => '狀態只能是啟用或停用',
+        'group_invalid'        => '分組無效或不屬於本帳號',
+        'no_lines'             => '請至少填寫一行域名',
+        'too_many_lines'       => '單次最多 :max 條（當前 :count 條），請分批匯入。',
+        'row_original_empty'   => '第 :row 行：原始域名不能為空或含路徑',
+        'row_original_invalid' => '第 :row 行（:label）：原始域名格式無效',
+        'row_skip_missing'     => '第 :row 行（:label）：缺少跳轉地址；請填統一跳轉或在本行寫「域名,地址」',
+        'row_dns_required'     => '第 :row 行（:label）：啟用前須 CNAME 到 :edge 或 A 到節點公網 IP',
+        'row_write_failed'     => '第 :row 行（:label）：寫入失敗',
+    ],
 ];

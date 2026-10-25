@@ -23,4 +23,15 @@ return [
         'summary'           => 'Added :imported, skipped duplicates :skipped.',
         'partial_errors'    => "Some lines were not saved:\n:errors",
     ],
+    'errors' => [
+        'status_invalid'       => 'Status must be enabled or disabled',
+        'group_invalid'        => 'Invalid group or group does not belong to this account',
+        'no_lines'             => 'Enter at least one domain line',
+        'too_many_lines'       => 'At most :max domains per batch (submitted :count); split into smaller batches.',
+        'row_original_empty'   => 'Row :row: origin hostname cannot be empty or contain a path',
+        'row_original_invalid' => 'Row :row (:label): invalid origin hostname',
+        'row_skip_missing'     => 'Row :row (:label): missing redirect URL; set default redirect or use "host,url" on the line',
+        'row_dns_required'     => 'Row :row (:label): enable requires CNAME to :edge or A to a node public IP',
+        'row_write_failed'       => 'Row :row (:label): write failed',
+    ],
 ];

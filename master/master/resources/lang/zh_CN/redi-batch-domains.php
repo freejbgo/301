@@ -23,4 +23,15 @@ return [
         'summary'           => '新增 :imported 条，跳过重复 :skipped 条。',
         'partial_errors'    => "部分行未写入：\n:errors",
     ],
+    'errors' => [
+        'status_invalid'       => '状态只能是启用或停用',
+        'group_invalid'        => '分组无效或不属于本账号',
+        'no_lines'             => '请至少填写一行域名',
+        'too_many_lines'       => '单次最多 :max 条（当前 :count 条），请分批导入。',
+        'row_original_empty'   => '第 :row 行：原始域名不能为空或含路径',
+        'row_original_invalid' => '第 :row 行（:label）：原始域名格式无效',
+        'row_skip_missing'     => '第 :row 行（:label）：缺少跳转地址；请填统一跳转或在本行写「域名,地址」',
+        'row_dns_required'     => '第 :row 行（:label）：启用前须 CNAME 到 :edge 或 A 到节点公网 IP',
+        'row_write_failed'     => '第 :row 行（:label）：写入失败',
+    ],
 ];
