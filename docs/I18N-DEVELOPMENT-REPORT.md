@@ -38,13 +38,14 @@
 | 27 | **已做** | `config/admin.php` 英文文件回退（与 `en/redi-branding` 一致）；门禁禁止 config 内硬编码中文 |
 | 28 | **已做** | 开发报告 / CONSOLE 与阶段 27 对齐；声明 Admin + ops 范围收口 |
 | 29 | **已做** | `verify-admin-i18n-invariants.sh` 扩展校验 `app/Models` 字符串字面量无汉字 |
+| 30 | **已做** | `verify-ops-english-invariants.sh` 门禁；接入 `dev-preflight` / CI |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维/节点 API 新消息英文 canonical |
 
 ### 运维速览
 
 1. 升级主控后执行 `php artisan migrate`（`admin_users.locale`）。
 2. 登录页或顶栏切换语言；在 **系统外观** 各语言选项卡填写对应品牌名（旧单语数据仍有效）。
-3. 开发防回退：`bash scripts/verify-admin-i18n-invariants.sh`、`tests/Unit/RediLangParityTest.php`、`tests/Unit/AdminMenuTitleTest.php`、`tests/Unit/PlatformBrandingLocalesTest.php`、`tests/Unit/DomainListCsvExporterTest.php`（CI 已跑）。
+3. 开发防回退：`bash scripts/verify-admin-i18n-invariants.sh`、`bash scripts/verify-ops-english-invariants.sh`、`tests/Unit/RediLangParityTest.php`、`tests/Unit/AdminMenuTitleTest.php`、`tests/Unit/PlatformBrandingLocalesTest.php`、`tests/Unit/DomainListCsvExporterTest.php`（CI 已跑）。
 
 ### 阶段 10 后快照（相对 §2 历史审计）
 
