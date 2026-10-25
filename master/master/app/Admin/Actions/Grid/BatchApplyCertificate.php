@@ -9,15 +9,18 @@ use Illuminate\Http\Request;
 
 class BatchApplyCertificate extends BatchAction
 {
-    protected $title = '批量申请证书';
+    public function title()
+    {
+        return __('redi-admin-domain.actions.batch_apply.title');
+    }
 
     public function handle(Request $request)
     {
         $count = DomainCertificateQueue::dispatchOwned((array) $this->getKey(), (int) Admin::user()->id);
         if ($count === 0) {
-            return $this->response()->error('没有可申请的域名');
+            return $this->response()->error(__('redi-admin-domain.actions.batch_apply.error'));
         }
 
-        return $this->response()->success("已将 {$count} 个域名加入证书队列（已错开排队）")->refresh();
+        return $this->response()->success(__('redi-admin-domain.actions.batch_apply.success', ['count' => $count]))->refresh();
     }
 }

@@ -74,7 +74,7 @@ class BatchCreateDomains extends Form
 
         $this->select('group_id', __('redi-batch-domains.fields.group_id'))->options($groupList)->required();
         $this->radio('status', __('redi-batch-domains.fields.status'))
-            ->options(__('redi-batch-domains.options.status'))
+            ->options(trans('redi-batch-domains.options.status'))
             ->default(2)
             ->help(__('redi-batch-domains.help.status'));
         $this->text('default_skip_url', __('redi-batch-domains.fields.default_skip_url'))

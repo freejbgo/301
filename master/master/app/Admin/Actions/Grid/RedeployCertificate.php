@@ -12,32 +12,35 @@ use Illuminate\Http\Request;
 
 class RedeployCertificate extends RowAction
 {
-    protected $title = '重新下发证书';
+    public function title()
+    {
+        return __('redi-admin-domain.actions.redeploy.title');
+    }
 
     public function confirm()
     {
-        return ['将向全部启用节点重新排队该域名的证书（pending）。继续？'];
+        return [__('redi-admin-domain.actions.redeploy.confirm')];
     }
 
     public function handle(Request $request, CertificateDeployService $deployService)
     {
         $domain = RediAdminDomain::query()->find($this->getKey());
         if (! $domain) {
-            return $this->response()->error('域名不存在');
+            return $this->response()->error(__('redi-admin-domain.actions.redeploy.error_not_found'));
         }
 
         if (! AdminTenantContext::isPlatformAdministrator()
             && (int) $domain->admin_id !== AdminTenantContext::sessionAdminId()) {
-            return $this->response()->error('无权操作该域名');
+            return $this->response()->error(__('redi-admin-domain.actions.redeploy.error_forbidden'));
         }
 
         if ((int) $domain->status !== 1) {
-            return $this->response()->error('域名未启用，无法重新下发证书');
+            return $this->response()->error(__('redi-admin-domain.actions.redeploy.error_disabled'));
         }
 
         $cert = RediDomainCert::query()->where('domain_id', $domain->id)->first();
         if (! $cert) {
-            return $this->response()->error('尚未申请证书');
+            return $this->response()->error(__('redi-admin-domain.actions.redeploy.error_no_cert'));
         }
 
         if (! in_array($cert->status, [
@@ -46,18 +49,18 @@ class RedeployCertificate extends RowAction
             RediDomainCert::STATUS_ACTIVE,
             RediDomainCert::STATUS_FAILED,
         ], true)) {
-            return $this->response()->error('当前证书状态不支持重新下发：'.$cert->statusLabel());
+            return $this->response()->error(__('redi-admin-domain.actions.redeploy.error_bad_status').$cert->statusLabel());
         }
 
         $cert->loadMissing('domain');
         if (! CertificateDeployService::certIsEligibleForDeployQueue($cert)) {
-            return $this->response()->error('证书不可下发（域名不一致、材料不可用或域名未启用）');
+            return $this->response()->error(__('redi-admin-domain.actions.redeploy.error_not_deployable'));
         }
 
         if (! $deployService->queueDeploy($cert)) {
-            return $this->response()->error((string) ($cert->fresh()->last_error ?: '无法排队证书部署'));
+            return $this->response()->error((string) ($cert->fresh()->last_error ?: __('redi-admin-domain.actions.redeploy.error_queue')));
         }
 
-        return $this->response()->success('已向全部启用节点重新排队证书部署')->refresh();
+        return $this->response()->success(__('redi-admin-domain.actions.redeploy.success'))->refresh();
     }
 }

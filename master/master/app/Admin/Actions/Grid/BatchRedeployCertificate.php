@@ -9,11 +9,14 @@ use Illuminate\Http\Request;
 
 class BatchRedeployCertificate extends BatchAction
 {
-    protected $title = '批量重新下发证书';
+    public function title()
+    {
+        return __('redi-admin-domain.actions.batch_redeploy.title');
+    }
 
     public function confirm()
     {
-        return ['仅对已签发且可解密的证书向全部启用节点重新排队部署。继续？'];
+        return [__('redi-admin-domain.actions.batch_redeploy.confirm')];
     }
 
     public function handle(Request $request)
@@ -25,15 +28,15 @@ class BatchRedeployCertificate extends BatchAction
 
         if ($result['queued'] === 0) {
             $msg = $result['skipped'] > 0
-                ? '所选域名均无法重新下发（无证书、未签发或密文不可读）'
-                : '没有可操作的域名';
+                ? __('redi-admin-domain.actions.batch_redeploy.error_all_skip')
+                : __('redi-admin-domain.actions.batch_redeploy.error_none');
 
             return $this->response()->error($msg);
         }
 
-        $summary = "已重新下发 {$result['queued']} 个域名的证书";
+        $summary = __('redi-admin-domain.actions.batch_redeploy.success', ['queued' => $result['queued']]);
         if ($result['skipped'] > 0) {
-            $summary .= "，跳过 {$result['skipped']} 个";
+            $summary .= __('redi-admin-domain.actions.batch_redeploy.success_skipped', ['skipped' => $result['skipped']]);
         }
 
         return $this->response()->success($summary)->refresh();
