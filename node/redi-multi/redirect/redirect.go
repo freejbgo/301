@@ -48,6 +48,15 @@ func Process(conn net.Conn, tls bool) {
 		conn.Close()
 		return
 	}
+	processConn(conn, tls)
+}
+
+// ProcessWithAcquiredSlot 在调用方已 TryAcquireConnection 成功后使用。
+func ProcessWithAcquiredSlot(conn net.Conn, tls bool) {
+	processConn(conn, tls)
+}
+
+func processConn(conn net.Conn, tls bool) {
 	defer releaseConnection()
 	defer conn.Close()
 	_ = conn.SetReadDeadline(time.Now().Add(15 * time.Second))

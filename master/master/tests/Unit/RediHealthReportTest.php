@@ -555,4 +555,51 @@ class RediHealthReportTest extends TestCase
         $this->assertContains('dns_zone_id_missing', $codes);
         $this->assertNotContains('dns_api_credentials_missing', $codes);
     }
+
+    public function test_collect_hints_dns_api_tenants_unsynced(): void
+    {
+        Schema::create('redi_tenant_edge', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('admin_id');
+            $table->string('token')->nullable();
+            $table->string('edge_fqdn')->nullable();
+            $table->timestamp('dns_synced_at')->nullable();
+            $table->timestamps();
+        });
+        Schema::table('redi_admin_domain', function (Blueprint $table) {
+            $table->unsignedInteger('admin_id')->default(1);
+        });
+
+        $platform = new \App\Models\RediPlatformDns([
+            'id' => 1,
+            'edge_zone' => 'example.com',
+            'pool_host' => 'pool',
+            'dns_mode' => 'api',
+            'dns_driver' => 'cloudflare',
+            'dns_zone_id' => 'zone123',
+            'acme_staging' => false,
+            'acme_contact_email' => 'ops@example.com',
+        ]);
+        $platform->setApiCredentialsArray(['api_key' => 'token', 'api_secret' => '']);
+        $platform->save();
+
+        \DB::table('redi_tenant_edge')->insert([
+            'admin_id' => 9,
+            'token' => 'tok',
+            'edge_fqdn' => 'tok.example.com',
+            'dns_synced_at' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_admin_domain')->insert([
+            'admin_id' => 9,
+            'original_url' => 'cust.example.com',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $codes = array_column(RediHealthReport::collectHints(), 'code');
+        $this->assertContains('dns_api_tenants_unsynced', $codes);
+    }
 }

@@ -6,6 +6,7 @@ use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use App\Models\RediPlatformDns;
+use App\Models\RediTenantEdge;
 use App\Services\Dns\DnsProviderFactory;
 use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
@@ -290,11 +291,54 @@ class RediHealthReport
             ];
         }
 
+        foreach (self::dnsApiTenantSyncHints() as $hint) {
+            $hints[] = $hint;
+        }
+
         foreach ($hints as $i => $hint) {
             $hints[$i]['message'] = OpsDisplaySanitizer::stripControlChars((string) ($hint['message'] ?? ''));
         }
 
         return $hints;
+    }
+
+    /**
+     * @return array<int, array{code: string, message: string}>
+     */
+    protected static function dnsApiTenantSyncHints(): array
+    {
+        if (! Schema::hasTable('redi_tenant_edge') || ! Schema::hasTable('redi_platform_dns') || ! Schema::hasTable('redi_admin_domain')) {
+            return [];
+        }
+        if (! Schema::hasColumn('redi_admin_domain', 'admin_id')) {
+            return [];
+        }
+
+        $platform = RediPlatformDns::query()->find(1);
+        if (! $platform || ! $platform->isDnsApiMode()) {
+            return [];
+        }
+
+        $count = (int) RediTenantEdge::query()
+            ->whereNull('dns_synced_at')
+            ->whereExists(function ($query) {
+                $query->selectRaw('1')
+                    ->from('redi_admin_domain as d')
+                    ->whereColumn('d.admin_id', 'redi_tenant_edge.admin_id');
+            })
+            ->count();
+
+        if ($count < 1) {
+            return [];
+        }
+
+        return [[
+            'code' => 'dns_api_tenants_unsynced',
+            'message' => sprintf(
+                'DNS API 模式下有 %d 个租户 edge 尚未记录 dns_synced_at；若曾同步失败，厂商 DNS 可能已部分更新，请按后台报错修正后重试「同步 Pool / 租户 CNAME」（见 docs/CONSOLE.md §2）',
+                $count
+            ),
+        ]];
     }
 
     /**

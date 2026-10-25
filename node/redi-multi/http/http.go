@@ -38,7 +38,10 @@ func Start() {
 			logrus.Debugf("[http] accept fail, err: %v\n", err)
 			continue
 		}
-		// 对每个新连接创建一个协程进行收发数据
-		go redirect.Process(conn, false)
+		if !redirect.TryAcquireConnection() {
+			conn.Close()
+			continue
+		}
+		go redirect.ProcessWithAcquiredSlot(conn, false)
 	}
 }

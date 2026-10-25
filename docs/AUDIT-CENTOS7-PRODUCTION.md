@@ -120,6 +120,7 @@
 | `queue_cache_file` | 队列非 sync 但 `CACHE_DRIVER=file` |
 | `queue_database_single_host` | 队列用 database 且与 DB 同机（多 worker 建议 Redis） |
 | `agent_version_gate_off` | 生产下 `REDI_MIN_AGENT_VERSION` 为空 |
+| `dns_api_tenants_unsynced` | DNS API 模式下仍有租户 edge 未 `dns_synced_at`（可能需重试同步；见 CONSOLE §2） |
 
 采集示例：`php artisan redi:health --json | jq '.summary.health_queue_pending_threshold,.summary.health_queue_stale_hours,.summary.health_validating_stuck_hours,.summary.health_renew_validating_stuck_hours,.issues,.hints'`
 
@@ -153,6 +154,8 @@
 **2026-10-25 边角修复（#362）：** `lagran` `setIptable` 以 IPv4 规则是否装全为准返回值；`mysqlconnect.Init` 与 `Reconnect` 共用 `replacePool`；`verify-lagran-iptables-invariants` / `verify-node-api-js` 加强；部署文档补节点库密码说明。
 
 **2026-10-25 边角修复（#363）：** `masteragent` 主控故障时轮询指数退避（5s→60s）；426 用最大间隔并强化日志；空证书列表默认连续 3 次才清空内存（`REDI_AGENT_EMPTY_CERT_CLEAR_AFTER`）。
+
+**2026-10-25 边角修复（#364）：** 80/443 accept 前预占连接槽；`masteragent` 相同错误日志 1 分钟节流；`redi:health` hints 增加 `dns_api_tenants_unsynced`。
 
 **2026-10-20 按模块深度扫（#360 已合并）：** 全库门禁 442/949 + 25×`verify-*`；修复 `release.yml` `master-phpunit` 与 CI 同跑 artisan/ACME 门禁；`verify-redi-artisan-cron` 含 `redi:normalize-domain-hosts`；`verify-admin-api` 含 `PlatformSettings` 超管约束。剩余：真机 ACME/HTTP-01、P2 租户全表隔离、intl DNS mock 单测。
 
