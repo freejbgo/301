@@ -162,14 +162,9 @@ class RediDomainCert extends Model
 
     public function statusLabel(): string
     {
-        return [
-            self::STATUS_NONE => '未申请',
-            self::STATUS_PENDING_DNS => '待解析',
-            self::STATUS_VALIDATING => '验证中',
-            self::STATUS_ISSUED => '已签发',
-            self::STATUS_DEPLOYING => '部署中',
-            self::STATUS_ACTIVE => '已生效',
-            self::STATUS_FAILED => '失败',
-        ][$this->status] ?? $this->status;
+        $key = 'redi-admin-domain.options.cert_status.'.$this->status;
+        $label = __($key);
+
+        return $label !== $key ? $label : (string) $this->status;
     }
 }
