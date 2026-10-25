@@ -41,4 +41,8 @@ grep -qF 'docs/DEVELOPMENT.md' "$REPO_ROOT/README.md" || fail 'README must link 
 grep -qF 'PLATFORM-ARCHITECTURE.md' "$REPO_ROOT/docs/ACCEPTANCE-EDGE-POOL.md" \
   || fail 'ACCEPTANCE-EDGE-POOL must link PLATFORM-ARCHITECTURE'
 
+if grep -qE 'V6-[0-9]{2}|## 3\. 陷阱' "$REPO_ROOT/docs/NETWORKING-IPv6.md"; then
+  fail 'NETWORKING-IPv6.md should stay operator-focused (no V6-xx dev ledger)'
+fi
+
 echo "verify-product-docs: OK"

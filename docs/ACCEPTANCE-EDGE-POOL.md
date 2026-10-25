@@ -1,4 +1,4 @@
-# 一期验收清单（F1–F8）
+# 边缘池业务验收（F1–F8）
 
 在测试/预发环境按序执行；架构背景见 [PLATFORM-ARCHITECTURE.md](PLATFORM-ARCHITECTURE.md)。
 
