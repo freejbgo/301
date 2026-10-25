@@ -65,6 +65,19 @@ class DnspodDnsProviderUpsertTest extends TestCase
         $this->assertSame('2001:db8::1', $params['value']);
     }
 
+    public function test_rejects_empty_configured_record_line(): void
+    {
+        config(['redi.dnspod_cn_record_line' => '']);
+
+        $platform = new RediPlatformDns();
+        $platform->setApiCredentialsArray(['api_key' => 'id', 'api_secret' => 'token']);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('DNSPod China record line is not configured');
+
+        new DnspodCnDnsProvider($platform);
+    }
+
     /**
      * @param  array<int, array<string, mixed>>  $responses
      */

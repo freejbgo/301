@@ -30,4 +30,9 @@ done
 
 grep -q 'SupportsPoolAAAA' "${DNS}/CloudflareDnsProvider.php" || fail "Cloudflare must support pool AAAA"
 
+redi_cfg="${REPO_ROOT}/master/master/config/redi.php"
+grep -q 'dnspod_cn_record_line' "$redi_cfg" || fail "redi.php must define dnspod_cn_record_line"
+grep -q "config('redi.dnspod_cn_record_line'" "${DNS}/DnspodDnsProvider.php" \
+  || fail "DnspodDnsProvider must read record line from config (no Han literal in Services)"
+
 echo "verify-dns-providers-invariants: OK"
