@@ -4,13 +4,14 @@ namespace App\Console\Commands;
 
 use App\Models\RediAdminDomain;
 use App\Services\DomainRecordNormalizer;
+use App\Support\RediErrorMessage;
 use Illuminate\Console\Command;
 
 class NormalizeDomainHosts extends Command
 {
-    protected $signature = 'redi:normalize-domain-hosts {--dry-run : 只报告不写入}';
+    protected $signature = 'redi:normalize-domain-hosts {--dry-run : Report only; do not write}';
 
-    protected $description = '将 original_url 规范为 punycode ASCII，并修正可规范化的 skip_url';
+    protected $description = 'Normalize original_url to punycode ASCII and fix skip_url when possible';
 
     public function handle(): int
     {
@@ -21,7 +22,7 @@ class NormalizeDomainHosts extends Command
             foreach ($rows as $domain) {
                 $canonical = DomainRecordNormalizer::originalUrlIfValid($domain->original_url);
                 if ($canonical === '') {
-                    $this->warn("跳过 id={$domain->id} 非法 original_url");
+                    $this->warn(RediErrorMessage::get('cli.normalize_skip_invalid', ['id' => $domain->id]));
                     continue;
                 }
                 $skip = DomainRecordNormalizer::normalizeSkipUrl($domain->skip_url);
@@ -31,7 +32,7 @@ class NormalizeDomainHosts extends Command
                     continue;
                 }
                 if ($skip === '' && trim((string) $domain->skip_url) !== '') {
-                    $this->warn("id={$domain->id} skip_url 无效将清空（请尽快在后台补合法 http/https 链接）");
+                    $this->warn(RediErrorMessage::get('cli.normalize_skip_url_clear', ['id' => $domain->id]));
                 }
                 if ($dry) {
                     $this->line("would update id={$domain->id} {$canonical}, skip_url -> {$skip}");
@@ -48,7 +49,10 @@ class NormalizeDomainHosts extends Command
             }
         });
 
-        $this->info($dry ? "dry-run: {$updated} 行待更新" : "已更新 {$updated} 行");
+        $this->info(RediErrorMessage::get('cli.normalize_done', [
+            'action' => $dry ? RediErrorMessage::get('cli.normalize_dry') : RediErrorMessage::get('cli.normalize_updated'),
+            'count' => $updated,
+        ]));
 
         return self::SUCCESS;
     }

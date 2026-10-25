@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Support\OpsDisplaySanitizer;
+use App\Support\RediErrorMessage;
 
 class RediHealthNotifier
 {
@@ -35,12 +36,14 @@ class RediHealthNotifier
     public static function formatPlainText(array $issues, ?int $totalCount = null): string
     {
         $total = $totalCount ?? count($issues);
-        $lines = ['[301] redi:health 发现 '.$total.' 项待处理：'];
+        $lines = [RediErrorMessage::get('health.summary', ['count' => $total])];
         if ($total > count($issues)) {
-            $lines[] = '[注意] 以下仅展示前 '.count($issues).' 条（完整列表见 --json）';
+            $lines[] = RediErrorMessage::get('health.truncated', ['shown' => count($issues)]);
         }
         foreach ($issues as $row) {
-            $tag = $row['level'] === 'critical' ? '严重' : '注意';
+            $tag = $row['level'] === 'critical'
+                ? RediErrorMessage::get('health.critical')
+                : RediErrorMessage::get('health.warning');
             $lines[] = '['.$tag.'] '.OpsDisplaySanitizer::field($row['message'] ?? '', '—', 500);
         }
 
