@@ -21,7 +21,7 @@
 </div>
 
 {{-- 已移除 Dcat 默认「Powered by Dcat Admin」及历史部署中的第三方版权文案，不保留 main-footer --}}
-<button type="button" class="btn btn-primary btn-icon scroll-top pull-right" style="position: fixed;bottom: 2%; right: 10px;display: none" aria-label="回到顶部">
+<button type="button" class="btn btn-primary btn-icon scroll-top pull-right" style="position: fixed;bottom: 2%; right: 10px;display: none" aria-label="{{ __('redi-locale.scroll_top') }}">
     <i class="feather icon-arrow-up"></i>
 </button>
 
