@@ -1,6 +1,6 @@
 # 文档索引
 
-按场景选路径即可；无需对照历史 PR 或开发进度表。
+按场景选路径即可。文档描述 **当前产品行为**，不包含二次开发进度或问题修复台账。
 
 ## 新环境上线
 
@@ -35,7 +35,6 @@
 | [PLATFORM-ARCHITECTURE.md](PLATFORM-ARCHITECTURE.md) | DNS 模型、节点 API、数据表 |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | `dev-preflight` 与发版 |
 | [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md) | 本地双 tar + scp；可选 GitHub Release |
-| [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md) | 长期限制与计划中的增强 |
-| [I18N-DEVELOPMENT-REPORT.md](I18N-DEVELOPMENT-REPORT.md) | 后台简 / 繁 / 英（已落地说明 + 技术报告） |
+| [I18N.md](I18N.md) | 后台三语与运维英文约定 |
 | [SECURITY.md](../SECURITY.md) | 密码、端口、Agent |
 | [scripts/README.md](../scripts/README.md) | verify 脚本 |

@@ -7,10 +7,10 @@
 ## 界面语言（简体中文 / 繁體中文 / English）
 
 - **切换**：登录页表单下方有语言选项；登录后侧栏右上角 **地球图标** 可随时切换。
-- **记忆**：选择会写入浏览器 session；**登录后**会写入管理员账号的 `locale` 字段，下次登录自动沿用（需已执行 `php artisan migrate`，见升级文档）。
+- **记忆**：选择会写入浏览器 session；**登录后**会写入管理员账号的 `locale` 字段，下次登录自动沿用（需已执行 `php artisan migrate`）。
 - **系统外观**：在 **站点配置 → 系统外观** 按 **简体中文 / 繁體中文 / English** 三个选项卡分别填写名称与标题；Logo、Favicon 共用。旧版单语 JSON 无需迁移，保存一次即写入多语结构。未保存过时，表单与各语言界面会显示语言包默认品牌名。
 - **侧栏菜单**：业务项与 `Admin` 子菜单优先按库内 title 映射；若 title 无翻译键，则按菜单 URI（如 `group`、`auth/users`）回退到语言包。
-- **证书 `last_error` 列**：展示库内保存的运维说明（**不随界面语言翻译**）。全新安装写入的为英文；仅当从很旧版本升级且库里已有中文记录时，才可能看到中文正文。CLI/Webhook 仍为英文。详见 [I18N-DEVELOPMENT-REPORT.md](I18N-DEVELOPMENT-REPORT.md)。
+- **证书 `last_error` 列**：展示库内运维说明（**不随界面语言翻译**）；新记录一般为英文。CLI/Webhook 亦为英文。详见 [I18N.md](I18N.md)。
 
 ## 菜单
 
@@ -233,4 +233,4 @@ php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修�
 | HTTP-01 | `/.well-known/` 必须优先于跳转（与 lagran 联调） |
 | 根域 CNAME | 部分厂商不支持；见 [CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md)（ALIAS/ANAME） |
 | DNS API 部分失败 | 厂商可能已写入部分 Pool/CNAME；按上文 §2「同步失败后的检查」修正后重试 |
-| 长期限制 | [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md) |
+| 长期限制 | [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) §已知限制 |

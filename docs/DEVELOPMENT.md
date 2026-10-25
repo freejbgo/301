@@ -20,10 +20,11 @@ bash scripts/dev-preflight.sh
 bash scripts/verify-admin-i18n-invariants.sh
 bash scripts/verify-redi-lang-parity.sh
 bash scripts/verify-redi-errors-invariants.sh
+bash scripts/verify-redi-cert-error-code-invariants.sh
 bash scripts/verify-ops-english-invariants.sh
 ```
 
-详见 [I18N-DEVELOPMENT-REPORT.md](I18N-DEVELOPMENT-REPORT.md)。
+约定说明见 [I18N.md](I18N.md)。
 
 ## 分步（调试时）
 
