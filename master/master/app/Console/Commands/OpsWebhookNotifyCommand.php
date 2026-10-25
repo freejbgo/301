@@ -3,15 +3,16 @@
 namespace App\Console\Commands;
 
 use App\Services\RediOpsWebhook;
+use App\Support\RediErrorMessage;
 use Illuminate\Console\Command;
 
 class OpsWebhookNotifyCommand extends Command
 {
     protected $signature = 'redi:ops-webhook
-                            {--task= : 任务名（如 redi:renew-certificates）}
-                            {--message= : 自定义说明}';
+                            {--task= : Task name (e.g. redi:renew-certificates)}
+                            {--message= : Custom message body}';
 
-    protected $description = '向 REDI_OPS_WEBHOOK_URL / REDI_HEALTH_WEBHOOK_URL 发送运维告警';
+    protected $description = 'POST ops alert to REDI_OPS_WEBHOOK_URL / REDI_HEALTH_WEBHOOK_URL';
 
     public function handle(): int
     {
@@ -23,12 +24,12 @@ class OpsWebhookNotifyCommand extends Command
         $message = trim((string) $this->option('message'));
 
         if (! RediOpsWebhook::notifyTaskFailure($task, $message)) {
-            $this->warn('Webhook 未配置或发送失败（见 storage/logs/laravel.log）。');
+            $this->warn(RediErrorMessage::get('cli.ops_webhook_failed'));
 
             return self::FAILURE;
         }
 
-        $this->info('Webhook 已发送。');
+        $this->info(RediErrorMessage::get('cli.ops_webhook_sent'));
 
         return self::SUCCESS;
     }

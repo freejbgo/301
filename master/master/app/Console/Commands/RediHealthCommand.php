@@ -21,11 +21,12 @@ class RediHealthCommand extends Command
     {
         $warnDays = min(365, max(1, (int) $this->option('days')));
         $issues = RediHealthReport::collectIssues($warnDays);
+        $issuesEn = RediHealthReport::localizeIssues($issues, 'en');
         $hasIssues = $issues !== [];
 
         $notifyDelivered = true;
         if ($this->option('notify') && $hasIssues) {
-            $notifyDelivered = RediHealthNotifier::notifyWebhook($issues);
+            $notifyDelivered = RediHealthNotifier::notifyWebhook($issuesEn);
             if ($notifyDelivered) {
                 $this->info(RediErrorMessage::get('cli.health_webhook_sent'));
             } else {
@@ -38,12 +39,15 @@ class RediHealthCommand extends Command
                 'ok' => ! $hasIssues,
                 'checked_at' => now()->toIso8601String(),
                 'summary' => RediHealthReport::summary(),
-                'hints' => RediHealthReport::collectHints(),
-                'issues' => $issues,
+                'hints' => array_map(
+                    fn (array $hint) => array_merge($hint, ['message' => RediHealthReport::hintMessage($hint, 'en')]),
+                    RediHealthReport::collectHints()
+                ),
+                'issues' => $issuesEn,
             ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
         } elseif ($hasIssues) {
             $this->warn(RediErrorMessage::get('cli.health_issues_found', ['count' => count($issues)]));
-            foreach ($issues as $row) {
+            foreach ($issuesEn as $row) {
                 $prefix = $row['level'] === 'critical'
                     ? '['.RediErrorMessage::get('health.critical').']'
                     : '['.RediErrorMessage::get('health.warning').']';
@@ -73,7 +77,7 @@ class RediHealthCommand extends Command
         $command->line('');
         $command->line(RediErrorMessage::get('cli.health_config_hints'));
         foreach ($hints as $hint) {
-            $command->line('  · '.OpsDisplaySanitizer::field(RediHealthReport::hintMessage($hint), '—', 300));
+            $command->line('  · '.OpsDisplaySanitizer::field(RediHealthReport::hintMessage($hint, 'en'), '—', 300));
         }
     }
 }

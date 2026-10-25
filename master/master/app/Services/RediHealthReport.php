@@ -502,16 +502,17 @@ class RediHealthReport
     /**
      * @param  array{code?: string, params?: array<string, mixed>, message?: string}  $issue
      */
-    public static function issueMessage(array $issue): string
+    public static function issueMessage(array $issue, ?string $locale = null): string
     {
         $code = (string) ($issue['code'] ?? '');
         if ($code === '') {
             return (string) ($issue['message'] ?? '');
         }
 
+        $locale = $locale ?? app()->getLocale();
         $key = 'redi-health.issues.'.$code;
-        if (Lang::has($key)) {
-            return (string) __($key, (array) ($issue['params'] ?? []));
+        if (Lang::has($key, $locale)) {
+            return (string) trans($key, (array) ($issue['params'] ?? []), $locale);
         }
 
         return (string) ($issue['message'] ?? '');
@@ -533,18 +534,32 @@ class RediHealthReport
     /**
      * @param  array{code?: string, params?: array<string, mixed>, message?: string}  $hint
      */
-    public static function hintMessage(array $hint): string
+    public static function hintMessage(array $hint, ?string $locale = null): string
     {
         $code = (string) ($hint['code'] ?? '');
         if ($code === '') {
             return (string) ($hint['message'] ?? '');
         }
 
+        $locale = $locale ?? app()->getLocale();
         $key = 'redi-health.hints.'.$code;
-        if (Lang::has($key)) {
-            return (string) __($key, (array) ($hint['params'] ?? []));
+        if (Lang::has($key, $locale)) {
+            return (string) trans($key, (array) ($hint['params'] ?? []), $locale);
         }
 
         return (string) ($hint['message'] ?? '');
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $issues
+     * @return array<int, array<string, mixed>>
+     */
+    public static function localizeIssues(array $issues, string $locale): array
+    {
+        return array_map(function (array $row) use ($locale) {
+            $row['message'] = self::issueMessage($row, $locale);
+
+            return $row;
+        }, $issues);
     }
 }
