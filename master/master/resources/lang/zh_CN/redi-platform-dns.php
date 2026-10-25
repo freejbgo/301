@@ -30,7 +30,6 @@ return [
         'failed'           => 'DNS 同步失败，详情请查看 storage/logs/laravel.log。',
         'success'          => 'DNS 已同步到厂商',
         'manual_mode_info' => '当前为手动解析模式：请按页面 Pool / 租户参考表在 DNS 服务商自行配置，无需同步。',
-        'failed_prefix'    => 'DNS 同步失败：',
     ],
     'fields' => [
         'edge_zone'                 => '平台主域名',

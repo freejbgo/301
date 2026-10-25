@@ -44,6 +44,7 @@
 | 33 | **已做** | 域名保存/启用/批量导入校验改 `redi-admin-domain` / `redi-batch-domains`（修复后台英文校验漏洞） |
 | 34 | **已做** | 租户 CNAME 占位文案 `cname_placeholder` 三语（不再用 `redi-errors` 英文） |
 | 35 | **已做** | DNS API 同步失败提示三语（不再拼接英文异常原文） |
+| 36 | **已做** | 移除未使用的 `redi-platform-dns.sync.failed_prefix` 语言键 |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维/节点 API 新消息英文 canonical |
 
 ### 运维速览
