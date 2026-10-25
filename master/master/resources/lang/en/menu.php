@@ -21,4 +21,11 @@ return [
         'dns与节点池'    => 'DNS & node pool',
         '节点管理'       => 'Nodes',
     ],
+    'uris' => [
+        'domain'            => 'Domains',
+        'group'             => 'Groups',
+        'platform-settings' => 'Branding',
+        'platform-dns'      => 'DNS & node pool',
+        'nodes'             => 'Nodes',
+    ],
 ];

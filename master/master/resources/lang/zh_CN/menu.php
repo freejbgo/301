@@ -20,4 +20,11 @@ return [
         'dns与节点池'    => 'DNS与节点池',
         '节点管理'       => '节点管理',
     ],
+    'uris' => [
+        'domain'            => '域名管理',
+        'group'             => '分组管理',
+        'platform-settings' => '系统外观',
+        'platform-dns'      => 'DNS与节点池',
+        'nodes'             => '节点管理',
+    ],
 ];
