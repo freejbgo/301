@@ -6,7 +6,7 @@
 | [build-release-tarballs.sh](build-release-tarballs.sh) | **推荐**：一次打出主控 + 节点 tar（见 [RELEASE-PACKAGES.md](../docs/RELEASE-PACKAGES.md)） |
 | [build-master-tar.sh](build-master-tar.sh) / [build-node-tar.sh](build-node-tar.sh) | 单独打主控/节点发布包 |
 | [ensure-release-tarballs.sh](ensure-release-tarballs.sh) | `deploy-*.sh` 共用：缺 tar 时尝试本地构建 |
-| [verify-redi-db-deploy-path.sh](verify-redi-db-deploy-path.sh) | Docker 临时 MariaDB：建库 collation + `redi_admin.sql` + `CALL redi_node_bump_skip`（CI/`VERIFY_REDI_REQUIRE_DOCKER=1` 时无 docker 会失败） |
+| [verify-redi-db-deploy-path.sh](verify-redi-db-deploy-path.sh) | Docker 临时 MariaDB：建库 collation + `redi_admin.sql` + `CALL redi_node_bump_skip` + `locale` / `last_error_code` 列冒烟（CI/`VERIFY_REDI_REQUIRE_DOCKER=1` 时无 docker 会失败） |
 | [verify-redi-node-procedure-sync.php](verify-redi-node-procedure-sync.php) | SQL dump 与迁移 `100009` 存储过程一致 |
 | [verify-master-cron-templates.sh](verify-master-cron-templates.sh) | 静态校验 `deploy-master` / `patch-master-cron` 的 Cron 模板（无 `schedule:run`、无 `master/master` 路径、三条任务 + `ops-webhook` 兜底且 `--task=` 与 artisan 命令一致、`--max-time=3600`） |
 | [verify-node-deploy-templates.sh](verify-node-deploy-templates.sh) | 静态校验 `deploy-node`、`vars.example.env`、`env.example` 与 lagran 脚本（HTTPS Agent、静态 ldd、`redi_node`、setcap、lagran_ports.py、`REDI_DB_PASSWORD`） |

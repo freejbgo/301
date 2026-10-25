@@ -16,6 +16,7 @@
 | [docs/LAUNCH-CHECKLIST.md](docs/LAUNCH-CHECKLIST.md) | 一页上线检查单（可打勾） |
 | [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md) | 上线说明与验收命令（详情） |
 | [docs/CONSOLE.md](docs/CONSOLE.md) | 控制台操作与平台边界 §8 |
+| [docs/I18N.md](docs/I18N.md) | 后台三语与运维英文文案约定 |
 | [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) | 已上线环境增量升级 |
 | [SECURITY.md](SECURITY.md) | 密码、端口、Agent |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 发版前 `dev-preflight` |

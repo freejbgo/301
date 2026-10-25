@@ -59,6 +59,10 @@ grep -qF 'DEPLOY-TUTORIAL-CENTOS7.md' "${REPO_ROOT}/DEPLOY.md" \
 
 grep -qF 'redi_node_bump_skip' "$GREEN" \
   || fail "GREENFIELD-INSTALL.md must document redi_node_bump_skip"
+grep -qF 'docs/I18N.md' "$GREEN" \
+  || fail "GREENFIELD-INSTALL.md must link I18N.md"
+grep -qF 'docs/I18N.md' "$DEPLOY_MASTER" \
+  || fail "deploy-master.sh must mention docs/I18N.md"
 
 grep -qF 'redi_node_bump_skip' "$SQL" \
   || fail "redi_admin.sql must define or reference redi_node_bump_skip"

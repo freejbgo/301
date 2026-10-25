@@ -14,6 +14,7 @@
 | [docs/ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) | 边缘池 F1–F8（DNS、证书、跳转） |
 | [docs/CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md) | 发给终端客户的 CNAME 说明（运营附录在同文末尾） |
 | [docs/CONSOLE.md](CONSOLE.md) | 后台操作 |
+| [docs/I18N.md](I18N.md) | 后台三语与证书 `last_error` 约定 |
 | [docs/PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) | 上线验收与 `redi:health` |
 | [SECURITY.md](../SECURITY.md) | 密码、端口、节点权限 |
 | [docs/DEVELOPMENT.md](DEVELOPMENT.md) | 开发机发版前 `dev-preflight.sh` |
@@ -24,7 +25,7 @@
 | 步骤 | 命令 / 动作 | 内容 |
 |------|-------------|------|
 | 1 建库 | `db/mysql_setup.example.sql` 或 `deploy-master.sh` | 创建 `redi_admin` 库与 `redi_admin` 应用账号 |
-| 2 导入 | **`mysql … redi_admin < db/redi_admin.sql`**（`deploy-master.sh` 空库时会自动导入） | Dcat 菜单/权限、业务表、默认超管 `admin`、节点存储过程 **`redi_node_bump_skip`**、节点 IPv6 列；`migrations` 表已与当前发布包对齐 |
+| 2 导入 | **`mysql … redi_admin < db/redi_admin.sql`**（`deploy-master.sh` 空库时会自动导入） | Dcat 菜单/权限、业务表、默认超管 `admin`（含 `locale` 列）、证书表 **`last_error_code`**、节点存储过程 **`redi_node_bump_skip`**、节点 IPv6 列；`migrations` 表已与当前发布包对齐 |
 
 **绿场不需要**手工执行 `php artisan migrate`。`deploy-master.sh` 解压主控后仍会跑 **`migrate --force`**（导入 SQL 后一般为 **无待执行迁移**）；你只需确认存储过程存在即可。导入完成后节点即可 `CALL redi_node_bump_skip`。
 
@@ -43,6 +44,7 @@ CentOS 的 `deploy-master.sh` 在 `migrate` 之后会检查该过程是否存在
 
 - 默认账号：`admin` / `Redi301@Install2026`（见 [DEPLOY.md](../DEPLOY.md)）。
 - 仍为默认密码时，后台会 **强制跳转改密**（`auth/setting`）。内网演示可在 `.env` 设 `REDI_BLOCK_DEFAULT_ADMIN_PASSWORD=false`。
+- **界面语言**：登录页或侧栏可切换简 / 繁 / 英；详见 [I18N.md](I18N.md)、[CONSOLE.md](CONSOLE.md) §界面语言。
 
 ## 节点（被干扰域名场景）
 

@@ -36,5 +36,11 @@ SQL
 
 docker exec -i "$cid" mariadb -uroot redi_admin < "$SQL"
 docker exec "$cid" mariadb -uroot redi_admin -e "CALL redi_node_bump_skip('__ci_smoke__');" >/dev/null
+docker exec "$cid" mariadb -uroot redi_admin -N -e \
+  "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='redi_admin' AND TABLE_NAME='redi_domain_certs' AND COLUMN_NAME='last_error_code'" \
+  | grep -q '^1$' || { echo "verify-redi-db-deploy-path: missing redi_domain_certs.last_error_code" >&2; exit 1; }
+docker exec "$cid" mariadb -uroot redi_admin -N -e \
+  "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='redi_admin' AND TABLE_NAME='admin_users' AND COLUMN_NAME='locale'" \
+  | grep -q '^1$' || { echo "verify-redi-db-deploy-path: missing admin_users.locale" >&2; exit 1; }
 
-echo "verify-redi-db-deploy-path: OK（unicode_ci 建库 + CALL redi_node_bump_skip）"
+echo "verify-redi-db-deploy-path: OK（unicode_ci 建库 + CALL redi_node_bump_skip + schema smoke）"
