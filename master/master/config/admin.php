@@ -150,7 +150,7 @@ return [
         'providers' => [
             'admin' => [
                 'driver' => 'eloquent',
-                'model'  => Dcat\Admin\Models\Administrator::class,
+                'model'  => App\Models\Administrator::class,
             ],
         ],
 
@@ -293,7 +293,7 @@ return [
 
         // User tables and model.
         'users_table' => 'admin_users',
-        'users_model' => Dcat\Admin\Models\Administrator::class,
+        'users_model' => App\Models\Administrator::class,
 
         // Role table and model.
         'roles_table' => 'admin_roles',

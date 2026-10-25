@@ -6,6 +6,7 @@
         'en' => 'English',
     ];
     $switchUrl = admin_url('locale');
+    $switchFailedMsg = __('redi-locale.switch_failed');
 @endphp
 <ul class="nav navbar-nav">
     <li class="dropdown dropdown-language nav-item">
@@ -39,7 +40,7 @@ Dcat.ready(function () {
       window.location.reload();
     }).fail(function () {
       Dcat.loading(false);
-      Dcat.error('Language switch failed');
+      Dcat.error(@json($switchFailedMsg));
     });
   });
 });

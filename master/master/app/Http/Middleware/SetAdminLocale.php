@@ -3,7 +3,9 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Dcat\Admin\Admin;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class SetAdminLocale
 {
@@ -17,14 +19,54 @@ class SetAdminLocale
 
     public static function resolve(?string $preferred = null): string
     {
-        $locale = $preferred ?? session(self::SESSION_KEY) ?? config('app.locale', 'zh_CN');
         $supported = self::supported();
 
-        if (! in_array($locale, $supported, true)) {
-            return $supported[0] ?? 'zh_CN';
+        if ($preferred !== null && in_array($preferred, $supported, true)) {
+            return $preferred;
         }
 
-        return $locale;
+        $userLocale = self::userStoredLocale();
+        if ($userLocale !== null) {
+            return $userLocale;
+        }
+
+        $sessionLocale = session(self::SESSION_KEY);
+        if (is_string($sessionLocale) && in_array($sessionLocale, $supported, true)) {
+            return $sessionLocale;
+        }
+
+        $accept = request()->getPreferredLanguage($supported);
+        if (is_string($accept) && in_array($accept, $supported, true)) {
+            return $accept;
+        }
+
+        $default = config('app.locale', 'zh_CN');
+
+        return in_array($default, $supported, true) ? $default : ($supported[0] ?? 'zh_CN');
+    }
+
+    public static function userStoredLocale(): ?string
+    {
+        if (! class_exists(Admin::class)) {
+            return null;
+        }
+
+        $user = Admin::user();
+        if (! $user) {
+            return null;
+        }
+
+        $table = (string) config('admin.database.users_table', 'admin_users');
+        if (! Schema::hasColumn($table, 'locale')) {
+            return null;
+        }
+
+        $locale = $user->getAttribute('locale');
+        if (! is_string($locale) || $locale === '') {
+            return null;
+        }
+
+        return in_array($locale, self::supported(), true) ? $locale : null;
     }
 
     public function handle(Request $request, Closure $next)
