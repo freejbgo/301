@@ -60,6 +60,18 @@
 
 添加、删除或改了节点 IP 之后要再同步一次。删除节点不会自动删除厂商上的 A 记录。DNS 凭证解密失败会记日志并中止同步（不会静默跳过）。
 
+#### 同步失败后的检查（API 自动）
+
+1. **看后台报错全文**（厂商 API 返回原因），不要只看「未同步」状态。
+2. **到 DNS 厂商控制台核对**：Pool 的 **A / AAAA** 是否已改、各租户 **token → pool** 的 CNAME 是否只写了一部分（失败时 `dns_synced_at` 不会前进，但厂商侧可能已部分更新）。
+3. **主控自检**（不影响业务退出码，只看提示）：
+   ```bash
+   cd /opt/301/master
+   sudo -u nginx php artisan redi:health --json | jq '.hints[] | select(.code=="dns_api_tenants_unsynced")'
+   ```
+4. **常见修正**：租户 `edge_fqdn` 与当前 `edge_zone` 不一致；Cloudflare 缺 Zone ID；凭证过期；Pool 无启用节点 IPv4（同步会先失败，不调厂商）。
+5. **修正后再次点击「同步 Pool / 租户 CNAME」**；系统**不会**自动回滚厂商上已写入的记录。
+
 域名在列表里设为 **停用** 时，主控会清除该域的 ACME 挑战与节点挑战同步行，减少节点继续暴露 HTTP-01。
 
 ## 3. 节点管理

@@ -110,21 +110,21 @@ func tick(client *http.Client, cfg config, registered *bool, revs *revisionState
 	if split {
 		if rev.ChallengesRevision != "" && rev.ChallengesRevision != revs.challenges {
 			if err := pullChallenges(client, cfg, registered); err != nil {
-				logrus.Warnf("[masteragent] pull challenges: %v", err)
+				warnThrottled("pull-challenges", "[masteragent] pull challenges: %v", err)
 			} else {
 				revs.challenges = rev.ChallengesRevision
 			}
 		}
 		if rev.RulesRevision != "" && rev.RulesRevision != revs.rules {
 			if err := pullRedirectRules(client, cfg, registered); err != nil {
-				logrus.Warnf("[masteragent] pull redirect rules: %v", err)
+				warnThrottled("pull-rules", "[masteragent] pull redirect rules: %v", err)
 			} else {
 				revs.rules = rev.RulesRevision
 			}
 		}
 		if rev.CertificatesRevision != "" && rev.CertificatesRevision != revs.certificates {
 			if err := pullCertificates(client, cfg, registered); err != nil {
-				logrus.Warnf("[masteragent] pull certificates: %v", err)
+				warnThrottled("pull-certificates", "[masteragent] pull certificates: %v", err)
 			} else {
 				revs.certificates = rev.CertificatesRevision
 			}
@@ -136,15 +136,15 @@ func tick(client *http.Client, cfg config, registered *bool, revs *revisionState
 		var pullErr error
 		if err := pullChallenges(client, cfg, registered); err != nil {
 			pullErr = err
-			logrus.Warnf("[masteragent] pull challenges: %v", err)
+			warnThrottled("pull-challenges", "[masteragent] pull challenges: %v", err)
 		}
 		if err := pullRedirectRules(client, cfg, registered); err != nil {
 			pullErr = err
-			logrus.Warnf("[masteragent] pull redirect rules: %v", err)
+			warnThrottled("pull-rules", "[masteragent] pull redirect rules: %v", err)
 		}
 		if err := pullCertificates(client, cfg, registered); err != nil {
 			pullErr = err
-			logrus.Warnf("[masteragent] pull certificates: %v", err)
+			warnThrottled("pull-certificates", "[masteragent] pull certificates: %v", err)
 		}
 		if pullErr == nil {
 			revs.legacy = rev.Revision
