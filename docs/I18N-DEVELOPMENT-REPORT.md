@@ -1,6 +1,6 @@
 # 301 跳转系统 — 多语言（简 / 繁 / 英）开发报告
 
-**版本**：2026-10-25（阶段 27：Admin 配置回退 + 运维英文收口）  
+**版本**：2026-10-25（阶段 31：运维门禁 + DNSPod 配置）  
 **范围**：主控 `master/master/` 管理后台**可见操作界面**（Laravel + Dcat Admin）；仓库 `docs/` 运维手册仍为中文。  
 **产品目标（已定）**：让使用后台的**超级管理员与租户账号**在 **简体中文 / 繁体中文 / English** 下方便操作；库内历史 `last_error` 不要求翻译。  
 **结论摘要**：自研 Admin 可见 UI 已三语化（`redi-*`、Dcat `menu`/`global`/`extension`、顶栏/登录切换、`PlatformBranding` per-locale）。**运维层**：新写入的 `last_error`、Artisan、Webhook、`redi:health` JSON、节点 API 门控等以 **`en/redi-errors` 英文 canonical** 为主；后台仍可能展示库内旧中文 `last_error` 原文。
@@ -40,6 +40,7 @@
 | 29 | **已做** | `verify-admin-i18n-invariants.sh` 扩展校验 `app/Models` 字符串字面量无汉字 |
 | 30 | **已做** | `verify-ops-english-invariants.sh` 门禁；接入 `dev-preflight` / CI |
 | 31 | **已做** | DNSPod 中国 `record_line` 迁至 `redi.dnspod_cn_record_line`；`Services` 门禁无例外 |
+| 32 | **已做** | `DEVELOPMENT.md` 补充 i18n/ops 门禁；`verify-dns-providers-invariants` 校验 DNSPod 配置约定 |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维/节点 API 新消息英文 canonical |
 
 ### 运维速览

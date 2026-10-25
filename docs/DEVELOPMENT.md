@@ -14,6 +14,15 @@ bash scripts/dev-preflight.sh
 
 `verify-*` 索引见 [scripts/README.md](../scripts/README.md)。
 
+**后台三语 / 运维英文防回退**（改 `app/Admin`、`app/Models`、`app/Services` 或 CLI 文案时建议单独跑）：
+
+```bash
+bash scripts/verify-admin-i18n-invariants.sh
+bash scripts/verify-ops-english-invariants.sh
+```
+
+详见 [I18N-DEVELOPMENT-REPORT.md](I18N-DEVELOPMENT-REPORT.md)。
+
 ## 分步（调试时）
 
 ```bash
