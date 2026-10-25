@@ -21,6 +21,10 @@ return [
         'cname_hint_tenant'  => 'Shared by all domains under this account',
         'cname_instruction'  => 'Point the customer domain CNAME to:',
     ],
+    'cname_placeholder' => [
+        'configure_zone_first' => 'Configure platform apex domain first',
+        'generated_after_save' => 'Generated after you save a domain',
+    ],
     'fields' => [
         'group_id'     => 'Group',
         'original_url' => 'Origin host',

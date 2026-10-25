@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\RediPlatformDns;
 use App\Models\RediTenantEdge;
 use App\Support\HostNameValidator;
-use App\Support\RediErrorMessage;
 use Illuminate\Support\Str;
 
 class TenantEdgeService
@@ -54,10 +53,15 @@ class TenantEdgeService
 
         $platform = RediPlatformDns::instance();
         if (trim($platform->edge_zone) === '') {
-            return RediErrorMessage::get('edge.configure_zone_first');
+            return self::cnamePlaceholder('configure_zone_first');
         }
 
-        return RediErrorMessage::get('edge.generated_after_save');
+        return self::cnamePlaceholder('generated_after_save');
+    }
+
+    protected static function cnamePlaceholder(string $key): string
+    {
+        return '('.__('redi-admin-domain.cname_placeholder.'.$key).')';
     }
 
     public static function rebuildAllEdgeFqdn(string $zone): void

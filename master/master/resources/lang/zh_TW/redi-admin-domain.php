@@ -21,6 +21,10 @@ return [
         'cname_hint_tenant'  => '本帳號下所有域名共用',
         'cname_instruction'  => '請將客戶域名 CNAME 到：',
     ],
+    'cname_placeholder' => [
+        'configure_zone_first' => '請先配置平台主域名',
+        'generated_after_save' => '保存域名後生成',
+    ],
     'fields' => [
         'group_id'     => '分組名稱',
         'original_url' => '原始域名',
