@@ -29,18 +29,8 @@ for dir in "${OPS_DIRS[@]}"; do
 done
 
 [[ -d "$SERVICES_DIR" ]] || fail "missing $SERVICES_DIR"
-service_hits="$(rg -n "$han_pattern" "$SERVICES_DIR" -g '*.php' 2>/dev/null || true)"
-if [[ -n "$service_hits" ]]; then
-  # DNSPod API default record line name (vendor parameter, not user-facing copy).
-  remaining="$(echo "$service_hits" | rg -v 'DnspodDnsProvider\.php' || true)"
-  if [[ -n "$remaining" ]]; then
-    echo "$remaining" >&2
-    fail 'app/Services must not contain Han in PHP string literals (except documented DNSPod record line default)'
-  fi
-  if ! echo "$service_hits" | rg -q 'DnspodDnsProvider\.php'; then
-    echo "$service_hits" >&2
-    fail 'unexpected Han in app/Services'
-  fi
+if rg -n "$han_pattern" "$SERVICES_DIR" -g '*.php' 2>/dev/null; then
+  fail 'app/Services must not contain Han in PHP string literals (use RediErrorMessage / config for vendor constants)'
 fi
 
 echo "verify-ops-english-invariants: ok"

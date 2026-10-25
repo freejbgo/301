@@ -71,6 +71,7 @@ return [
         'dnscom_response_invalid' => 'Invalid dns.com response',
         'dnscom_api_error' => 'dns.com API error',
         'dnspod_keys_missing' => 'DNSPod API ID / token not configured (use API Key / Secret fields)',
+        'dnspod_record_line_missing' => 'DNSPod China record line is not configured (set REDI_DNSPOD_CN_RECORD_LINE)',
         'dnspod_page_limit' => 'DNSPod record pagination limit exceeded; remove duplicates manually and retry',
         'dnspod_response_invalid' => 'Invalid DNSPod response',
         'dnspod_api_error' => 'DNSPod API error',
