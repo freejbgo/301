@@ -111,7 +111,7 @@ php artisan queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600
 
 主控域名的 HTTPS 证书用面板或 certbot 签在 Nginx 上。这张证书只保护后台，和客户域名的跳转证书不是同一张。
 
-浏览器打开 `https://主控域名/admin`（或暂时的 `http://主控IP/admin`）。
+浏览器打开 `https://主控域名/admin`（或暂时的 `http://主控IP/admin`）。界面语言与证书错误列说明见 [docs/I18N.md](docs/I18N.md)。
 
 ## 3. 节点
 

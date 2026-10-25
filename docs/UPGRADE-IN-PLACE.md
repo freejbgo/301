@@ -28,6 +28,8 @@ sudo -u nginx php artisan config:cache
 sudo systemctl start php*-fpm nginx redi-queue
 ```
 
+跟包后 **`migrate --force` 会应用尚未执行的迁移**（例如 `admin_users.locale`、`redi_domain_certs.last_error_code`）。若已导入当前版 `redi_admin.sql` 且 `migrations` 表与发布包一致，此处通常 **无待执行迁移**。后台三语说明见 [I18N.md](I18N.md)。
+
 仅覆盖 tar、未重跑 `deploy-master` 时，请核对 `/etc/systemd/system/redi-queue.service` 的 `queue:work` 是否含 **`--max-time=3600`**（与 [scripts/systemd/redi-queue.service.example](../scripts/systemd/redi-queue.service.example) 一致）；过旧可手工改 unit 后 `systemctl daemon-reload && systemctl restart redi-queue`，或重跑 `deploy-master` 刷新 unit。
 
 节点：用 `deploy-node.sh` 或仅替换 `bin/redi-multi` 后 `systemctl restart redi-multi`。

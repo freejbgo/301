@@ -312,6 +312,7 @@ CREATE TABLE `admin_users` (
   `password` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `avatar` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `locale` varchar(12) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `remember_token` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
@@ -326,7 +327,7 @@ CREATE TABLE `admin_users` (
 
 LOCK TABLES `admin_users` WRITE;
 /*!40000 ALTER TABLE `admin_users` DISABLE KEYS */;
-INSERT INTO `admin_users` VALUES (1,'admin','$2b$10$H1daH3IQEcnNNKkGJxQQoeVvxw0RXPjBAXHMPqwttW8/BAIUYKEYS','管理员',NULL,NULL,'2023-02-22 00:32:10',NOW());
+INSERT INTO `admin_users` VALUES (1,'admin','$2b$10$H1daH3IQEcnNNKkGJxQQoeVvxw0RXPjBAXHMPqwttW8/BAIUYKEYS','管理员',NULL,NULL,NULL,'2023-02-22 00:32:10',NOW());
 /*!40000 ALTER TABLE `admin_users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -342,7 +343,7 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -351,7 +352,7 @@ CREATE TABLE `migrations` (
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'2014_10_12_000000_create_users_table',1),(2,'2014_10_12_100000_create_password_resets_table',1),(3,'2016_01_04_173148_create_admin_tables',1),(4,'2019_08_19_000000_create_failed_jobs_table',1),(5,'2019_12_14_000001_create_personal_access_tokens_table',1),(6,'2020_09_07_090635_create_admin_settings_table',1),(7,'2020_09_22_015815_create_admin_extensions_table',1),(8,'2020_11_01_083237_update_admin_menu_table',1),(9,'2026_03_28_000001_add_platform_settings_menu',2),(10,'2026_03_28_099998_create_redi_admin_core_tables',2),(11,'2026_03_28_100000_create_edge_pool_and_cert_tables',2),(12,'2026_03_28_100001_add_edge_pool_admin_menu',2),(13,'2026_03_28_100002_add_acme_challenges_and_jobs',2),(14,'2026_03_28_100003_add_node_challenge_sync',2),(15,'2026_03_28_100004_add_node_extra_ips',2),(16,'2026_10_13_000001_ensure_failed_jobs_table',3),(17,'2026_03_28_100005_global_unique_original_url',3),(18,'2026_03_28_100006_redi_domain_certs_domain_fk',4),(19,'2026_03_28_100007_node_domain_view_and_url_hash',5),(20,'2026_03_28_100008_redi_cert_deployments_foreign_keys',5),(21,'2026_03_28_100009_redi_node_skip_procedure',6),(22,'2026_03_28_100010_add_node_ipv6_columns',7);
+INSERT INTO `migrations` VALUES (1,'2014_10_12_000000_create_users_table',1),(2,'2014_10_12_100000_create_password_resets_table',1),(3,'2016_01_04_173148_create_admin_tables',1),(4,'2019_08_19_000000_create_failed_jobs_table',1),(5,'2019_12_14_000001_create_personal_access_tokens_table',1),(6,'2020_09_07_090635_create_admin_settings_table',1),(7,'2020_09_22_015815_create_admin_extensions_table',1),(8,'2020_11_01_083237_update_admin_menu_table',1),(9,'2026_03_28_000001_add_platform_settings_menu',2),(10,'2026_03_28_099998_create_redi_admin_core_tables',2),(11,'2026_03_28_100000_create_edge_pool_and_cert_tables',2),(12,'2026_03_28_100001_add_edge_pool_admin_menu',2),(13,'2026_03_28_100002_add_acme_challenges_and_jobs',2),(14,'2026_03_28_100003_add_node_challenge_sync',2),(15,'2026_03_28_100004_add_node_extra_ips',2),(16,'2026_10_13_000001_ensure_failed_jobs_table',3),(17,'2026_03_28_100005_global_unique_original_url',3),(18,'2026_03_28_100006_redi_domain_certs_domain_fk',4),(19,'2026_03_28_100007_node_domain_view_and_url_hash',5),(20,'2026_03_28_100008_redi_cert_deployments_foreign_keys',5),(21,'2026_03_28_100009_redi_node_skip_procedure',6),(22,'2026_03_28_100010_add_node_ipv6_columns',7),(23,'2026_10_25_120000_add_locale_to_admin_users',8),(24,'2026_10_25_210000_normalize_admin_menu_title_slugs',8),(25,'2026_10_25_220000_add_last_error_code_to_redi_domain_certs',8);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
