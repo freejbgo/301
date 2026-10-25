@@ -5,4 +5,9 @@ return [
     'switch_failed' => '语言切换失败',
     'scroll_top'    => '回到顶部',
     'login_choose'  => '界面语言：',
+    'names' => [
+        'zh_CN' => '简体中文',
+        'zh_TW' => '繁體中文',
+        'en'    => 'English',
+    ],
 ];

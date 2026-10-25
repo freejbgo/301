@@ -8,6 +8,8 @@ ADMIN_CFG="${REPO_ROOT}/master/master/config/admin.php"
 LOCALE_MW="${REPO_ROOT}/master/master/app/Http/Middleware/SetAdminLocale.php"
 PARITY_TEST="${REPO_ROOT}/master/master/tests/Unit/RediLangParityTest.php"
 EVENTS="${REPO_ROOT}/master/master/app/Providers/EventServiceProvider.php"
+APP_PROVIDER="${REPO_ROOT}/master/master/app/Providers/AppServiceProvider.php"
+MENU_PARTIAL="${REPO_ROOT}/master/master/resources/views/admin/partials/menu.blade.php"
 
 fail() {
   echo "verify-admin-i18n-invariants: $*" >&2
@@ -16,7 +18,7 @@ fail() {
 
 command -v rg >/dev/null 2>&1 || fail "ripgrep (rg) required"
 
-for f in "$ADMIN_CFG" "$LOCALE_MW" "$PARITY_TEST" "$EVENTS"; do
+for f in "$ADMIN_CFG" "$LOCALE_MW" "$PARITY_TEST" "$EVENTS" "$APP_PROVIDER" "$MENU_PARTIAL"; do
   [[ -f "$f" ]] || fail "missing $f"
 done
 
@@ -29,6 +31,9 @@ if [[ -z "$locale_pos" || -z "$admin_pos" || "$locale_pos" -ge "$admin_pos" ]]; 
 fi
 
 grep -q 'SyncAdminLocaleOnLogin' "$EVENTS" || fail 'Login listener SyncAdminLocaleOnLogin must be registered'
+
+grep -q 'LocalizedMenu' "$APP_PROVIDER" || fail 'AppServiceProvider must register LocalizedMenu as admin.menu'
+grep -q 'translateMenuItem' "$MENU_PARTIAL" || fail 'admin menu partial must use translateMenuItem'
 
 if rg -n "('|\")([^'\"\\]|\\.)*[\x{4e00}-\x{9fff}]" "$ADMIN_APP" -g '*.php' 2>/dev/null; then
   fail 'app/Admin must not contain Han characters inside PHP string literals (use language files)'

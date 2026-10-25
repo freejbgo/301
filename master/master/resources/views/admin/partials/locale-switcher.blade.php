@@ -1,10 +1,5 @@
 @php
     $current = app()->getLocale();
-    $labels = [
-        'zh_CN' => '简体中文',
-        'zh_TW' => '繁體中文',
-        'en' => 'English',
-    ];
     $switchUrl = admin_url('locale');
     $switchFailedMsg = __('redi-locale.switch_failed');
 @endphp
@@ -12,13 +7,13 @@
     <li class="dropdown dropdown-language nav-item">
         <a class="dropdown-toggle nav-link" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <i class="fa fa-language"></i>
-            <span class="selected-language">{{ $labels[$current] ?? $current }}</span>
+            <span class="selected-language">{{ __('redi-locale.names.'.$current) }}</span>
         </a>
         <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-language">
             @foreach (App\Http\Middleware\SetAdminLocale::supported() as $code)
                 <li>
                     <a href="javascript:void(0)" class="dropdown-item redi-admin-locale" data-locale="{{ $code }}">
-                        {{ $labels[$code] ?? $code }}
+                        {{ __('redi-locale.names.'.$code) }}
                     </a>
                 </li>
             @endforeach

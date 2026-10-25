@@ -1,6 +1,6 @@
 # 301 跳转系统 — 多语言（简 / 繁 / 英）开发报告
 
-**版本**：2026-10-25（阶段 18：菜单 URI 翻译回退）  
+**版本**：2026-10-25（阶段 19：语言切换器文案入包）  
 **范围**：主控 `master/master/` 管理后台**可见操作界面**（Laravel + Dcat Admin）；节点与运维文档不在本期。  
 **产品目标（已定）**：让使用后台的**超级管理员与租户账号**在 **简体中文 / 繁体中文 / English** 下方便操作；不要求节点 API、CLI、Webhook、库内历史 `last_error` 原文多语。  
 **结论摘要**：自研后台可见界面已接入 `redi-*` 语言包与 Dcat `menu`/`global`/`extension`（英）；顶栏与**登录页**可切换简/繁/英，`admin_users.locale` 持久化。「系统外观」支持 per-locale 名称/标题（旧单语 JSON 兼容）。**未做**：Service/CLI 异常；`last_error` 正文仍为库内原文（仅标签三语）。
@@ -27,6 +27,7 @@
 | 16 | **已做** | `PlatformBranding` `locales` JSON、系统外观按语言 Tab、缓存 `v2`、单测 |
 | 17 | **已做** | 域名列表 CSV 导出表头随 `SetAdminLocale`（`DomainListCsvExporter::headerRow`） |
 | 18 | **已做** | `menu.uris.*` + `AdminMenuTitle` / `LocalizedMenu`（DB title 无键时按 URI 回退） |
+| 19 | **已做** | `redi-locale.names` 驱动顶栏/登录语言切换；i18n 门禁校验 `LocalizedMenu` |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；Service 层仍单语 |
 
 ### 运维速览
