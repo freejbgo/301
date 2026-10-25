@@ -1,9 +1,9 @@
 # 301 跳转系统 — 多语言（简 / 繁 / 英）开发报告
 
-**版本**：2026-10-25（阶段 20：Admin 子菜单 URI 映射）  
-**范围**：主控 `master/master/` 管理后台**可见操作界面**（Laravel + Dcat Admin）；节点与运维文档不在本期。  
-**产品目标（已定）**：让使用后台的**超级管理员与租户账号**在 **简体中文 / 繁体中文 / English** 下方便操作；不要求节点 API、CLI、Webhook、库内历史 `last_error` 原文多语。  
-**结论摘要**：自研后台可见界面已接入 `redi-*` 语言包与 Dcat `menu`/`global`/`extension`（英）；顶栏与**登录页**可切换简/繁/英，`admin_users.locale` 持久化。「系统外观」支持 per-locale 名称/标题（旧单语 JSON 兼容）。**运维层（阶段 21）**：`redi-errors`（英文 canonical）、证书 `last_error`/批量导入/校验、菜单 slug、CLI 输出逐步英文化；库内历史中文 `last_error` 仍原样展示。
+**版本**：2026-10-25（阶段 27：Admin 配置回退 + 运维英文收口）  
+**范围**：主控 `master/master/` 管理后台**可见操作界面**（Laravel + Dcat Admin）；仓库 `docs/` 运维手册仍为中文。  
+**产品目标（已定）**：让使用后台的**超级管理员与租户账号**在 **简体中文 / 繁体中文 / English** 下方便操作；库内历史 `last_error` 不要求翻译。  
+**结论摘要**：自研 Admin 可见 UI 已三语化（`redi-*`、Dcat `menu`/`global`/`extension`、顶栏/登录切换、`PlatformBranding` per-locale）。**运维层**：新写入的 `last_error`、Artisan、Webhook、`redi:health` JSON、节点 API 门控等以 **`en/redi-errors` 英文 canonical** 为主；后台仍可能展示库内旧中文 `last_error` 原文。
 
 ### 实施进度（代码）
 
@@ -36,7 +36,8 @@
 | 25 | **已做** | `RediAcmeChallenge::upsertForDomain` 校验异常走 `redi-errors.acme.*` |
 | 26 | **已做** | `RediNode` / `RediAdminGroup` 模型校验走 `redi-admin-*`；平台 DNS 凭证解密文案三语 |
 | 27 | **已做** | `config/admin.php` 英文文件回退（与 `en/redi-branding` 一致）；门禁禁止 config 内硬编码中文 |
-| — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维/节点 API 消息以英文 canonical 为主 |
+| 28 | **已做** | 开发报告 / CONSOLE 与阶段 27 对齐；声明 Admin + ops 范围收口 |
+| — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维/节点 API 新消息英文 canonical |
 
 ### 运维速览
 
