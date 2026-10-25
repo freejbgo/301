@@ -18,6 +18,8 @@ bash scripts/dev-preflight.sh
 
 ```bash
 bash scripts/verify-admin-i18n-invariants.sh
+bash scripts/verify-redi-lang-parity.sh
+bash scripts/verify-redi-errors-invariants.sh
 bash scripts/verify-ops-english-invariants.sh
 ```
 

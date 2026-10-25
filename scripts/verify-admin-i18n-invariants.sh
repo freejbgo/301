@@ -60,4 +60,16 @@ if rg -n "('|\")([^'\"\\]|\\.)*[\x{4e00}-\x{9fff}]" "$ADMIN_CFG" 2>/dev/null; th
   fail 'config/admin.php must not contain Han in string literals (use English file fallback; PlatformBranding applies per locale)'
 fi
 
+ADMIN_FACING=(
+  "${REPO_ROOT}/master/master/app/Services/DomainBatchCreator.php"
+  "${REPO_ROOT}/master/master/app/Services/DomainDnsPointingGuard.php"
+  "${REPO_ROOT}/master/master/app/Models/RediAdminDomain.php"
+)
+for f in "${ADMIN_FACING[@]}"; do
+  [[ -f "$f" ]] || fail "missing $f"
+  if rg -n 'RediErrorMessage' "$f" >/dev/null 2>&1; then
+    fail "$(basename "$f") must use __() / redi-admin-* / redi-batch-domains, not RediErrorMessage (ops English)"
+  fi
+done
+
 echo "verify-admin-i18n-invariants: ok"

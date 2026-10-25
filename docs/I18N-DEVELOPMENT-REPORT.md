@@ -1,6 +1,6 @@
 # 301 跳转系统 — 多语言（简 / 繁 / 英）开发报告
 
-**版本**：2026-10-25（阶段 31：运维门禁 + DNSPod 配置）  
+**版本**：2026-10-25（阶段 37：语言键门禁 + `redi-errors` 死键清理）  
 **范围**：主控 `master/master/` 管理后台**可见操作界面**（Laravel + Dcat Admin）；仓库 `docs/` 运维手册仍为中文。  
 **产品目标（已定）**：让使用后台的**超级管理员与租户账号**在 **简体中文 / 繁体中文 / English** 下方便操作；证书 `last_error` 列展示库内原文（不翻译），绿场新写入为英文。  
 **结论摘要**：自研 Admin 可见 UI 已三语化（`redi-*`、Dcat `menu`/`global`/`extension`、顶栏/登录切换、`PlatformBranding` per-locale）。**运维层**：新写入的 `last_error`、Artisan、Webhook、`redi:health` JSON、节点 API 门控等以 **`en/redi-errors` 英文 canonical** 为主；后台仍可能展示库内旧中文 `last_error` 原文。
@@ -45,13 +45,14 @@
 | 34 | **已做** | 租户 CNAME 占位文案 `cname_placeholder` 三语（不再用 `redi-errors` 英文） |
 | 35 | **已做** | DNS API 同步失败提示三语（不再拼接英文异常原文） |
 | 36 | **已做** | 移除未使用的 `redi-platform-dns.sync.failed_prefix` 语言键 |
+| 37 | **已做** | `verify-redi-lang-parity.sh` + `verify-redi-errors-invariants.sh`；清理 `redi-errors` 中已迁移/重复的 `edge`/`batch`/`domain`/`deploy` 等死键；门禁禁止后台路径误用 `RediErrorMessage` |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维/节点 API 新消息英文 canonical |
 
 ### 运维速览
 
 1. 升级主控后执行 `php artisan migrate`（`admin_users.locale`）。
 2. 登录页或顶栏切换语言；在 **系统外观** 各语言选项卡填写对应品牌名（旧单语数据仍有效）。
-3. 开发防回退：`bash scripts/verify-admin-i18n-invariants.sh`、`bash scripts/verify-ops-english-invariants.sh`、`tests/Unit/RediLangParityTest.php`、`tests/Unit/AdminMenuTitleTest.php`、`tests/Unit/PlatformBrandingLocalesTest.php`、`tests/Unit/DomainListCsvExporterTest.php`（CI 已跑）。
+3. 开发防回退：`bash scripts/verify-admin-i18n-invariants.sh`、`bash scripts/verify-redi-lang-parity.sh`、`bash scripts/verify-redi-errors-invariants.sh`、`bash scripts/verify-ops-english-invariants.sh`、`tests/Unit/RediLangParityTest.php`、`tests/Unit/AdminMenuTitleTest.php`、`tests/Unit/PlatformBrandingLocalesTest.php`、`tests/Unit/DomainListCsvExporterTest.php`（CI 已跑）。
 
 ### 阶段 10 后快照（相对 §2 历史审计）
 
@@ -321,7 +322,7 @@ Laravel 自定义属性名与规则消息可放在 `redi.php` 的 `validation` �
 - [ ] 超级管理员与普通租户账号均可在顶栏切换 **zh_CN / zh_TW / en**，刷新后保持（已登录读用户 `locale`）。
 - [ ] `docs/CONSOLE.md` 所列菜单页面在 **en** 下无大块中文（允许品牌自定义名称、用户填写的域名/URL）。
 - [ ] 域名列表、证书状态、DNS 表单、节点管理、批量导入域名 **help 文本** 均有三语键。
-- [ ] `php artisan redi:lang-check`（或同等脚本）通过。
+- [x] `bash scripts/verify-redi-lang-parity.sh`（或 `RediLangParityTest`）通过。
 - [x] 新增文案禁止 `app/Admin` / `app/Models` 字符串字面量含汉字（`scripts/verify-admin-i18n-invariants.sh`）。
 
 ---
