@@ -22,8 +22,15 @@
 | 11 | **已做** | `redi-branding` 默认品牌三语、`cert_last_error` 标签、`SetAdminLocale` 先于 `admin` 中间件 |
 | 12 | **已做** | 补齐 `zh_TW` `cert_last_error`、文档进度表与 §快照 |
 | 13 | **已做** | `RediLangParityTest` 覆盖 `menu`/`global`/`extension`；`global.php` 键对齐 |
-| 14 | **已做（PR 待合并）** | `scripts/verify-admin-i18n-invariants.sh` 接入 CI / dev-preflight |
+| 14 | **已做** | `scripts/verify-admin-i18n-invariants.sh` 接入 CI / dev-preflight |
+| 15 | **已做（PR 待合并）** | `CONSOLE.md` 语言切换运维说明；文档索引更新 |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；已存品牌 JSON / Service 层仍单语 |
+
+### 运维速览
+
+1. 升级主控后执行 `php artisan migrate`（`admin_users.locale`）。
+2. 登录页或顶栏切换语言；英文部署请在 **系统外观** 填写英文品牌名。
+3. 开发防回退：`bash scripts/verify-admin-i18n-invariants.sh`、`tests/Unit/RediLangParityTest.php`（CI 已跑）。
 
 ### 阶段 10 后快照（相对 §2 历史审计）
 

@@ -17,7 +17,7 @@ return [
         'favicon'     => 'Favicon',
     ],
     'help' => [
-        'system_name' => '侧边栏 Logo 旁显示的名称',
+        'system_name' => '侧边栏 Logo 旁显示的名称（全平台单语；各语言界面显示相同字符串，英文站请直接填英文）',
         'page_title'  => '浏览器标签页标题，留空则与系统名称相同',
         'login_title' => '登录页主标题，留空则与系统名称相同',
         'logo'        => '建议 PNG，高度约 35px',
