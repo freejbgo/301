@@ -62,17 +62,26 @@ func loop(cfg config) {
 	registered := false
 	revs := revisionState{}
 	sleep := basePollInterval
+	var lastLogMsg string
+	var lastLogAt time.Time
 	for {
 		err := tick(client, cfg, &registered, &revs)
 		if err != nil {
-			if isAgentUpgradeRequired(err) {
-				logrus.Errorf("[masteragent] %v — 请升级节点 redi-multi（当前 %s），或请主控管理员调整 REDI_MIN_AGENT_VERSION", err, agentVersion)
-			} else {
-				logrus.Errorf("[masteragent] %v", err)
+			msg := err.Error()
+			shouldLog := msg != lastLogMsg || time.Since(lastLogAt) >= time.Minute
+			if shouldLog {
+				if isAgentUpgradeRequired(err) {
+					logrus.Errorf("[masteragent] %v — 请升级节点 redi-multi（当前 %s），或请主控管理员调整 REDI_MIN_AGENT_VERSION", err, agentVersion)
+				} else {
+					logrus.Errorf("[masteragent] %v", err)
+				}
+				lastLogMsg = msg
+				lastLogAt = time.Now()
 			}
 			sleep = nextPollIntervalAfterError(sleep, err)
 		} else {
 			sleep = basePollInterval
+			lastLogMsg = ""
 		}
 		time.Sleep(sleep)
 	}

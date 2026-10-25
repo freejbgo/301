@@ -25,6 +25,7 @@ done
 grep -q 'isAdministrator' "$home" || fail "HomeController must gate platform health dashboard"
 grep -q 'TenantOpsSummary::forAdmin' "$home" || fail "tenant home must use TenantOpsSummary"
 grep -q 'sanitizeHealthIssues' "$health" || fail "RediHealthReport must sanitize health messages"
+grep -q 'dns_api_tenants_unsynced' "$health" || fail "RediHealthReport must hint dns_api_tenants_unsynced"
 grep -q "where('admin_id', \$adminId)" "$tenant" || fail "TenantOpsSummary must scope by admin_id"
 grep -q 'isPlatformAdministrator' "$batch" || fail "BatchCreateDomains must check platform vs tenant"
 grep -q "where('admin_id', \$adminId)" "$batchSvc" || fail "DomainBatchCreator must verify group admin_id"

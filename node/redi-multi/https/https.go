@@ -40,6 +40,10 @@ func Start(listen string) {
 			logrus.Debugf("[https] accept: %v", err)
 			continue
 		}
-		go redirect.Process(conn, true)
+		if !redirect.TryAcquireConnection() {
+			conn.Close()
+			continue
+		}
+		go redirect.ProcessWithAcquiredSlot(conn, true)
 	}
 }
