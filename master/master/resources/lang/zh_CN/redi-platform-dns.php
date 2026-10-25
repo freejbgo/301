@@ -70,6 +70,13 @@ return [
             'dns_com'     => 'dns.com',
         ],
     ],
+    'reference' => [
+        'pool_no_nodes'        => '（请先在节点管理添加启用节点 IP）',
+        'tenant_token_host'    => '（租户 token）',
+        'tenant_pool_pending'  => ':target（租户登录并添加域名后生成）',
+        'tenant_rr_fqdn'       => ':rr（:fqdn）',
+        'pool_ipv6_unreadable' => '（部分启用节点 IPv6 无法解析，请先在后台修正）',
+    ],
     'messages' => [
         'saved'                    => '已保存',
         'forbidden'                => '仅超级管理员可修改平台 DNS / ACME 设置',

@@ -70,6 +70,13 @@ return [
             'dns_com'     => 'dns.com',
         ],
     ],
+    'reference' => [
+        'pool_no_nodes'        => '(Add enabled node IPs under Nodes first)',
+        'tenant_token_host'    => '(tenant token)',
+        'tenant_pool_pending'  => ':target (generated after tenant signs in and adds domains)',
+        'tenant_rr_fqdn'       => ':rr (:fqdn)',
+        'pool_ipv6_unreadable' => '(Some enabled nodes have invalid IPv6—fix in the admin console)',
+    ],
     'messages' => [
         'saved'               => 'Saved',
         'forbidden'           => 'Platform administrators only can change DNS / ACME settings',

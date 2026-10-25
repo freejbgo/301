@@ -11,6 +11,7 @@ use App\Services\Dns\DnsProviderFactory;
 use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Schema;
 
 class RediHealthReport
@@ -41,35 +42,40 @@ class RediHealthReport
             ->get(['id', 'name', 'public_ip', 'last_heartbeat_at']);
 
         foreach ($staleNodes as $node) {
+            $params = [
+                'id' => $node->id,
+                'name' => OpsDisplaySanitizer::field($node->name),
+                'ip' => OpsDisplaySanitizer::field($node->public_ip),
+            ];
             $issues[] = [
                 'level' => 'warning',
                 'code' => 'node_stale',
-                'message' => sprintf(
-                    '节点 #%d %s (%s) 超过 15 分钟无心跳',
-                    $node->id,
-                    OpsDisplaySanitizer::field($node->name),
-                    OpsDisplaySanitizer::field($node->public_ip)
-                ),
+                'params' => $params,
+                'message' => self::issueMessage(['code' => 'node_stale', 'params' => $params]),
             ];
         }
 
         $pendingDeploys = CertificateDeployService::countActionableDeployments('pending');
 
         if ($pendingDeploys > 0) {
+            $params = ['count' => $pendingDeploys];
             $issues[] = [
                 'level' => 'warning',
                 'code' => 'cert_deploy_pending',
-                'message' => sprintf('仍有 %d 条证书部署待节点拉取/确认（pending）', $pendingDeploys),
+                'params' => $params,
+                'message' => self::issueMessage(['code' => 'cert_deploy_pending', 'params' => $params]),
             ];
         }
 
         $failedDeploys = CertificateDeployService::countActionableDeployments('failed');
 
         if ($failedDeploys > 0) {
+            $params = ['count' => $failedDeploys];
             $issues[] = [
                 'level' => 'critical',
                 'code' => 'cert_deploy_failed',
-                'message' => sprintf('有 %d 条证书在节点上安装失败（failed）', $failedDeploys),
+                'params' => $params,
+                'message' => self::issueMessage(['code' => 'cert_deploy_failed', 'params' => $params]),
             ];
         }
 
@@ -95,15 +101,16 @@ class RediHealthReport
             if ($host === '') {
                 continue;
             }
+            $params = [
+                'host' => OpsDisplaySanitizer::field($host, $host, 253),
+                'date' => $cert->expires_at->format('Y-m-d'),
+                'status' => $cert->status,
+            ];
             $issues[] = [
                 'level' => 'critical',
                 'code' => 'cert_expired',
-                'message' => sprintf(
-                    '证书已过期：%s（%s，状态 %s）',
-                    OpsDisplaySanitizer::field($host, $host, 253),
-                    $cert->expires_at->format('Y-m-d'),
-                    $cert->status
-                ),
+                'params' => $params,
+                'message' => self::issueMessage(['code' => 'cert_expired', 'params' => $params]),
             ];
         }
 
@@ -127,16 +134,17 @@ class RediHealthReport
             if ($host === '') {
                 continue;
             }
+            $params = [
+                'days' => $warnDays,
+                'host' => OpsDisplaySanitizer::field($host, $host, 253),
+                'date' => $cert->expires_at->format('Y-m-d'),
+                'status' => $cert->status,
+            ];
             $issues[] = [
                 'level' => 'warning',
                 'code' => 'cert_expiring',
-                'message' => sprintf(
-                    '证书将在 %d 天内到期：%s（%s，状态 %s）',
-                    $warnDays,
-                    OpsDisplaySanitizer::field($host, $host, 253),
-                    $cert->expires_at->format('Y-m-d'),
-                    $cert->status
-                ),
+                'params' => $params,
+                'message' => self::issueMessage(['code' => 'cert_expiring', 'params' => $params]),
             ];
         }
 
@@ -163,11 +171,7 @@ class RediHealthReport
         $issues = [];
 
         if (config('app.debug')) {
-            $issues[] = [
-                'level' => 'critical',
-                'code' => 'app_debug_enabled',
-                'message' => 'APP_DEBUG=true：生产环境请关闭调试并执行 php artisan config:cache',
-            ];
+            $issues[] = self::makeIssue('critical', 'app_debug_enabled');
         }
 
         if (! Schema::hasTable('redi_platform_dns')) {
@@ -180,52 +184,28 @@ class RediHealthReport
         }
 
         if (trim((string) $platform->acme_contact_email) === '') {
-            $issues[] = [
-                'level' => 'warning',
-                'code' => 'acme_email_missing',
-                'message' => '未配置 ACME 联系邮箱（后台 DNS 与节点池），无法签发证书',
-            ];
+            $issues[] = self::makeIssue('warning', 'acme_email_missing');
         }
 
         if ($platform->acme_staging) {
-            $issues[] = [
-                'level' => 'warning',
-                'code' => 'acme_staging_enabled',
-                'message' => '生产环境仍开启 ACME Staging；正式证书请关闭「ACME 测试环境」',
-            ];
+            $issues[] = self::makeIssue('warning', 'acme_staging_enabled');
         }
 
         if (trim((string) $platform->edge_zone) === '') {
-            $issues[] = [
-                'level' => 'warning',
-                'code' => 'edge_zone_missing',
-                'message' => '未配置平台 edge 主域名（edge_zone），租户 CNAME 与证书流程不完整',
-            ];
+            $issues[] = self::makeIssue('warning', 'edge_zone_missing');
         }
 
         if ($platform->isDnsApiMode()) {
             $driver = strtolower(trim((string) $platform->dns_driver));
             if ($driver === '' || $driver === 'manual' || ! DnsProviderFactory::isSupportedApiDriver($driver)) {
-                $issues[] = [
-                    'level' => 'warning',
-                    'code' => 'dns_driver_invalid',
-                    'message' => 'DNS 为 API 自动模式但驱动无效（请在后台 DNS 与节点池选择具体厂商驱动）',
-                ];
+                $issues[] = self::makeIssue('warning', 'dns_driver_invalid');
             }
             $creds = $platform->getApiCredentialsArray();
             if (trim((string) ($creds['api_key'] ?? '')) === '') {
-                $issues[] = [
-                    'level' => 'warning',
-                    'code' => 'dns_api_credentials_missing',
-                    'message' => 'DNS 为 API 自动模式但未保存 API 凭证，无法同步 pool / 租户 CNAME',
-                ];
+                $issues[] = self::makeIssue('warning', 'dns_api_credentials_missing');
             }
             if ($driver === 'cloudflare' && trim((string) $platform->dns_zone_id) === '') {
-                $issues[] = [
-                    'level' => 'warning',
-                    'code' => 'dns_zone_id_missing',
-                    'message' => 'Cloudflare 驱动未配置 Zone ID，API 同步将失败',
-                ];
+                $issues[] = self::makeIssue('warning', 'dns_zone_id_missing');
             }
         }
 
@@ -243,25 +223,16 @@ class RediHealthReport
 
         $enabled = (int) RediNode::query()->enabled()->count();
         if ($enabled === 0) {
-            return [[
-                'level' => 'warning',
-                'code' => 'node_pool_empty',
-                'message' => '没有启用的边缘节点，证书无法部署、pool DNS 无 A 记录可同步',
-            ]];
+            return [self::makeIssue('warning', 'node_pool_empty')];
         }
 
         if (RediNode::enabledPublicIps() !== []) {
             return [];
         }
 
-        return [[
-            'level' => 'warning',
-            'code' => 'node_no_public_ip',
-            'message' => sprintf(
-                '有 %d 台启用节点但未配置公网 IP（public_ip / extra_ips），pool A 记录与 A 池 CNAME 预检将无法工作',
-                $enabled
-            ),
-        ]];
+        $params = ['count' => $enabled];
+
+        return [self::makeIssue('warning', 'node_no_public_ip', $params)];
     }
 
     public static function collectHints(): array
@@ -375,19 +346,12 @@ class RediHealthReport
             $sample
         ));
         if ($total > count($sample)) {
-            $names .= sprintf(' …等共 %d 个', $total);
+            $names .= __('redi-health.issues.cert_validating_stuck_more', ['total' => $total]);
         }
 
-        return [[
-            'level' => 'warning',
-            'code' => 'cert_validating_stuck',
-            'message' => sprintf(
-                '%d 张证书超过 %d 小时仍为 validating（可能 ACME 任务卡住）：%s',
-                $total,
-                $hours,
-                $names
-            ),
-        ]];
+        $params = ['total' => $total, 'hours' => $hours, 'names' => $names];
+
+        return [self::makeIssue('warning', 'cert_validating_stuck', $params)];
     }
 
     /**
@@ -404,11 +368,7 @@ class RediHealthReport
         if (Schema::hasTable('failed_jobs')) {
             $failed = (int) \DB::table('failed_jobs')->count();
             if ($failed > 0) {
-                $issues[] = [
-                    'level' => 'critical',
-                    'code' => 'queue_failed_jobs',
-                    'message' => sprintf('队列有 %d 条 failed_jobs，请执行 php artisan queue:failed 排查', $failed),
-                ];
+                $issues[] = self::makeIssue('critical', 'queue_failed_jobs', ['count' => $failed]);
             }
         }
 
@@ -416,15 +376,10 @@ class RediHealthReport
             $pending = (int) \DB::table('jobs')->count();
             $threshold = max(10, (int) config('redi.health_queue_pending_threshold', 80));
             if ($pending >= $threshold) {
-                $issues[] = [
-                    'level' => 'warning',
-                    'code' => 'queue_backlog',
-                    'message' => sprintf(
-                        '队列积压 %d 条（阈值 %d），请确认 redi-queue / queue:work 在运行',
-                        $pending,
-                        $threshold
-                    ),
-                ];
+                $issues[] = self::makeIssue('warning', 'queue_backlog', [
+                    'pending' => $pending,
+                    'threshold' => $threshold,
+                ]);
             }
         }
 
@@ -434,15 +389,10 @@ class RediHealthReport
                 ->where('available_at', '<', now()->subHours($staleHours)->timestamp)
                 ->count();
             if ($stale > 0) {
-                $issues[] = [
-                    'level' => 'warning',
-                    'code' => 'queue_stale',
-                    'message' => sprintf(
-                        '有 %d 条队列任务超过 %d 小时未执行，可能 worker 未运行',
-                        $stale,
-                        $staleHours
-                    ),
-                ];
+                $issues[] = self::makeIssue('warning', 'queue_stale', [
+                    'count' => $stale,
+                    'hours' => $staleHours,
+                ]);
             }
         }
 
@@ -531,16 +481,12 @@ class RediHealthReport
                     $cert = $healed;
                 }
                 $canonical = self::certCanonicalHost($cert);
-                $issues[] = [
-                    'level' => 'warning',
-                    'code' => 'cert_domain_name_drift',
-                    'message' => sprintf(
-                        '证书 #%d domain_name 与域名不一致且未能自动对齐：记录 %s，应为 %s',
-                        $cert->id,
-                        OpsDisplaySanitizer::field($cert->domain_name, (string) $cert->domain_name, 253),
-                        OpsDisplaySanitizer::field($canonical, $canonical, 253)
-                    ),
+                $params = [
+                    'id' => $cert->id,
+                    'recorded' => OpsDisplaySanitizer::field($cert->domain_name, (string) $cert->domain_name, 253),
+                    'canonical' => OpsDisplaySanitizer::field($canonical, $canonical, 253),
                 ];
+                $issues[] = self::makeIssue('warning', 'cert_domain_name_drift', $params);
             });
 
         return $issues;
@@ -552,5 +498,37 @@ class RediHealthReport
     public static function deploymentCountsByNode(): Collection
     {
         return CertificateDeployService::deploymentCountsByNode();
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array{level: string, code: string, params: array<string, mixed>, message: string}
+     */
+    protected static function makeIssue(string $level, string $code, array $params = []): array
+    {
+        return [
+            'level' => $level,
+            'code' => $code,
+            'params' => $params,
+            'message' => self::issueMessage(['code' => $code, 'params' => $params]),
+        ];
+    }
+
+    /**
+     * @param  array{code?: string, params?: array<string, mixed>, message?: string}  $issue
+     */
+    public static function issueMessage(array $issue): string
+    {
+        $code = (string) ($issue['code'] ?? '');
+        if ($code === '') {
+            return (string) ($issue['message'] ?? '');
+        }
+
+        $key = 'redi-health.issues.'.$code;
+        if (Lang::has($key)) {
+            return (string) __($key, (array) ($issue['params'] ?? []));
+        }
+
+        return (string) ($issue['message'] ?? '');
     }
 }
