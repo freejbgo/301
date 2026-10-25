@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # CentOS 7.x（推荐 7.9）主控全自动部署。内核小版本不同不用重编：主控是 PHP，节点包是静态二进制。
 #
-# 在仓库里执行（不要把仓库克隆到 MASTER_INSTALL_ROOT，默认 /opt/301）：
-#   cp scripts/centos7/vars.example.env scripts/centos7/vars.env
-#   chmod 600 scripts/centos7/vars.env && vi scripts/centos7/vars.env
-#   sudo bash scripts/centos7/deploy-master.sh
+# 分步教程：docs/DEPLOY-TUTORIAL-CENTOS7.md（步骤 2–3）
+# 在仓库根目录执行（勿把 git 克隆到 MASTER_INSTALL_ROOT，默认 /opt/301）：
+#   1) 发版机：bash scripts/build-release-tarballs.sh && scp master.tar.gz 等到本机 /tmp/
+#   2) cp scripts/centos7/vars.example.env scripts/centos7/vars.env
+#   3) chmod 600 scripts/centos7/vars.env && vi vars.env  # 设 REDI_MASTER_TAR=/tmp/master.tar.gz 等
+#   4) sudo bash scripts/centos7/deploy-master.sh
 #
 # 重复执行是安全的：已有库不会被 SQL 覆盖（绿场空库一次导入 redi_admin.sql，含 redi_node_bump_skip），已有 .env 和 APP_KEY 会保留。
 set -euo pipefail
@@ -70,6 +72,7 @@ for ip in $NODE_IPS; do
   redi_is_ipv4 "$ip" || die "NODE_IPS 里有非法 IPv4: $ip"
 done
 redi_ensure_master_tar "$REPO_ROOT" "$TAR" die
+echo "使用主控发布包: $TAR"
 [[ -f "${REPO_ROOT}/db/redi_admin.sql" ]] || die "找不到 db/redi_admin.sql"
 
 APP="${MASTER_INSTALL_ROOT}/master"

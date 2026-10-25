@@ -7,7 +7,8 @@
 | 文档 | 用途 |
 |------|------|
 | [DEPLOY.md](../DEPLOY.md) | 通用部署说明（手工步骤；生产一键脚本仅 CentOS 7） |
-| [DEPLOY-centos7.md](../DEPLOY-centos7.md) | CentOS 7 一键 `deploy-master.sh` / `deploy-node.sh` |
+| [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) | **从零分步教程（推荐）** |
+| [DEPLOY-centos7.md](../DEPLOY-centos7.md) | CentOS 7 `deploy-master.sh` / `deploy-node.sh` 说明 |
 | [DEPLOY-centos7-example.md](../DEPLOY-centos7-example.md) | `vars.env` 填 IP 示例 |
 | [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) | 真机逐步验收 |
 | [docs/ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) | 边缘池 F1–F8（DNS、证书、跳转） |
@@ -45,7 +46,7 @@ CentOS 的 `deploy-master.sh` 在 `migrate` 之后会检查该过程是否存在
 
 ## 节点（被干扰域名场景）
 
-- 发布包 `node/redi-multi.tar.gz`：**不含**本机 `config.json`，首次从 `config.json.example` 复制；二进制为 **linux/amd64** 静态链接；**lagran 默认开启**。本地 `scripts/build-*-tar.sh` 或打 **`v*` tag** 由 `release.yml` 生成（见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)）。
+- 发布包 `node/redi-multi.tar.gz`：**不含**本机 `config.json`，首次从 `config.json.example` 复制；二进制为 **linux/amd64** 静态链接；**lagran 默认开启**。开发机 `scripts/build-release-tarballs.sh`（或 `build-*-tar.sh`）；可选 **`v*` tag** → `release.yml`（见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md)、[DEPLOY-centos7.md](../DEPLOY-centos7.md)）。
 - `deploy-node.sh` 会 `setcap cap_net_admin`，并在应开启 lagran 时检查 capability 与日志。`REDI_MASTER_URL` 生产须 **https://**；主控尚无证书时 lab 可 `REDI_MASTER_INSECURE=1` + `http://`（见 `vars.example.env`）。
 - 跳转配置通过访客域名上的 **`/api.js`** 从 MySQL 拉取（见 [node/README.md](../node/README.md)）。
 

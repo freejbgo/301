@@ -30,6 +30,9 @@ for needle in \
   'docs/ACCEPTANCE-CENTOS7-DEPLOY.md' \
   'docs/ACCEPTANCE-EDGE-POOL.md' \
   'docs/UPGRADE-IN-PLACE.md' \
+  'build-release-tarballs.sh' \
+  'REDI_MASTER_TAR' \
+  '不需要 Docker' \
   '同步失败后的检查' \
   'redi_node_bump_skip' \
   '不必手工 migrate' \
@@ -51,6 +54,8 @@ done
 
 grep -qF 'DEPLOY-centos7.md' "${REPO_ROOT}/DEPLOY.md" \
   || fail "DEPLOY.md must link DEPLOY-centos7.md"
+grep -qF 'DEPLOY-TUTORIAL-CENTOS7.md' "${REPO_ROOT}/DEPLOY.md" \
+  || fail "DEPLOY.md must link DEPLOY-TUTORIAL-CENTOS7"
 
 grep -qF 'redi_node_bump_skip' "$GREEN" \
   || fail "GREENFIELD-INSTALL.md must document redi_node_bump_skip"

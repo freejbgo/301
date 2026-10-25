@@ -1,6 +1,6 @@
 # 上线检查单（一页）
 
-打印或在预发环境逐项打勾。详细说明与命令见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)；真机步骤见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md)、[ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)。平台边界见 [CONSOLE.md](CONSOLE.md) §8。
+打印或在预发环境逐项打勾。**首次部署步骤**见 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md)。详细说明与命令见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)；真机步骤见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md)、[ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)。平台边界见 [CONSOLE.md](CONSOLE.md) §8。
 
 在 Cursor 中可使用可勾选副本：[301 上线检查单](https://cursor.com/canvas/store-0707e8bc-7570-4527-8e26-d32c04eb4d4e/e877d821-4edb-4d1f-9d65-4e1382e20da4)（进度会保存在 Canvas 侧）。
 
@@ -17,14 +17,14 @@
 
 ## B. 部署与进程
 
-- [ ] 绿场或升级路径完成：[DEPLOY-centos7.md](../DEPLOY-centos7.md) / [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)
+- [ ] 绿场或升级路径完成：**CentOS 7.x 裸机**（常用 7.9），未依赖 Docker；见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) / [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)
 - [ ] 主控：`nginx`、`php-fpm`、`mariadb`、`redi-queue` 均为 active
 - [ ] `redi-queue` 含 `--max-time=3600`
 - [ ] `/etc/cron.d/redi-renew` 含 renew / prune / health，**无** `schedule:run`，**无** `master/master` 路径
 - [ ] Cron 行尾含 `|| redi:ops-webhook --task=…`（或已跑 `patch-master-cron-ops-webhook.sh`）
 - [ ] 节点：`redi-multi` active；`setcap cap_net_admin`；防火墙仅 22/80/443
 - [ ] 主控 `NODE_IPS` 与节点公网 IP 一致；已 `deploy-master` 或 `grant-nodes-from-vars`
-- [ ] 发版包来自 [GitHub Releases](https://github.com/freejbgo/301/releases) 某 `v*` 版本（或本地 `dev-preflight` 后自建 tar，见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md)）
+- [ ] 发版包为本地 `dev-preflight` + `build-release-tarballs.sh`（或等价 tar），并已 `scp` / 配置 `REDI_*_TAR`（可选：GitHub Releases 某 `v*`，见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md)）
 
 ## C. 运营自检（命令）
 

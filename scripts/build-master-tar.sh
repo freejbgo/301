@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# 打主控发布包 master/master.tar.gz。
+# 打主控发布包 master/master.tar.gz（上线常与 build-node-tar 一并执行 build-release-tarballs.sh）。
 # 包内带 composer install --no-dev 的 vendor，不带 .env，服务器上不用再跑 composer。
-# 产物勿提交 git；发 v* tag 时 release.yml 在测试通过后会打相同包并上传 Release。
+# 产物勿提交 git；可选 v* tag 时 release.yml 会打相同包上传 GitHub Release。
 # 打包前建议 bash scripts/dev-preflight.sh（见 docs/DEVELOPMENT.md）。
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
