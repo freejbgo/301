@@ -9,11 +9,11 @@ class AcmeHttp01Token
     public static function normalize(string $token): string
     {
         if (OpsDisplaySanitizer::containsControlChars($token)) {
-            throw new InvalidArgumentException('ACME 挑战 token 无效');
+            throw new InvalidArgumentException('Invalid ACME challenge token');
         }
         $token = trim($token);
         if ($token === '' || strlen($token) > 128 || ! preg_match('/^[A-Za-z0-9_-]+$/', $token)) {
-            throw new InvalidArgumentException('ACME 挑战 token 无效');
+            throw new InvalidArgumentException('Invalid ACME challenge token');
         }
 
         return $token;

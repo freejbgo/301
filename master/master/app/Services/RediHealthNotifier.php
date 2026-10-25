@@ -44,7 +44,8 @@ class RediHealthNotifier
             $tag = $row['level'] === 'critical'
                 ? RediErrorMessage::get('health.critical')
                 : RediErrorMessage::get('health.warning');
-            $lines[] = '['.$tag.'] '.OpsDisplaySanitizer::field($row['message'] ?? '', '—', 500);
+            $message = RediHealthReport::issueMessage($row, 'en');
+            $lines[] = '['.$tag.'] '.OpsDisplaySanitizer::field($message, '—', 500);
         }
 
         $text = implode("\n", $lines);

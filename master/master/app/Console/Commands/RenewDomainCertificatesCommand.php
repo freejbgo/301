@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\Log;
 class RenewDomainCertificatesCommand extends Command
 {
     protected $signature = 'redi:renew-certificates
-                            {--days=25 : 到期多少天内触发续期排队}
-                            {--dry-run : 只列出将续期的域名，不入队}';
+                            {--days=25 : Queue renewal within this many days before expiry}
+                            {--dry-run : List domains only; do not enqueue}';
 
     protected $description = 'Queue renewal for domain certificates expiring soon (HTTP-01)';
 
