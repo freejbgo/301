@@ -10,7 +10,7 @@ trait EnsuresAdministrator
     {
         $user = Admin::user();
         if (! $user || ! method_exists($user, 'isAdministrator') || ! $user->isAdministrator()) {
-            abort(403, '仅超级管理员可操作');
+            abort(403, __('redi-auth.admin_only'));
         }
     }
 }

@@ -20,19 +20,19 @@ class PlatformDnsSettings extends Form implements LazyRenderable
     {
         $user = Admin::user();
         if (! $user || ! method_exists($user, 'isAdministrator') || ! $user->isAdministrator()) {
-            return $this->response()->error('仅超级管理员可修改平台 DNS / ACME 设置');
+            return $this->response()->error(__('redi-platform-dns.messages.forbidden'));
         }
 
         $mode = strtolower(trim((string) ($input['dns_mode'] ?? 'manual')));
         if (! in_array($mode, ['manual', 'api'], true)) {
-            return $this->response()->error('解析模式无效');
+            return $this->response()->error(__('redi-platform-dns.messages.invalid_dns_mode'));
         }
         $driver = strtolower(trim((string) ($input['dns_driver'] ?? 'manual')));
         if ($mode === 'api' && ($driver === '' || $driver === 'manual')) {
-            return $this->response()->error('API 自动模式请选择具体 DNS 驱动，不能选「手动」');
+            return $this->response()->error(__('redi-platform-dns.messages.api_driver_required'));
         }
         if ($mode === 'api' && ! DnsProviderFactory::isSupportedApiDriver($driver)) {
-            return $this->response()->error('不支持的 DNS API 驱动: '.$driver);
+            return $this->response()->error(__('redi-platform-dns.messages.unsupported_driver', ['driver' => $driver]));
         }
         if ($mode === 'manual') {
             $driver = 'manual';
@@ -45,15 +45,15 @@ class PlatformDnsSettings extends Form implements LazyRenderable
         $poolHost = strtolower(trim((string) ($input['pool_host'] ?? 'pool') ?: 'pool'));
         if (OpsDisplaySanitizer::containsControlChars($edgeZone)
             || OpsDisplaySanitizer::containsControlChars($poolHost)) {
-            return $this->response()->error('域名配置不能包含控制字符');
+            return $this->response()->error(__('redi-platform-dns.messages.control_chars'));
         }
         $edgeZone = HostNameValidator::toCanonicalAscii($edgeZone);
         if ($edgeZone === '' || ! HostNameValidator::isValidHostLabel($edgeZone)) {
-            return $this->response()->error('平台主域名格式无效');
+            return $this->response()->error(__('redi-platform-dns.messages.invalid_edge_zone'));
         }
         if ($poolHost === '' || str_contains($poolHost, '.')
             || ! HostNameValidator::isValidHostLabel($poolHost)) {
-            return $this->response()->error('Pool 主机名格式无效（单段主机名，不含点）');
+            return $this->response()->error(__('redi-platform-dns.messages.invalid_pool_host'));
         }
         $platform->edge_zone = $edgeZone;
         $platform->pool_host = $poolHost;
@@ -82,30 +82,33 @@ class PlatformDnsSettings extends Form implements LazyRenderable
             TenantEdgeService::invalidateAllDnsSyncedAt();
         }
 
-        return $this->response()->success('已保存')->refresh();
+        return $this->response()->success(__('redi-platform-dns.messages.saved'))->refresh();
     }
 
     public function form()
     {
-        $this->text('edge_zone', '平台主域名')->required()->help('例：123.com（你拥有 DNS 解析权的域名）');
-        $this->text('pool_host', 'Pool 主机名')->default('pool')->help('最终 FQDN：pool.平台主域名；修改后须重新 API 同步（租户 CNAME 指向会变）');
-        $this->radio('dns_mode', '解析模式')->options(['manual' => '手动', 'api' => 'API 自动'])->default('manual')
-            ->help('手动：在下方「解析参考」表按记录在 DNS 服务商面板自行添加，无需点同步。API 自动：保存凭证后可一键同步 pool A 与各租户 token→pool CNAME。');
-        $this->select('dns_driver', 'DNS 驱动')->options([
-            'manual' => '手动',
-            'cloudflare' => 'Cloudflare',
-            'aliyun_cn' => '阿里云中国',
-            'aliyun_intl' => '阿里云国际',
-            'dnspod_cn' => 'DNSPod 中国',
-            'dnspod_intl' => 'DNSPod 国际',
-            'dns_com' => 'dns.com',
-        ])->default('manual');
-        $this->text('dns_zone_id', 'Zone ID')->help('Cloudflare 必填；其他厂商可留空');
-        $this->text('api_key', 'API Key / Token')->help('Cloudflare=API Token；阿里云=AccessKey ID；DNSPod=API ID；dns.com=API Key。留空不修改');
-        $this->password('api_secret', 'API Secret')->help('阿里云=AccessKey Secret；DNSPod=Token；dns.com=API Secret');
-        $this->switch('clear_dns_api_credentials', '清空已保存的 API 密钥')->help('勾选并保存将删除库内加密凭证');
-        $this->email('acme_contact_email', 'ACME 联系邮箱')->help('Let\'s Encrypt 注册邮箱');
-        $this->switch('acme_staging', 'ACME 测试环境')->help('勾选则使用 Let\'s Encrypt Staging');
+        $dnsModeOptions = trans('redi-platform-dns.options.dns_mode');
+        $dnsDriverOptions = trans('redi-platform-dns.options.dns_driver');
+
+        $this->text('edge_zone', __('redi-platform-dns.fields.edge_zone'))->required()
+            ->help(__('redi-platform-dns.help.edge_zone'));
+        $this->text('pool_host', __('redi-platform-dns.fields.pool_host'))->default('pool')
+            ->help(__('redi-platform-dns.help.pool_host'));
+        $this->radio('dns_mode', __('redi-platform-dns.fields.dns_mode'))->options($dnsModeOptions)->default('manual')
+            ->help(__('redi-platform-dns.help.dns_mode'));
+        $this->select('dns_driver', __('redi-platform-dns.fields.dns_driver'))->options($dnsDriverOptions)->default('manual');
+        $this->text('dns_zone_id', __('redi-platform-dns.fields.dns_zone_id'))
+            ->help(__('redi-platform-dns.help.dns_zone_id'));
+        $this->text('api_key', __('redi-platform-dns.fields.api_key'))
+            ->help(__('redi-platform-dns.help.api_key'));
+        $this->password('api_secret', __('redi-platform-dns.fields.api_secret'))
+            ->help(__('redi-platform-dns.help.api_secret'));
+        $this->switch('clear_dns_api_credentials', __('redi-platform-dns.fields.clear_dns_api_credentials'))
+            ->help(__('redi-platform-dns.help.clear_dns_api_credentials'));
+        $this->email('acme_contact_email', __('redi-platform-dns.fields.acme_contact_email'))
+            ->help(__('redi-platform-dns.help.acme_contact_email'));
+        $this->switch('acme_staging', __('redi-platform-dns.fields.acme_staging'))
+            ->help(__('redi-platform-dns.help.acme_staging'));
     }
 
     public function default()

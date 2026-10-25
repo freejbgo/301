@@ -39,4 +39,25 @@ return [
             'success' => '新 Token 已生成（完整串僅本次響應可見，請立即寫入節點 REDI_NODE_TOKEN）：:masked',
         ],
     ],
+    'form' => [
+        'fields' => [
+            'public_ip'   => '主公網 IP',
+            'public_ipv6' => '主公網 IPv6',
+            'extra_ipv6'  => '其他公網 IPv6',
+            'extra_ips'   => '其他公網 IP',
+            'note'        => '備註',
+        ],
+        'help' => [
+            'public_ip'   => '這台機器對外的主 IP，也是節點程序所在機器。一台機器只建一條節點。',
+            'public_ipv6' => '可選。默認不會在 Pool 發布 AAAA 記錄；需開啟 REDI_PUBLISH_POOL_AAAA 並同步後才會寫入廠商 DNS。',
+            'extra_ipv6'  => '同一台機器上還要寫入 pool 的公網 IPv6，一行一個。須先填寫主公網 IPv6。',
+            'extra_ips'   => '同一台機器上還要寫入 pool 的公網 IPv4，一行一個。Pool 只寫 A 記錄。仍然只跑一個節點進程、只用一個 Token。不要為這些 IP 再新建節點。',
+        ],
+        'validation' => [
+            'public_ip_ipv4'     => '主公網 IP 必須是 IPv4',
+            'extra_ipv6_primary' => '請先填寫主公網 IPv6',
+        ],
+        'created'        => '節點已創建',
+        'created_toastr' => '節點已創建。完整 Token 僅本次響應可見（請立即寫入 REDI_NODE_TOKEN）：:masked',
+    ],
 ];

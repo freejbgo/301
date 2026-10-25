@@ -13,14 +13,14 @@ class PlatformSettingsController extends Controller
     public function index(Content $content)
     {
         if (! Admin::user() || ! Admin::user()->isAdministrator()) {
-            abort(403, '仅超级管理员可修改系统外观');
+            abort(403, __('redi-platform-settings.messages.forbidden'));
         }
 
-        $card = Card::make('全平台外观（Logo / 标题）', new PlatformSettings());
+        $card = Card::make(__('redi-platform-settings.cards.branding'), new PlatformSettings());
 
         return $content
-            ->title('系统外观')
-            ->description('全平台共用一套品牌设置')
+            ->title(__('redi-platform-settings.page.title'))
+            ->description(__('redi-platform-settings.page.description'))
             ->body($card);
     }
 }

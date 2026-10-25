@@ -1,0 +1,83 @@
+<?php
+
+return [
+    'page' => [
+        'title'       => 'DNS 与节点池',
+        'description' => '模型 2：客户域 CNAME → 租户 token；token CNAME → pool；pool 多条 A → 节点',
+    ],
+    'cards' => [
+        'settings' => 'DNS 与节点池',
+        'pool'     => 'Pool：节点 A 记录参考',
+        'tenant'   => '租户 edge：token → pool（CNAME）参考',
+    ],
+    'alerts' => [
+        'manual_title' => '说明',
+        'manual_body'  => '当前为<strong>手动解析</strong>：请复制下方记录，到你方 DNS 服务商（Cloudflare、阿里云等）控制台自行添加或更新；本系统不会调用 DNS API。',
+        'api_title'    => '说明',
+        'api_body'     => '当前为 <strong>API 自动</strong>：保存驱动与凭证后，可点击同步将 pool 的多条 A 与各租户 CNAME 写入厂商。',
+    ],
+    'empty' => [
+        'pool'   => '请先填写平台主域名并添加节点。',
+        'tenant' => '配置平台主域名后，租户 edge 记录将显示于此。',
+    ],
+    'table' => [
+        'pool_headers'   => ['类型', '主机名 / FQDN', '记录值'],
+        'tenant_headers' => ['类型', '主机记录（FQDN）', '指向'],
+    ],
+    'sync' => [
+        'button'           => '同步 Pool / 租户 CNAME 到 DNS 厂商',
+        'not_run'          => '未执行同步',
+        'failed'           => '同步失败',
+        'success'          => 'DNS 已同步到厂商',
+        'manual_mode_info' => '当前为手动解析模式：请按页面 Pool / 租户参考表在 DNS 服务商自行配置，无需同步。',
+        'failed_prefix'    => 'DNS 同步失败：',
+    ],
+    'fields' => [
+        'edge_zone'                 => '平台主域名',
+        'pool_host'                 => 'Pool 主机名',
+        'dns_mode'                  => '解析模式',
+        'dns_driver'                => 'DNS 驱动',
+        'dns_zone_id'               => 'Zone ID',
+        'api_key'                   => 'API Key / Token',
+        'api_secret'                => 'API Secret',
+        'clear_dns_api_credentials' => '清空已保存的 API 密钥',
+        'acme_contact_email'        => 'ACME 联系邮箱',
+        'acme_staging'              => 'ACME 测试环境',
+    ],
+    'help' => [
+        'edge_zone'                 => '例：123.com（你拥有 DNS 解析权的域名）',
+        'pool_host'                 => '最终 FQDN：pool.平台主域名；修改后须重新 API 同步（租户 CNAME 指向会变）',
+        'dns_mode'                  => '手动：在下方「解析参考」表按记录在 DNS 服务商面板自行添加，无需点同步。API 自动：保存凭证后可一键同步 pool A 与各租户 token→pool CNAME。',
+        'dns_zone_id'               => 'Cloudflare 必填；其他厂商可留空',
+        'api_key'                   => 'Cloudflare=API Token；阿里云=AccessKey ID；DNSPod=API ID；dns.com=API Key。留空不修改',
+        'api_secret'                => '阿里云=AccessKey Secret；DNSPod=Token；dns.com=API Secret',
+        'clear_dns_api_credentials' => '勾选并保存将删除库内加密凭证',
+        'acme_contact_email'        => 'Let\'s Encrypt 注册邮箱',
+        'acme_staging'              => '勾选则使用 Let\'s Encrypt Staging',
+    ],
+    'options' => [
+        'dns_mode' => [
+            'manual' => '手动',
+            'api'    => 'API 自动',
+        ],
+        'dns_driver' => [
+            'manual'      => '手动',
+            'cloudflare'  => 'Cloudflare',
+            'aliyun_cn'   => '阿里云中国',
+            'aliyun_intl' => '阿里云国际',
+            'dnspod_cn'   => 'DNSPod 中国',
+            'dnspod_intl' => 'DNSPod 国际',
+            'dns_com'     => 'dns.com',
+        ],
+    ],
+    'messages' => [
+        'saved'                    => '已保存',
+        'forbidden'                => '仅超级管理员可修改平台 DNS / ACME 设置',
+        'invalid_dns_mode'         => '解析模式无效',
+        'api_driver_required'      => 'API 自动模式请选择具体 DNS 驱动，不能选「手动」',
+        'unsupported_driver'       => '不支持的 DNS API 驱动: :driver',
+        'control_chars'            => '域名配置不能包含控制字符',
+        'invalid_edge_zone'        => '平台主域名格式无效',
+        'invalid_pool_host'        => 'Pool 主机名格式无效（单段主机名，不含点）',
+    ],
+];
