@@ -240,7 +240,7 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 
 ## 7. IPv4/IPv6 双栈（可选）
 
-**前提：** 主控与节点代码已含 V6-01–V6-30（`main` 默认仍 **不** 发布 Pool AAAA；节点默认 `0.0.0.0` 在 Linux 上已双栈接听；lagran 的 IPv6 与 IPv4 相同）。需要节点有 **公网 IPv6**、主控有 **IPv6 出口**；操作细节见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12 与 [NETWORKING-IPv6.md](NETWORKING-IPv6.md)。
+**前提：** 默认 **不** 发布 Pool AAAA；节点 `0.0.0.0` 监听在 Linux 上已双栈；lagran 对 IPv6 出站与 IPv4 相同。需要节点有 **公网 IPv6**、主控有 **IPv6 出口**。步骤与陷阱摘要见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12、[NETWORKING-IPv6.md](NETWORKING-IPv6.md)。
 
 在后台「节点管理」填写主 IPv6 / 其他 IPv6（**不要**写入 `vars.env` 的 `NODE_IPS`）。
 
