@@ -19,9 +19,11 @@ use Illuminate\Validation\ValidationException;
 
 class RediAdminGroupController extends AdminController
 {
+    protected $translation = 'redi-admin-group';
+
     public function title()
     {
-        return "分组管理";
+        return admin_trans_label('title');
     }
 
     /**
@@ -37,17 +39,16 @@ class RediAdminGroupController extends AdminController
                 return e(OpsDisplaySanitizer::field($value, '—', 120));
             });
             if (AdminTenantContext::isPlatformAdministrator()) {
-                $grid->column('admin_name', '所属账号')->display(function ($value) {
+                $grid->column('admin_name', admin_trans_field('admin_name'))->display(function ($value) {
                     return e(OpsDisplaySanitizer::field($value, '—', 120));
                 });
             }
-            $grid->column('status', '状态')->using([1 => "启用", 2 => "停用"]);
+            $grid->column('status', admin_trans_field('status'))->using(admin_trans('redi-admin-group.options.status'));
             $grid->column('created_at');
             $grid->column('updated_at')->sortable();
 
-            $grid->column('avgMonthCost')->display('批量修改跳转')->modal(function (Grid\Displayers\Modal $modal) {
-                // 标题
-                $modal->title('批量修改跳转');
+            $grid->column('avgMonthCost')->display(admin_trans_label('batch_redirect'))->modal(function (Grid\Displayers\Modal $modal) {
+                $modal->title(admin_trans_label('batch_modal'));
                 // 自定义图标
                 $modal->icon('feather icon-edit');
                 // 传递当前行字段值
@@ -58,7 +59,7 @@ class RediAdminGroupController extends AdminController
                 $filter->panel();
 
                 $filter->like('name')->width(3);
-                $filter->equal('status', '状态')->select([1 => '启用', 2 => '停用'])->width(3);
+                $filter->equal('status', admin_trans_field('status'))->select(admin_trans('redi-admin-group.options.status'))->width(3);
             });
         });
     }
@@ -91,19 +92,19 @@ class RediAdminGroupController extends AdminController
         return Form::make(new RediAdminGroup(), function (Form $form) {
             $form->display('id');
             $form->text('name');
-            $form->radio('status', '状态')->options([1=>'启用', 2=>'停用'])->default(1);
+            $form->radio('status', admin_trans_field('status'))->options(admin_trans('redi-admin-group.options.status'))->default(1);
             //$form->text('status');
 
             if ($form->isCreating()) {
                 if (AdminTenantContext::isPlatformAdministrator()) {
                     $owners = AdminTenantContext::tenantOwnerSelectOptions();
                     if ($owners === []) {
-                        $form->html('<p class="text-danger">请先创建租户管理员账号（非 administrator 角色），再建分组。</p>');
+                        $form->html('<p class="text-danger">'.e(admin_trans_label('no_tenant')).'</p>');
                     }
-                    $form->select('owner_admin_id', '所属租户账号')
+                    $form->select('owner_admin_id', admin_trans_field('owner_admin_id'))
                         ->options($owners)
                         ->required()
-                        ->help('超级管理员建分组时必须指定租户，避免分组挂在超管账号下。');
+                        ->help(admin_trans('redi-admin-group.help.owner_admin_id'));
                 } else {
                     $form->hidden('admin_id')->value(Admin::user()->id);
                     $form->hidden('admin_name')->value(Admin::user()->username);
@@ -121,7 +122,7 @@ class RediAdminGroupController extends AdminController
                     ->count();
                 if ($count > 0) {
                     throw ValidationException::withMessages([
-                        'name' => "该分组下还有 {$count} 条域名，请先迁移或删除域名后再删分组。",
+                        'name' => admin_trans('redi-admin-group.validation.delete_has_domains', ['count' => $count]),
                     ]);
                 }
             });
@@ -144,13 +145,13 @@ class RediAdminGroupController extends AdminController
                         $owner = DB::table($usersTable)->where('id', $ownerId)->first();
                         if (! $owner) {
                             throw ValidationException::withMessages([
-                                'owner_admin_id' => '请选择有效的租户账号',
+                                'owner_admin_id' => admin_trans('redi-admin-group.validation.owner_invalid'),
                             ]);
                         }
                         $allowed = AdminTenantContext::tenantOwnerSelectOptions();
                         if (! isset($allowed[$ownerId])) {
                             throw ValidationException::withMessages([
-                                'owner_admin_id' => '不能将分组挂在超级管理员账号下',
+                                'owner_admin_id' => admin_trans('redi-admin-group.validation.owner_not_tenant'),
                             ]);
                         }
                         $form->model()->forceFill([

@@ -33,6 +33,7 @@ Dcat.ready(function () {
     $.ajax({
       method: 'POST',
       url: @json($switchUrl),
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
       data: { locale: locale, _token: Dcat.token }
     }).done(function () {
       window.location.reload();

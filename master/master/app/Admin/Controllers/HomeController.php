@@ -16,63 +16,68 @@ class HomeController extends Controller
 {
     public function index(Content $content)
     {
-        $content->header('301 跳转系统');
+        $content->header(__('redi-home.labels.header'));
 
         $user = Admin::user();
         if ($user && method_exists($user, 'isAdministrator') && $user->isAdministrator()) {
             $summary = RediHealthReport::summary();
             $issues = RediHealthReport::collectIssues(7);
             $issueHtml = $issues === []
-                ? '<p class="text-success mb-0">redi:health 当前无待处理项。</p>'
+                ? '<p class="text-success mb-0">'.e(__('redi-home.labels.health_ok')).'</p>'
                 : '<ul class="mb-0">'.implode('', array_map(function ($row) {
                     $class = $row['level'] === 'critical' ? 'text-danger' : 'text-warning';
+
                     return '<li class="'.e($class).'">'.e(OpsDisplaySanitizer::field($row['message'] ?? '', '—', 300)).'</li>';
                 }, array_slice($issues, 0, 8))).'</ul>';
 
             if (count($issues) > 8) {
-                $issueHtml .= '<p class="text-muted mt-2 mb-0">另有 '.(count($issues) - 8).' 项，请执行 <code>php artisan redi:health</code></p>';
+                $issueHtml .= '<p class="text-muted mt-2 mb-0">'.e(__('redi-home.labels.health_more', ['count' => count($issues) - 8])).'</p>';
             }
 
             $content->row(function (Row $row) use ($summary) {
-                $row->column(2, Card::make('启用节点', (string) $summary['enabled_nodes']));
-                $row->column(2, Card::make('心跳异常', (string) $summary['stale_nodes']));
-                $row->column(2, Card::make('证书待部署', (string) $summary['pending_deploys']));
-                $row->column(2, Card::make('证书部署失败', (string) $summary['failed_deploys']));
-                $row->column(2, Card::make('队列积压', (string) $summary['queue_pending']));
-                $row->column(2, Card::make('failed_jobs', (string) $summary['queue_failed']));
+                $row->column(2, Card::make(__('redi-home.cards.enabled_nodes'), (string) $summary['enabled_nodes']));
+                $row->column(2, Card::make(__('redi-home.cards.stale_nodes'), (string) $summary['stale_nodes']));
+                $row->column(2, Card::make(__('redi-home.cards.pending_deploys'), (string) $summary['pending_deploys']));
+                $row->column(2, Card::make(__('redi-home.cards.failed_deploys'), (string) $summary['failed_deploys']));
+                $row->column(2, Card::make(__('redi-home.cards.queue_pending'), (string) $summary['queue_pending']));
+                $row->column(2, Card::make(__('redi-home.cards.queue_failed'), (string) $summary['queue_failed']));
             });
 
-            $content->row(function (Row $row) use ($issueHtml) {
+            $requeueConfirm = json_encode(__('redi-home.labels.requeue_confirm'), JSON_UNESCAPED_UNICODE);
+            $content->row(function (Row $row) use ($issueHtml, $requeueConfirm) {
                 $requeueUrl = admin_url('ops/requeue-failed-deployments');
                 $token = csrf_token();
                 $opsHtml = $issueHtml
-                    .'<form method="post" action="'.e($requeueUrl).'" class="mt-3" onsubmit="return confirm(\'将全部 failed 证书部署改回 pending？\');">'
+                    .'<form method="post" action="'.e($requeueUrl).'" class="mt-3" onsubmit="return confirm('.$requeueConfirm.');">'
                     .'<input type="hidden" name="_token" value="'.e($token).'">'
                     .'<input type="hidden" name="_redirect" value="'.e(admin_base_path('/')).'">'
-                    .'<button type="submit" class="btn btn-warning btn-sm">重试全部失败部署</button>'
-                    .'<span class="text-muted ml-2">等同 <code>php artisan redi:requeue-failed-deployments</code></span>'
+                    .'<button type="submit" class="btn btn-warning btn-sm">'.e(__('redi-home.labels.requeue_btn')).'</button>'
+                    .'<span class="text-muted ml-2">'.e(__('redi-home.labels.requeue_hint')).'</span>'
                     .'</form>';
-                $row->column(12, Card::make('运营自检（最近 7 天证书预警）', $opsHtml));
+                $row->column(12, Card::make(__('redi-home.labels.ops_card'), $opsHtml));
             });
         } elseif ($user) {
             $stats = TenantOpsSummary::forAdmin(AdminTenantContext::sessionAdminId());
             $tips = '<ul class="mb-0">'
-                .'<li>启用域名：'.(int) $stats['domains_enabled'].'，停用：'.(int) $stats['domains_disabled'].'</li>'
-                .'<li>证书已生效：'.(int) $stats['certs_active'].'</li>'
-                .'<li>证书待处理（解析/签发/部署等）：'.(int) $stats['certs_needs_attention'].'</li>'
-                .'<li>14 天内到期：'.(int) $stats['certs_expiring_soon'].'</li>'
+                .'<li>'.e(__('redi-home.labels.tenant_stats_enabled', [
+                    'enabled' => (int) $stats['domains_enabled'],
+                    'disabled' => (int) $stats['domains_disabled'],
+                ])).'</li>'
+                .'<li>'.e(__('redi-home.labels.tenant_stats_cert_active', ['count' => (int) $stats['certs_active']])).'</li>'
+                .'<li>'.e(__('redi-home.labels.tenant_stats_cert_pending', ['count' => (int) $stats['certs_needs_attention']])).'</li>'
+                .'<li>'.e(__('redi-home.labels.tenant_stats_expiring', ['count' => (int) $stats['certs_expiring_soon']])).'</li>'
                 .'</ul>'
-                .'<p class="text-muted mt-2 mb-0">请先完成 CNAME/A 解析，再在「域名管理」中启用域名并申请证书。</p>';
+                .'<p class="text-muted mt-2 mb-0">'.e(__('redi-home.labels.tenant_tip')).'</p>';
 
             $content->row(function (Row $row) use ($stats) {
-                $row->column(3, Card::make('启用域名', (string) $stats['domains_enabled']));
-                $row->column(3, Card::make('证书已生效', (string) $stats['certs_active']));
-                $row->column(3, Card::make('证书待处理', (string) $stats['certs_needs_attention']));
-                $row->column(3, Card::make('即将到期', (string) $stats['certs_expiring_soon']));
+                $row->column(3, Card::make(__('redi-home.cards.domains_enabled'), (string) $stats['domains_enabled']));
+                $row->column(3, Card::make(__('redi-home.cards.certs_active'), (string) $stats['certs_active']));
+                $row->column(3, Card::make(__('redi-home.cards.certs_attention'), (string) $stats['certs_needs_attention']));
+                $row->column(3, Card::make(__('redi-home.cards.certs_expiring'), (string) $stats['certs_expiring_soon']));
             });
 
             $content->row(function (Row $row) use ($tips) {
-                $row->column(12, Card::make('我的业务概览', $tips));
+                $row->column(12, Card::make(__('redi-home.labels.tenant_overview'), $tips));
             });
         }
 
