@@ -3,7 +3,6 @@
 本文档汇总 **阻塞上线** 与 **验收必做** 项，与 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 配合使用。**生产环境仅维护 CentOS 7.9（7.x）部署路径。**
 
 - **已上线升级（不重装）**：[UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（含 `scripts/patch-master-cron-ops-webhook.sh`）
-- **已知限制与未来工作**：[ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)
 - **一页打勾清单**：[LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)（[Canvas 可勾选副本](https://cursor.com/canvas/store-0707e8bc-7570-4527-8e26-d32c04eb4d4e/e877d821-4edb-4d1f-9d65-4e1382e20da4)）
 
 ## 阻塞上线（P0 摘要）
@@ -88,7 +87,21 @@ bash scripts/verify-redi-db-deploy-path.sh
 - `failed_jobs` > 0 → 严重（`queue_failed_jobs`）
 - `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）→ `queue_backlog`；`available_at` 超过 `REDI_HEALTH_QUEUE_STALE_HOURS`（默认 2）未执行 → `queue_stale`（仅 `QUEUE_CONNECTION=database`）
 
-长期限制见 [ROADMAP-PRODUCTION.md](ROADMAP-PRODUCTION.md)。多 worker 见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)；节点 DB TLS 见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §9。
+多 worker 见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)；节点 DB TLS 见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §9。
+
+## 已知限制与计划增强
+
+不阻塞首单上线，排障时勿当缺陷：
+
+| 项 | 说明 |
+|----|------|
+| Laravel / PHP 大版本 | 当前锁 PHP 8.0 与 Dcat `2.2.3-beta` |
+| 租户隔离 | 持续收紧 API/后台全表策略 |
+| 运行环境 | CentOS 7 已 EOL，长期使用 vault 源；换 OS 属单独项目 |
+| 跳转与 HTTPS | 正常跳转 **200 + JS**；仅 **force HTTPS** 为 TLS **301** |
+| 域名占坑 | 平台内 `original_url` 唯一；新建默认停用，启用前 DNS 预检 |
+
+产品边界与后台操作见 [CONSOLE.md](CONSOLE.md) §8。
 
 ## 回滚
 

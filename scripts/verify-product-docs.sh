@@ -13,6 +13,7 @@ fail() {
 for f in \
   docs/README.md \
   docs/DEVELOPMENT.md \
+  docs/I18N.md \
   docs/HEALTH-REFERENCE.md \
   docs/PLATFORM-ARCHITECTURE.md \
   docs/NETWORKING-IPv6.md \
@@ -27,15 +28,17 @@ for gone in \
   docs/AUDIT-CENTOS7-PRODUCTION.md \
   docs/DEVELOPMENT-EDGE-POOL-HTTPS.md \
   docs/IPV6-DUALSTACK-DEV.md \
-  docs/IPV6-DUALSTACK-IMPLEMENTATION.md; do
+  docs/IPV6-DUALSTACK-IMPLEMENTATION.md \
+  docs/I18N-DEVELOPMENT-REPORT.md \
+  docs/ROADMAP-PRODUCTION.md; do
   [[ ! -f "$REPO_ROOT/$gone" ]] || fail "removed doc still present: $gone"
 done
 
-if grep -rE 'AUDIT-CENTOS7-PRODUCTION|DEVELOPMENT-EDGE-POOL-HTTPS|IPV6-DUALSTACK-(DEV|IMPLEMENTATION)' \
+if grep -rE 'AUDIT-CENTOS7-PRODUCTION|DEVELOPMENT-EDGE-POOL-HTTPS|IPV6-DUALSTACK-(DEV|IMPLEMENTATION)|I18N-DEVELOPMENT-REPORT|ROADMAP-PRODUCTION' \
   --include='*.md' --include='*.sh' --include='.env.example' "$REPO_ROOT" \
   --exclude='verify-product-docs.sh' \
   | grep -v '^Binary' | grep -q .; then
-  grep -rE 'AUDIT-CENTOS7-PRODUCTION|DEVELOPMENT-EDGE-POOL-HTTPS|IPV6-DUALSTACK-(DEV|IMPLEMENTATION)' \
+  grep -rE 'AUDIT-CENTOS7-PRODUCTION|DEVELOPMENT-EDGE-POOL-HTTPS|IPV6-DUALSTACK-(DEV|IMPLEMENTATION)|I18N-DEVELOPMENT-REPORT|ROADMAP-PRODUCTION' \
     --include='*.md' --include='*.sh' --include='.env.example' "$REPO_ROOT" \
     --exclude='verify-product-docs.sh' || true
   fail 'stale references to removed docs'
@@ -53,11 +56,9 @@ grep -qF 'deploy-master.sh' "$REPO_ROOT/docs/DEPLOY-TUTORIAL-CENTOS7.md" \
 grep -qF 'CONSOLE.md' "$REPO_ROOT/docs/README.md" || fail 'docs/README must link CONSOLE'
 grep -qF '## 8. 平台边界与运营约定' "$REPO_ROOT/docs/CONSOLE.md" \
   || fail 'CONSOLE must document platform boundaries (§8)'
-grep -qE '## 计划中的增强' "$REPO_ROOT/docs/ROADMAP-PRODUCTION.md" \
-  || fail 'ROADMAP must use future-work sections only'
-if grep -q '## 已具备' "$REPO_ROOT/docs/ROADMAP-PRODUCTION.md"; then
-  fail 'ROADMAP must not duplicate shipped capability ledger'
-fi
+grep -qF '## 已知限制与计划增强' "$REPO_ROOT/docs/PRODUCTION-READINESS.md" \
+  || fail 'PRODUCTION-READINESS must document known limits'
+grep -qF 'I18N.md' "$REPO_ROOT/docs/README.md" || fail 'docs/README must link I18N.md'
 grep -qF 'PLATFORM-ARCHITECTURE.md' "$REPO_ROOT/docs/ACCEPTANCE-EDGE-POOL.md" \
   || fail 'ACCEPTANCE-EDGE-POOL must link PLATFORM-ARCHITECTURE'
 

@@ -1,6 +1,6 @@
-# 绿场安装说明（无历史数据）
+# 绿场安装说明
 
-本仓库按 **全新部署（绿场）** 设计：你从未装过这套系统时，**不必**单独研究 Laravel 迁移编号；按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 跑脚本并 **一次导入** `db/redi_admin.sql` 即可。日后跟新发布包见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（与绿场首装无关）。
+按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 部署并 **一次导入** `db/redi_admin.sql` 即可；一般无需单独梳理迁移编号。日后换发布包见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
 
 ## 文档索引
 
