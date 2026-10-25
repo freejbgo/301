@@ -37,6 +37,7 @@
 | 26 | **已做** | `RediNode` / `RediAdminGroup` 模型校验走 `redi-admin-*`；平台 DNS 凭证解密文案三语 |
 | 27 | **已做** | `config/admin.php` 英文文件回退（与 `en/redi-branding` 一致）；门禁禁止 config 内硬编码中文 |
 | 28 | **已做** | 开发报告 / CONSOLE 与阶段 27 对齐；声明 Admin + ops 范围收口 |
+| 29 | **已做** | `verify-admin-i18n-invariants.sh` 扩展校验 `app/Models` 字符串字面量无汉字 |
 | — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；运维/节点 API 新消息英文 canonical |
 
 ### 运维速览
@@ -314,7 +315,7 @@ Laravel 自定义属性名与规则消息可放在 `redi.php` 的 `validation` �
 - [ ] `docs/CONSOLE.md` 所列菜单页面在 **en** 下无大块中文（允许品牌自定义名称、用户填写的域名/URL）。
 - [ ] 域名列表、证书状态、DNS 表单、节点管理、批量导入域名 **help 文本** 均有三语键。
 - [ ] `php artisan redi:lang-check`（或同等脚本）通过。
-- [x] 新增文案禁止 `app/Admin` 字符串字面量含汉字（`scripts/verify-admin-i18n-invariants.sh`）。
+- [x] 新增文案禁止 `app/Admin` / `app/Models` 字符串字面量含汉字（`scripts/verify-admin-i18n-invariants.sh`）。
 
 ---
 

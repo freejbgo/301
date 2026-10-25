@@ -36,7 +36,7 @@
 | [verify-cert-deploy-invariants.sh](verify-cert-deploy-invariants.sh) | `reconcileCertDeployStatus` / `certIsNodePullable`、启用守卫、`csvSafeCell` |
 | [verify-production-readiness-doc.sh](verify-production-readiness-doc.sh) | 静态校验 [PRODUCTION-READINESS.md](../docs/PRODUCTION-READINESS.md) 关键验收表述 |
 | [verify-admin-api-invariants.sh](verify-admin-api-invariants.sh) | 后台登录与节点 Agent API 限速约定 |
-| [verify-admin-i18n-invariants.sh](verify-admin-i18n-invariants.sh) | 后台 `app/Admin` 禁止字符串字面量中文、locale 中间件与登录同步约定 |
+| [verify-admin-i18n-invariants.sh](verify-admin-i18n-invariants.sh) | 后台 `app/Admin` / `app/Models` 禁止字符串字面量中文、`config/admin.php` 英文回退、locale 中间件与登录同步约定 |
 | [verify-release-workflow-invariants.sh](verify-release-workflow-invariants.sh) | `release.yml` 与 `build-*-tar` / 冒烟门禁约定 |
 | [verify-ci-preflight-parity.sh](verify-ci-preflight-parity.sh) | `dev-preflight` 中的 `verify-*.sh` 须在 `ci.yml` / `release.yml` 出现 |
 | [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | 已上线主控：升级 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`；可传参 `bash …/patch-master-cron-ops-webhook.sh <artisan目录>`）；结束会打印 Cron / `redi:health --notify` 验收提示 |
