@@ -1,9 +1,9 @@
 # 301 跳转系统 — 多语言（简 / 繁 / 英）开发报告
 
-**版本**：2026-10-25（产品范围收窄 + 阶段 1 已落地）  
+**版本**：2026-10-25（阶段 10 收尾：登录页语言切换 + 文档更新）  
 **范围**：主控 `master/master/` 管理后台**可见操作界面**（Laravel + Dcat Admin）；节点与运维文档不在本期。  
 **产品目标（已定）**：让使用后台的**超级管理员与租户账号**在 **简体中文 / 繁体中文 / English** 下方便操作；不要求节点 API、CLI、Webhook、库内历史 `last_error` 原文多语。  
-**结论摘要**：业务页仍以中文硬编码为主；**阶段 1** 已提供顶栏语言切换、`locale` 修正、侧栏业务菜单三语（Dcat `menu.php`）。其余页面文案按阶段 2 起逐模块抽取。
+**结论摘要**：自研后台可见界面已接入 `redi-*` 语言包与 Dcat `menu`/`global`/`extension`（英）；顶栏与**登录页**可切换简/繁/英，`admin_users.locale` 持久化。**未做**：系统外观品牌文案仍单语 JSON、Service/CLI 异常、库内 `last_error` 原文。
 
 ### 实施进度（代码）
 
@@ -17,8 +17,18 @@
 | 6 | **已做** | `EdgeDnsManualReference` 占位三语、首页 `RediHealthReport` 告警 `redi-health` |
 | 7 | **已做** | `collectHints` 三语 + 首页展示、批量重试 Toast、`en/global.php`（Dcat 字段） |
 | 8 | **已做** | `en/extension.php`、`admin_users.locale` 持久化、`redi-locale` 壳层文案 |
-| 9 | **已做（PR 待合并）** | 登录 `Login` 事件同步 session ↔ `admin_users.locale` |
-| — | **覆盖率（粗估）** | 自研业务可见页 ~95%；CLI/Service 异常与库内 `last_error` 仍单语 |
+| 9 | **已做** | 登录 `Login` 事件同步 session ↔ `admin_users.locale` |
+| 10 | **已做（PR 待合并）** | 登录页内联语言切换、`zh_CN/menu.php` 业务菜单键对齐 |
+| — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~98%；品牌 JSON / 非界面层仍单语 |
+
+### 阶段 10 后快照（相对 §2 历史审计）
+
+| 区域 | 现状 |
+|------|------|
+| `app/Admin/**` 用户可见字符串 | 已走 `__` / `admin_trans` / `redi-*`（仅注释含中文） |
+| `resources/lang/en` | 含 `menu`、`global`、`extension` 及全部 `redi-*` |
+| 语言解析 | `SetAdminLocale` + 顶栏/登录切换 + `admin_users.locale` + 登录事件同步 |
+| 仍单语 | `PlatformBranding` 默认与库内 JSON、`config/admin.php` 回退标题、证书 `last_error` 展示原文 |
 
 ---
 
