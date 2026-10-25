@@ -10,21 +10,10 @@
 
 | 文档 | 内容 |
 |------|------|
-| [DEPLOY.md](DEPLOY.md) | 部署教程（通用 / 手工） |
-| [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md) | 绿场安装（无旧数据、一次导入 `redi_admin.sql`） |
-| [DEPLOY-centos7.md](DEPLOY-centos7.md) | CentOS 7 一键脚本与变量 |
-| [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) | CentOS 7.9 真机部署验收清单 |
-| [docs/ACCEPTANCE-EDGE-POOL.md](docs/ACCEPTANCE-EDGE-POOL.md) | 边缘池业务验收 F1–F8（DNS / 证书 / 跳转） |
-| [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md) | 上线阻塞项与真机验收命令 |
-| [docs/HEALTH-REFERENCE.md](docs/HEALTH-REFERENCE.md) | `redi:health` 问题码与 hints |
-| [docs/ROADMAP-PRODUCTION.md](docs/ROADMAP-PRODUCTION.md) | 已知限制与未来工作 |
-| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 开发机发版前自检（`dev-preflight`） |
-| [docs/PLATFORM-ARCHITECTURE.md](docs/PLATFORM-ARCHITECTURE.md) | 边缘池、证书、节点 API 架构说明 |
-| [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) | 已上线主控/节点增量升级 |
-| [docs/OPS-MULTI-WORKER-QUEUE.md](docs/OPS-MULTI-WORKER-QUEUE.md) | 多 worker / Redis 缓存 |
-| [docs/CONSOLE.md](docs/CONSOLE.md) | 控制台操作手册 |
-| [docs/CUSTOMER-CNAME-HTTPS.md](docs/CUSTOMER-CNAME-HTTPS.md) | 交给客户的 CNAME 说明 |
-| [docs/NETWORKING-IPv6.md](docs/NETWORKING-IPv6.md) | IPv4/IPv6 双栈与 Pool AAAA |
-| [SECURITY.md](SECURITY.md) | 上线前要改的密码和端口 |
-| [scripts/README.md](scripts/README.md) | 发版与 verify 脚本索引 |
-| [scripts/dev-preflight.sh](scripts/dev-preflight.sh) | 开发机发版前自检（对齐 CI 核心步骤，见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)） |
+| [docs/README.md](docs/README.md) | **文档索引**（按上线 / 运营 / 开发场景） |
+| [DEPLOY-centos7.md](DEPLOY-centos7.md) | CentOS 7 一键部署（生产唯一路径） |
+| [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md) | 上线阻塞项与验收命令 |
+| [docs/CONSOLE.md](docs/CONSOLE.md) | 控制台操作与平台边界 §8 |
+| [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) | 已上线环境增量升级 |
+| [SECURITY.md](SECURITY.md) | 密码、端口、Agent |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 发版前 `dev-preflight` |

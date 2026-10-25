@@ -11,6 +11,7 @@ fail() {
 }
 
 for f in \
+  docs/README.md \
   docs/DEVELOPMENT.md \
   docs/HEALTH-REFERENCE.md \
   docs/PLATFORM-ARCHITECTURE.md \
@@ -37,7 +38,15 @@ if grep -rE 'AUDIT-CENTOS7-PRODUCTION|DEVELOPMENT-EDGE-POOL-HTTPS|IPV6-DUALSTACK
   fail 'stale references to removed docs'
 fi
 
-grep -qF 'docs/DEVELOPMENT.md' "$REPO_ROOT/README.md" || fail 'README must link DEVELOPMENT.md'
+grep -qF 'docs/README.md' "$REPO_ROOT/README.md" || fail 'README must link docs/README.md'
+grep -qF 'CONSOLE.md' "$REPO_ROOT/docs/README.md" || fail 'docs/README must link CONSOLE'
+grep -qF '## 8. 平台边界与运营约定' "$REPO_ROOT/docs/CONSOLE.md" \
+  || fail 'CONSOLE must document platform boundaries (§8)'
+grep -qE '## 计划中的增强' "$REPO_ROOT/docs/ROADMAP-PRODUCTION.md" \
+  || fail 'ROADMAP must use future-work sections only'
+if grep -q '## 已具备' "$REPO_ROOT/docs/ROADMAP-PRODUCTION.md"; then
+  fail 'ROADMAP must not duplicate shipped capability ledger'
+fi
 grep -qF 'PLATFORM-ARCHITECTURE.md' "$REPO_ROOT/docs/ACCEPTANCE-EDGE-POOL.md" \
   || fail 'ACCEPTANCE-EDGE-POOL must link PLATFORM-ARCHITECTURE'
 

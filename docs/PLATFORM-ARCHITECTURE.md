@@ -1,6 +1,6 @@
 # 平台架构与能力说明
 
-部署步骤见 [DEPLOY.md](../DEPLOY.md)、[DEPLOY-centos7.md](../DEPLOY-centos7.md)；后台操作见 [CONSOLE.md](CONSOLE.md)。业务验收见 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)（F1–F8）。
+部署见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)；后台与**平台边界**见 [CONSOLE.md](CONSOLE.md)（含 §8）。业务验收见 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)（F1–F8）。文档索引见 [README.md](README.md)。
 
 ## 能力范围
 
@@ -16,12 +16,6 @@
 | 8 | 验证方式 | **HTTP-01**；客户 **只做 CNAME**（不做 NS 委托、不做逐域 TXT 主流程） |
 | 9 | 跳转面 | **lagran 80 + 443**；节点仍直连 MySQL（`REDI_DB_*`） |
 | 10 | 数据库 | 绿场：**`db/redi_admin.sql` 全量导入**（见 [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md)） |
-
-## 产品行为（非缺陷）
-
-- 正常跳转：**HTTP 200 + JS**，不是业务层 301。
-- **强制 HTTPS**：TLS 层 301。
-- 「抢注」指平台内 `original_url` 唯一；新建默认停用 + 启用前 DNS 预检。
 
 ## DNS（模型 2）
 
@@ -93,16 +87,4 @@ DNS 模式：**手动**（参考表，无同步按钮）或 **API 自动**（一
 
 HTTP-01 签发前：至少一台在线节点在窗口内 `challenges-synced`，且公网 `http://客户域/.well-known/...` 可达。
 
-## 明确不支持
-
-NS 委托；多 pool；逐域 TXT 主流程；客户自带 DNS API；主控替代 MySQL 提供跳转规则。
-
-## 运营注意
-
-| 项 | 说明 |
-|----|------|
-| LE 限流 | 批量入队间隔；全局单 ACME 任务 |
-| 主控队列 | `QUEUE_CONNECTION` 须 database/redis，勿长期 sync |
-| HTTP-01 vs lagran | `/.well-known/` 必须优先于跳转 |
-| 根域 CNAME | 部分厂商不支持；见 [CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md)（ALIAS/ANAME） |
-| DNS API 部分失败 | 可能已写入部分记录；按 CONSOLE「同步失败后的检查」修正后重试 |
+不支持的能力与日常运营约定见 [CONSOLE.md](CONSOLE.md) §8。
