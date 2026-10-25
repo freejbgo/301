@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToAdminTenant;
 use App\Services\AcmeChallengeCleanup;
 use App\Services\CertificateDeployService;
 use App\Services\DomainRecordNormalizer;
+use App\Support\RediCertLastError;
 use Illuminate\Validation\ValidationException;
 use Dcat\Admin\Traits\HasDateTimeFormatter;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,8 @@ class RediAdminDomain extends Model
     use BelongsToAdminTenant;
     use HasDateTimeFormatter;
 
-    public const DISABLE_DEPLOY_CANCEL_MSG = 'Domain disabled; cancelled certificate deploy queue on nodes';
+    /** @deprecated Use {@see RediCertLastError::DOMAIN_DISABLED_CANCEL} */
+    public const DISABLE_DEPLOY_CANCEL_MSG = RediCertLastError::LEGACY_DOMAIN_DISABLED_CANCEL_MSG;
 
     protected static function booted(): void
     {
@@ -88,10 +90,10 @@ class RediAdminDomain extends Model
                     RediDomainCert::STATUS_DEPLOYING,
                 ], true)) {
                     $cert->status = RediDomainCert::STATUS_ISSUED;
-                    $cert->last_error = self::DISABLE_DEPLOY_CANCEL_MSG;
+                    RediCertLastError::apply($cert, RediCertLastError::DOMAIN_DISABLED_CANCEL);
                     $cert->save();
                 } elseif ($hadDeployments) {
-                    $cert->last_error = self::DISABLE_DEPLOY_CANCEL_MSG;
+                    RediCertLastError::apply($cert, RediCertLastError::DOMAIN_DISABLED_CANCEL);
                     $cert->save();
                 }
                 CertificateDeployService::forgetActionableDeploymentMetrics();

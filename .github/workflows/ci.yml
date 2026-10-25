@@ -61,6 +61,7 @@ jobs:
             verify-admin-i18n-invariants.sh \
             verify-redi-lang-parity.sh \
             verify-redi-errors-invariants.sh \
+            verify-redi-cert-error-code-invariants.sh \
             verify-ops-english-invariants.sh \
             verify-release-workflow-invariants.sh \
             verify-node-api-js-invariants.sh \

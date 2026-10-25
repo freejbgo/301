@@ -25,6 +25,10 @@ return [
         'waiting_pull' => 'Waiting for nodes to pull certificate',
         'credential_unreadable' => 'Certificate or private key cannot be decrypted (APP_KEY changed or data corrupt); re-issue the certificate',
     ],
+    'deploy' => [
+        'domain_disabled_cancel' => 'Domain disabled; cancelled certificate deploy queue on nodes',
+        'node_disabled_cleared' => 'Node disabled; related deployment rows cleared',
+    ],
     'acme' => [
         'yaac_missing' => 'Run composer require afosto/yaac on the master host first',
         'contact_email_missing' => 'Configure ACME contact email under DNS & node pool',

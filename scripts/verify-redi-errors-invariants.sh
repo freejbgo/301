@@ -59,6 +59,58 @@ foreach ($lines as $line) {
         $used[$m[1]] = true;
     }
 }
+
+$codePatterns = [
+    "RediCertLastError::apply\\([^,]+,\\s*'([^']+)'",
+    "refuseQueueDeploy\\([^,]+,\\s*'([^']+)'",
+    "reconcileCertWithNoDeploymentRows\\([^,]+,\\s*'([^']+)'",
+    "RediCertLastError::applyRaw\\([^,]+,[^,]+,\\s*'([^']+)'",
+];
+foreach ($codePatterns as $pattern) {
+    $grep = sprintf(
+        'rg -o %s %s -g *.php',
+        escapeshellarg($pattern),
+        escapeshellarg($appRoot.'/app')
+    );
+    exec($grep, $codeLines, $codeExit);
+    if ($codeExit > 1) {
+        fwrite(STDERR, "verify-redi-errors-invariants: rg failed for cert error codes\n");
+        exit(1);
+    }
+    foreach ($codeLines as $line) {
+        if (preg_match("/'([^']+)'/", $line, $m)) {
+            $used[$m[1]] = true;
+        }
+    }
+}
+
+require_once $appRoot.'/app/Support/RediCertLastError.php';
+foreach (\App\Support\RediCertLastError::declaredCodes() as $declared) {
+    $used[$declared] = true;
+}
+
+$certErrorFiles = [
+    $appRoot.'/app/Support/RediCertLastError.php',
+    $appRoot.'/app/Services/CertificateDeployService.php',
+    $appRoot.'/app/Jobs/IssueDomainCertificateJob.php',
+    $appRoot.'/app/Models/RediAdminDomain.php',
+    $appRoot.'/app/Models/RediDomainCert.php',
+];
+foreach ($certErrorFiles as $file) {
+    if (! is_file($file)) {
+        continue;
+    }
+    $content = (string) file_get_contents($file);
+    if (preg_match_all("/'((?:cert|deploy)\\.[a-z0-9_]+)'/", $content, $matches)) {
+        foreach ($matches[1] as $code) {
+            if ($code === 'cert.domain') {
+                continue;
+            }
+            $used[$code] = true;
+        }
+    }
+}
+
 $usedKeys = array_keys($used);
 sort($usedKeys);
 
