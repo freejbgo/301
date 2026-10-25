@@ -2,6 +2,7 @@
 
 namespace App\Admin\Forms;
 
+use App\Http\Middleware\SetAdminLocale;
 use App\Support\PlatformBranding;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Contracts\LazyRenderable;
@@ -26,13 +27,27 @@ class PlatformSettings extends Form implements LazyRenderable
 
     public function form()
     {
-        $this->text('system_name', __('redi-platform-settings.fields.system_name'))
-            ->required()
-            ->help(__('redi-platform-settings.help.system_name'));
-        $this->text('page_title', __('redi-platform-settings.fields.page_title'))
-            ->help(__('redi-platform-settings.help.page_title'));
-        $this->text('login_title', __('redi-platform-settings.fields.login_title'))
-            ->help(__('redi-platform-settings.help.login_title'));
+        $locales = SetAdminLocale::supported();
+        $tab = null;
+        foreach ($locales as $index => $locale) {
+            $label = __('redi-platform-settings.tabs.'.$locale);
+            $builder = function (Form $form) use ($locale) {
+                $form->text("locales.{$locale}.system_name", __('redi-platform-settings.fields.system_name'))
+                    ->help(__('redi-platform-settings.help.system_name'));
+                $form->text("locales.{$locale}.page_title", __('redi-platform-settings.fields.page_title'))
+                    ->help(__('redi-platform-settings.help.page_title'));
+                $form->text("locales.{$locale}.login_title", __('redi-platform-settings.fields.login_title'))
+                    ->help(__('redi-platform-settings.help.login_title'));
+            };
+
+            if ($index === 0) {
+                $tab = $this->tab($label, $builder);
+            } else {
+                $tab = $tab->tab($label, $builder);
+            }
+        }
+
+        $this->divider(__('redi-platform-settings.sections.shared_assets'));
 
         $this->image('logo', __('redi-platform-settings.fields.logo'))
             ->disk('public')
@@ -52,11 +67,12 @@ class PlatformSettings extends Form implements LazyRenderable
             ->disk('public')
             ->uniqueName()
             ->move('branding')
-            ->autoUpload();
+            ->autoUpload()
+            ->help(__('redi-platform-settings.help.favicon_shared'));
     }
 
     public function default()
     {
-        return PlatformBranding::get();
+        return PlatformBranding::formDefaults();
     }
 }

@@ -1,9 +1,9 @@
 # 301 跳转系统 — 多语言（简 / 繁 / 英）开发报告
 
-**版本**：2026-10-25（阶段 14：CI i18n 门禁）  
+**版本**：2026-10-25（阶段 16：系统外观多语 JSON）  
 **范围**：主控 `master/master/` 管理后台**可见操作界面**（Laravel + Dcat Admin）；节点与运维文档不在本期。  
 **产品目标（已定）**：让使用后台的**超级管理员与租户账号**在 **简体中文 / 繁体中文 / English** 下方便操作；不要求节点 API、CLI、Webhook、库内历史 `last_error` 原文多语。  
-**结论摘要**：自研后台可见界面已接入 `redi-*` 语言包与 Dcat `menu`/`global`/`extension`（英）；顶栏与**登录页**可切换简/繁/英，`admin_users.locale` 持久化。未保存品牌时默认标题随语言包变化；已保存的「系统外观」JSON 仍为单语。**未做**：Service/CLI 异常；`last_error` 正文仍为库内原文（仅标签三语）。
+**结论摘要**：自研后台可见界面已接入 `redi-*` 语言包与 Dcat `menu`/`global`/`extension`（英）；顶栏与**登录页**可切换简/繁/英，`admin_users.locale` 持久化。「系统外观」支持 per-locale 名称/标题（旧单语 JSON 兼容）。**未做**：Service/CLI 异常；`last_error` 正文仍为库内原文（仅标签三语）。
 
 ### 实施进度（代码）
 
@@ -23,14 +23,15 @@
 | 12 | **已做** | 补齐 `zh_TW` `cert_last_error`、文档进度表与 §快照 |
 | 13 | **已做** | `RediLangParityTest` 覆盖 `menu`/`global`/`extension`；`global.php` 键对齐 |
 | 14 | **已做** | `scripts/verify-admin-i18n-invariants.sh` 接入 CI / dev-preflight |
-| 15 | **已做（PR 待合并）** | `CONSOLE.md` 语言切换运维说明；文档索引更新 |
-| — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；已存品牌 JSON / Service 层仍单语 |
+| 15 | **已做** | `CONSOLE.md` 语言切换运维说明；文档索引更新 |
+| 16 | **已做** | `PlatformBranding` `locales` JSON、系统外观按语言 Tab、缓存 `v2`、单测 |
+| — | **覆盖率（粗估）** | 自研 Admin 可见 UI ~99%；Service 层仍单语 |
 
 ### 运维速览
 
 1. 升级主控后执行 `php artisan migrate`（`admin_users.locale`）。
-2. 登录页或顶栏切换语言；英文部署请在 **系统外观** 填写英文品牌名。
-3. 开发防回退：`bash scripts/verify-admin-i18n-invariants.sh`、`tests/Unit/RediLangParityTest.php`（CI 已跑）。
+2. 登录页或顶栏切换语言；在 **系统外观** 各语言选项卡填写对应品牌名（旧单语数据仍有效）。
+3. 开发防回退：`bash scripts/verify-admin-i18n-invariants.sh`、`tests/Unit/RediLangParityTest.php`、`tests/Unit/PlatformBrandingLocalesTest.php`（CI 已跑）。
 
 ### 阶段 10 后快照（相对 §2 历史审计）
 
@@ -39,7 +40,7 @@
 | `app/Admin/**` 用户可见字符串 | 已走 `__` / `admin_trans` / `redi-*`（仅注释含中文） |
 | `resources/lang/en` | 含 `menu`、`global`、`extension` 及全部 `redi-*` |
 | 语言解析 | `SetAdminLocale`（在 `admin` 前）+ 顶栏/登录切换 + `admin_users.locale` + 登录事件同步 |
-| 仍单语 | 已保存的 `PlatformBranding` JSON、`config/admin.php` 文件内回退、证书 `last_error` 正文、Service/CLI |
+| 仍单语 | `config/admin.php` 文件内回退、证书 `last_error` 正文、Service/CLI |
 
 ---
 
@@ -107,12 +108,7 @@
 
 ### 2.6 「系统外观」与多语言
 
-`PlatformBranding` 将 `system_name` / `page_title` / `login_title` 存 `admin_settings` JSON，**每平台一套字符串**，无 per-locale 字段。
-
-多语场景可选方案：
-
-- **A（推荐 MVP）**：品牌文案仍单语，由运营自行填写（英文部署填英文）；与 UI 语言开关独立。
-- **B**：JSON 扩展为 `{ "zh_CN": "...", "en": "..." }`，表单分语言编辑（工作量大）。
+**阶段 16 已实现**：`admin_settings.platform_branding` JSON 含顶层兼容字段与 `locales.{zh_CN|zh_TW|en}`；解析顺序为当前界面语言 → `zh_CN` → 顶层旧字段 → `redi-branding` 默认。Logo / Favicon 仍全平台共用。
 
 ---
 
