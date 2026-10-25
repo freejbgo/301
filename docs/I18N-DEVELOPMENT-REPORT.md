@@ -16,8 +16,9 @@
 | 5 | **已做** | DNS 与节点池、系统外观、节点创建/编辑表单、分组批量跳转、`redi-auth.admin_only` |
 | 6 | **已做** | `EdgeDnsManualReference` 占位三语、首页 `RediHealthReport` 告警 `redi-health` |
 | 7 | **已做** | `collectHints` 三语 + 首页展示、批量重试 Toast、`en/global.php`（Dcat 字段） |
-| 8 | **已做（PR 待合并）** | `en/extension.php`、`admin_users.locale` 持久化、`redi-locale` 壳层文案 |
-| 9+ | 待做 | 登录后同步 session、Dcat Menu/Operation log 细项、业务覆盖率收尾审计 |
+| 8 | **已做** | `en/extension.php`、`admin_users.locale` 持久化、`redi-locale` 壳层文案 |
+| 9 | **已做（PR 待合并）** | 登录 `Login` 事件同步 session ↔ `admin_users.locale` |
+| — | **覆盖率（粗估）** | 自研业务可见页 ~95%；CLI/Service 异常与库内 `last_error` 仍单语 |
 
 ---
 

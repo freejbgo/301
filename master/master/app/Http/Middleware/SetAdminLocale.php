@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Dcat\Admin\Admin;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
@@ -79,5 +80,47 @@ class SetAdminLocale
         app()->setLocale(self::resolve());
 
         return $next($request);
+    }
+
+    /**
+     * After admin login: align session with saved user locale, or persist login-page session choice.
+     */
+    public static function syncForAuthenticatedUser(?Authenticatable $user): void
+    {
+        $supported = self::supported();
+        $sessionLocale = session(self::SESSION_KEY);
+        $sessionValid = is_string($sessionLocale) && in_array($sessionLocale, $supported, true);
+
+        $table = (string) config('admin.database.users_table', 'admin_users');
+        $hasColumn = Schema::hasTable($table) && Schema::hasColumn($table, 'locale');
+
+        if ($user !== null && $hasColumn) {
+            $stored = $user->getAttribute('locale');
+            $storedValid = is_string($stored) && $stored !== '' && in_array($stored, $supported, true);
+
+            if ($storedValid) {
+                session([self::SESSION_KEY => $stored]);
+                app()->setLocale($stored);
+
+                return;
+            }
+
+            if ($sessionValid) {
+                if (method_exists($user, 'forceFill')) {
+                    $user->forceFill(['locale' => $sessionLocale])->save();
+                }
+                app()->setLocale($sessionLocale);
+
+                return;
+            }
+        }
+
+        if ($sessionValid) {
+            app()->setLocale($sessionLocale);
+
+            return;
+        }
+
+        app()->setLocale(self::resolve());
     }
 }
