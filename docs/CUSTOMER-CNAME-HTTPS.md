@@ -27,3 +27,18 @@
 ## HTTPS
 
 CNAME 生效且证书申请成功后，访问将自动支持 **HTTPS** 跳转；若开启「强制 HTTPS」，HTTP 会 301 到 HTTPS。
+
+## CNAME 一直不生效 / 后台显示未指向？
+
+1. 确认记录类型为 **CNAME**，记录值与后台给出的目标 **完全一致**（不要多写 `http://` 或路径）。
+2. 等待 DNS 传播（常见几分钟到数小时，视注册商而定）。
+3. **请联系为您开通跳转服务的运营人员**（平台方）。对方需先在系统里配好节点与 Pool，并把 `{token}.平台域名` 正确发布到公网 DNS；若对方使用「API 自动同步」，同步失败时需在其后台按运维手册处理——**终端客户无需自行改 Pool 记录**。
+
+## 附：平台运营人员（内部，勿整段发给终端客户）
+
+| 情况 | 处理 |
+|------|------|
+| 客户 CNAME 已填对仍「未指向」 | 检查 Pool A / 租户 token CNAME 是否已在厂商 DNS 生效；[CONSOLE.md](CONSOLE.md) §2–§3 |
+| API 同步失败或 `dns_synced_at` 未更新 | [CONSOLE.md](CONSOLE.md) §2 **「同步失败后的检查」**；`redi:health --json` 的 `dns_api_tenants_unsynced` |
+| 上线与证书验收 | [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) F1–F8、[ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) |
+| 发给客户的说明 | 仅转发本文 **「您需要做的」** 至 **「HTTPS」** 各节即可 |

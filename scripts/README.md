@@ -18,6 +18,7 @@
 | [verify-redirect-conn-limit.sh](verify-redirect-conn-limit.sh) | 80/443 accept 前预占连接槽约定 |
 | [verify-lagran-iptables-invariants.sh](verify-lagran-iptables-invariants.sh) | lagran `setIptable` IPv4 返回值与 ip6tables 告警约定 |
 | [verify-console-dns-sync-doc.sh](verify-console-dns-sync-doc.sh) | [CONSOLE.md](../docs/CONSOLE.md) DNS API 同步失败运维段落 |
+| [verify-customer-cname-doc.sh](verify-customer-cname-doc.sh) | [CUSTOMER-CNAME-HTTPS.md](../docs/CUSTOMER-CNAME-HTTPS.md) 与 CONSOLE 互链 |
 | [verify-masteragent-invariants.sh](verify-masteragent-invariants.sh) | Go masteragent：证书拉取、ack 与注册状态约定 |
 | [verify-acme-code-invariants.sh](verify-acme-code-invariants.sh) | 静态校验 ACME 签发/HTTP-01/挑战 upsert 与节点 `GetSkipUrl` 使用 `acmeHostKey`/`AcmeHostKey` |
 | [verify-renew-ops-invariants.sh](verify-renew-ops-invariants.sh) | 证书续期 cron 与 ops-webhook 脱敏约定 |

@@ -10,6 +10,8 @@
 | [DEPLOY-centos7.md](../DEPLOY-centos7.md) | CentOS 7 一键 `deploy-master.sh` / `deploy-node.sh` |
 | [DEPLOY-centos7-example.md](../DEPLOY-centos7-example.md) | `vars.env` 填 IP 示例 |
 | [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) | 真机逐步验收 |
+| [docs/ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) | 边缘池 F1–F8（DNS、证书、跳转） |
+| [docs/CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md) | 发给终端客户的 CNAME 说明（运营附录在同文末尾） |
 | [docs/CONSOLE.md](CONSOLE.md) | 后台操作 |
 | [docs/PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) | 上线验收与 `redi:health` |
 | [SECURITY.md](../SECURITY.md) | 密码、端口、节点权限 |

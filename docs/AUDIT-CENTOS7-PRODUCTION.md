@@ -163,6 +163,8 @@
 
 **2026-10-25 文档（#367）：** `ACCEPTANCE-EDGE-POOL` F2.6 + 运维交叉引用表；`DEVELOPMENT-EDGE-POOL` / `DEPLOY` / `DEPLOY-centos7` 链到 CONSOLE；`verify-acceptance-edge-pool-doc` 扩展。
 
+**2026-10-25 文档（#368）：** `CUSTOMER-CNAME-HTTPS` 客户排障 + 运营附录；`CONSOLE` / `README` / `GREENFIELD` 互链；`verify-customer-cname-doc.sh`。
+
 **2026-10-20 按模块深度扫（#360 已合并）：** 全库门禁 442/949 + 25×`verify-*`；修复 `release.yml` `master-phpunit` 与 CI 同跑 artisan/ACME 门禁；`verify-redi-artisan-cron` 含 `redi:normalize-domain-hosts`；`verify-admin-api` 含 `PlatformSettings` 超管约束。剩余：真机 ACME/HTTP-01、P2 租户全表隔离、intl DNS mock 单测。
 
 **2026-10-20 部署文档复核（#359 已合并）：** `verify-deploy-centos7-doc`；绿场弱化迁移编号；`DEPLOY-centos7` 与 `deploy-master` Cron 对齐。

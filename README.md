@@ -14,6 +14,7 @@
 | [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md) | 绿场安装（无旧数据、一次导入 `redi_admin.sql`） |
 | [DEPLOY-centos7.md](DEPLOY-centos7.md) | CentOS 7 一键脚本与变量 |
 | [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) | CentOS 7.9 真机部署验收清单 |
+| [docs/ACCEPTANCE-EDGE-POOL.md](docs/ACCEPTANCE-EDGE-POOL.md) | 边缘池业务验收 F1–F8（DNS / 证书 / 跳转） |
 | [docs/AUDIT-CENTOS7-PRODUCTION.md](docs/AUDIT-CENTOS7-PRODUCTION.md) | 生产复核（P0/P1 与待办 P2） |
 | [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md) | 上线阻塞项与真机验收命令 |
 | [docs/ROADMAP-PRODUCTION.md](docs/ROADMAP-PRODUCTION.md) | P0/P1/P2 路线图（基线见 AUDIT §7） |
