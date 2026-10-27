@@ -89,6 +89,60 @@ return [
             'success' => '已重新下发 :queued 个域名的证书',
             'success_skipped' => '，跳过 :skipped 个',
         ],
+        'batch_enable' => [
+            'title' => '批量启用',
+            'error_none' => '没有可启用的域名（请勾选本账号下的记录）',
+            'error_all' => '所选域名均未能启用',
+            'success' => '已启用 :count 个域名',
+        ],
+        'batch_disable' => [
+            'title' => '批量停用',
+            'confirm' => '停用后不再跳转，证书部署会取消。继续？',
+            'error_none' => '没有可停用的域名',
+            'error_already' => '所选域名已是停用状态',
+            'success' => '已停用 :count 个域名',
+        ],
+        'batch_edit' => [
+            'title' => '批量修改',
+            'success' => '已更新 :count 个域名',
+            'error_all' => '未能更新任何域名',
+        ],
+        'batch_mutator' => [
+            'skipped_suffix' => '（跳过 :count 个无需变更）',
+            'partial_errors' => '另有 :count 条未成功：',
+        ],
+    ],
+    'batch_edit' => [
+        'fields' => [
+            'skip_url' => '跳转链接',
+            'group_id' => '移动到分组',
+            'force_https' => '强制 HTTPS',
+        ],
+        'help' => [
+            'skip_url' => '留空表示不修改跳转地址',
+            'group_id' => '不选表示不调整分组；超级管理员可跨租户迁组',
+            'force_https' => '选「不修改」保持原值；开启前证书须为「已生效」',
+        ],
+        'options' => [
+            'force_https_keep' => '不修改',
+            'force_https_on' => '开启',
+            'force_https_off' => '关闭',
+        ],
+    ],
+    'batch_mutator' => [
+        'errors' => [
+            'status_invalid' => '状态无效',
+            'no_domains' => '没有可操作的域名',
+            'no_selection' => '请先勾选要操作的域名',
+            'nothing_to_apply' => '请至少填写一项要修改的内容',
+            'nothing_changed' => '没有域名被更新',
+            'force_https_invalid' => '强制 HTTPS 选项无效',
+            'save_failed' => '保存失败',
+            'row_enable' => ':label：:reason',
+            'row_save' => ':label：:reason',
+            'row_group_owner' => ':label：目标分组与域名所属账号不一致',
+            'row_force_https' => ':label：证书尚未生效，不能开启强制 HTTPS',
+        ],
     ],
     'export' => [
         'headers' => [

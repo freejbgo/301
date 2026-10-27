@@ -23,6 +23,9 @@ use App\Support\AdminTenantContext;
 use App\Support\OpsDisplaySanitizer;
 use App\Admin\Actions\Grid\ApplyCertificate;
 use App\Admin\Actions\Grid\BatchApplyCertificate;
+use App\Admin\Actions\Grid\BatchDisableDomains;
+use App\Admin\Actions\Grid\BatchEditDomains;
+use App\Admin\Actions\Grid\BatchEnableDomains;
 use App\Admin\Actions\Grid\BatchRedeployCertificate;
 use App\Admin\Actions\Grid\RedeployCertificate;
 use App\Jobs\IssueDomainCertificateJob;
@@ -71,6 +74,9 @@ class RediAdminDomainController extends AdminController
             });
 
             $grid->batchActions(function ($batch) {
+                $batch->add(new BatchEnableDomains());
+                $batch->add(new BatchDisableDomains());
+                $batch->add(new BatchEditDomains());
                 $batch->add(new BatchApplyCertificate());
                 $batch->add(new BatchRedeployCertificate());
             });

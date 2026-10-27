@@ -89,6 +89,60 @@ return [
             'success' => 'Redeploy queued for :queued domain(s)',
             'success_skipped' => ', skipped :skipped',
         ],
+        'batch_enable' => [
+            'title' => 'Batch enable',
+            'error_none' => 'No domains to enable (select rows you own)',
+            'error_all' => 'None of the selected domains could be enabled',
+            'success' => 'Enabled :count domain(s)',
+        ],
+        'batch_disable' => [
+            'title' => 'Batch disable',
+            'confirm' => 'Disabled domains stop redirecting and cert deploy is cancelled. Continue?',
+            'error_none' => 'No domains to disable',
+            'error_already' => 'All selected domains are already disabled',
+            'success' => 'Disabled :count domain(s)',
+        ],
+        'batch_edit' => [
+            'title' => 'Batch edit',
+            'success' => 'Updated :count domain(s)',
+            'error_all' => 'No domains were updated',
+        ],
+        'batch_mutator' => [
+            'skipped_suffix' => ' (skipped :count unchanged)',
+            'partial_errors' => ':count more failed:',
+        ],
+    ],
+    'batch_edit' => [
+        'fields' => [
+            'skip_url' => 'Redirect URL',
+            'group_id' => 'Move to group',
+            'force_https' => 'Force HTTPS',
+        ],
+        'help' => [
+            'skip_url' => 'Leave empty to keep current redirect URL',
+            'group_id' => 'Leave unset to keep group; platform admins may move across tenants',
+            'force_https' => 'Keep = no change; enabling requires an active certificate',
+        ],
+        'options' => [
+            'force_https_keep' => 'No change',
+            'force_https_on' => 'On',
+            'force_https_off' => 'Off',
+        ],
+    ],
+    'batch_mutator' => [
+        'errors' => [
+            'status_invalid' => 'Invalid status',
+            'no_domains' => 'No domains to process',
+            'no_selection' => 'Select at least one domain',
+            'nothing_to_apply' => 'Fill at least one field to change',
+            'nothing_changed' => 'No domains were updated',
+            'force_https_invalid' => 'Invalid force HTTPS option',
+            'save_failed' => 'Save failed',
+            'row_enable' => ':label: :reason',
+            'row_save' => ':label: :reason',
+            'row_group_owner' => ':label: target group belongs to another account',
+            'row_force_https' => ':label: certificate not active; cannot enable force HTTPS',
+        ],
     ],
     'export' => [
         'headers' => [
