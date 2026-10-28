@@ -260,9 +260,9 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 通过 | `batch_create` 审计 | 仅成功路径（`imported` 或 `skipped`>0）；`updated` 映射 `imported`；不记 `lines` |
 | 通过 | `url_set_by_group` | 租户校验未改；计数与 `update` 条件一致；不记 URL 正文 |
 | 通过 | 空分组按组改跳转 | `updated=0, skipped=0` 仍成功并写审计（可追溯「点过但无域名」） |
-| 低风险 | `UrlSetByGroup` 写库 | 仍为 `DB::update`，不走模型校验（改前即如此；与勾选批量修改校验路径不一致） |
-| 低风险 | `skip_url !=` 条件 | 依赖库对 NULL/大小写比较；生产数据若 `skip_url` 恒为非空规范化 URL 则无影响 |
-| 低风险 | 批量修改全跳过 | `updated=0` 且仅 `skipped>0` 时仍报「无变更」、**不写** `batch_edit` 审计（原 UX） |
+| 已修 | `UrlSetByGroup` 写库 | §18：`setSkipUrlForGroupOwned` + 模型 `save` |
+| 低风险 | `skip_url !=` 条件 | 已改为 ORM 比较（§18 前为 `DB::update`） |
+| 已修 | 批量修改全跳过 | §18：成功 + `batch_edit` 审计 |
 | 待 CI | 单测 | 未新增 UrlSetByGroup / BatchCreate 审计单测；合并前跑全量 `phpunit` |
 
 ## 18. 批量修改全跳过 + 按组改跳转走模型
