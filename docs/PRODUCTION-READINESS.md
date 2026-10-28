@@ -11,7 +11,7 @@
 |------|------|
 | 域名占坑 | 默认 **新建为停用**；启用前 DNS（CNAME 或 A 到池）；`REDI_REQUIRE_DNS_POINTING_TO_ENABLE` |
 | 后台安全 | 默认密码拦截；`dcat-api` 须登录；登录限速；列表 XSS 转义 |
-| 证书与 Agent | 部署行补齐；空证书列表默认 3 次拉取后清空节点内存证；Agent ≥ `0.1.3` |
+| 证书与 Agent | 部署行补齐；主控连续空列表默认 **3** 次拉取后才清空节点内存（证书 / ACME 挑战 / redirect-rules，见 `REDI_AGENT_EMPTY_*_CLEAR_AFTER`）；Agent ≥ `0.1.3` |
 | 生产配置 | `redi:health` 检查 debug、ACME、edge_zone、DNS 驱动与凭证等（见 [HEALTH-REFERENCE.md](HEALTH-REFERENCE.md)） |
 | 节点池 | 启用节点公网 IP；pool A 仅合法 IPv4 |
 

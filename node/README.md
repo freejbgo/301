@@ -25,6 +25,8 @@
 | `REDI_MASTER_URL` | 主控地址，须 `https://`（lab 可 `REDI_MASTER_INSECURE=1` 允许 `http://`） |
 | `REDI_NODE_TOKEN` | 后台「节点管理」创建节点时只显示一次的 Token |
 | `REDI_AGENT_EMPTY_CERT_CLEAR_AFTER` | 可选，默认 `3`；主控连续空证书列表 N 次后才清空本机 TLS 内存（`1` = 立即清空） |
+| `REDI_AGENT_EMPTY_CHALLENGE_CLEAR_AFTER` | 可选，默认 `3`；主控连续空 ACME 挑战列表 N 次后才清空本地挑战 |
+| `REDI_AGENT_EMPTY_RULES_CLEAR_AFTER` | 可选，默认 `3`；主控连续空 redirect-rules N 次后才清空 force_https 映射 |
 
 `config.json` 里把 `server_ip` 改成这台机器的主公网 IPv4，`default_redirect_url` 改成未命中域名时的默认页。示例见 `redi-multi/config.json.example`。
 
