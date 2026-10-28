@@ -64,7 +64,7 @@ sudo MYSQL_ROOT_PASSWORD='root密码' bash scripts/centos7/grant-node-mysql.sh '
 
 ## 2. 主控
 
-要求 PHP **8.0.2 及以上**（与 `composer.json`、GitHub CI 的 PHP 8.4 构建一致）。CentOS 7 可使用 Remi 的 PHP 8.0/8.2；生产请与发布包 `vendor` 的 PHP 版本匹配。
+要求 PHP **8.0.2 及以上**（与 `composer.json`、GitHub CI 的 PHP 8.4 构建一致）。CentOS 7 上 `scripts/centos7/deploy-master.sh` 仅安装 **Remi PHP 8.0**；生产请与发布包 `vendor` 的 PHP 版本匹配。
 
 ```bash
 cd master/master

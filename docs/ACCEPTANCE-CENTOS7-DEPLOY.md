@@ -86,9 +86,9 @@ grep -E 'cd /opt/301/master' /etc/cron.d/redi-renew
 grep -q 'redi:prune-acme-challenges' /etc/cron.d/redi-renew
 grep -q 'redi:health' /etc/cron.d/redi-renew
 grep -q 'redi:ops-webhook' /etc/cron.d/redi-renew
-grep -q '--task=redi:renew-certificates' /etc/cron.d/redi-renew
-grep -q '--task=redi:prune-acme-challenges' /etc/cron.d/redi-renew
-grep -q '--task=redi:health' /etc/cron.d/redi-renew
+grep -qF '--task=redi:renew-certificates' /etc/cron.d/redi-renew
+grep -qF '--task=redi:prune-acme-challenges' /etc/cron.d/redi-renew
+grep -qF '--task=redi:health' /etc/cron.d/redi-renew
 ! grep -q 'master/master' /etc/cron.d/redi-renew
 ! grep -q 'schedule:run' /etc/cron.d/redi-renew
 ss -lntp | egrep ':80|:443|:3306' || true

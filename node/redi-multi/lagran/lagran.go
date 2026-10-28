@@ -27,6 +27,10 @@ func Run() {
 		return
 	}
 	sport := config.LagranSport()
+	if !setIptable(sport) {
+		logrus.Error("[lagran] iptables OUTPUT rules were not installed; aborting lagran (check cap_net_admin / root)")
+		return
+	}
 	type queuePool struct {
 		label   string
 		from    int
@@ -49,6 +53,7 @@ func Run() {
 		})
 		if err != nil {
 			logrus.Errorf("[lagran] %s pool: %v (aborting lagran startup; no iptables rules)", spec.label, err)
+			UnsetIptable(sport)
 			return
 		}
 		pools = append(pools, p)
@@ -65,9 +70,6 @@ func Run() {
 			_ = p.Invoke(i)
 		}
 		// NFQUEUE handlers block for process lifetime; do not Release() when Run returns.
-	}
-	if !setIptable(sport) {
-		logrus.Error("[lagran] iptables OUTPUT rules were not installed; NFQUEUE is running but outbound window rewrite will not apply (check cap_net_admin / root)")
 	}
 }
 
@@ -99,7 +101,7 @@ func UnsetIptable(sport string) {
 
 	ip6, err := iptables.New(iptables.IPFamily(iptables.ProtocolIPv6))
 	if err != nil {
-		logrus.Errorf("[lagran] failed to new ip6tables, err: %v\n", err)
+		logrus.Warnf("[lagran] ip6tables new error during cleanup: %v", err)
 	} else {
 		deleteLagranRules(ip6, sport, "ip6tables")
 	}

@@ -92,6 +92,20 @@ class RediOpsWebhookTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_webhook_url_rejects_private_ip_targets(): void
+    {
+        config([
+            'redi.ops_webhook_url' => 'http://127.0.0.1/hook',
+            'redi.health_webhook_url' => '',
+        ]);
+
+        Http::fake();
+
+        $this->assertFalse(RediOpsWebhook::notifyTaskFailure('redi:health', 'x'));
+
+        Http::assertNothingSent();
+    }
+
     public function test_post_sanitizes_issue_messages_in_payload(): void
     {
         config(['redi.health_webhook_url' => 'https://hooks.example/health']);

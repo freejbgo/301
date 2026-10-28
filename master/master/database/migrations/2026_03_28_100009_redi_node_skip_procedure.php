@@ -22,7 +22,7 @@ return new class extends Migration
             .'START TRANSACTION; '
             .'SELECT `skip_url` INTO v_skip FROM `redi_admin_domain` '
             .'WHERE `original_url` = p_host AND `status` = 1 LIMIT 1 FOR UPDATE; '
-            .'IF v_skip IS NOT NULL THEN '
+            .'IF v_skip IS NOT NULL AND CHAR_LENGTH(TRIM(v_skip)) > 0 AND LOCATE(\'@\', v_skip) = 0 AND ((LOWER(TRIM(v_skip)) LIKE \'http://%\' AND CHAR_LENGTH(TRIM(v_skip)) > 7) OR (LOWER(TRIM(v_skip)) LIKE \'https://%\' AND CHAR_LENGTH(TRIM(v_skip)) > 8)) THEN '
             .'UPDATE `redi_admin_domain` SET `skip_num` = `skip_num` + 1 '
             .'WHERE `original_url` = p_host AND `status` = 1 LIMIT 1; '
             .'END IF; '

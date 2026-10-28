@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\AdminTenantContext;
 use App\Support\OpsDisplaySanitizer;
 use App\Models\RediAdminDomain;
 use App\Models\RediAdminGroup;
@@ -116,6 +117,7 @@ class DomainBatchCreator
 
             if ($status === 1
                 && DomainDnsPointingGuard::mustPointToEdgeBeforeEnable()
+                && ! AdminTenantContext::isPlatformAdministrator()
                 && ! DomainDnsPointingGuard::pointsToTenantEdge($adminId, $originalUrl)) {
                 $edge = TenantEdgeService::cnameTargetForAdmin($adminId);
                 $label = OpsDisplaySanitizer::field($originalUrl, '—', 253);

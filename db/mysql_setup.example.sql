@@ -8,7 +8,7 @@
 -- 每个节点公网 IP 授权（不能用主机名）：
 --   sudo MYSQL_ROOT_PASSWORD='...' bash scripts/centos7/grant-node-mysql.sh <节点IP> <同上密码>
 
-CREATE DATABASE IF NOT EXISTS `redi_admin` DEFAULT CHARACTER SET utf8mb4;
+CREATE DATABASE IF NOT EXISTS `redi_admin` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE USER IF NOT EXISTS 'redi_admin'@'127.0.0.1' IDENTIFIED BY 'change_this_db_password';
 CREATE USER IF NOT EXISTS 'redi_admin'@'localhost' IDENTIFIED BY 'change_this_db_password';

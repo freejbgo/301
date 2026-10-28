@@ -18,6 +18,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -296,5 +297,6 @@ func GetSkipUrl(Db *sqlx.DB, Url string) string {
 			}
 		}
 	}
+	logrus.Warnf("[api.js] redi_node_bump_skip failed for host %q", hostKey)
 	return ""
 }

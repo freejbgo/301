@@ -62,6 +62,14 @@ func readRequest(conn net.Conn) (*httpRequest, error) {
 
 func hostWithoutPort(host string) string {
 	host = strings.TrimSpace(host)
+	if strings.HasPrefix(host, "[") {
+		if h, _, err := net.SplitHostPort(host); err == nil {
+			return strings.TrimSpace(h)
+		}
+		if idx := strings.LastIndex(host, "]"); idx > 0 {
+			return strings.TrimSpace(host[1:idx])
+		}
+	}
 	if h, _, err := net.SplitHostPort(host); err == nil {
 		return h
 	}
