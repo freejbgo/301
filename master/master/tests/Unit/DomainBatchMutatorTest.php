@@ -160,4 +160,30 @@ class DomainBatchMutatorTest extends TestCase
         $this->assertSame(1, $result['updated']);
         $this->assertTrue((bool) RediAdminDomain::query()->find(1)->force_https);
     }
+
+    public function test_apply_edits_counts_unique_domains(): void
+    {
+        RediDomainCert::query()->insert([
+            'domain_id' => 1,
+            'admin_id' => 10,
+            'status' => RediDomainCert::STATUS_ACTIVE,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $mutator = new DomainBatchMutator();
+        $result = $mutator->applyEditsOwned(
+            [1],
+            10,
+            'https://new.example.com/path',
+            2,
+            '1',
+            false
+        );
+
+        $this->assertSame(1, $result['updated']);
+        $this->assertSame(2, (int) RediAdminDomain::query()->find(1)->group_id);
+        $this->assertSame('https://new.example.com/path', RediAdminDomain::query()->find(1)->skip_url);
+        $this->assertTrue((bool) RediAdminDomain::query()->find(1)->force_https);
+    }
 }

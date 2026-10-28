@@ -110,7 +110,7 @@ class DomainBatchMutator
      */
     protected function applySkipUrlOnOwnedIds(array $ownedIds, string $skipUrl): array
     {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'changed_ids' => []];
         if ($ownedIds === []) {
             return $result;
         }
@@ -136,6 +136,7 @@ class DomainBatchMutator
                 continue;
             }
             $result['updated']++;
+            $result['changed_ids'][] = (int) $domain->id;
         }
 
         return $result;
@@ -201,7 +202,7 @@ class DomainBatchMutator
         int $sessionAdminId,
         bool $isPlatformAdministrator
     ): array {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'changed_ids' => []];
         $groupId = (int) $group->id;
 
         $domains = RediAdminDomain::query()->whereIn('id', $ownedIds)->orderBy('id')->get();
@@ -237,6 +238,7 @@ class DomainBatchMutator
                 continue;
             }
             $result['updated']++;
+            $result['changed_ids'][] = (int) $domain->id;
         }
 
         return $result;
@@ -285,7 +287,7 @@ class DomainBatchMutator
      */
     protected function applyForceHttpsOnOwnedIds(array $ownedIds, bool $wantsOn): array
     {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'changed_ids' => []];
         $domains = RediAdminDomain::query()->whereIn('id', $ownedIds)->orderBy('id')->get();
 
         foreach ($domains as $domain) {
@@ -311,6 +313,7 @@ class DomainBatchMutator
             $domain->force_https = $wantsOn;
             $domain->save();
             $result['updated']++;
+            $result['changed_ids'][] = (int) $domain->id;
         }
 
         return $result;
@@ -367,7 +370,7 @@ class DomainBatchMutator
         string $forceHttps,
         ?bool $isPlatformAdministrator = null
     ): array {
-        $merged = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0];
+        $merged = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0, 'changed_ids' => []];
 
         $hasSkip = $skipUrl !== null && trim($skipUrl) !== '';
         $hasGroup = $groupId !== null && $groupId > 0;
@@ -406,7 +409,7 @@ class DomainBatchMutator
                         $sessionAdminId,
                         (bool) $isPlatformAdministrator
                     );
-                    $merged = $this->mergeResults($merged, $part);
+                    $merged = $this->mergeEditResults($merged, $part);
                 }
             }
         }
@@ -417,7 +420,7 @@ class DomainBatchMutator
                 $merged['errors'][] = __('redi-admin-domain.validation.skip_url_invalid');
             } else {
                 $part = $this->applySkipUrlOnOwnedIds($ownedIds, $skipUrl);
-                $merged = $this->mergeResults($merged, $part);
+                $merged = $this->mergeEditResults($merged, $part);
             }
         }
 
@@ -426,9 +429,11 @@ class DomainBatchMutator
                 $merged['errors'][] = __('redi-admin-domain.batch_mutator.errors.force_https_invalid');
             } else {
                 $part = $this->applyForceHttpsOnOwnedIds($ownedIds, $forceHttps === '1');
-                $merged = $this->mergeResults($merged, $part);
+                $merged = $this->mergeEditResults($merged, $part);
             }
         }
+
+        unset($merged['changed_ids']);
 
         return $merged;
     }
@@ -469,6 +474,24 @@ class DomainBatchMutator
     {
         return [
             'updated' => $a['updated'] + $b['updated'],
+            'skipped' => $a['skipped'] + $b['skipped'],
+            'errors' => array_merge($a['errors'], $b['errors']),
+            'truncated' => (int) ($a['truncated'] ?? 0),
+        ];
+    }
+
+    /**
+     * @param  array{updated: int, skipped: int, errors: string[], truncated?: int, changed_ids?: list<int>}  $a
+     * @param  array{updated: int, skipped: int, errors: string[], changed_ids?: list<int>}  $b
+     * @return array{updated: int, skipped: int, errors: string[], truncated: int, changed_ids: list<int>}
+     */
+    protected function mergeEditResults(array $a, array $b): array
+    {
+        $changed = array_values(array_unique(array_merge($a['changed_ids'] ?? [], $b['changed_ids'] ?? [])));
+
+        return [
+            'updated' => count($changed),
+            'changed_ids' => $changed,
             'skipped' => $a['skipped'] + $b['skipped'],
             'errors' => array_merge($a['errors'], $b['errors']),
             'truncated' => (int) ($a['truncated'] ?? 0),

@@ -53,7 +53,7 @@ return [
             'title' => '批量重试失败证书',
             'confirm' => '将选中节点上 failed 部署改回 pending。继续？',
             'error_none' => '所选节点均无失败部署可重试',
-            'success' => '已重新排队 :count 条失败部署',
+            'success' => '已为 :nodes 个节点重新排队 :deployments 条失败部署',
         ],
         'batch_rotate_token' => [
             'title' => '批量重置 Token',

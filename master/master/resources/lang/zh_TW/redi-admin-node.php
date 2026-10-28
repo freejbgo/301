@@ -53,7 +53,7 @@ return [
             'title' => '批量重試失敗憑證',
             'confirm' => '將選中節點上 failed 部署改回 pending。繼續？',
             'error_none' => '所選節點均無失敗部署可重試',
-            'success' => '已重新排隊 :count 條失敗部署',
+            'success' => '已為 :nodes 個節點重新排隊 :deployments 條失敗部署',
         ],
         'batch_rotate_token' => [
             'title' => '批量重置 Token',

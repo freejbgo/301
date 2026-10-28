@@ -2,6 +2,7 @@
 
 namespace App\Admin\Forms;
 
+use App\Admin\Concerns\RecordsAdminBatchAudit;
 use App\Services\DomainBatchMutator;
 use App\Support\AdminTenantContext;
 use App\Support\BatchSelectionLimiter;
@@ -13,6 +14,7 @@ use Dcat\Admin\Widgets\Form;
 class BatchEditDomains extends Form implements LazyRenderable
 {
     use LazyWidget;
+    use RecordsAdminBatchAudit;
 
     public function handle(array $input)
     {
@@ -59,6 +61,8 @@ class BatchEditDomains extends Form implements LazyRenderable
         }
 
         $summary = BatchSelectionLimiter::appendTruncationNotice($summary, (int) ($result['truncated'] ?? 0));
+
+        $this->auditFromMutator('domain', 'batch_edit', $result, $domainIds);
 
         return $this->response()->success($summary)->refresh();
     }

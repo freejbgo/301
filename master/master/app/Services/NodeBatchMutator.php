@@ -84,7 +84,7 @@ class NodeBatchMutator
      */
     public function requeueFailed(array $nodeIds, CertificateDeployService $deployService): array
     {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0];
+        $result = ['updated' => 0, 'deployments_requeued' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0];
         $normalized = $this->normalizeIds($nodeIds);
         $ids = $normalized['ids'];
         $result['truncated'] = $normalized['truncated'];
@@ -103,7 +103,8 @@ class NodeBatchMutator
                 $result['errors'][] = __('redi-admin-node.batch_mutator.errors.requeue_empty', ['label' => $label]);
                 continue;
             }
-            $result['updated'] += $count;
+            $result['updated']++;
+            $result['deployments_requeued'] += $count;
         }
 
         return $result;

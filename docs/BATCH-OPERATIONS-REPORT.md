@@ -178,8 +178,8 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 低 | 按筛选批量未覆盖「批量修改」 | 仍用勾选「批量修改」 |
 | 已做 | 勾选或筛选超过 500 条 | 成功提示追加 `truncated_suffix`，请分批再操作 |
 | 已做 | 按筛选批量「重新下发证书」 | `DomainBatchFilterRunner` + 筛选弹窗选项 |
-| 设计 | `applyEditsOwned` 合并多次操作的 `updated` 计数 | 表示「字段变更次数」而非「域名数」，提示文案已按条数展示 |
-| 设计 | 节点批量重试 `updated` 为 deployment 行数 | 与单行「重试失败证书」一致 |
+| 已修 | `applyEditsOwned` 的 `updated` 计数 | 按 **唯一域名数** 统计（`mergeEditResults` + `changed_ids`） |
+| 已修 | 节点批量重试计数语义 | `updated` = 节点数，`deployments_requeued` = 部署条数；提示文案区分二者 |
 
 ## 11. 二次复核（截断 + 筛选重新下发后）
 

@@ -2,8 +2,9 @@
 
 namespace App\Admin\Actions\Grid;
 
-use App\Admin\Concerns\AppendsNodeBatchTruncationNotice;
 use App\Admin\Concerns\AdminOnlyGridAction;
+use App\Admin\Concerns\AppendsNodeBatchTruncationNotice;
+use App\Admin\Concerns\RecordsAdminBatchAudit;
 use App\Models\RediNode;
 use App\Services\NodeBatchMutator;
 use Dcat\Admin\Grid\BatchAction;
@@ -13,6 +14,7 @@ class BatchRotateNodeTokens extends BatchAction
 {
     use AdminOnlyGridAction;
     use AppendsNodeBatchTruncationNotice;
+    use RecordsAdminBatchAudit;
 
     public function title()
     {
@@ -57,6 +59,10 @@ class BatchRotateNodeTokens extends BatchAction
             (int) ($result['truncated'] ?? 0),
             NodeBatchMutator::MAX_TOKEN_ROTATE_BATCH
         );
+
+        $this->auditFromMutator('node', 'batch_rotate_token', $result, (array) $this->getKey(), [
+            'sensitive' => true,
+        ]);
 
         return $this->response()->success($msg)->refresh();
     }

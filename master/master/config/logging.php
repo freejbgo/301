@@ -60,6 +60,13 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
         ],
 
+        'admin_batch' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/admin-batch.log'),
+            'level' => 'info',
+            'days' => 30,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

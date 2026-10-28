@@ -3,6 +3,7 @@
 namespace App\Admin\Actions\Grid;
 
 use App\Admin\Concerns\AppendsBatchTruncationNotice;
+use App\Admin\Concerns\RecordsAdminBatchAudit;
 use App\Services\DomainCertificateRedeployQueue;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Grid\BatchAction;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 class BatchRedeployCertificate extends BatchAction
 {
     use AppendsBatchTruncationNotice;
+    use RecordsAdminBatchAudit;
     public function title()
     {
         return __('redi-admin-domain.actions.batch_redeploy.title');
@@ -41,6 +43,8 @@ class BatchRedeployCertificate extends BatchAction
             $summary .= __('redi-admin-domain.actions.batch_redeploy.success_skipped', ['skipped' => $result['skipped']]);
         }
         $summary = $this->withTruncationNotice($summary, (int) ($result['truncated'] ?? 0));
+
+        $this->auditCertRedeploy($result, (array) $this->getKey());
 
         return $this->response()->success($summary)->refresh();
     }

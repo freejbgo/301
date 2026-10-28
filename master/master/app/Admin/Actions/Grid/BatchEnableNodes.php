@@ -4,6 +4,7 @@ namespace App\Admin\Actions\Grid;
 
 use App\Admin\Concerns\AppendsNodeBatchTruncationNotice;
 use App\Admin\Concerns\AdminOnlyGridAction;
+use App\Admin\Concerns\RecordsAdminBatchAudit;
 use App\Services\NodeBatchMutator;
 use Dcat\Admin\Grid\BatchAction;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ class BatchEnableNodes extends BatchAction
 {
     use AdminOnlyGridAction;
     use AppendsNodeBatchTruncationNotice;
+    use RecordsAdminBatchAudit;
 
     public function title()
     {
@@ -45,6 +47,8 @@ class BatchEnableNodes extends BatchAction
         }
 
         $msg = $this->withNodeTruncationNotice($msg, (int) ($result['truncated'] ?? 0));
+
+        $this->auditFromMutator('node', $key, $result, (array) $this->getKey());
 
         return $this->response()->success($msg)->refresh();
     }

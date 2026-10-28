@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\AdminBatchOperationAudit;
 use App\Support\AdminTenantContext;
 use App\Support\BatchSelectionLimiter;
 use Illuminate\Http\Request;
@@ -68,6 +69,11 @@ class DomainBatchFilterRunner
                     'cap' => DomainBatchMutator::MAX_IDS_PER_BATCH,
                 ]);
                 $msg = $this->finishSuccessMessage($msg, $filterTruncated + $dispatch['truncated'], $filterRequest);
+                $this->auditFilterRun('apply_cert', $sessionAdminId, $dispatch['dispatched'], [
+                    'skipped' => 0,
+                    'truncated' => $filterTruncated + $dispatch['truncated'],
+                    'error_count' => 0,
+                ], $filterRequest);
 
                 return [
                     'ok' => true,
@@ -95,23 +101,28 @@ class DomainBatchFilterRunner
                     ]);
                 }
                 $msg = $this->finishSuccessMessage($msg, $filterTruncated + $redeploy['truncated'], $filterRequest);
+                $this->auditFilterRun('redeploy', $sessionAdminId, $redeploy['queued'], [
+                    'skipped' => (int) $redeploy['skipped'],
+                    'truncated' => $filterTruncated + $redeploy['truncated'],
+                    'error_count' => 0,
+                ], $filterRequest);
 
                 return ['ok' => true, 'message' => $msg, 'count' => $redeploy['queued']];
 
             case 'enable':
                 $result = $mutator->setStatusOwned($ids, 1, $sessionAdminId, $isPlatform);
 
-                return $this->mutatorSummary($result, 'enable', $filterTruncated, $filterRequest);
+                return $this->mutatorSummary($result, 'enable', $sessionAdminId, $filterTruncated, $filterRequest);
 
             case 'disable':
                 $result = $mutator->setStatusOwned($ids, 2, $sessionAdminId, $isPlatform);
 
-                return $this->mutatorSummary($result, 'disable', $filterTruncated, $filterRequest);
+                return $this->mutatorSummary($result, 'disable', $sessionAdminId, $filterTruncated, $filterRequest);
 
             case 'delete':
                 $result = $mutator->deleteOwned($ids, $sessionAdminId, $isPlatform);
 
-                return $this->mutatorSummary($result, 'delete', $filterTruncated, $filterRequest);
+                return $this->mutatorSummary($result, 'delete', $sessionAdminId, $filterTruncated, $filterRequest);
         }
 
         return [
@@ -145,8 +156,13 @@ class DomainBatchFilterRunner
     /**
      * @param  array{updated: int, skipped: int, errors: string[], truncated?: int}  $result
      */
-    protected function mutatorSummary(array $result, string $actionKey, int $filterTruncated = 0, ?Request $filterRequest = null): array
-    {
+    protected function mutatorSummary(
+        array $result,
+        string $actionKey,
+        int $sessionAdminId,
+        int $filterTruncated = 0,
+        ?Request $filterRequest = null
+    ): array {
         if ($result['updated'] === 0) {
             $msg = $result['errors'] !== []
                 ? __('redi-admin-domain.batch_filter.error_all.'.$actionKey)
@@ -177,6 +193,46 @@ class DomainBatchFilterRunner
             $filterRequest ?? request()
         );
 
+        $request = $filterRequest ?? request();
+        $this->auditFilterRun($actionKey, $sessionAdminId, (int) $result['updated'], [
+            'skipped' => (int) $result['skipped'],
+            'truncated' => $filterTruncated + (int) ($result['truncated'] ?? 0),
+            'error_count' => count($result['errors']),
+        ], $request);
+
         return ['ok' => true, 'message' => $msg, 'count' => $result['updated']];
+    }
+
+    /**
+     * @param  array<string, int>  $metrics
+     */
+    protected function auditFilterRun(string $action, int $adminId, int $primaryCount, array $metrics, Request $filterRequest): void
+    {
+        AdminBatchOperationAudit::record(
+            'domain',
+            'filter.'.$action,
+            $adminId,
+            array_merge(['updated' => $primaryCount], $metrics),
+            [
+                'mode' => 'list_filter',
+                'filtered' => DomainListFilter::hasAnyFilter($filterRequest),
+                'filter_keys' => $this->activeFilterKeys($filterRequest),
+            ]
+        );
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function activeFilterKeys(Request $filterRequest): array
+    {
+        $keys = [];
+        foreach (DomainListFilter::FILTER_KEYS as $key) {
+            if ($filterRequest->filled($key)) {
+                $keys[] = $key;
+            }
+        }
+
+        return $keys;
     }
 }

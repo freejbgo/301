@@ -53,7 +53,7 @@ return [
             'title' => 'Batch retry failed certs',
             'confirm' => 'Mark failed deployments on selected nodes as pending. Continue?',
             'error_none' => 'No failed deployments to requeue on selected nodes',
-            'success' => 'Requeued :count failed deployment(s)',
+            'success' => 'Requeued :deployments failed deployment(s) across :nodes node(s)',
         ],
         'batch_rotate_token' => [
             'title' => 'Batch rotate tokens',
