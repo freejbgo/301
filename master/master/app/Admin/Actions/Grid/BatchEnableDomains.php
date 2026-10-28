@@ -62,7 +62,7 @@ class BatchEnableDomains extends BatchAction
 
         $summary = $this->withTruncationNotice($summary, (int) ($result['truncated'] ?? 0));
 
-        $this->auditFromMutator('domain', 'batch_enable', $result, (array) $this->getKey());
+        $this->auditFromMutator('domain', $actionKey, $result, (array) $this->getKey());
 
         return $this->response()->success($summary)->refresh();
     }
