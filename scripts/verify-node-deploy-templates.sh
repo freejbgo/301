@@ -36,6 +36,8 @@ for key in NODE_INSTALL_ROOT NODE_PUBLIC_IP DEFAULT_REDIRECT_URL REDI_MASTER_URL
 done
 grep -q 'REDI_MASTER_INSECURE' "$VARS" || fail "vars.example.env: missing REDI_MASTER_INSECURE hint"
 grep -q 'REDI_AGENT_EMPTY_CERT_CLEAR_AFTER' "$VARS" || fail "vars.example.env: missing REDI_AGENT_EMPTY_CERT_CLEAR_AFTER hint"
+grep -q 'REDI_AGENT_EMPTY_CHALLENGE_CLEAR_AFTER' "$VARS" || fail "vars.example.env: missing REDI_AGENT_EMPTY_CHALLENGE_CLEAR_AFTER hint"
+grep -q 'REDI_AGENT_EMPTY_RULES_CLEAR_AFTER' "$VARS" || fail "vars.example.env: missing REDI_AGENT_EMPTY_RULES_CLEAR_AFTER hint"
 grep -q 'NODE_IPS' "$VARS" || fail "vars.example.env: missing NODE_IPS"
 
 # lagran 脚本与 lagran_ports.py 一致
@@ -56,6 +58,9 @@ ENV_EX="${REPO_ROOT}/node/redi-multi/env.example"
 [[ -f "$ENV_EX" ]] || fail "missing node/redi-multi/env.example"
 for key in REDI_DB_HOST REDI_DB_USER REDI_DB_PASSWORD REDI_DB_NAME REDI_MASTER_URL REDI_NODE_TOKEN REDI_LAGRAN_DISABLED; do
   grep -q "$key" "$ENV_EX" || fail "env.example: missing ${key}"
+done
+for empty_key in REDI_AGENT_EMPTY_CERT_CLEAR_AFTER REDI_AGENT_EMPTY_CHALLENGE_CLEAR_AFTER REDI_AGENT_EMPTY_RULES_CLEAR_AFTER; do
+  grep -q "$empty_key" "$ENV_EX" || fail "env.example: missing ${empty_key} hint"
 done
 grep -q 'redi_mysql_tls_args_from_env' "${REPO_ROOT}/scripts/centos7/deploy-node.sh" \
   || fail "deploy-node.sh must honor REDI_DB_TLS in DB smoke test"
