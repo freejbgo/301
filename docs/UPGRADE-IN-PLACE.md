@@ -28,7 +28,9 @@ sudo -u nginx php artisan config:cache
 sudo systemctl start php*-fpm nginx redi-queue
 ```
 
-跟包后 **`migrate --force` 会应用尚未执行的迁移**（例如 `admin_users.locale`、`redi_domain_certs.last_error_code`）。若已导入当前版 `redi_admin.sql` 且 `migrations` 表与发布包一致，此处通常 **无待执行迁移**。后台三语说明见 [I18N.md](I18N.md)。
+跟包后 **`migrate --force` 会应用尚未执行的迁移**（例如 `admin_users.locale`、`redi_domain_certs.last_error_code`、**`2026_10_29_100011_redi_node_skip_bump_guard`** 更新 `redi_node_bump_skip` 计数规则）。若已导入当前版 `redi_admin.sql` 且 `migrations` 表与发布包一致，此处通常 **无待执行迁移**。后台三语说明见 [I18N.md](I18N.md)。
+
+**含节点程序变更时**：主控 migrate 后，各节点须替换 `redi-multi` 并 `systemctl restart redi-multi`（或重跑 `deploy-node.sh`），否则 ACME 挑战防抖、lagran 启动顺序、TLS 缓存等修复不会生效。
 
 仅覆盖 tar、未重跑 `deploy-master` 时，请核对 `/etc/systemd/system/redi-queue.service` 的 `queue:work` 是否含 **`--max-time=3600`**（与 [scripts/systemd/redi-queue.service.example](../scripts/systemd/redi-queue.service.example) 一致）；过旧可手工改 unit 后 `systemctl daemon-reload && systemctl restart redi-queue`，或重跑 `deploy-master` 刷新 unit。
 

@@ -106,29 +106,31 @@ func GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	}
 	mu.RLock()
 	e, ok := entries[host]
-	mu.RUnlock()
 	if !ok {
+		mu.RUnlock()
 		return nil, fmt.Errorf("no certificate for %s", host)
 	}
-	mu.RLock()
 	if cached, hit := parsedByCert[e.CertID]; hit {
 		mu.RUnlock()
 		return cached, nil
 	}
+	certPEM := append([]byte(nil), e.Certificate...)
+	keyPEM := append([]byte(nil), e.PrivateKey...)
+	certID := e.CertID
 	mu.RUnlock()
 
-	cert, err := tls.X509KeyPair(e.Certificate, e.PrivateKey)
+	cert, err := tls.X509KeyPair(certPEM, keyPEM)
 	if err != nil {
 		return nil, err
 	}
 
 	mu.Lock()
-	if cached, hit := parsedByCert[e.CertID]; hit {
+	if cached, hit := parsedByCert[certID]; hit {
 		mu.Unlock()
 		return cached, nil
 	}
 	parsed := cert
-	parsedByCert[e.CertID] = &parsed
+	parsedByCert[certID] = &parsed
 	mu.Unlock()
 	return &parsed, nil
 }

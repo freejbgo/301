@@ -24,6 +24,7 @@ grep -q 'acmeHostKey' "$issuer" || fail "CertificateIssuer must use acmeHostKey"
 grep -q 'originalUrlIfValid' "$job" || fail "IssueDomainCertificateJob must gate on originalUrlIfValid"
 grep -q "domain_name = ''" "$job" || fail "IssueDomainCertificateJob must clear domain_name when host invalid"
 grep -q 'withoutRedirecting' "$waiter" || fail "Http01PropagationWaiter must not follow redirects on HTTP-01 probe"
+grep -q 'acmeHostKey' "$waiter" || fail "Http01PropagationWaiter must normalize domain with acmeHostKey"
 grep -q 'acmeHostKey' "$challenge" || fail "RediAcmeChallenge upsert must use acmeHostKey"
 
 [[ -f "$GO_API" ]] || fail "missing api.go"
