@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Support\AdminTenantContext;
 use App\Models\RediAdminDomain;
+use Dcat\Admin\Admin;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -18,6 +20,13 @@ class DomainListFilter
         $query = RediAdminDomain::query()
             ->with('certificate')
             ->orderBy('id');
+
+        if (! AdminTenantContext::isPlatformAdministrator()) {
+            $user = Admin::user();
+            if ($user) {
+                $query->where('admin_id', (int) $user->id);
+            }
+        }
 
         if ($request->filled('group_id')) {
             $query->where('group_id', (int) $request->input('group_id'));

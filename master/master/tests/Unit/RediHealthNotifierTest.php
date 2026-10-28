@@ -20,26 +20,26 @@ class RediHealthNotifierTest extends TestCase
     public function test_notify_uses_health_url_when_ops_url_also_set(): void
     {
         config([
-            'redi.health_webhook_url' => 'https://hooks.example/health',
-            'redi.ops_webhook_url' => 'https://hooks.example/ops',
+            'redi.health_webhook_url' => 'https://example.com/health',
+            'redi.ops_webhook_url' => 'https://example.com/ops',
         ]);
 
         Http::fake([
-            'https://hooks.example/*' => Http::response(['ok' => true], 200),
+            'https://example.com/*' => Http::response(['ok' => true], 200),
         ]);
 
         $this->assertTrue(RediHealthNotifier::notifyWebhook([
             ['level' => 'warning', 'code' => 'test', 'message' => 'x'],
         ]));
 
-        Http::assertSent(fn ($request) => $request->url() === 'https://hooks.example/health');
+        Http::assertSent(fn ($request) => $request->url() === 'https://example.com/health');
     }
 
     public function test_notify_truncates_large_issue_list(): void
     {
-        config(['redi.health_webhook_url' => 'https://hooks.example/health']);
+        config(['redi.health_webhook_url' => 'https://example.com/health']);
 
-        Http::fake(['https://hooks.example/*' => Http::response([], 200)]);
+        Http::fake(['https://example.com/*' => Http::response([], 200)]);
 
         $issues = [];
         for ($i = 0; $i < 45; $i++) {
@@ -77,12 +77,12 @@ class RediHealthNotifierTest extends TestCase
     public function test_notify_posts_json_payload(): void
     {
         config([
-            'redi.health_webhook_url' => 'https://hooks.example/health',
+            'redi.health_webhook_url' => 'https://example.com/health',
             'redi.ops_webhook_url' => '',
         ]);
 
         Http::fake([
-            'https://hooks.example/*' => Http::response(['ok' => true], 200),
+            'https://example.com/*' => Http::response(['ok' => true], 200),
         ]);
 
         $issues = [
@@ -94,10 +94,10 @@ class RediHealthNotifierTest extends TestCase
         Http::assertSent(function ($request) {
             $data = $request->data();
 
-            return $request->url() === 'https://hooks.example/health'
+            return $request->url() === 'https://example.com/health'
                 && ($data['source'] ?? '') === 'redi-health'
                 && ($data['ok'] ?? true) === false
-                && str_contains((string) ($data['text'] ?? ''), 'a.com');
+                && str_contains((string) ($data['issues'][0]['message'] ?? ''), 'a.com');
         });
     }
 

@@ -3,7 +3,8 @@
 namespace Tests\Unit;
 
 use App\Services\Dns\Concerns\ReconcilesDnsRecords;
-use PHPUnit\Framework\TestCase;
+use App\Support\RediErrorMessage;
+use Tests\TestCase;
 
 class ReconcilesDnsRecordsTest extends TestCase
 {
@@ -132,7 +133,7 @@ class ReconcilesDnsRecordsTest extends TestCase
         };
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('CNAME 目标 无效');
+        $this->expectExceptionMessage(RediErrorMessage::get('dns.cname_target_invalid'));
         $helper->run('not..valid');
     }
 
@@ -182,7 +183,7 @@ class ReconcilesDnsRecordsTest extends TestCase
         };
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('DNS 删除陈旧记录失败');
+        $this->expectExceptionMessage('Failed to delete stale DNS records');
         $helper->run();
     }
 

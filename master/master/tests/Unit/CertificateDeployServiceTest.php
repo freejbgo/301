@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\RediDomainCert;
 use App\Models\RediNode;
 use App\Services\CertificateDeployService;
+use App\Support\RediErrorMessage;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
@@ -361,7 +362,7 @@ class CertificateDeployServiceTest extends TestCase
             ->where('cert_id', $cert->id)
             ->where('node_id', $node->id)
             ->value('last_error');
-        $this->assertStringContainsString('不一致', $deploymentError);
+        $this->assertStringContainsString(RediErrorMessage::get('cert.domain_mismatch_reject'), $deploymentError);
         $this->assertSame(RediDomainCert::STATUS_FAILED, $cert->fresh()->status);
     }
 
@@ -428,7 +429,7 @@ class CertificateDeployServiceTest extends TestCase
         $method->invoke(app(CertificateDeployService::class), $cert->fresh()->load('domain'));
 
         $this->assertSame(RediDomainCert::STATUS_ISSUED, $cert->fresh()->status);
-        $this->assertStringContainsString('不可下发', (string) $cert->fresh()->last_error);
+        $this->assertStringContainsString(RediErrorMessage::get('cert.ack_not_deployable'), (string) $cert->fresh()->last_error);
     }
 
     public function test_mark_node_ack_is_idempotent_when_already_ok(): void
@@ -839,7 +840,7 @@ class CertificateDeployServiceTest extends TestCase
 
         $this->assertFalse($queued);
         $this->assertDatabaseCount('redi_cert_deployments', 0);
-        $this->assertStringContainsString('跳过部署', (string) $cert->fresh()->last_error);
+        $this->assertStringContainsString(RediErrorMessage::get('cert.hostname_mismatch_skip'), (string) $cert->fresh()->last_error);
         $this->assertSame('issued', $cert->fresh()->status);
     }
 

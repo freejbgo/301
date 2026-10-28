@@ -54,7 +54,10 @@ REDI_DNS_PRECHECK_ALLOW_A_TO_POOL=true
 ## 3. 节点 Agent
 
 - 所有节点升级到含 **Agent 0.1.3** 的 `redi-multi`（较新包含主控故障 **轮询退避**、空证书列表 **防抖**、日志节流；一般无需改 env）。
-- 节点 `env.sh` 可选：`REDI_AGENT_EMPTY_CERT_CLEAR_AFTER`（默认 3，设为 `1` 则主控空证书列表立即清空内存证书，见 `node/redi-multi/env.example`）。
+- 节点 `env.sh` 可选（主控连续空列表防抖，默认均为 **3**；设为 `1` 恢复立即清空，见 `node/redi-multi/env.example` 与 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §9）：
+  - `REDI_AGENT_EMPTY_CERT_CLEAR_AFTER`（空证书列表 → 内存 TLS）
+  - `REDI_AGENT_EMPTY_CHALLENGE_CLEAR_AFTER`（空 ACME 挑战列表）
+  - `REDI_AGENT_EMPTY_RULES_CLEAR_AFTER`（空 redirect-rules → force_https 映射）
 - 过渡：可暂时 `REDI_MIN_AGENT_VERSION=` 清空，升级完节点再改回 `0.1.3`。
 - 新增/下线节点 IP：更新主控 `vars.env` 的 `NODE_IPS` 后重跑 `deploy-master.sh`，或仅同步授权/防火墙时 `sudo bash scripts/centos7/grant-nodes-from-vars.sh`（读 `vars.env` 的 `MYSQL_ROOT_PASS` / `DB_PASS`；从列表删 IP 或清空 `NODE_IPS` 后重跑可撤销已记录授权）。单 IP 见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §5 手工 `grant-node-mysql` / `revoke-node-mysql` 与 firewalld 脚本。
 

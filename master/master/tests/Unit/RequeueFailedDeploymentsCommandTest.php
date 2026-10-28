@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\RediDomainCert;
 use Illuminate\Database\Schema\Blueprint;
+use App\Support\RediErrorMessage;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -60,21 +61,21 @@ class RequeueFailedDeploymentsCommandTest extends TestCase
     {
         $exit = Artisan::call('redi:requeue-failed-deployments');
         $this->assertSame(0, $exit);
-        $this->assertStringContainsString('没有 failed', Artisan::output());
+        $this->assertStringContainsString(RediErrorMessage::get('cli.requeue_none'), Artisan::output());
     }
 
     public function test_command_rejects_invalid_node_id(): void
     {
         $exit = Artisan::call('redi:requeue-failed-deployments', ['--node' => '0']);
         $this->assertSame(1, $exit);
-        $this->assertStringContainsString('正整数', Artisan::output());
+        $this->assertStringContainsString(RediErrorMessage::get('cli.requeue_node_id'), Artisan::output());
     }
 
     public function test_command_rejects_invalid_cert_id(): void
     {
         $exit = Artisan::call('redi:requeue-failed-deployments', ['--cert' => '0']);
         $this->assertSame(1, $exit);
-        $this->assertStringContainsString('正整数', Artisan::output());
+        $this->assertStringContainsString(RediErrorMessage::get('cli.requeue_cert_id'), Artisan::output());
     }
 
     public function test_command_skips_failed_on_disabled_node(): void
@@ -110,7 +111,7 @@ class RequeueFailedDeploymentsCommandTest extends TestCase
 
         $exit = Artisan::call('redi:requeue-failed-deployments');
         $this->assertSame(0, $exit);
-        $this->assertStringContainsString('没有 failed', Artisan::output());
+        $this->assertStringContainsString(RediErrorMessage::get('cli.requeue_none'), Artisan::output());
         $this->assertDatabaseHas('redi_cert_deployments', [
             'cert_id' => $certId,
             'status' => 'failed',
@@ -151,7 +152,7 @@ class RequeueFailedDeploymentsCommandTest extends TestCase
 
         $exit = Artisan::call('redi:requeue-failed-deployments', ['--node' => (string) $nodeId]);
         $this->assertSame(0, $exit);
-        $this->assertStringContainsString('重新排队', Artisan::output());
+        $this->assertStringContainsString(RediErrorMessage::get('cli.requeue_done', ['count' => 1]), Artisan::output());
         $this->assertDatabaseHas('redi_cert_deployments', [
             'cert_id' => $certId,
             'node_id' => $nodeId,

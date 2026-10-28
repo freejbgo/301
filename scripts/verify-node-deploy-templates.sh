@@ -57,7 +57,10 @@ ENV_EX="${REPO_ROOT}/node/redi-multi/env.example"
 for key in REDI_DB_HOST REDI_DB_USER REDI_DB_PASSWORD REDI_DB_NAME REDI_MASTER_URL REDI_NODE_TOKEN REDI_LAGRAN_DISABLED; do
   grep -q "$key" "$ENV_EX" || fail "env.example: missing ${key}"
 done
-grep -q 'REDI_DB_PASSWORD=' "$DEPLOY" || fail "deploy-node: env.sh must set REDI_DB_PASSWORD"
+grep -q 'redi_mysql_tls_args_from_env' "${REPO_ROOT}/scripts/centos7/deploy-node.sh" \
+  || fail "deploy-node.sh must honor REDI_DB_TLS in DB smoke test"
+grep -q 'redi_mysql_tls_args_from_env' "${REPO_ROOT}/scripts/centos7/lib.sh" \
+  || fail "lib.sh must define redi_mysql_tls_args_from_env"
 grep -q 'UPGRADE-IN-PLACE' "$DEPLOY" || fail "deploy-node: must mention UPGRADE-IN-PLACE for optional Agent env"
 
 echo "verify-node-deploy-templates: OK"

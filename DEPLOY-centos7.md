@@ -153,6 +153,10 @@ sudo systemctl start redi-multi
 | 键 | 含义 |
 |----|------|
 | `REDI_AGENT_EMPTY_CERT_CLEAR_AFTER` | 主控连续返回空证书列表多少次后才清空本机 TLS 内存（默认 **3**；`1` = 立即清空，与旧版相同） |
+| `REDI_AGENT_EMPTY_CHALLENGE_CLEAR_AFTER` | 主控连续返回空 ACME 挑战列表多少次后才清空本机挑战（默认 **3**） |
+| `REDI_AGENT_EMPTY_RULES_CLEAR_AFTER` | 主控连续返回空 redirect-rules 多少次后才清空本机 force_https 映射（默认 **3**） |
+
+节点 `deploy-node.sh` 的 MySQL 冒烟会读取 `vars.env` 中的 **`REDI_DB_TLS`**（`redi_mysql_tls_args_from_env`），与 `env.sh` 写入值一致。
 
 详见 [node/redi-multi/env.example](node/redi-multi/env.example) 与 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) §3。
 

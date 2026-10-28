@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Support\RediErrorMessage;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
@@ -60,7 +61,7 @@ class NormalizeDomainHostsCommandTest extends TestCase
 
         Artisan::call('redi:normalize-domain-hosts');
         $output = Artisan::output();
-        $this->assertStringContainsString('跳过 id=1 非法 original_url', $output);
+        $this->assertStringContainsString(RediErrorMessage::get('cli.normalize_skip_invalid', ['id' => 1]), $output);
         $this->assertStringNotContainsString("\r\n", $output);
         $this->assertDatabaseHas('redi_admin_domain', [
             'original_url' => "evil.com\r\n",

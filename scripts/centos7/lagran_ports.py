@@ -68,7 +68,20 @@ def merge_listener_ports(lagran_port, http_addr: str, tls_addr: str) -> str:
 
 def lagran_bool(lag: dict, key: str, default: bool = True) -> bool:
     v = lag.get(key, default)
-    return v not in (False, 0, "0", "false")
+    if v is None:
+        return default
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, str):
+        s = v.strip().lower()
+        if s in ("1", "true", "yes", "on"):
+            return True
+        if s in ("0", "false", "no", "off"):
+            return False
+        raise SystemExit(f"lagran boolean {key!r}: invalid string {v!r}")
+    if isinstance(v, (int, float)):
+        return v != 0
+    raise SystemExit(f"lagran flag {key!r} must be boolean")
 
 
 def apply_listen_env_overrides(http_addr: str, tls_addr: str) -> tuple[str, str]:

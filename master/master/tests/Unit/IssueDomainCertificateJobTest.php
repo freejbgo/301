@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Jobs\IssueDomainCertificateJob;
 use App\Models\RediDomainCert;
 use App\Services\Acme\CertificateIssuer;
+use App\Support\RediErrorMessage;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -58,7 +59,7 @@ class IssueDomainCertificateJobTest extends TestCase
         $this->assertNotNull($cert);
         $this->assertSame('', $cert->domain_name);
         $this->assertSame(RediDomainCert::STATUS_FAILED, $cert->status);
-        $this->assertStringContainsString('无效', (string) $cert->last_error);
+        $this->assertStringContainsString(RediErrorMessage::get('cert.invalid_hostname'), (string) $cert->last_error);
     }
 
     public function test_skips_issue_when_domain_disabled(): void

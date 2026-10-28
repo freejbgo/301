@@ -153,6 +153,7 @@ return [
             'row_group_owner' => ':label：目标分组与域名所属账号不一致',
             'row_force_https' => ':label：证书尚未生效，不能开启强制 HTTPS',
             'row_delete' => ':label：:reason',
+            'group_skip_url_too_many' => '该分组共有 :count 个域名，按组改跳转单次最多 :max 个。请拆分分组或使用筛选批量修改。',
         ],
     ],
     'batch_filter' => [
@@ -192,6 +193,7 @@ return [
             'action_invalid' => '无效操作',
             'no_match' => '当前筛选下没有匹配的域名',
             'filter_required_destructive' => '批量停用/删除须先设置至少一项列表筛选（避免误操作整表前 500 条）',
+            'filter_required_sensitive' => '该批量操作须先设置至少一项列表筛选（避免误操作整表前 500 条）',
         ],
         'warnings' => [
             'unfiltered' => '（未设列表筛选，仅按 ID 顺序处理前 :max 条）',

@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\RediDomainCert;
+use App\Support\RediErrorMessage;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
@@ -96,7 +97,7 @@ class RediHealthCommandTest extends TestCase
 
         Artisan::call('redi:health');
         $output = Artisan::output();
-        $this->assertStringContainsString('超过 15 分钟无心跳', $output);
+        $this->assertStringContainsString('no heartbeat for 15+ minutes', $output);
         $this->assertStringContainsString('evilnode', $output);
         $this->assertStringNotContainsString("\r\n", $output);
     }
@@ -124,8 +125,8 @@ class RediHealthCommandTest extends TestCase
 
     public function test_health_notify_exits_zero_when_webhook_delivered(): void
     {
-        config(['redi.health_webhook_url' => 'https://hooks.example/health']);
-        Http::fake(['https://hooks.example/*' => Http::response([], 200)]);
+        config(['redi.health_webhook_url' => 'https://example.com/health']);
+        Http::fake(['https://example.com/*' => Http::response([], 200)]);
 
         \DB::table('redi_nodes')->insert([
             'name' => 'stale',
@@ -141,8 +142,8 @@ class RediHealthCommandTest extends TestCase
 
     public function test_health_json_notify_exits_zero_when_webhook_delivered(): void
     {
-        config(['redi.health_webhook_url' => 'https://hooks.example/health']);
-        Http::fake(['https://hooks.example/*' => Http::response([], 200)]);
+        config(['redi.health_webhook_url' => 'https://example.com/health']);
+        Http::fake(['https://example.com/*' => Http::response([], 200)]);
 
         \DB::table('redi_nodes')->insert([
             'name' => 'stale',
@@ -214,6 +215,6 @@ class RediHealthCommandTest extends TestCase
         $this->withoutMockingConsoleOutput();
         $exit = Artisan::call('redi:health');
         $this->assertSame(0, $exit);
-        $this->assertStringContainsString('配置建议', Artisan::output());
+        $this->assertStringContainsString(RediErrorMessage::get('cli.health_config_hints'), Artisan::output());
     }
 }

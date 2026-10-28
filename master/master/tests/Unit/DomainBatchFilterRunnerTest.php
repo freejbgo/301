@@ -48,4 +48,13 @@ class DomainBatchFilterRunnerTest extends TestCase
         $this->assertFalse($out['ok']);
         $this->assertSame(1, (int) \DB::table('redi_admin_domain')->count());
     }
+
+    public function test_enable_without_filter_is_rejected(): void
+    {
+        $runner = new DomainBatchFilterRunner();
+        $request = Request::create('/admin/domain', 'GET');
+        $out = $runner->run('enable', $request, 1);
+
+        $this->assertFalse($out['ok']);
+    }
 }

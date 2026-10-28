@@ -43,7 +43,11 @@ func TestTickPullsOnlyChangedSplitRevision(t *testing.T) {
 			})
 		case "GET /api/nodes/redirect-rules":
 			rulesPulls++
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{"rules": []interface{}{}})
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"rules": []map[string]interface{}{
+					{"original_url": "example.test", "force_https": false},
+				},
+			})
 		case "GET /api/nodes/acme-challenges":
 			challengePulls++
 			_ = json.NewEncoder(w).Encode(map[string]interface{}{"challenges": []interface{}{}})
