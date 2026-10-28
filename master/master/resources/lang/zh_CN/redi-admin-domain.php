@@ -15,6 +15,7 @@ return [
         'expired'            => '已过期',
         'expiring_soon'      => '即将到期',
         'batch_add_domains'  => '批量添加域名',
+        'batch_filter'       => '按筛选批量操作',
         'copy_cname_success' => '已复制 CNAME 目标',
         'onboarding_admin_create' => '请先选择<strong>所属租户的分组</strong>并保存。保存后在列表「CNAME 目标」列查看该租户的边缘域名。',
         'cname_hint_admin'   => '域名所属租户账号下所有域名共用此 CNAME 目标（改分组迁户后以保存结果为准）',
@@ -89,6 +90,114 @@ return [
             'success' => '已重新下发 :queued 个域名的证书',
             'success_skipped' => '，跳过 :skipped 个',
         ],
+        'batch_enable' => [
+            'title' => '批量启用',
+            'error_none' => '没有可启用的域名（请勾选本账号下的记录）',
+            'error_all' => '所选域名均未能启用',
+            'success' => '已启用 :count 个域名',
+        ],
+        'batch_disable' => [
+            'title' => '批量停用',
+            'confirm' => '停用后不再跳转，证书部署会取消。继续？',
+            'error_none' => '没有可停用的域名',
+            'error_already' => '所选域名已是停用状态',
+            'success' => '已停用 :count 个域名',
+        ],
+        'batch_edit' => [
+            'title' => '批量修改',
+            'success' => '已更新 :count 个域名',
+            'success_all_skipped' => '所选 :count 个域名均已符合设置，无需变更',
+            'error_all' => '未能更新任何域名',
+        ],
+        'batch_delete' => [
+            'title' => '批量删除',
+            'confirm' => '将永久删除选中域名及关联证书记录，不可恢复。继续？',
+            'error_none' => '没有可删除的域名',
+            'error_all' => '未能删除任何域名',
+            'success' => '已删除 :count 个域名',
+        ],
+        'batch_mutator' => [
+            'skipped_suffix' => '（跳过 :count 个无需变更）',
+            'partial_errors' => '另有 :count 条未成功：',
+            'truncated_suffix' => '（另有 :count 条因单次上限 :max 未处理，请分批再操作）',
+        ],
+    ],
+    'batch_edit' => [
+        'fields' => [
+            'skip_url' => '跳转链接',
+            'group_id' => '移动到分组',
+            'force_https' => '强制 HTTPS',
+        ],
+        'help' => [
+            'skip_url' => '留空表示不修改跳转地址',
+            'group_id' => '不选表示不调整分组；超级管理员可跨租户迁组',
+            'force_https' => '选「不修改」保持原值；开启前证书须为「已生效」',
+        ],
+        'options' => [
+            'force_https_keep' => '不修改',
+            'force_https_on' => '开启',
+            'force_https_off' => '关闭',
+        ],
+    ],
+    'batch_mutator' => [
+        'errors' => [
+            'status_invalid' => '状态无效',
+            'no_domains' => '没有可操作的域名',
+            'no_selection' => '请先勾选要操作的域名',
+            'nothing_to_apply' => '请至少填写一项要修改的内容',
+            'nothing_changed' => '没有域名被更新',
+            'force_https_invalid' => '强制 HTTPS 选项无效',
+            'save_failed' => '保存失败',
+            'row_enable' => ':label：:reason',
+            'row_save' => ':label：:reason',
+            'row_group_owner' => ':label：目标分组与域名所属账号不一致',
+            'row_force_https' => ':label：证书尚未生效，不能开启强制 HTTPS',
+            'row_delete' => ':label：:reason',
+        ],
+    ],
+    'batch_filter' => [
+        'fields' => [
+            'action' => '操作',
+        ],
+        'help' => [
+            'action' => '对当前列表筛选条件下最多 :max 条域名执行（与导出 CSV 使用相同筛选；请先点「搜索」再打开本弹窗）',
+        ],
+        'actions' => [
+            'apply_cert' => '批量申请证书',
+            'redeploy' => '批量重新下发证书',
+            'enable' => '批量启用',
+            'disable' => '批量停用',
+            'delete' => '批量删除',
+        ],
+        'success' => [
+            'apply_cert' => '已将 :count 个域名加入证书队列（筛选上限 :cap 条）',
+            'redeploy' => '已重新下发 :queued 个域名的证书（筛选上限 :cap 条）',
+            'enable' => '已启用 :count 个域名（筛选上限 :cap 条）',
+            'disable' => '已停用 :count 个域名（筛选上限 :cap 条）',
+            'delete' => '已删除 :count 个域名（筛选上限 :cap 条）',
+        ],
+        'error_none' => [
+            'redeploy' => '筛选结果中没有可重新下发的域名',
+            'enable' => '筛选结果中没有可启用的域名',
+            'disable' => '筛选结果中没有可停用的域名',
+            'delete' => '筛选结果中没有可删除的域名',
+        ],
+        'error_all' => [
+            'redeploy' => '筛选结果中的域名均无法重新下发（无证书、未签发或不可读）',
+            'enable' => '筛选结果中的域名均未能启用',
+            'disable' => '筛选结果中的域名均未能停用',
+            'delete' => '筛选结果中的域名均未能删除',
+        ],
+        'errors' => [
+            'action_invalid' => '无效操作',
+            'no_match' => '当前筛选下没有匹配的域名',
+            'filter_required_destructive' => '批量停用/删除须先设置至少一项列表筛选（避免误操作整表前 500 条）',
+        ],
+        'warnings' => [
+            'unfiltered' => '（未设列表筛选，仅按 ID 顺序处理前 :max 条）',
+        ],
+        'confirm_title' => '确认按筛选批量操作',
+        'confirm_content' => '将对当前筛选条件下最多 500 条域名执行所选操作。删除与停用请先使用列表筛选缩小范围。',
     ],
     'export' => [
         'headers' => [

@@ -12,6 +12,9 @@ use Dcat\Admin\Http\Controllers\AdminController;
 use Dcat\Admin\Widgets\Radio;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Layout\Content;
+use App\Admin\Actions\Grid\BatchDeleteGroups;
+use App\Admin\Actions\Grid\BatchDisableGroups;
+use App\Admin\Actions\Grid\BatchEnableGroups;
 use App\Admin\Forms\UrlSetByGroup;
 use Dcat\Admin\Widgets\Modal;
 use App\Support\OpsDisplaySanitizer;
@@ -46,6 +49,12 @@ class RediAdminGroupController extends AdminController
             $grid->column('status', admin_trans_field('status'))->using(admin_trans('redi-admin-group.options.status'));
             $grid->column('created_at');
             $grid->column('updated_at')->sortable();
+
+            $grid->batchActions(function ($batch) {
+                $batch->add(new BatchEnableGroups());
+                $batch->add(new BatchDisableGroups());
+                $batch->add(new BatchDeleteGroups());
+            });
 
             $grid->column('avgMonthCost')->display(admin_trans_label('batch_redirect'))->modal(function (Grid\Displayers\Modal $modal) {
                 $modal->title(admin_trans_label('batch_modal'));

@@ -2,6 +2,7 @@
 
 namespace App\Admin\Forms;
 
+use App\Admin\Concerns\RecordsAdminBatchAudit;
 use App\Services\DomainBatchCreator;
 use App\Support\AdminTenantContext;
 use App\Support\OpsDisplaySanitizer;
@@ -11,10 +12,13 @@ use Illuminate\Support\Facades\DB;
 
 class BatchCreateDomains extends Form
 {
+    use RecordsAdminBatchAudit;
+
     public function handle(array $input)
     {
         $user = Admin::user();
         $groupId = (int) ($input['group_id'] ?? 0);
+        $status = (int) ($input['status'] ?? 2);
         $group = DB::table('redi_admin_group')->where('id', $groupId)->first();
         if (! $group) {
             return $this->response()->error(__('redi-batch-domains.messages.group_invalid'));
@@ -29,7 +33,7 @@ class BatchCreateDomains extends Form
             (int) $group->admin_id,
             (string) $group->admin_name,
             $groupId,
-            (int) ($input['status'] ?? 2),
+            $status,
             (string) ($input['lines'] ?? ''),
             $input['default_skip_url'] ?? null
         );
@@ -60,6 +64,8 @@ class BatchCreateDomains extends Form
                 'errors' => $formatErrors($result['errors'], 10),
             ]);
         }
+
+        $this->auditBatchCreateDomains($result, $groupId, $status);
 
         return $this->response()->success($summary)->refresh();
     }

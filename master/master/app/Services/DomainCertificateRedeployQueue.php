@@ -5,18 +5,21 @@ namespace App\Services;
 use App\Models\RediAdminDomain;
 use App\Models\RediDomainCert;
 use App\Support\AdminTenantContext;
+use App\Support\BatchSelectionLimiter;
 
 class DomainCertificateRedeployQueue
 {
     /**
      * @param  array<int, int|string>  $domainIds
-     * @return array{queued: int, skipped: int}
+     * @return array{queued: int, skipped: int, truncated: int}
      */
     public static function redeployOwned(array $domainIds, int $sessionAdminId, ?bool $isPlatformAdministrator = null): array
     {
+        $capped = BatchSelectionLimiter::intIdsCapped($domainIds, DomainBatchMutator::MAX_IDS_PER_BATCH);
+
         $query = RediAdminDomain::query()
             ->where('status', 1)
-            ->whereIn('id', $domainIds)
+            ->whereIn('id', $capped['ids'])
             ->with('certificate');
 
         $isPlatformAdministrator = $isPlatformAdministrator ?? AdminTenantContext::isPlatformAdministrator();
@@ -51,6 +54,10 @@ class DomainCertificateRedeployQueue
             }
         }
 
-        return ['queued' => $queued, 'skipped' => $skipped];
+        return [
+            'queued' => $queued,
+            'skipped' => $skipped,
+            'truncated' => $capped['truncated'],
+        ];
     }
 }

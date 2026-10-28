@@ -2,6 +2,8 @@
 
 namespace App\Admin\Actions\Grid;
 
+use App\Admin\Concerns\AppendsBatchTruncationNotice;
+use App\Admin\Concerns\RecordsAdminBatchAudit;
 use App\Services\DomainCertificateQueue;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Grid\BatchAction;
@@ -9,6 +11,8 @@ use Illuminate\Http\Request;
 
 class BatchApplyCertificate extends BatchAction
 {
+    use AppendsBatchTruncationNotice;
+    use RecordsAdminBatchAudit;
     public function title()
     {
         return __('redi-admin-domain.actions.batch_apply.title');
@@ -16,11 +20,18 @@ class BatchApplyCertificate extends BatchAction
 
     public function handle(Request $request)
     {
-        $count = DomainCertificateQueue::dispatchOwned((array) $this->getKey(), (int) Admin::user()->id);
-        if ($count === 0) {
+        $dispatch = DomainCertificateQueue::dispatchOwned((array) $this->getKey(), (int) Admin::user()->id);
+        if ($dispatch['dispatched'] === 0) {
             return $this->response()->error(__('redi-admin-domain.actions.batch_apply.error'));
         }
 
-        return $this->response()->success(__('redi-admin-domain.actions.batch_apply.success', ['count' => $count]))->refresh();
+        $summary = $this->withTruncationNotice(
+            __('redi-admin-domain.actions.batch_apply.success', ['count' => $dispatch['dispatched']]),
+            $dispatch['truncated']
+        );
+
+        $this->auditCertDispatch('batch_apply_cert', $dispatch, (array) $this->getKey());
+
+        return $this->response()->success($summary)->refresh();
     }
 }
