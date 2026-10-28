@@ -275,6 +275,25 @@ docs/BATCH-OPERATIONS-REPORT.md
 
 **合并建议**：无阻塞。
 
+## 19. 六轮复核（§18 批量修改全跳过 + 按组改跳转模型）
+
+**范围**：`fe57362`～`d6fc6a1`。
+
+| 级别 | 项 | 结论 |
+|------|-----|------|
+| 通过 | 批量修改分支顺序 | 先 `errors`→`error_all`；再 `skipped`→成功/审计；`nothing_changed` 仅 `updated=0且skipped=0` |
+| 通过 | 审计 | `recordSkippedOnlySuccess` 仅 `BatchEditDomains` 启用；全跳过时 `updated=0` 仍写 `batch_edit` + `id_sample` |
+| 通过 | `setSkipUrlForGroupOwned` | 分组/租户校验与表单一致；域名为 `group_id` + 分组 `admin_id`；无 500 cap |
+| 通过 | 模型路径 | `applySkipUrlOnOwnedIds` 逐条 `save()`，校验失败进 `errors` 不中断其余行 |
+| 通过 | 按组改跳转 UX | 空分组仍成功；全跳过用 `success_all_skipped`；部分成功带 `skipped_suffix` / `partial_errors` |
+| 通过 | 审计 | `auditGroupUrlSet($groupId, $result)` 含 `error_count`；空分组 0/0 仍留痕 |
+| 低风险 | 批量修改混合结果 | `updated=0` 且同时有 `errors` 与 `skipped>0` 仍走 **error_all**（不展示「全跳过」成功）——符合「有失败即失败」 |
+| 低风险 | 超大分组改跳转 | 组内域名数无上限，极端规模可能慢/超时（与改前全表 update 同类风险） |
+| 低风险 | 批量修改成功文案 | 有部分 `errors` 时仅追加条数，不展开明细（§18 前亦如此） |
+| 待 CI | 单测 | 缺「全跳过成功」表单级用例；合并前跑全量 `phpunit` |
+
+**合并建议**：无阻塞。Smoke：批量修改三字段不变 → 绿色成功 + 日志 `batch_edit`（`updated=0, skipped>0`）；分组改跳转 → 单条域名 `skip_url` 非法应行级失败而非整表 SQL。
+
 ---
 
 **总结**：项目在证书批量与排队方面原先已完备；本次把 **域名 / 分组 / 节点** 的高频批量运维补齐，并增加 **按筛选批量** 与 **文件审计** 以减轻多页勾选成本并留痕。更大规模编排仍适合后续用队列任务 + 后台可查的审计表扩展。
