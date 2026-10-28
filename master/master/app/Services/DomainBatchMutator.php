@@ -184,6 +184,7 @@ class DomainBatchMutator
 
             try {
                 $domain->save();
+                DomainCertificateAdminSync::realignCertsForDomain($domain);
             } catch (\Illuminate\Validation\ValidationException $e) {
                 $label = OpsDisplaySanitizer::field($domain->original_url, '—', 253);
                 $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.row_save', [
@@ -263,10 +264,6 @@ class DomainBatchMutator
      * @param  array<int, int|string>  $domainIds
      * @return array{updated: int, skipped: int, errors: string[]}
      */
-    /**
-     * @param  array<int, int|string>  $domainIds
-     * @return array{updated: int, skipped: int, errors: string[]}
-     */
     public function deleteOwned(
         array $domainIds,
         int $sessionAdminId,
@@ -288,10 +285,15 @@ class DomainBatchMutator
             try {
                 $domain->delete();
                 $result['updated']++;
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.row_delete', [
+                    'label' => $label,
+                    'reason' => $e->validator->errors()->first() ?: __('redi-admin-domain.batch_mutator.errors.save_failed'),
+                ]);
             } catch (\Throwable $e) {
                 $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.row_delete', [
                     'label' => $label,
-                    'reason' => $e->getMessage(),
+                    'reason' => __('redi-admin-domain.batch_mutator.errors.save_failed'),
                 ]);
             }
         }

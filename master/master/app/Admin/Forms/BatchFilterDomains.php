@@ -31,6 +31,11 @@ class BatchFilterDomains extends Form implements LazyRenderable
 
     public function form()
     {
+        $this->confirm(
+            __('redi-admin-domain.batch_filter.confirm_title'),
+            __('redi-admin-domain.batch_filter.confirm_content')
+        );
+
         $options = [
             'apply_cert' => __('redi-admin-domain.batch_filter.actions.apply_cert'),
             'enable' => __('redi-admin-domain.batch_filter.actions.enable'),

@@ -52,6 +52,17 @@ class DomainListFilter
             ->all();
     }
 
+    public static function hasAnyFilter(Request $request): bool
+    {
+        foreach (self::FILTER_KEYS as $key) {
+            if ($request->filled($key)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static function mergeFilterIntoRequest(Request $request, array $input): Request
     {
         $bag = [];

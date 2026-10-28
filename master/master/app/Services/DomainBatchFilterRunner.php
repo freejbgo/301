@@ -28,6 +28,14 @@ class DomainBatchFilterRunner
             ];
         }
 
+        if (in_array($action, ['delete', 'disable'], true) && ! DomainListFilter::hasAnyFilter($filterRequest)) {
+            return [
+                'ok' => false,
+                'message' => __('redi-admin-domain.batch_filter.errors.filter_required_destructive'),
+                'count' => 0,
+            ];
+        }
+
         $ids = DomainListFilter::limitedIds($filterRequest);
         if ($ids === []) {
             return [

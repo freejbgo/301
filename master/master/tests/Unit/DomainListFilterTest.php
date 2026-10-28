@@ -43,4 +43,13 @@ class DomainListFilterTest extends TestCase
 
         $this->assertSame([2], $ids);
     }
+
+    public function test_has_any_filter(): void
+    {
+        $empty = Request::create('/admin/domain', 'GET');
+        $this->assertFalse(DomainListFilter::hasAnyFilter($empty));
+
+        $with = Request::create('/admin/domain', 'GET', ['group_id' => 1]);
+        $this->assertTrue(DomainListFilter::hasAnyFilter($with));
+    }
 }
