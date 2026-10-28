@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\RediPlatformDns;
 use App\Services\Dns\DnsProviderFactory;
+use App\Support\RediErrorMessage;
 use App\Services\Dns\ManualDnsProvider;
 use InvalidArgumentException;
 use Tests\TestCase;
@@ -28,7 +29,7 @@ class DnsProviderFactoryTest extends TestCase
         ]);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('未知 DNS API 驱动');
+        $this->expectExceptionMessage(RediErrorMessage::get('dns.unknown_driver', ['driver' => 'not_a_real_driver']));
 
         DnsProviderFactory::make($platform);
     }

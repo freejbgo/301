@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Services\Dns\CloudflareDnsProvider;
 use App\Models\RediPlatformDns;
+use App\Support\RediErrorMessage;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -19,7 +20,7 @@ class EnsuresValidDnsNamesTest extends TestCase
         $provider = new CloudflareDnsProvider($platform);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('DNS FQDN 无效');
+        $this->expectExceptionMessage(RediErrorMessage::get('dns.label_invalid', ['label' => 'DNS FQDN']));
 
         $provider->upsertARecords("pool\r\n.example.com", ['1.2.3.4']);
     }
@@ -34,7 +35,7 @@ class EnsuresValidDnsNamesTest extends TestCase
         $provider = new CloudflareDnsProvider($platform);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('DNS FQDN 无效');
+        $this->expectExceptionMessage(RediErrorMessage::get('dns.label_invalid', ['label' => 'DNS FQDN']));
 
         $provider->upsertARecords('1.2.3.4', ['1.2.3.4']);
     }
@@ -49,7 +50,7 @@ class EnsuresValidDnsNamesTest extends TestCase
         $provider = new CloudflareDnsProvider($platform);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('CNAME 目标 无效');
+        $this->expectExceptionMessage(RediErrorMessage::get('dns.label_invalid', ['label' => 'CNAME target']));
 
         $provider->upsertCname('tok', 'example.com', '1.2.3.4');
     }
@@ -64,7 +65,7 @@ class EnsuresValidDnsNamesTest extends TestCase
         $provider = new CloudflareDnsProvider($platform);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('DNS 主机记录名无效');
+        $this->expectExceptionMessage(RediErrorMessage::get('dns.host_invalid'));
 
         $provider->upsertCname("tok\r\n", 'example.com', 'pool.example.com');
     }

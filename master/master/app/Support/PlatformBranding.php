@@ -244,21 +244,28 @@ class PlatformBranding
         $candidates = [];
 
         if (is_array($locales[$locale] ?? null)) {
-            $candidates[] = trim((string) ($locales[$locale][$field] ?? ''));
-        }
-        if ($locale !== 'zh_CN' && is_array($locales['zh_CN'] ?? null)) {
-            $candidates[] = trim((string) ($locales['zh_CN'][$field] ?? ''));
-        }
-        $candidates[] = trim((string) ($stored[$field] ?? ''));
-        $candidates[] = self::defaultFieldForLocale($locale, $field);
+            $block = $locales[$locale];
+            if (array_key_exists($field, $block)) {
+                $fromBlock = trim((string) $block[$field]);
+                if ($fromBlock !== '') {
+                    return $fromBlock;
+                }
 
-        foreach ($candidates as $value) {
-            if ($value !== '') {
-                return $value;
+                return '';
             }
         }
+        if ($locale !== 'zh_CN' && is_array($locales['zh_CN'] ?? null)) {
+            $fromCn = trim((string) ($locales['zh_CN'][$field] ?? ''));
+            if ($fromCn !== '') {
+                return $fromCn;
+            }
+        }
+        $legacy = trim((string) ($stored[$field] ?? ''));
+        if ($legacy !== '') {
+            return $legacy;
+        }
 
-        return '';
+        return self::defaultFieldForLocale($locale, $field);
     }
 
     protected static function defaultFieldForLocale(string $locale, string $field): string

@@ -45,19 +45,37 @@ class DomainBatchMutatorTest extends TestCase
             $table->timestamps();
         });
 
-        Schema::create('redi_domain_cert', function (Blueprint $table) {
+        Schema::create('redi_domain_certs', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('domain_id');
             $table->unsignedInteger('admin_id');
+            $table->string('domain_name')->default('');
             $table->string('status')->default('none');
             $table->timestamps();
         });
 
-        Schema::create('redi_cert_deployment', function (Blueprint $table) {
+        Schema::create('redi_cert_deployments', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('cert_id');
             $table->unsignedInteger('node_id');
             $table->string('status')->default('pending');
+            $table->timestamps();
+        });
+
+        Schema::create('redi_acme_challenges', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('domain_name');
+            $table->string('token')->nullable();
+            $table->text('response_body')->nullable();
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('redi_acme_challenge_node_sync', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('node_id');
+            $table->string('domain_name');
+            $table->timestamp('synced_at')->nullable();
             $table->timestamps();
         });
 
@@ -151,6 +169,7 @@ class DomainBatchMutatorTest extends TestCase
         RediDomainCert::query()->insert([
             'domain_id' => 1,
             'admin_id' => 10,
+            'domain_name' => 'a.com',
             'status' => RediDomainCert::STATUS_ACTIVE,
             'created_at' => now(),
             'updated_at' => now(),
@@ -166,6 +185,7 @@ class DomainBatchMutatorTest extends TestCase
         RediDomainCert::query()->insert([
             'domain_id' => 1,
             'admin_id' => 10,
+            'domain_name' => 'a.com',
             'status' => RediDomainCert::STATUS_ACTIVE,
             'created_at' => now(),
             'updated_at' => now(),

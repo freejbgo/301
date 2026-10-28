@@ -6,6 +6,7 @@ use App\Models\RediPlatformDns;
 use App\Services\Dns\DnsProviderInterface;
 use App\Services\Dns\SupportsPoolAAAA;
 use App\Services\EdgeDnsSyncService;
+use App\Support\RediErrorMessage;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -328,7 +329,7 @@ class EdgeDnsSyncServiceTest extends TestCase
         };
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Pool FQDN 无效');
+        $this->expectExceptionMessage(RediErrorMessage::get('dns.pool_fqdn_invalid'));
 
         app(EdgeDnsSyncService::class)->syncAll($provider);
     }
@@ -365,7 +366,7 @@ class EdgeDnsSyncServiceTest extends TestCase
             app(EdgeDnsSyncService::class)->syncAll($provider);
             $this->fail('expected exception');
         } catch (RuntimeException $e) {
-            $this->assertStringContainsString('无法发布', $e->getMessage());
+            $this->assertStringContainsString(RediErrorMessage::get('dns.invalid_node_ipv6'), $e->getMessage());
         }
 
         $this->assertSame(0, $provider->aCalls);
@@ -407,7 +408,7 @@ class EdgeDnsSyncServiceTest extends TestCase
             app(EdgeDnsSyncService::class)->syncAll($provider);
             $this->fail('expected exception');
         } catch (RuntimeException $e) {
-            $this->assertStringContainsString('尚未迁移', $e->getMessage());
+            $this->assertStringContainsString(RediErrorMessage::get('dns.ipv6_migration_required'), $e->getMessage());
         }
 
         $this->assertSame(0, $provider->aCalls);
@@ -460,8 +461,8 @@ class EdgeDnsSyncServiceTest extends TestCase
             $this->fail('expected exception');
         } catch (RuntimeException $e) {
             $this->assertStringContainsString('AAAA', $e->getMessage());
-            $this->assertStringContainsString('Pool A 可能', $e->getMessage());
-            $this->assertStringNotContainsString('Pool A 记录同步失败', $e->getMessage());
+            $this->assertStringContainsString('may already be updated at vendor', $e->getMessage());
+            $this->assertStringNotContainsString('Pool A record sync failed', $e->getMessage());
         }
 
         $this->assertSame(0, $provider->cnameCalls);

@@ -5,10 +5,29 @@ namespace Tests\Unit;
 use App\Models\RediDomainCert;
 use App\Support\RediCertLastError;
 use App\Support\RediErrorMessage;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class RediCertLastErrorTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['database.default' => 'sqlite']);
+        config(['database.connections.sqlite' => [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]]);
+
+        Schema::create('redi_domain_certs', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('last_error_code')->nullable();
+            $table->text('last_error')->nullable();
+        });
+    }
+
     public function test_matches_by_code_and_legacy_message(): void
     {
         $cert = new RediDomainCert();

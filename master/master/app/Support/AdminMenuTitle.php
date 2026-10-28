@@ -19,9 +19,9 @@ class AdminMenuTitle
 
         $slug = self::uriLangSlug($uri);
         if ($slug !== '') {
-            $uriKey = 'menu.uris.'.$slug;
-            if (Lang::has($uriKey)) {
-                return (string) __($uriKey);
+            $uris = Lang::get('menu.uris', [], app()->getLocale());
+            if (is_array($uris) && array_key_exists($slug, $uris)) {
+                return (string) $uris[$slug];
             }
         }
 

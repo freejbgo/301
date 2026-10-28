@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Services\Acme\Http01PropagationWaiter;
+use App\Support\RediErrorMessage;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
@@ -103,7 +104,7 @@ class Http01PropagationWaiterTest extends TestCase
     public function test_wait_throws_when_no_node_synced_before_deadline(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('HTTP-01 未在');
+        $this->expectExceptionMessage(RediErrorMessage::get('acme.http01_timeout', ['seconds' => 10]));
 
         app(Http01PropagationWaiter::class)->wait('no-sync.example', 'tok', 'body', 0);
     }
@@ -111,7 +112,7 @@ class Http01PropagationWaiterTest extends TestCase
     public function test_wait_rejects_invalid_domain(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Invalid hostname');
+        $this->expectExceptionMessage(RediErrorMessage::get('acme.http01_host_invalid'));
 
         app(Http01PropagationWaiter::class)->wait('not a host', 'tok', 'body', 0);
     }
@@ -119,7 +120,7 @@ class Http01PropagationWaiterTest extends TestCase
     public function test_wait_rejects_invalid_token(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('token 无效');
+        $this->expectExceptionMessage(RediErrorMessage::get('acme.http01_token_invalid'));
 
         app(Http01PropagationWaiter::class)->wait('valid.example', '../evil', 'body', 0);
     }
@@ -127,7 +128,7 @@ class Http01PropagationWaiterTest extends TestCase
     public function test_wait_rejects_empty_response_body(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('响应体无效');
+        $this->expectExceptionMessage(RediErrorMessage::get('acme.http01_body_invalid'));
 
         app(Http01PropagationWaiter::class)->wait('valid.example', 'tok', '   ', 0);
     }
@@ -135,7 +136,7 @@ class Http01PropagationWaiterTest extends TestCase
     public function test_wait_rejects_control_chars_in_response_body(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('响应体无效');
+        $this->expectExceptionMessage(RediErrorMessage::get('acme.http01_body_invalid'));
 
         app(Http01PropagationWaiter::class)->wait('valid.example', 'tok', "bo\r\ndy", 0);
     }
@@ -166,7 +167,7 @@ class Http01PropagationWaiterTest extends TestCase
         ]);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('HTTP-01 未在');
+        $this->expectExceptionMessage(RediErrorMessage::get('acme.http01_timeout', ['seconds' => 10]));
 
         app(Http01PropagationWaiter::class)->wait($domain, $token, $body, 0);
     }
@@ -174,7 +175,7 @@ class Http01PropagationWaiterTest extends TestCase
     public function test_wait_rejects_trailing_newline_in_response_body(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('响应体无效');
+        $this->expectExceptionMessage(RediErrorMessage::get('acme.http01_body_invalid'));
 
         app(Http01PropagationWaiter::class)->wait('valid.example', 'ok-token', "body\n", 0);
     }
@@ -183,7 +184,7 @@ class Http01PropagationWaiterTest extends TestCase
     {
         config(['redi.publish_pool_aaaa' => true]);
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Pool AAAA');
+        $this->expectExceptionMessage(RediErrorMessage::get('acme.http01_timeout_ipv6'));
 
         app(Http01PropagationWaiter::class)->wait('no-sync.example', 'tok', 'body', 0);
     }
@@ -216,7 +217,7 @@ class Http01PropagationWaiterTest extends TestCase
         ]);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('HTTP-01 未在');
+        $this->expectExceptionMessage(RediErrorMessage::get('acme.http01_timeout', ['seconds' => 10]));
 
         app(Http01PropagationWaiter::class)->wait($domain, $token, $body, 0);
     }

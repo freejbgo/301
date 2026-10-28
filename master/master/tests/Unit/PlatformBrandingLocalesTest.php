@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use App\Support\PlatformBranding;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class PlatformBrandingLocalesTest extends TestCase
 {
