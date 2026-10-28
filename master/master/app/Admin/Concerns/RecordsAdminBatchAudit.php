@@ -77,4 +77,27 @@ trait RecordsAdminBatchAudit
             'selection' => AdminBatchOperationAudit::idSample($selectedKeys),
         ]);
     }
+
+    /**
+     * @param  array{imported: int, skipped: int, errors: string[]}  $result
+     */
+    protected function auditBatchCreateDomains(array $result, int $groupId, int $status): void
+    {
+        $imported = (int) ($result['imported'] ?? 0);
+        $skipped = (int) ($result['skipped'] ?? 0);
+        if ($imported <= 0 && $skipped <= 0) {
+            return;
+        }
+
+        $this->auditAdminBatch('domain', 'batch_create', [
+            'updated' => $imported,
+            'skipped' => $skipped,
+            'truncated' => 0,
+            'error_count' => count($result['errors'] ?? []),
+        ], [
+            'mode' => 'batch_create',
+            'group_id' => $groupId,
+            'status' => $status,
+        ]);
+    }
 }

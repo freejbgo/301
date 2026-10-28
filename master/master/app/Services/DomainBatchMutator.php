@@ -110,7 +110,7 @@ class DomainBatchMutator
      */
     protected function applySkipUrlOnOwnedIds(array $ownedIds, string $skipUrl): array
     {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'changed_ids' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'changed_ids' => [], 'skipped_ids' => []];
         if ($ownedIds === []) {
             return $result;
         }
@@ -120,6 +120,7 @@ class DomainBatchMutator
         foreach ($domains as $domain) {
             if ((string) $domain->skip_url === $skipUrl) {
                 $result['skipped']++;
+                $result['skipped_ids'][] = (int) $domain->id;
 
                 continue;
             }
@@ -202,7 +203,7 @@ class DomainBatchMutator
         int $sessionAdminId,
         bool $isPlatformAdministrator
     ): array {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'changed_ids' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'changed_ids' => [], 'skipped_ids' => []];
         $groupId = (int) $group->id;
 
         $domains = RediAdminDomain::query()->whereIn('id', $ownedIds)->orderBy('id')->get();
@@ -210,6 +211,7 @@ class DomainBatchMutator
         foreach ($domains as $domain) {
             if ((int) $domain->group_id === $groupId) {
                 $result['skipped']++;
+                $result['skipped_ids'][] = (int) $domain->id;
 
                 continue;
             }
@@ -287,13 +289,14 @@ class DomainBatchMutator
      */
     protected function applyForceHttpsOnOwnedIds(array $ownedIds, bool $wantsOn): array
     {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'changed_ids' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'changed_ids' => [], 'skipped_ids' => []];
         $domains = RediAdminDomain::query()->whereIn('id', $ownedIds)->orderBy('id')->get();
 
         foreach ($domains as $domain) {
             $current = (bool) $domain->force_https;
             if ($current === $wantsOn) {
                 $result['skipped']++;
+                $result['skipped_ids'][] = (int) $domain->id;
 
                 continue;
             }
@@ -370,7 +373,7 @@ class DomainBatchMutator
         string $forceHttps,
         ?bool $isPlatformAdministrator = null
     ): array {
-        $merged = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0, 'changed_ids' => []];
+        $merged = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0, 'changed_ids' => [], 'skipped_ids' => []];
 
         $hasSkip = $skipUrl !== null && trim($skipUrl) !== '';
         $hasGroup = $groupId !== null && $groupId > 0;
@@ -433,7 +436,7 @@ class DomainBatchMutator
             }
         }
 
-        unset($merged['changed_ids']);
+        unset($merged['changed_ids'], $merged['skipped_ids']);
 
         return $merged;
     }
@@ -488,11 +491,14 @@ class DomainBatchMutator
     protected function mergeEditResults(array $a, array $b): array
     {
         $changed = array_values(array_unique(array_merge($a['changed_ids'] ?? [], $b['changed_ids'] ?? [])));
+        $skippedIds = array_values(array_unique(array_merge($a['skipped_ids'] ?? [], $b['skipped_ids'] ?? [])));
+        $skippedIds = array_values(array_diff($skippedIds, $changed));
 
         return [
             'updated' => count($changed),
             'changed_ids' => $changed,
-            'skipped' => $a['skipped'] + $b['skipped'],
+            'skipped' => count($skippedIds),
+            'skipped_ids' => $skippedIds,
             'errors' => array_merge($a['errors'], $b['errors']),
             'truncated' => (int) ($a['truncated'] ?? 0),
         ];
