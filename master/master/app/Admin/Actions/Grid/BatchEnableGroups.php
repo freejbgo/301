@@ -2,6 +2,7 @@
 
 namespace App\Admin\Actions\Grid;
 
+use App\Admin\Concerns\AppendsGroupBatchTruncationNotice;
 use App\Services\GroupBatchMutator;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Grid\BatchAction;
@@ -9,6 +10,7 @@ use Illuminate\Http\Request;
 
 class BatchEnableGroups extends BatchAction
 {
+    use AppendsGroupBatchTruncationNotice;
     public function title()
     {
         return __('redi-admin-group.actions.batch_enable.title');
@@ -23,7 +25,7 @@ class BatchEnableGroups extends BatchAction
     }
 
     /**
-     * @param  array{updated: int, skipped: int, errors: string[]}  $result
+     * @param  array{updated: int, skipped: int, errors: string[], truncated?: int}  $result
      */
     protected function respond(array $result, string $actionKey)
     {
@@ -38,6 +40,8 @@ class BatchEnableGroups extends BatchAction
         if ($result['errors'] !== []) {
             $msg .= "\n".implode("\n", array_slice($result['errors'], 0, 5));
         }
+
+        $msg = $this->withGroupTruncationNotice($msg, (int) ($result['truncated'] ?? 0));
 
         return $this->response()->success($msg)->refresh();
     }

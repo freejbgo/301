@@ -54,6 +54,7 @@ return [
             'no_groups' => '没有可操作的分组',
             'row_save' => ':label：:reason',
             'row_delete' => ':label：:reason',
+            'save_failed' => '保存失败',
         ],
     ],
     'url_set' => [

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\RediAdminGroup;
 use App\Support\AdminTenantContext;
+use App\Support\BatchSelectionLimiter;
 use App\Support\OpsDisplaySanitizer;
 
 class GroupBatchMutator
@@ -12,7 +13,7 @@ class GroupBatchMutator
 
     /**
      * @param  array<int, int|string>  $groupIds
-     * @return array{updated: int, skipped: int, errors: string[]}
+     * @return array{updated: int, skipped: int, errors: string[], truncated: int}
      */
     public function setStatusOwned(
         array $groupIds,
@@ -20,7 +21,7 @@ class GroupBatchMutator
         int $sessionAdminId,
         ?bool $isPlatformAdministrator = null
     ): array {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0];
 
         if (! in_array($status, [1, 2], true)) {
             $result['errors'][] = __('redi-admin-group.batch_mutator.errors.status_invalid');
@@ -28,7 +29,9 @@ class GroupBatchMutator
             return $result;
         }
 
-        $ids = $this->normalizeOwnedIds($groupIds, $sessionAdminId, $isPlatformAdministrator);
+        $normalized = $this->normalizeOwnedIds($groupIds, $sessionAdminId, $isPlatformAdministrator);
+        $ids = $normalized['ids'];
+        $result['truncated'] = $normalized['truncated'];
         if ($ids === []) {
             $result['errors'][] = __('redi-admin-group.batch_mutator.errors.no_groups');
 
@@ -46,11 +49,17 @@ class GroupBatchMutator
             try {
                 $group->save();
                 $result['updated']++;
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                $label = OpsDisplaySanitizer::field($group->name, '—', 120);
+                $result['errors'][] = __('redi-admin-group.batch_mutator.errors.row_save', [
+                    'label' => $label,
+                    'reason' => $e->validator->errors()->first() ?: __('redi-admin-group.batch_mutator.errors.save_failed'),
+                ]);
             } catch (\Throwable $e) {
                 $label = OpsDisplaySanitizer::field($group->name, '—', 120);
                 $result['errors'][] = __('redi-admin-group.batch_mutator.errors.row_save', [
                     'label' => $label,
-                    'reason' => $e->getMessage(),
+                    'reason' => __('redi-admin-group.batch_mutator.errors.save_failed'),
                 ]);
             }
         }
@@ -60,16 +69,18 @@ class GroupBatchMutator
 
     /**
      * @param  array<int, int|string>  $groupIds
-     * @return array{updated: int, skipped: int, errors: string[]}
+     * @return array{updated: int, skipped: int, errors: string[], truncated: int}
      */
     public function deleteOwned(
         array $groupIds,
         int $sessionAdminId,
         ?bool $isPlatformAdministrator = null
     ): array {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0];
 
-        $ids = $this->normalizeOwnedIds($groupIds, $sessionAdminId, $isPlatformAdministrator);
+        $normalized = $this->normalizeOwnedIds($groupIds, $sessionAdminId, $isPlatformAdministrator);
+        $ids = $normalized['ids'];
+        $result['truncated'] = $normalized['truncated'];
         if ($ids === []) {
             $result['errors'][] = __('redi-admin-group.batch_mutator.errors.no_groups');
 
@@ -82,10 +93,15 @@ class GroupBatchMutator
             try {
                 $group->delete();
                 $result['updated']++;
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                $result['errors'][] = __('redi-admin-group.batch_mutator.errors.row_delete', [
+                    'label' => $label,
+                    'reason' => $e->validator->errors()->first() ?: __('redi-admin-group.batch_mutator.errors.save_failed'),
+                ]);
             } catch (\Throwable $e) {
                 $result['errors'][] = __('redi-admin-group.batch_mutator.errors.row_delete', [
                     'label' => $label,
-                    'reason' => $e->getMessage(),
+                    'reason' => __('redi-admin-group.batch_mutator.errors.save_failed'),
                 ]);
             }
         }
@@ -95,27 +111,27 @@ class GroupBatchMutator
 
     /**
      * @param  array<int, int|string>  $groupIds
-     * @return array<int, int>
+     * @return array{ids: list<int>, truncated: int}
      */
     protected function normalizeOwnedIds(
         array $groupIds,
         int $sessionAdminId,
         ?bool $isPlatformAdministrator
     ): array {
-        $groupIds = array_values(array_unique(array_filter(array_map('intval', $groupIds), static fn (int $id): bool => $id > 0)));
-        if ($groupIds === []) {
-            return [];
-        }
-        if (count($groupIds) > self::MAX_IDS_PER_BATCH) {
-            $groupIds = array_slice($groupIds, 0, self::MAX_IDS_PER_BATCH);
+        $capped = BatchSelectionLimiter::intIdsCapped($groupIds, self::MAX_IDS_PER_BATCH);
+        if ($capped['ids'] === []) {
+            return ['ids' => [], 'truncated' => $capped['truncated']];
         }
 
         $isPlatformAdministrator = $isPlatformAdministrator ?? AdminTenantContext::isPlatformAdministrator();
-        $query = RediAdminGroup::query()->whereIn('id', $groupIds);
+        $query = RediAdminGroup::query()->whereIn('id', $capped['ids']);
         if (! $isPlatformAdministrator) {
             $query->where('admin_id', $sessionAdminId);
         }
 
-        return $query->orderBy('id')->pluck('id')->all();
+        return [
+            'ids' => $query->orderBy('id')->pluck('id')->all(),
+            'truncated' => $capped['truncated'],
+        ];
     }
 }

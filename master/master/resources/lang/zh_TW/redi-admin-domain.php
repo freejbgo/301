@@ -190,6 +190,9 @@ return [
             'no_match' => '當前篩選下沒有匹配的域名',
             'filter_required_destructive' => '批量停用/刪除須先設置至少一項列表篩選（避免誤操作整表前 500 條）',
         ],
+        'warnings' => [
+            'unfiltered' => '（未設列表篩選，僅按 ID 順序處理前 :max 條）',
+        ],
         'confirm_title' => '確認按篩選批量操作',
         'confirm_content' => '將對當前篩選條件下最多 500 條域名執行所選操作。刪除與停用請先使用列表篩選縮小範圍。',
     ],

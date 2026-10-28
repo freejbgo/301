@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\RediNode;
+use App\Support\BatchSelectionLimiter;
 use App\Support\OpsDisplaySanitizer;
 
 class NodeBatchMutator
@@ -14,12 +15,14 @@ class NodeBatchMutator
 
     /**
      * @param  array<int, int|string>  $nodeIds
-     * @return array{updated: int, skipped: int, errors: string[]}
+     * @return array{updated: int, skipped: int, errors: string[], truncated: int}
      */
     public function setEnabled(array $nodeIds, bool $enabled): array
     {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
-        $ids = $this->normalizeIds($nodeIds);
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0];
+        $normalized = $this->normalizeIds($nodeIds);
+        $ids = $normalized['ids'];
+        $result['truncated'] = $normalized['truncated'];
         if ($ids === []) {
             $result['errors'][] = __('redi-admin-node.batch_mutator.errors.no_nodes');
 
@@ -43,20 +46,22 @@ class NodeBatchMutator
 
     /**
      * @param  array<int, int|string>  $nodeIds
-     * @return array{updated: int, skipped: int, errors: string[], tokens: array<int, string>}
+     * @return array{updated: int, skipped: int, errors: string[], tokens: array<int, string>, truncated: int}
      */
     public function rotateTokens(array $nodeIds): array
     {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'tokens' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'tokens' => [], 'truncated' => 0];
 
-        $ids = $this->normalizeIds($nodeIds, self::MAX_TOKEN_ROTATE_BATCH);
+        $normalized = $this->normalizeIds($nodeIds, self::MAX_TOKEN_ROTATE_BATCH);
+        $ids = $normalized['ids'];
+        $result['truncated'] = $normalized['truncated'];
         if ($ids === []) {
             $result['errors'][] = __('redi-admin-node.batch_mutator.errors.no_nodes');
 
             return $result;
         }
 
-        if (count($nodeIds) > self::MAX_TOKEN_ROTATE_BATCH) {
+        if ($result['truncated'] > 0) {
             $result['errors'][] = __('redi-admin-node.batch_mutator.errors.token_cap', [
                 'max' => self::MAX_TOKEN_ROTATE_BATCH,
             ]);
@@ -75,12 +80,14 @@ class NodeBatchMutator
 
     /**
      * @param  array<int, int|string>  $nodeIds
-     * @return array{updated: int, skipped: int, errors: string[]}
+     * @return array{updated: int, skipped: int, errors: string[], truncated: int}
      */
     public function requeueFailed(array $nodeIds, CertificateDeployService $deployService): array
     {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
-        $ids = $this->normalizeIds($nodeIds);
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0];
+        $normalized = $this->normalizeIds($nodeIds);
+        $ids = $normalized['ids'];
+        $result['truncated'] = $normalized['truncated'];
         if ($ids === []) {
             $result['errors'][] = __('redi-admin-node.batch_mutator.errors.no_nodes');
 
@@ -104,18 +111,18 @@ class NodeBatchMutator
 
     /**
      * @param  array<int, int|string>  $nodeIds
-     * @return array<int, int>
+     * @return array{ids: list<int>, truncated: int}
      */
     protected function normalizeIds(array $nodeIds, int $max = self::MAX_IDS_PER_BATCH): array
     {
-        $nodeIds = array_values(array_unique(array_filter(array_map('intval', $nodeIds), static fn (int $id): bool => $id > 0)));
-        if ($nodeIds === []) {
-            return [];
-        }
-        if (count($nodeIds) > $max) {
-            $nodeIds = array_slice($nodeIds, 0, $max);
+        $capped = BatchSelectionLimiter::intIdsCapped($nodeIds, $max);
+        if ($capped['ids'] === []) {
+            return ['ids' => [], 'truncated' => $capped['truncated']];
         }
 
-        return RediNode::query()->whereIn('id', $nodeIds)->orderBy('id')->pluck('id')->all();
+        return [
+            'ids' => RediNode::query()->whereIn('id', $capped['ids'])->orderBy('id')->pluck('id')->all(),
+            'truncated' => $capped['truncated'],
+        ];
     }
 }

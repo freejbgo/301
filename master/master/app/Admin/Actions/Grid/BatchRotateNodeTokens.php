@@ -2,6 +2,7 @@
 
 namespace App\Admin\Actions\Grid;
 
+use App\Admin\Concerns\AppendsNodeBatchTruncationNotice;
 use App\Admin\Concerns\AdminOnlyGridAction;
 use App\Models\RediNode;
 use App\Services\NodeBatchMutator;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 class BatchRotateNodeTokens extends BatchAction
 {
     use AdminOnlyGridAction;
+    use AppendsNodeBatchTruncationNotice;
 
     public function title()
     {
@@ -49,6 +51,12 @@ class BatchRotateNodeTokens extends BatchAction
         if ($result['errors'] !== []) {
             $msg .= "\n".implode("\n", $result['errors']);
         }
+
+        $msg = $this->withNodeTruncationNotice(
+            $msg,
+            (int) ($result['truncated'] ?? 0),
+            NodeBatchMutator::MAX_TOKEN_ROTATE_BATCH
+        );
 
         return $this->response()->success($msg)->refresh();
     }

@@ -2,6 +2,7 @@
 
 namespace App\Admin\Actions\Grid;
 
+use App\Admin\Concerns\AppendsNodeBatchTruncationNotice;
 use App\Admin\Concerns\AdminOnlyGridAction;
 use App\Services\NodeBatchMutator;
 use Dcat\Admin\Grid\BatchAction;
@@ -10,6 +11,7 @@ use Illuminate\Http\Request;
 class BatchEnableNodes extends BatchAction
 {
     use AdminOnlyGridAction;
+    use AppendsNodeBatchTruncationNotice;
 
     public function title()
     {
@@ -41,6 +43,8 @@ class BatchEnableNodes extends BatchAction
         if ($result['skipped'] > 0) {
             $msg .= __('redi-admin-node.actions.batch_common.skipped', ['count' => $result['skipped']]);
         }
+
+        $msg = $this->withNodeTruncationNotice($msg, (int) ($result['truncated'] ?? 0));
 
         return $this->response()->success($msg)->refresh();
     }

@@ -2,6 +2,7 @@
 
 namespace App\Admin\Actions\Grid;
 
+use App\Admin\Concerns\AppendsGroupBatchTruncationNotice;
 use App\Services\GroupBatchMutator;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Grid\BatchAction;
@@ -9,6 +10,7 @@ use Illuminate\Http\Request;
 
 class BatchDisableGroups extends BatchAction
 {
+    use AppendsGroupBatchTruncationNotice;
     public function title()
     {
         return __('redi-admin-group.actions.batch_disable.title');
@@ -32,6 +34,8 @@ class BatchDisableGroups extends BatchAction
         if ($result['skipped'] > 0) {
             $msg .= __('redi-admin-group.actions.batch_common.skipped', ['count' => $result['skipped']]);
         }
+
+        $msg = $this->withGroupTruncationNotice($msg, (int) ($result['truncated'] ?? 0));
 
         return $this->response()->success($msg)->refresh();
     }

@@ -190,6 +190,9 @@ return [
             'no_match' => 'No domains match the current filters',
             'filter_required_destructive' => 'Batch disable/delete requires at least one list filter (avoids touching the first 500 rows by mistake)',
         ],
+        'warnings' => [
+            'unfiltered' => ' (no list filter; only the first :max rows by ID are processed)',
+        ],
         'confirm_title' => 'Confirm filter-based batch',
         'confirm_content' => 'Applies to up to 500 domains matching current filters. Use filters before disable or delete.',
     ],

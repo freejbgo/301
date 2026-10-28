@@ -54,6 +54,7 @@ return [
             'no_groups' => 'No groups to process',
             'row_save' => ':label: :reason',
             'row_delete' => ':label: :reason',
+            'save_failed' => 'Save failed',
         ],
     ],
     'url_set' => [

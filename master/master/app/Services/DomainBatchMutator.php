@@ -93,15 +93,29 @@ class DomainBatchMutator
         }
 
         $normalized = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
-        $ids = $normalized['ids'];
-        $result['truncated'] = $normalized['truncated'];
-        if ($ids === []) {
+        if ($normalized['ids'] === []) {
             $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.no_domains');
 
             return $result;
         }
+        $result = $this->applySkipUrlOnOwnedIds($normalized['ids'], $skipUrl);
+        $result['truncated'] = $normalized['truncated'];
 
-        $domains = RediAdminDomain::query()->whereIn('id', $ids)->orderBy('id')->get();
+        return $result;
+    }
+
+    /**
+     * @param  list<int>  $ownedIds
+     * @return array{updated: int, skipped: int, errors: string[]}
+     */
+    protected function applySkipUrlOnOwnedIds(array $ownedIds, string $skipUrl): array
+    {
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        if ($ownedIds === []) {
+            return $result;
+        }
+
+        $domains = RediAdminDomain::query()->whereIn('id', $ownedIds)->orderBy('id')->get();
 
         foreach ($domains as $domain) {
             if ((string) $domain->skip_url === $skipUrl) {
@@ -129,7 +143,7 @@ class DomainBatchMutator
 
     /**
      * @param  array<int, int|string>  $domainIds
-     * @return array{updated: int, skipped: int, errors: string[]}
+     * @return array{updated: int, skipped: int, errors: string[], truncated: int}
      */
     public function moveGroupOwned(
         array $domainIds,
@@ -160,15 +174,37 @@ class DomainBatchMutator
         }
 
         $normalized = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
-        $ids = $normalized['ids'];
         $result['truncated'] = $normalized['truncated'];
-        if ($ids === []) {
+        if ($normalized['ids'] === []) {
             $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.no_domains');
 
             return $result;
         }
 
-        $domains = RediAdminDomain::query()->whereIn('id', $ids)->orderBy('id')->get();
+        $part = $this->applyMoveGroupOnOwnedIds(
+            $normalized['ids'],
+            $group,
+            $sessionAdminId,
+            $isPlatformAdministrator
+        );
+
+        return array_merge($result, $part);
+    }
+
+    /**
+     * @param  list<int>  $ownedIds
+     * @return array{updated: int, skipped: int, errors: string[]}
+     */
+    protected function applyMoveGroupOnOwnedIds(
+        array $ownedIds,
+        RediAdminGroup $group,
+        int $sessionAdminId,
+        bool $isPlatformAdministrator
+    ): array {
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        $groupId = (int) $group->id;
+
+        $domains = RediAdminDomain::query()->whereIn('id', $ownedIds)->orderBy('id')->get();
 
         foreach ($domains as $domain) {
             if ((int) $domain->group_id === $groupId) {
@@ -209,7 +245,7 @@ class DomainBatchMutator
     /**
      * @param  array<int, int|string>  $domainIds
      * @param  ''|'0'|'1'  $forceHttps  '' = no change, '1' = on, '0' = off
-     * @return array{updated: int, skipped: int, errors: string[]}
+     * @return array{updated: int, skipped: int, errors: string[], truncated: int}
      */
     public function setForceHttpsOwned(
         array $domainIds,
@@ -231,15 +267,26 @@ class DomainBatchMutator
 
         $wantsOn = $forceHttps === '1';
         $normalized = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
-        $ids = $normalized['ids'];
         $result['truncated'] = $normalized['truncated'];
-        if ($ids === []) {
+        if ($normalized['ids'] === []) {
             $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.no_domains');
 
             return $result;
         }
 
-        $domains = RediAdminDomain::query()->whereIn('id', $ids)->orderBy('id')->get();
+        $part = $this->applyForceHttpsOnOwnedIds($normalized['ids'], $wantsOn);
+
+        return array_merge($result, $part);
+    }
+
+    /**
+     * @param  list<int>  $ownedIds
+     * @return array{updated: int, skipped: int, errors: string[]}
+     */
+    protected function applyForceHttpsOnOwnedIds(array $ownedIds, bool $wantsOn): array
+    {
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        $domains = RediAdminDomain::query()->whereIn('id', $ownedIds)->orderBy('id')->get();
 
         foreach ($domains as $domain) {
             $current = (bool) $domain->force_https;
@@ -271,7 +318,7 @@ class DomainBatchMutator
 
     /**
      * @param  array<int, int|string>  $domainIds
-     * @return array{updated: int, skipped: int, errors: string[]}
+     * @return array{updated: int, skipped: int, errors: string[], truncated: int}
      */
     public function deleteOwned(
         array $domainIds,
@@ -341,22 +388,46 @@ class DomainBatchMutator
             return $merged;
         }
 
+        $isPlatformAdministrator = $isPlatformAdministrator ?? AdminTenantContext::isPlatformAdministrator();
+
         if ($hasGroup) {
-            $part = $this->moveGroupOwned($ownedIds, (int) $groupId, $sessionAdminId, $isPlatformAdministrator);
-            $part['truncated'] = 0;
-            $merged = $this->mergeResults($merged, $part);
+            if ($groupId === null || $groupId <= 0) {
+                $merged['errors'][] = __('redi-admin-domain.validation.group_invalid');
+            } else {
+                $group = RediAdminGroup::query()->find($groupId);
+                if (! $group) {
+                    $merged['errors'][] = __('redi-admin-domain.validation.group_invalid');
+                } elseif (! $isPlatformAdministrator && (int) $group->admin_id !== $sessionAdminId) {
+                    $merged['errors'][] = __('redi-admin-domain.validation.group_wrong_owner');
+                } else {
+                    $part = $this->applyMoveGroupOnOwnedIds(
+                        $ownedIds,
+                        $group,
+                        $sessionAdminId,
+                        (bool) $isPlatformAdministrator
+                    );
+                    $merged = $this->mergeResults($merged, $part);
+                }
+            }
         }
 
         if ($hasSkip) {
-            $part = $this->setSkipUrlOwned($ownedIds, (string) $skipUrl, $sessionAdminId, $isPlatformAdministrator);
-            $part['truncated'] = 0;
-            $merged = $this->mergeResults($merged, $part);
+            $skipUrl = DomainRecordNormalizer::normalizeSkipUrl((string) $skipUrl);
+            if ($skipUrl === '') {
+                $merged['errors'][] = __('redi-admin-domain.validation.skip_url_invalid');
+            } else {
+                $part = $this->applySkipUrlOnOwnedIds($ownedIds, $skipUrl);
+                $merged = $this->mergeResults($merged, $part);
+            }
         }
 
         if ($hasHttps) {
-            $part = $this->setForceHttpsOwned($ownedIds, $forceHttps, $sessionAdminId, $isPlatformAdministrator);
-            $part['truncated'] = 0;
-            $merged = $this->mergeResults($merged, $part);
+            if (! in_array($forceHttps, ['0', '1'], true)) {
+                $merged['errors'][] = __('redi-admin-domain.batch_mutator.errors.force_https_invalid');
+            } else {
+                $part = $this->applyForceHttpsOnOwnedIds($ownedIds, $forceHttps === '1');
+                $merged = $this->mergeResults($merged, $part);
+            }
         }
 
         return $merged;

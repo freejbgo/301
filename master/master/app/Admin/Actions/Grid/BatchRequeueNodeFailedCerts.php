@@ -2,6 +2,7 @@
 
 namespace App\Admin\Actions\Grid;
 
+use App\Admin\Concerns\AppendsNodeBatchTruncationNotice;
 use App\Admin\Concerns\AdminOnlyGridAction;
 use App\Services\CertificateDeployService;
 use App\Services\NodeBatchMutator;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 class BatchRequeueNodeFailedCerts extends BatchAction
 {
     use AdminOnlyGridAction;
+    use AppendsNodeBatchTruncationNotice;
 
     public function title()
     {
@@ -39,6 +41,8 @@ class BatchRequeueNodeFailedCerts extends BatchAction
         if ($result['skipped'] > 0) {
             $msg .= __('redi-admin-node.actions.batch_common.skipped_nodes', ['count' => $result['skipped']]);
         }
+
+        $msg = $this->withNodeTruncationNotice($msg, (int) ($result['truncated'] ?? 0));
 
         return $this->response()->success($msg)->refresh();
     }
