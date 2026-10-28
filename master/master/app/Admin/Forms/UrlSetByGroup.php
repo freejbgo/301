@@ -2,6 +2,7 @@
 
 namespace App\Admin\Forms;
 
+use App\Admin\Concerns\RecordsAdminBatchAudit;
 use App\Services\DomainRecordNormalizer;
 use App\Support\AdminTenantContext;
 use Dcat\Admin\Admin;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 class UrlSetByGroup extends Form implements LazyRenderable
 {
     use LazyWidget;
+    use RecordsAdminBatchAudit;
 
     public function handle(array $input)
     {
@@ -35,10 +37,23 @@ class UrlSetByGroup extends Form implements LazyRenderable
             return $this->response()->error(__('redi-admin-group.url_set.error_forbidden'));
         }
 
-        DB::table('redi_admin_domain')
+        $ownerId = (int) $group->admin_id;
+        $skipped = (int) DB::table('redi_admin_domain')
             ->where('group_id', $groupId)
-            ->where('admin_id', (int) $group->admin_id)
-            ->update(['skip_url' => $skipUrl]);
+            ->where('admin_id', $ownerId)
+            ->where('skip_url', $skipUrl)
+            ->count();
+
+        $updated = (int) DB::table('redi_admin_domain')
+            ->where('group_id', $groupId)
+            ->where('admin_id', $ownerId)
+            ->where('skip_url', '!=', $skipUrl)
+            ->update([
+                'skip_url' => $skipUrl,
+                'updated_at' => now(),
+            ]);
+
+        $this->auditGroupUrlSet($groupId, $updated, $skipped);
 
         return $this
             ->response()

@@ -212,7 +212,7 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 批量修改 `updated` | 多字段同时改同一域名只计 1 |
 | 节点批量重试 | 成功提示「:nodes 个节点 / :deployments 条部署」 |
 | 审计 | `AdminBatchOperationAudit` → `storage/logs/admin-batch.log`（30 天 daily） |
-| 覆盖范围 | 域名/分组/节点勾选批量、批量修改、按筛选批量（含证书申请/重新下发） |
+| 覆盖范围 | 域名/分组/节点勾选批量、批量修改、**批量添加**、按筛选批量（含证书申请/重新下发） |
 | 安全 | 日志仅 ID 抽样；Token 批量标记 `sensitive`，不写入明文 |
 
 ## 14. 四轮复核（语义 + 审计后）
@@ -228,7 +228,7 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 通过 | 审计安全 | 不记 Token/筛选值；勾选模式有 `id_sample`（≤25） |
 | 已修 | 批量修改 `skipped` | §15：`skipped_ids` 去重，已变更域名不计入跳过 |
 | 低风险 | 按筛选审计 | 无 `id_sample`，仅 `filter_keys` + 条数；追溯依赖当时列表筛选条件 |
-| 已修 | 批量添加域名审计 | §15：`batch_create`；分组行内 **按组改跳转** 仍未覆盖 |
+| 已修 | 批量添加域名审计 | §15：`batch_create`；分组行 **按组改跳转** → §16 `url_set_by_group` |
 | 待 CI | 单测 | 云环境无 PHP；合并前跑全量 `phpunit`（含 `AdminBatchOperationAuditTest`） |
 
 **合并建议**：无阻塞；合并后抽一条勾选批量与一条按筛选批量，确认 `storage/logs/admin-batch.log` 有对应记录。
@@ -240,6 +240,14 @@ docs/BATCH-OPERATIONS-REPORT.md
 | `applyEditsOwned` `skipped` | 各字段 `skipped_ids` 合并去重，并减去已变更域名 |
 | 单测 | `test_apply_edits_skipped_counts_unique_domains` |
 | 批量添加域名 | `BatchCreateDomains` → `auditBatchCreateDomains`（`action=batch_create`，不记录 lines 正文） |
+
+## 16. 分组按组改跳转审计
+
+| 项 | 处理 |
+|----|------|
+| 入口 | `UrlSetByGroup` 行操作 |
+| 审计 | `group.url_set_by_group`，`updated`/`skipped` 为组内域名数（不含跳转 URL 正文） |
+| 计数 | 更新前区分已相同 `skip_url` 与待更新行 |
 
 ---
 

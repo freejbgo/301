@@ -100,4 +100,17 @@ trait RecordsAdminBatchAudit
             'status' => $status,
         ]);
     }
+
+    protected function auditGroupUrlSet(int $groupId, int $updated, int $skipped): void
+    {
+        $this->auditAdminBatch('group', 'url_set_by_group', [
+            'updated' => $updated,
+            'skipped' => $skipped,
+            'truncated' => 0,
+            'error_count' => 0,
+        ], [
+            'mode' => 'group_row_action',
+            'group_id' => $groupId,
+        ]);
+    }
 }
