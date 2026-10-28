@@ -2,6 +2,7 @@
 
 namespace App\Admin\Actions\Grid;
 
+use App\Admin\Concerns\AppendsBatchTruncationNotice;
 use App\Services\DomainBatchMutator;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Grid\BatchAction;
@@ -9,6 +10,7 @@ use Illuminate\Http\Request;
 
 class BatchEnableDomains extends BatchAction
 {
+    use AppendsBatchTruncationNotice;
     public function title()
     {
         return __('redi-admin-domain.actions.batch_enable.title');
@@ -55,6 +57,8 @@ class BatchEnableDomains extends BatchAction
             ]);
             $summary .= "\n".implode("\n", array_slice($result['errors'], 0, 5));
         }
+
+        $summary = $this->withTruncationNotice($summary, (int) ($result['truncated'] ?? 0));
 
         return $this->response()->success($summary)->refresh();
     }

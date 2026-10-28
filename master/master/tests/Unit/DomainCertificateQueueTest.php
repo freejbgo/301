@@ -60,9 +60,9 @@ class DomainCertificateQueueTest extends TestCase
     {
         Bus::fake();
 
-        $count = DomainCertificateQueue::dispatchOwned([1, 2], 20, false);
+        $dispatch = DomainCertificateQueue::dispatchOwned([1, 2], 20, false);
 
-        $this->assertSame(1, $count);
+        $this->assertSame(1, $dispatch['dispatched']);
         Bus::assertDispatched(IssueDomainCertificateJob::class, function (IssueDomainCertificateJob $job) {
             return $job->domainId === 2;
         });
@@ -82,9 +82,9 @@ class DomainCertificateQueueTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        $count = DomainCertificateQueue::dispatchOwned([1, 3], 10, false);
+        $dispatch = DomainCertificateQueue::dispatchOwned([1, 3], 10, false);
 
-        $this->assertSame(1, $count);
+        $this->assertSame(1, $dispatch['dispatched']);
         Bus::assertDispatchedTimes(IssueDomainCertificateJob::class, 1);
     }
 }

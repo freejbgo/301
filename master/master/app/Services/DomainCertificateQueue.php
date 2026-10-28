@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Jobs\IssueDomainCertificateJob;
 use App\Models\RediAdminDomain;
 use App\Support\AdminTenantContext;
+use App\Support\BatchSelectionLimiter;
 
 class DomainCertificateQueue
 {
@@ -12,12 +13,15 @@ class DomainCertificateQueue
      * 为当前管理员名下的域名入队；超级管理员可为任意租户域名入队。
      *
      * @param  array<int, int|string>  $domainIds
+     * @return array{dispatched: int, truncated: int}
      */
-    public static function dispatchOwned(array $domainIds, int $sessionAdminId, ?bool $isPlatformAdministrator = null): int
+    public static function dispatchOwned(array $domainIds, int $sessionAdminId, ?bool $isPlatformAdministrator = null): array
     {
+        $capped = BatchSelectionLimiter::intIdsCapped($domainIds, DomainBatchMutator::MAX_IDS_PER_BATCH);
+
         $query = RediAdminDomain::query()
             ->where('status', 1)
-            ->whereIn('id', $domainIds);
+            ->whereIn('id', $capped['ids']);
 
         $isPlatformAdministrator = $isPlatformAdministrator ?? AdminTenantContext::isPlatformAdministrator();
         if (! $isPlatformAdministrator) {
@@ -33,6 +37,9 @@ class DomainCertificateQueue
             $i++;
         }
 
-        return $i;
+        return [
+            'dispatched' => $i,
+            'truncated' => $capped['truncated'],
+        ];
     }
 }

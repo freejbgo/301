@@ -118,6 +118,7 @@ return [
         'batch_mutator' => [
             'skipped_suffix' => '（跳過 :count 個無需變更）',
             'partial_errors' => '另有 :count 條未成功：',
+            'truncated_suffix' => '（另有 :count 條因單次上限 :max 未處理，請分批再操作）',
         ],
     ],
     'batch_edit' => [
@@ -160,22 +161,26 @@ return [
         ],
         'actions' => [
             'apply_cert' => '批量申請憑證',
+            'redeploy' => '批量重新下發憑證',
             'enable' => '批量啟用',
             'disable' => '批量停用',
             'delete' => '批量刪除',
         ],
         'success' => [
             'apply_cert' => '已將 :count 個域名加入憑證隊列（篩選上限 :cap 條）',
+            'redeploy' => '已重新下發 :queued 個域名的憑證（篩選上限 :cap 條）',
             'enable' => '已啟用 :count 個域名（篩選上限 :cap 條）',
             'disable' => '已停用 :count 個域名（篩選上限 :cap 條）',
             'delete' => '已刪除 :count 個域名（篩選上限 :cap 條）',
         ],
         'error_none' => [
+            'redeploy' => '篩選結果中沒有可重新下發的域名',
             'enable' => '篩選結果中沒有可啟用的域名',
             'disable' => '篩選結果中沒有可停用的域名',
             'delete' => '篩選結果中沒有可刪除的域名',
         ],
         'error_all' => [
+            'redeploy' => '篩選結果中的域名均無法重新下發（無憑證、未簽發或不可讀）',
             'enable' => '篩選結果中的域名均未能啟用',
             'disable' => '篩選結果中的域名均未能停用',
             'delete' => '篩選結果中的域名均未能刪除',

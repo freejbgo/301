@@ -2,6 +2,7 @@
 
 namespace App\Admin\Actions\Grid;
 
+use App\Admin\Concerns\AppendsBatchTruncationNotice;
 use App\Services\DomainBatchMutator;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Grid\BatchAction;
@@ -9,6 +10,7 @@ use Illuminate\Http\Request;
 
 class BatchDeleteDomains extends BatchAction
 {
+    use AppendsBatchTruncationNotice;
     public function title()
     {
         return __('redi-admin-domain.actions.batch_delete.title');
@@ -41,6 +43,8 @@ class BatchDeleteDomains extends BatchAction
                 'count' => count($result['errors']),
             ]);
         }
+
+        $summary = $this->withTruncationNotice($summary, (int) ($result['truncated'] ?? 0));
 
         return $this->response()->success($summary)->refresh();
     }

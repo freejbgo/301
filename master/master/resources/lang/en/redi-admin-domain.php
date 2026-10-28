@@ -118,6 +118,7 @@ return [
         'batch_mutator' => [
             'skipped_suffix' => ' (skipped :count unchanged)',
             'partial_errors' => ':count more failed:',
+            'truncated_suffix' => ' (:count more not processed; batch limit :max — run again)',
         ],
     ],
     'batch_edit' => [
@@ -160,22 +161,26 @@ return [
         ],
         'actions' => [
             'apply_cert' => 'Batch apply certificates',
+            'redeploy' => 'Batch redeploy certificates',
             'enable' => 'Batch enable',
             'disable' => 'Batch disable',
             'delete' => 'Batch delete',
         ],
         'success' => [
             'apply_cert' => 'Queued :count domain(s) for certificates (filter cap :cap)',
+            'redeploy' => 'Redeploy queued for :queued domain(s) (filter cap :cap)',
             'enable' => 'Enabled :count domain(s) (filter cap :cap)',
             'disable' => 'Disabled :count domain(s) (filter cap :cap)',
             'delete' => 'Deleted :count domain(s) (filter cap :cap)',
         ],
         'error_none' => [
+            'redeploy' => 'No domains to redeploy in filter results',
             'enable' => 'No domains to enable in filter results',
             'disable' => 'No domains to disable in filter results',
             'delete' => 'No domains to delete in filter results',
         ],
         'error_all' => [
+            'redeploy' => 'All matching domains were skipped for redeploy',
             'enable' => 'No domains could be enabled from filter results',
             'disable' => 'No domains could be disabled from filter results',
             'delete' => 'No domains could be deleted from filter results',

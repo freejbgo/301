@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Support\AdminTenantContext;
+use App\Support\BatchSelectionLimiter;
 use Illuminate\Http\Request;
 
 class DomainBatchFilterRunner
@@ -10,6 +11,7 @@ class DomainBatchFilterRunner
     /** @var list<string> */
     public const ACTIONS = [
         'apply_cert',
+        'redeploy',
         'enable',
         'disable',
         'delete',
@@ -36,7 +38,9 @@ class DomainBatchFilterRunner
             ];
         }
 
-        $ids = DomainListFilter::limitedIds($filterRequest);
+        $selection = DomainListFilter::limitedSelection($filterRequest);
+        $ids = $selection['ids'];
+        $filterTruncated = $selection['truncated'];
         if ($ids === []) {
             return [
                 'ok' => false,
@@ -50,8 +54,8 @@ class DomainBatchFilterRunner
 
         switch ($action) {
             case 'apply_cert':
-                $count = DomainCertificateQueue::dispatchOwned($ids, $sessionAdminId, $isPlatform);
-                if ($count === 0) {
+                $dispatch = DomainCertificateQueue::dispatchOwned($ids, $sessionAdminId, $isPlatform);
+                if ($dispatch['dispatched'] === 0) {
                     return [
                         'ok' => false,
                         'message' => __('redi-admin-domain.actions.batch_apply.error'),
@@ -59,29 +63,55 @@ class DomainBatchFilterRunner
                     ];
                 }
 
+                $msg = __('redi-admin-domain.batch_filter.success.apply_cert', [
+                    'count' => $dispatch['dispatched'],
+                    'cap' => DomainBatchMutator::MAX_IDS_PER_BATCH,
+                ]);
+                $msg = $this->withTruncation($msg, $filterTruncated + $dispatch['truncated']);
+
                 return [
                     'ok' => true,
-                    'message' => __('redi-admin-domain.batch_filter.success.apply_cert', [
-                        'count' => $count,
-                        'cap' => DomainBatchMutator::MAX_IDS_PER_BATCH,
-                    ]),
-                    'count' => $count,
+                    'message' => $msg,
+                    'count' => $dispatch['dispatched'],
                 ];
+
+            case 'redeploy':
+                $redeploy = DomainCertificateRedeployQueue::redeployOwned($ids, $sessionAdminId, $isPlatform);
+                if ($redeploy['queued'] === 0) {
+                    $msg = $redeploy['skipped'] > 0
+                        ? __('redi-admin-domain.batch_filter.error_all.redeploy')
+                        : __('redi-admin-domain.batch_filter.error_none.redeploy');
+
+                    return ['ok' => false, 'message' => $msg, 'count' => 0];
+                }
+
+                $msg = __('redi-admin-domain.batch_filter.success.redeploy', [
+                    'queued' => $redeploy['queued'],
+                    'cap' => DomainBatchMutator::MAX_IDS_PER_BATCH,
+                ]);
+                if ($redeploy['skipped'] > 0) {
+                    $msg .= __('redi-admin-domain.actions.batch_redeploy.success_skipped', [
+                        'skipped' => $redeploy['skipped'],
+                    ]);
+                }
+                $msg = $this->withTruncation($msg, $filterTruncated + $redeploy['truncated']);
+
+                return ['ok' => true, 'message' => $msg, 'count' => $redeploy['queued']];
 
             case 'enable':
                 $result = $mutator->setStatusOwned($ids, 1, $sessionAdminId, $isPlatform);
 
-                return $this->mutatorSummary($result, 'enable');
+                return $this->mutatorSummary($result, 'enable', $filterTruncated);
 
             case 'disable':
                 $result = $mutator->setStatusOwned($ids, 2, $sessionAdminId, $isPlatform);
 
-                return $this->mutatorSummary($result, 'disable');
+                return $this->mutatorSummary($result, 'disable', $filterTruncated);
 
             case 'delete':
                 $result = $mutator->deleteOwned($ids, $sessionAdminId, $isPlatform);
 
-                return $this->mutatorSummary($result, 'delete');
+                return $this->mutatorSummary($result, 'delete', $filterTruncated);
         }
 
         return [
@@ -95,7 +125,15 @@ class DomainBatchFilterRunner
      * @param  array{updated: int, skipped: int, errors: string[]}  $result
      * @return array{ok: bool, message: string, count: int}
      */
-    protected function mutatorSummary(array $result, string $actionKey): array
+    protected function withTruncation(string $message, int $truncated): string
+    {
+        return BatchSelectionLimiter::appendTruncationNotice($message, $truncated);
+    }
+
+    /**
+     * @param  array{updated: int, skipped: int, errors: string[], truncated?: int}  $result
+     */
+    protected function mutatorSummary(array $result, string $actionKey, int $filterTruncated = 0): array
     {
         if ($result['updated'] === 0) {
             $msg = $result['errors'] !== []
@@ -120,6 +158,8 @@ class DomainBatchFilterRunner
                 'count' => count($result['errors']),
             ]);
         }
+
+        $msg = $this->withTruncation($msg, $filterTruncated + (int) ($result['truncated'] ?? 0));
 
         return ['ok' => true, 'message' => $msg, 'count' => $result['updated']];
     }

@@ -118,6 +118,7 @@ return [
         'batch_mutator' => [
             'skipped_suffix' => '（跳过 :count 个无需变更）',
             'partial_errors' => '另有 :count 条未成功：',
+            'truncated_suffix' => '（另有 :count 条因单次上限 :max 未处理，请分批再操作）',
         ],
     ],
     'batch_edit' => [
@@ -162,22 +163,26 @@ return [
         ],
         'actions' => [
             'apply_cert' => '批量申请证书',
+            'redeploy' => '批量重新下发证书',
             'enable' => '批量启用',
             'disable' => '批量停用',
             'delete' => '批量删除',
         ],
         'success' => [
             'apply_cert' => '已将 :count 个域名加入证书队列（筛选上限 :cap 条）',
+            'redeploy' => '已重新下发 :queued 个域名的证书（筛选上限 :cap 条）',
             'enable' => '已启用 :count 个域名（筛选上限 :cap 条）',
             'disable' => '已停用 :count 个域名（筛选上限 :cap 条）',
             'delete' => '已删除 :count 个域名（筛选上限 :cap 条）',
         ],
         'error_none' => [
+            'redeploy' => '筛选结果中没有可重新下发的域名',
             'enable' => '筛选结果中没有可启用的域名',
             'disable' => '筛选结果中没有可停用的域名',
             'delete' => '筛选结果中没有可删除的域名',
         ],
         'error_all' => [
+            'redeploy' => '筛选结果中的域名均无法重新下发（无证书、未签发或不可读）',
             'enable' => '筛选结果中的域名均未能启用',
             'disable' => '筛选结果中的域名均未能停用',
             'delete' => '筛选结果中的域名均未能删除',

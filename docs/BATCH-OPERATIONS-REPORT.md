@@ -175,8 +175,9 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 高 | 「按筛选批量」无筛选时会对前 500 条做停用/删除 | 停用/删除强制 `DomainListFilter::hasAnyFilter`；表单增加二次确认 |
 | 中 | 批量删除异常向用户暴露原始异常信息 | 非校验类异常改为通用「保存失败」文案 |
 | 中 | `DomainBatchMutator` 重复 docblock | 已删除 |
-| 低 | 勾选 >500 条时静默截断 | 文档已说明上限；后续可在 UI 提示 |
-| 低 | 按筛选批量未覆盖「重新下发 / 批量修改」 | 仍用勾选批量；避免无筛选误操作 |
+| 低 | 按筛选批量未覆盖「批量修改」 | 仍用勾选「批量修改」 |
+| 已做 | 勾选或筛选超过 500 条 | 成功提示追加 `truncated_suffix`，请分批再操作 |
+| 已做 | 按筛选批量「重新下发证书」 | `DomainBatchFilterRunner` + 筛选弹窗选项 |
 | 设计 | `applyEditsOwned` 合并多次操作的 `updated` 计数 | 表示「字段变更次数」而非「域名数」，提示文案已按条数展示 |
 | 设计 | 节点批量重试 `updated` 为 deployment 行数 | 与单行「重试失败证书」一致 |
 

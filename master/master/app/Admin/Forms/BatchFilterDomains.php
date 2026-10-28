@@ -38,6 +38,7 @@ class BatchFilterDomains extends Form implements LazyRenderable
 
         $options = [
             'apply_cert' => __('redi-admin-domain.batch_filter.actions.apply_cert'),
+            'redeploy' => __('redi-admin-domain.batch_filter.actions.redeploy'),
             'enable' => __('redi-admin-domain.batch_filter.actions.enable'),
             'disable' => __('redi-admin-domain.batch_filter.actions.disable'),
             'delete' => __('redi-admin-domain.batch_filter.actions.delete'),

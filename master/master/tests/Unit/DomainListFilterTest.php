@@ -44,6 +44,26 @@ class DomainListFilterTest extends TestCase
         $this->assertSame([2], $ids);
     }
 
+    public function test_limited_selection_truncates_when_over_cap(): void
+    {
+        for ($i = 3; $i <= 502; $i++) {
+            \DB::table('redi_admin_domain')->insert([
+                'id' => $i,
+                'admin_id' => 1,
+                'group_id' => 1,
+                'original_url' => "host{$i}.com",
+                'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $selection = DomainListFilter::limitedSelection(Request::create('/admin/domain', 'GET'));
+        $this->assertCount(500, $selection['ids']);
+        $this->assertSame(502, $selection['matched']);
+        $this->assertSame(2, $selection['truncated']);
+    }
+
     public function test_has_any_filter(): void
     {
         $empty = Request::create('/admin/domain', 'GET');

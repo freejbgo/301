@@ -6,6 +6,7 @@ use App\Models\RediAdminDomain;
 use App\Models\RediAdminGroup;
 use App\Models\RediDomainCert;
 use App\Support\AdminTenantContext;
+use App\Support\BatchSelectionLimiter;
 use App\Support\OpsDisplaySanitizer;
 
 class DomainBatchMutator
@@ -14,7 +15,7 @@ class DomainBatchMutator
 
     /**
      * @param  array<int, int|string>  $domainIds
-     * @return array{updated: int, skipped: int, errors: string[]}
+     * @return array{updated: int, skipped: int, errors: string[], truncated: int}
      */
     public function setStatusOwned(
         array $domainIds,
@@ -22,7 +23,7 @@ class DomainBatchMutator
         int $sessionAdminId,
         ?bool $isPlatformAdministrator = null
     ): array {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0];
 
         if (! in_array($status, [1, 2], true)) {
             $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.status_invalid');
@@ -30,7 +31,9 @@ class DomainBatchMutator
             return $result;
         }
 
-        $ids = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
+        $normalized = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
+        $ids = $normalized['ids'];
+        $result['truncated'] = $normalized['truncated'];
         if ($ids === []) {
             $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.no_domains');
 
@@ -80,7 +83,7 @@ class DomainBatchMutator
         int $sessionAdminId,
         ?bool $isPlatformAdministrator = null
     ): array {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0];
 
         $skipUrl = DomainRecordNormalizer::normalizeSkipUrl($rawSkipUrl);
         if ($skipUrl === '') {
@@ -89,7 +92,9 @@ class DomainBatchMutator
             return $result;
         }
 
-        $ids = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
+        $normalized = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
+        $ids = $normalized['ids'];
+        $result['truncated'] = $normalized['truncated'];
         if ($ids === []) {
             $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.no_domains');
 
@@ -132,7 +137,7 @@ class DomainBatchMutator
         int $sessionAdminId,
         ?bool $isPlatformAdministrator = null
     ): array {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0];
 
         if ($groupId <= 0) {
             $result['errors'][] = __('redi-admin-domain.validation.group_invalid');
@@ -154,7 +159,9 @@ class DomainBatchMutator
             return $result;
         }
 
-        $ids = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
+        $normalized = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
+        $ids = $normalized['ids'];
+        $result['truncated'] = $normalized['truncated'];
         if ($ids === []) {
             $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.no_domains');
 
@@ -210,7 +217,7 @@ class DomainBatchMutator
         int $sessionAdminId,
         ?bool $isPlatformAdministrator = null
     ): array {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0];
 
         if ($forceHttps === '') {
             return $result;
@@ -223,7 +230,9 @@ class DomainBatchMutator
         }
 
         $wantsOn = $forceHttps === '1';
-        $ids = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
+        $normalized = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
+        $ids = $normalized['ids'];
+        $result['truncated'] = $normalized['truncated'];
         if ($ids === []) {
             $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.no_domains');
 
@@ -269,9 +278,11 @@ class DomainBatchMutator
         int $sessionAdminId,
         ?bool $isPlatformAdministrator = null
     ): array {
-        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0];
 
-        $ids = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
+        $normalized = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
+        $ids = $normalized['ids'];
+        $result['truncated'] = $normalized['truncated'];
         if ($ids === []) {
             $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.no_domains');
 
@@ -309,7 +320,7 @@ class DomainBatchMutator
         string $forceHttps,
         ?bool $isPlatformAdministrator = null
     ): array {
-        $merged = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+        $merged = ['updated' => 0, 'skipped' => 0, 'errors' => [], 'truncated' => 0];
 
         $hasSkip = $skipUrl !== null && trim($skipUrl) !== '';
         $hasGroup = $groupId !== null && $groupId > 0;
@@ -321,18 +332,30 @@ class DomainBatchMutator
             return $merged;
         }
 
+        $normalized = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
+        $merged['truncated'] = $normalized['truncated'];
+        $ownedIds = $normalized['ids'];
+        if ($ownedIds === []) {
+            $merged['errors'][] = __('redi-admin-domain.batch_mutator.errors.no_domains');
+
+            return $merged;
+        }
+
         if ($hasGroup) {
-            $part = $this->moveGroupOwned($domainIds, (int) $groupId, $sessionAdminId, $isPlatformAdministrator);
+            $part = $this->moveGroupOwned($ownedIds, (int) $groupId, $sessionAdminId, $isPlatformAdministrator);
+            $part['truncated'] = 0;
             $merged = $this->mergeResults($merged, $part);
         }
 
         if ($hasSkip) {
-            $part = $this->setSkipUrlOwned($domainIds, (string) $skipUrl, $sessionAdminId, $isPlatformAdministrator);
+            $part = $this->setSkipUrlOwned($ownedIds, (string) $skipUrl, $sessionAdminId, $isPlatformAdministrator);
+            $part['truncated'] = 0;
             $merged = $this->mergeResults($merged, $part);
         }
 
         if ($hasHttps) {
-            $part = $this->setForceHttpsOwned($domainIds, $forceHttps, $sessionAdminId, $isPlatformAdministrator);
+            $part = $this->setForceHttpsOwned($ownedIds, $forceHttps, $sessionAdminId, $isPlatformAdministrator);
+            $part['truncated'] = 0;
             $merged = $this->mergeResults($merged, $part);
         }
 
@@ -340,36 +363,36 @@ class DomainBatchMutator
     }
 
     /**
-     * @param  array<int, int|string>  $domainIds
-     * @return array<int, int>
+     * @param  array<int, int|string>|list<int>  $domainIds
+     * @return array{ids: list<int>, truncated: int}
      */
     protected function normalizeOwnedIds(
         array $domainIds,
         int $sessionAdminId,
         ?bool $isPlatformAdministrator
     ): array {
-        $domainIds = array_values(array_unique(array_filter(array_map('intval', $domainIds), static fn (int $id): bool => $id > 0)));
-        if ($domainIds === []) {
-            return [];
-        }
-        if (count($domainIds) > self::MAX_IDS_PER_BATCH) {
-            $domainIds = array_slice($domainIds, 0, self::MAX_IDS_PER_BATCH);
+        $capped = BatchSelectionLimiter::intIdsCapped($domainIds, self::MAX_IDS_PER_BATCH);
+        if ($capped['ids'] === []) {
+            return ['ids' => [], 'truncated' => $capped['truncated']];
         }
 
         $isPlatformAdministrator = $isPlatformAdministrator ?? AdminTenantContext::isPlatformAdministrator();
 
-        $query = RediAdminDomain::query()->whereIn('id', $domainIds);
+        $query = RediAdminDomain::query()->whereIn('id', $capped['ids']);
         if (! $isPlatformAdministrator) {
             $query->where('admin_id', $sessionAdminId);
         }
 
-        return $query->orderBy('id')->pluck('id')->all();
+        return [
+            'ids' => $query->orderBy('id')->pluck('id')->all(),
+            'truncated' => $capped['truncated'],
+        ];
     }
 
     /**
-     * @param  array{updated: int, skipped: int, errors: string[]}  $a
-     * @param  array{updated: int, skipped: int, errors: string[]}  $b
-     * @return array{updated: int, skipped: int, errors: string[]}
+     * @param  array{updated: int, skipped: int, errors: string[], truncated?: int}  $a
+     * @param  array{updated: int, skipped: int, errors: string[], truncated?: int}  $b
+     * @return array{updated: int, skipped: int, errors: string[], truncated: int}
      */
     protected function mergeResults(array $a, array $b): array
     {
@@ -377,6 +400,7 @@ class DomainBatchMutator
             'updated' => $a['updated'] + $b['updated'],
             'skipped' => $a['skipped'] + $b['skipped'],
             'errors' => array_merge($a['errors'], $b['errors']),
+            'truncated' => (int) ($a['truncated'] ?? 0),
         ];
     }
 }

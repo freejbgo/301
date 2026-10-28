@@ -16,8 +16,8 @@ class ApplyCertificate extends RowAction
 
     public function handle(Request $request)
     {
-        $count = DomainCertificateQueue::dispatchOwned([(int) $this->getKey()], (int) Admin::user()->id);
-        if ($count === 0) {
+        $dispatch = DomainCertificateQueue::dispatchOwned([(int) $this->getKey()], (int) Admin::user()->id);
+        if ($dispatch['dispatched'] === 0) {
             return $this->response()->error(__('redi-admin-domain.actions.apply_cert.error'));
         }
 

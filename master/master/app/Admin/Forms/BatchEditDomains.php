@@ -4,6 +4,7 @@ namespace App\Admin\Forms;
 
 use App\Services\DomainBatchMutator;
 use App\Support\AdminTenantContext;
+use App\Support\BatchSelectionLimiter;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Contracts\LazyRenderable;
 use Dcat\Admin\Traits\LazyWidget;
@@ -56,6 +57,8 @@ class BatchEditDomains extends Form implements LazyRenderable
                 'count' => count($result['errors']),
             ]);
         }
+
+        $summary = BatchSelectionLimiter::appendTruncationNotice($summary, (int) ($result['truncated'] ?? 0));
 
         return $this->response()->success($summary)->refresh();
     }

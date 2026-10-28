@@ -43,13 +43,25 @@ class DomainListFilter
      */
     public static function limitedIds(Request $request, int $max = DomainBatchMutator::MAX_IDS_PER_BATCH): array
     {
-        $max = max(1, min($max, DomainBatchMutator::MAX_IDS_PER_BATCH));
+        return self::limitedSelection($request, $max)['ids'];
+    }
 
-        return self::filteredQuery($request)
-            ->limit($max)
-            ->pluck('id')
-            ->map(static fn ($id) => (int) $id)
-            ->all();
+    /**
+     * @return array{ids: list<int>, truncated: int, matched: int}
+     */
+    public static function limitedSelection(Request $request, int $max = DomainBatchMutator::MAX_IDS_PER_BATCH): array
+    {
+        $max = max(1, min($max, DomainBatchMutator::MAX_IDS_PER_BATCH));
+        $query = self::filteredQuery($request);
+        $matched = (int) $query->count();
+        $ids = $query->limit($max)->pluck('id')->map(static fn ($id) => (int) $id)->all();
+        $truncated = max(0, $matched - count($ids));
+
+        return [
+            'ids' => $ids,
+            'truncated' => $truncated,
+            'matched' => $matched,
+        ];
     }
 
     public static function hasAnyFilter(Request $request): bool
