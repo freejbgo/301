@@ -59,7 +59,7 @@ DNS 模式：**手动**（参考表，无同步按钮）或 **API 自动**（一
 
 ### Master Agent（`REDI_MASTER_URL` + `REDI_NODE_TOKEN`）
 
-约 5 秒一轮（缺 env 则不启动）：`register` → `revision` → 按需拉 challenges / redirect-rules / certificates → `heartbeat` → 证书安装后 `ack`。主控故障时轮询退避至 60s；空证书列表默认连续 3 次拉取后才清空本机 TLS 内存（`REDI_AGENT_EMPTY_CERT_CLEAR_AFTER`）。
+约 5 秒一轮（缺 env 则不启动）：`register` → `revision` → 按需拉 challenges / redirect-rules / certificates → `heartbeat` → 证书安装后 `ack`。主控故障时轮询退避至 60s；主控连续返回**空列表**时，默认 **3** 次拉取后才清空本机内存（`REDI_AGENT_EMPTY_CERT_CLEAR_AFTER` / `REDI_AGENT_EMPTY_CHALLENGE_CLEAR_AFTER` / `REDI_AGENT_EMPTY_RULES_CLEAR_AFTER`，设为 `1` 则立即清空，见 `node/redi-multi/env.example`）。
 
 ### 80/443 处理顺序
 
