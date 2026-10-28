@@ -62,6 +62,7 @@ return [
         'confirm_content' => 'Redirect URL will apply to all domains in this group.',
         'field_skip_url'  => 'Redirect URL',
         'success'         => 'Redirect URL updated for domains in this group',
+        'success_all_skipped' => ':count domain(s) in this group already use that redirect URL; no changes needed',
         'error_group_id'  => 'Invalid group id',
         'error_skip_url'  => 'Invalid redirect URL',
         'error_group'     => 'Invalid group',

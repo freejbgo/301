@@ -39,19 +39,23 @@ class BatchEditDomains extends Form implements LazyRenderable
             $forceHttps
         );
 
-        if ($result['updated'] === 0 && $result['errors'] === []) {
-            return $this->response()->error(__('redi-admin-domain.batch_mutator.errors.nothing_changed'));
-        }
-
-        if ($result['updated'] === 0) {
+        if ($result['updated'] === 0 && $result['errors'] !== []) {
             $msg = __('redi-admin-domain.actions.batch_edit.error_all');
             $msg .= "\n".implode("\n", array_slice($result['errors'], 0, 8));
 
             return $this->response()->error($msg);
         }
 
-        $summary = __('redi-admin-domain.actions.batch_edit.success', ['count' => $result['updated']]);
-        if ($result['skipped'] > 0) {
+        if ($result['updated'] === 0 && (int) $result['skipped'] <= 0) {
+            return $this->response()->error(__('redi-admin-domain.batch_mutator.errors.nothing_changed'));
+        }
+
+        if ($result['updated'] > 0) {
+            $summary = __('redi-admin-domain.actions.batch_edit.success', ['count' => $result['updated']]);
+        } else {
+            $summary = __('redi-admin-domain.actions.batch_edit.success_all_skipped', ['count' => $result['skipped']]);
+        }
+        if ($result['skipped'] > 0 && $result['updated'] > 0) {
             $summary .= __('redi-admin-domain.actions.batch_mutator.skipped_suffix', ['count' => $result['skipped']]);
         }
         if ($result['errors'] !== []) {
@@ -62,7 +66,7 @@ class BatchEditDomains extends Form implements LazyRenderable
 
         $summary = BatchSelectionLimiter::appendTruncationNotice($summary, (int) ($result['truncated'] ?? 0));
 
-        $this->auditFromMutator('domain', 'batch_edit', $result, $domainIds);
+        $this->auditFromMutator('domain', 'batch_edit', $result, $domainIds, [], true);
 
         return $this->response()->success($summary)->refresh();
     }

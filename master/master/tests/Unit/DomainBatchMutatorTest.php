@@ -215,4 +215,16 @@ class DomainBatchMutatorTest extends TestCase
         $this->assertSame(0, $result['updated']);
         $this->assertSame(1, $result['skipped']);
     }
+
+    public function test_set_skip_url_for_group_uses_model_save(): void
+    {
+        RediAdminDomain::query()->where('id', 1)->update(['skip_url' => 'https://old.example.com']);
+
+        $mutator = new DomainBatchMutator();
+        $result = $mutator->setSkipUrlForGroupOwned(1, 'https://group-wide.example.com', 10, false);
+
+        $this->assertSame(1, $result['updated']);
+        $this->assertSame(0, $result['skipped']);
+        $this->assertSame('https://group-wide.example.com', RediAdminDomain::query()->find(1)->skip_url);
+    }
 }

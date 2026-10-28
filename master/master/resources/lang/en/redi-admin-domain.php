@@ -106,6 +106,7 @@ return [
         'batch_edit' => [
             'title' => 'Batch edit',
             'success' => 'Updated :count domain(s)',
+            'success_all_skipped' => 'All :count selected domain(s) already match; no changes needed',
             'error_all' => 'No domains were updated',
         ],
         'batch_delete' => [

@@ -105,6 +105,68 @@ class DomainBatchMutator
     }
 
     /**
+     * 分组行「按组改跳转」：组内全部域名，不受勾选 500 条上限。
+     *
+     * @return array{updated: int, skipped: int, errors: string[], truncated: int}
+     */
+    public function setSkipUrlForGroupOwned(
+        int $groupId,
+        string $rawSkipUrl,
+        int $sessionAdminId,
+        ?bool $isPlatformAdministrator = null
+    ): array {
+        $skipUrl = DomainRecordNormalizer::normalizeSkipUrl($rawSkipUrl);
+        if ($skipUrl === '') {
+            return [
+                'updated' => 0,
+                'skipped' => 0,
+                'errors' => [__('redi-admin-domain.validation.skip_url_invalid')],
+                'truncated' => 0,
+            ];
+        }
+
+        if ($groupId <= 0) {
+            return [
+                'updated' => 0,
+                'skipped' => 0,
+                'errors' => [__('redi-admin-domain.validation.group_invalid')],
+                'truncated' => 0,
+            ];
+        }
+
+        $group = RediAdminGroup::query()->find($groupId);
+        if (! $group) {
+            return [
+                'updated' => 0,
+                'skipped' => 0,
+                'errors' => [__('redi-admin-domain.validation.group_invalid')],
+                'truncated' => 0,
+            ];
+        }
+
+        $isPlatformAdministrator = $isPlatformAdministrator ?? AdminTenantContext::isPlatformAdministrator();
+        if (! $isPlatformAdministrator && (int) $group->admin_id !== $sessionAdminId) {
+            return [
+                'updated' => 0,
+                'skipped' => 0,
+                'errors' => [__('redi-admin-domain.validation.group_wrong_owner')],
+                'truncated' => 0,
+            ];
+        }
+
+        $ids = RediAdminDomain::query()
+            ->where('group_id', $groupId)
+            ->where('admin_id', (int) $group->admin_id)
+            ->orderBy('id')
+            ->pluck('id')
+            ->all();
+
+        $part = $this->applySkipUrlOnOwnedIds($ids, $skipUrl);
+
+        return array_merge(['truncated' => 0], $part);
+    }
+
+    /**
      * @param  list<int>  $ownedIds
      * @return array{updated: int, skipped: int, errors: string[]}
      */

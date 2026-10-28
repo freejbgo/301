@@ -22,14 +22,24 @@ trait RecordsAdminBatchAudit
      * @param  array<int, int|string>  $selectedKeys
      * @param  array<string, mixed>  $context
      */
-    protected function auditFromMutator(string $module, string $action, array $result, array $selectedKeys = [], array $context = []): void
-    {
-        if ((int) ($result['updated'] ?? 0) <= 0) {
+    protected function auditFromMutator(
+        string $module,
+        string $action,
+        array $result,
+        array $selectedKeys = [],
+        array $context = [],
+        bool $recordSkippedOnlySuccess = false
+    ): void {
+        $updated = (int) ($result['updated'] ?? 0);
+        $skipped = (int) ($result['skipped'] ?? 0);
+        if ($updated <= 0 && (! $recordSkippedOnlySuccess || $skipped <= 0)) {
             return;
         }
 
         $context['mode'] = $context['mode'] ?? 'grid_selection';
-        $context['selection'] = AdminBatchOperationAudit::idSample($selectedKeys);
+        if ($selectedKeys !== []) {
+            $context['selection'] = AdminBatchOperationAudit::idSample($selectedKeys);
+        }
 
         $this->auditAdminBatch($module, $action, AdminBatchOperationAudit::metricsFromMutator($result), $context);
     }
@@ -101,14 +111,9 @@ trait RecordsAdminBatchAudit
         ]);
     }
 
-    protected function auditGroupUrlSet(int $groupId, int $updated, int $skipped): void
+    protected function auditGroupUrlSet(int $groupId, array $result): void
     {
-        $this->auditAdminBatch('group', 'url_set_by_group', [
-            'updated' => $updated,
-            'skipped' => $skipped,
-            'truncated' => 0,
-            'error_count' => 0,
-        ], [
+        $this->auditAdminBatch('group', 'url_set_by_group', AdminBatchOperationAudit::metricsFromMutator($result), [
             'mode' => 'group_row_action',
             'group_id' => $groupId,
         ]);

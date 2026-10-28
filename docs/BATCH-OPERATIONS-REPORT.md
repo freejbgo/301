@@ -265,7 +265,15 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 低风险 | 批量修改全跳过 | `updated=0` 且仅 `skipped>0` 时仍报「无变更」、**不写** `batch_edit` 审计（原 UX） |
 | 待 CI | 单测 | 未新增 UrlSetByGroup / BatchCreate 审计单测；合并前跑全量 `phpunit` |
 
-**合并建议**：无阻塞。Smoke：批量添加 2 条（含 1 重复）→ 日志 `batch_create`；分组行改跳转 → `url_set_by_group`；批量修改三字段不变 → 提示跳过数为 **1**。
+## 18. 批量修改全跳过 + 按组改跳转走模型
+
+| 项 | 处理 |
+|----|------|
+| 批量修改 | `updated=0` 且 `skipped>0` 无错误 → 成功 + `success_all_skipped` + `batch_edit` 审计（`recordSkippedOnlySuccess`） |
+| 按组改跳转 | `DomainBatchMutator::setSkipUrlForGroupOwned` → `applySkipUrlOnOwnedIds` 逐条 `save()`；组内全量不受 500 上限 |
+| 单测 | `test_set_skip_url_for_group_uses_model_save` |
+
+**合并建议**：无阻塞。
 
 ---
 

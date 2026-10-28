@@ -62,6 +62,7 @@ return [
         'confirm_content' => '將更新該分組內所有域名的跳轉連結',
         'field_skip_url'  => '跳轉連結',
         'success'         => '已更新分組內域名的跳轉連結',
+        'success_all_skipped' => '組內 :count 個域名跳轉連結已是目標值，無需變更',
         'error_group_id'  => '分組 id 異常',
         'error_skip_url'  => '跳轉連結異常',
         'error_group'     => '分組無效',

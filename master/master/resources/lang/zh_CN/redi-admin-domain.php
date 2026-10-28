@@ -106,6 +106,7 @@ return [
         'batch_edit' => [
             'title' => '批量修改',
             'success' => '已更新 :count 个域名',
+            'success_all_skipped' => '所选 :count 个域名均已符合设置，无需变更',
             'error_all' => '未能更新任何域名',
         ],
         'batch_delete' => [
