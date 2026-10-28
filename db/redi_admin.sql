@@ -695,10 +695,8 @@ BEGIN
     IF v_skip IS NOT NULL
         AND CHAR_LENGTH(TRIM(v_skip)) > 0
         AND LOCATE('@', v_skip) = 0
-        AND (
-            (LOWER(TRIM(v_skip)) LIKE 'http://%' AND CHAR_LENGTH(TRIM(v_skip)) > 7)
-            OR (LOWER(TRIM(v_skip)) LIKE 'https://%' AND CHAR_LENGTH(TRIM(v_skip)) > 8)
-        ) THEN
+        AND ((LOWER(TRIM(v_skip)) LIKE 'http://%' AND CHAR_LENGTH(TRIM(v_skip)) > 7)
+            OR (LOWER(TRIM(v_skip)) LIKE 'https://%' AND CHAR_LENGTH(TRIM(v_skip)) > 8)) THEN
         UPDATE `redi_admin_domain`
         SET `skip_num` = `skip_num` + 1
         WHERE `original_url` = p_host AND `status` = 1

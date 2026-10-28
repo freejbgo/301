@@ -212,6 +212,7 @@ class DomainBatchMutatorTest extends TestCase
         RediDomainCert::query()->insert([
             'domain_id' => 1,
             'admin_id' => 10,
+            'domain_name' => 'a.com',
             'status' => RediDomainCert::STATUS_ACTIVE,
             'created_at' => now(),
             'updated_at' => now(),
