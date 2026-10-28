@@ -31,10 +31,11 @@ class DomainBatchFilterRunner
             ];
         }
 
-        if (in_array($action, ['delete', 'disable'], true) && ! DomainListFilter::hasAnyFilter($filterRequest)) {
+        if (in_array($action, ['delete', 'disable', 'apply_cert', 'redeploy', 'enable'], true)
+            && ! DomainListFilter::hasAnyFilter($filterRequest)) {
             return [
                 'ok' => false,
-                'message' => __('redi-admin-domain.batch_filter.errors.filter_required_destructive'),
+                'message' => __('redi-admin-domain.batch_filter.errors.filter_required_sensitive'),
                 'count' => 0,
             ];
         }

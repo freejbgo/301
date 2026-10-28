@@ -218,6 +218,13 @@ func pullRedirectRules(client *http.Client, cfg config, registered *bool) error 
 	if err := getJSON(client, cfg, "/api/nodes/redirect-rules", &out, registered); err != nil {
 		return err
 	}
+	if len(out.Rules) == 0 {
+		if err := noteEmptyRedirectRulesList(); err != nil {
+			return err
+		}
+		rules.ReplaceForceHTTPS(map[string]bool{})
+		return nil
+	}
 	m := map[string]bool{}
 	for _, r := range out.Rules {
 		if host.ContainsControlChars(r.OriginalURL) {
@@ -229,6 +236,7 @@ func pullRedirectRules(client *http.Client, cfg config, registered *bool) error 
 		}
 		m[label] = bool(r.ForceHTTPS)
 	}
+	resetEmptyRedirectRulesStreak()
 	rules.ReplaceForceHTTPS(m)
 	return nil
 }

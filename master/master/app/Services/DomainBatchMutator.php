@@ -13,6 +13,9 @@ class DomainBatchMutator
 {
     public const MAX_IDS_PER_BATCH = 500;
 
+    /** 按分组批量改跳转 URL 时单次最多更新的域名数（与列表批量上限一致）。 */
+    public const MAX_GROUP_SKIP_URL_DOMAINS = 500;
+
     /**
      * @param  array<int, int|string>  $domainIds
      * @return array{updated: int, skipped: int, errors: string[], truncated: int}
@@ -154,10 +157,27 @@ class DomainBatchMutator
             ];
         }
 
+        $matched = (int) RediAdminDomain::query()
+            ->where('group_id', $groupId)
+            ->where('admin_id', (int) $group->admin_id)
+            ->count();
+        if ($matched > self::MAX_GROUP_SKIP_URL_DOMAINS) {
+            return [
+                'updated' => 0,
+                'skipped' => 0,
+                'errors' => [__('redi-admin-domain.batch_mutator.errors.group_skip_url_too_many', [
+                    'count' => $matched,
+                    'max' => self::MAX_GROUP_SKIP_URL_DOMAINS,
+                ])],
+                'truncated' => 0,
+            ];
+        }
+
         $ids = RediAdminDomain::query()
             ->where('group_id', $groupId)
             ->where('admin_id', (int) $group->admin_id)
             ->orderBy('id')
+            ->limit(self::MAX_GROUP_SKIP_URL_DOMAINS)
             ->pluck('id')
             ->all();
 
@@ -527,21 +547,6 @@ class DomainBatchMutator
         return [
             'ids' => $query->orderBy('id')->pluck('id')->all(),
             'truncated' => $capped['truncated'],
-        ];
-    }
-
-    /**
-     * @param  array{updated: int, skipped: int, errors: string[], truncated?: int}  $a
-     * @param  array{updated: int, skipped: int, errors: string[], truncated?: int}  $b
-     * @return array{updated: int, skipped: int, errors: string[], truncated: int}
-     */
-    protected function mergeResults(array $a, array $b): array
-    {
-        return [
-            'updated' => $a['updated'] + $b['updated'],
-            'skipped' => $a['skipped'] + $b['skipped'],
-            'errors' => array_merge($a['errors'], $b['errors']),
-            'truncated' => (int) ($a['truncated'] ?? 0),
         ];
     }
 

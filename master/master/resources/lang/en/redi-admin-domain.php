@@ -153,6 +153,7 @@ return [
             'row_group_owner' => ':label: target group belongs to another account',
             'row_force_https' => ':label: certificate not active; cannot enable force HTTPS',
             'row_delete' => ':label: :reason',
+            'group_skip_url_too_many' => 'This group has :count domains; bulk URL change allows at most :max per operation. Split the group or use filtered batch edit.',
         ],
     ],
     'batch_filter' => [
@@ -190,6 +191,7 @@ return [
             'action_invalid' => 'Invalid action',
             'no_match' => 'No domains match the current filters',
             'filter_required_destructive' => 'Batch disable/delete requires at least one list filter (avoids touching the first 500 rows by mistake)',
+            'filter_required_sensitive' => 'This batch action requires at least one list filter (avoids touching the first 500 rows by mistake)',
         ],
         'warnings' => [
             'unfiltered' => ' (no list filter; only the first :max rows by ID are processed)',

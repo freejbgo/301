@@ -166,7 +166,8 @@ user=redi_node
 password=${DB_PASS}
 database=redi_admin
 EOF
-if mysql --defaults-extra-file="$db_cnf" -e "CALL redi_node_bump_skip('__redi_deploy_smoke__')" >/dev/null; then
+redi_mysql_tls_args_from_env
+if mysql --defaults-extra-file="$db_cnf" "${redi_mysql_tls_args[@]}" -e "CALL redi_node_bump_skip('__redi_deploy_smoke__')" >/dev/null; then
   echo "数据库连接正常（redi_node EXECUTE redi_node_bump_skip）"
 else
   rm -f "$db_cnf"
@@ -211,7 +212,7 @@ redi_lagran_expected_enabled() {
   if [[ -f "${APP}/env.sh" ]] && grep -qiE '^REDI_LAGRAN_DISABLED=(1|true|yes)' "${APP}/env.sh" 2>/dev/null; then
     return 1
   fi
-  if [[ -f "${APP}/config.json" ]] && grep -qE '"enabled"[[:space:]]*:[[:space:]]*false' "${APP}/config.json" 2>/dev/null; then
+  if [[ -f "${APP}/config.json" ]] && redi_lagran_json_enabled_off "${APP}/config.json"; then
     return 1
   fi
   return 0

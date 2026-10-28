@@ -40,6 +40,9 @@ for needle in \
   'REDI_MASTER_INSECURE' \
   'REDI_DB_TLS' \
   'REDI_AGENT_EMPTY_CERT_CLEAR_AFTER' \
+  'REDI_AGENT_EMPTY_CHALLENGE_CLEAR_AFTER' \
+  'REDI_AGENT_EMPTY_RULES_CLEAR_AFTER' \
+  'redi_mysql_tls_args_from_env' \
   '--max-time=3600' \
   '03:10' \
   '04:10' \

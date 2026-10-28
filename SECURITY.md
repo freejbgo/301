@@ -34,6 +34,7 @@
 | 平台 DNS 表单 | 仅超级管理员可提交（与「DNS 与节点池」页面一致） |
 | DNS API 同步 | 厂商记录 **先增/改、后删**；Pool A 与租户 CNAME 分步执行。租户 `edge_fqdn` 不在平台 zone 下会 **中止**（全部无效时不写厂商；部分无效时 Pool/已写 CNAME 可能已更新）。任一步失败则 **不更新** `dns_synced_at`（需修正后重试）。`dns_mode=api` 时未知 `dns_driver` 会 **抛错**（不会静默退回手动模式） |
 | 域名停用 | `status=2` 时清除该域 ACME 挑战、节点 sync 行及 `redi_cert_deployments`，证书 active/deploying 降为 issued 并写明取消部署；**任意状态**下若停用前仍有部署行则写入同一取消提示；从停用 **改回** `status=1` 且 PEM 可用时会自动 `queueDeploy`（非新建即启用） |
+| `REDI_HEALTH_WEBHOOK_URL` / `REDI_OPS_WEBHOOK_URL` | 仅允许 **公网可解析** 的 `http(s)` 目标；拒绝字面私网 IP、`localhost`、`.internal` / `.local` 等（见 `WebhookUrlGuard`） |
 | Session Cookie | HTTPS 后台请设 `SESSION_SECURE_COOKIE=true`（见 `.env.example`） |
 | 证书存储 | `redi_domain_certs` 中 PEM 经 Laravel `Crypt` 加密；备份库即备份密钥材料 |
 | ACME | 主控 `storage/app/acme` 存 LE 账户；签发前要求节点上报挑战已同步，并探测公网域名 HTTP-01 |
@@ -44,7 +45,7 @@
 | 证书 PEM / 主机名变更 | 模型 `saved` 钩子触发 `afterCertMaterialOrHostChange`：不可拉取时删除**全部** `redi_cert_deployments` 并 reconcile（与节点 heartbeat 清理一致） |
 | 队列 | 生产请 `QUEUE_CONNECTION=database`，并常驻 `queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600`（CentOS `deploy-master` / `redi-queue.service` 已写入） |
 | ACME 并发 | 全局锁 `redi-acme-le-global` + 按域名锁；**多台** `queue:work` 时 `CACHE_DRIVER` 须为 **redis**（或共享缓存），否则文件锁不跨机 |
-| 节点 Agent | `REDI_MASTER_URL` 必须 **https://**；可选 `REDI_DB_TLS=1`；Agent **0.1.3+** 分项 revision；默认 `REDI_MIN_AGENT_VERSION=0.1.3`，**全部** `/api/nodes/*` 受版本门（请求 `version` 或库内 `agent_version`）；设 `REDI_MIN_AGENT_VERSION=` 可禁用；主控故障时轮询退避至 60s；空证书列表默认连续 3 次才清空节点内存（`REDI_AGENT_EMPTY_CERT_CLEAR_AFTER`） |
+| 节点 Agent | `REDI_MASTER_URL` 必须 **https://**；可选 `REDI_DB_TLS=1`；Agent **0.1.3+** 分项 revision；默认 `REDI_MIN_AGENT_VERSION=0.1.3`，**全部** `/api/nodes/*` 受版本门（请求 `version` 或库内 `agent_version`）；设 `REDI_MIN_AGENT_VERSION=` 可禁用；主控故障时轮询退避至 60s；空证书/ACME 挑战/redirect-rules 列表默认连续 **3** 次才清空本机内存（`REDI_AGENT_EMPTY_*_CLEAR_AFTER`） |
 | `TRUSTED_PROXIES` / `REDI_ALLOW_TRUST_ALL_PROXIES` | 生产拒绝 `*` 除非 `config('redi.allow_trust_all_proxies')` 为 true（**`php artisan config:cache` 后仍有效**）；Web 与 `queue:work` 启动时均检查 |
 | ACME 维护 | CentOS `/etc/cron.d/redi-renew`：**03:10** `redi:renew-certificates`、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`；`redi:normalize-domain-hosts` 可修正历史 IDN / `skip_url` |
 | `redi:health` 阈值 | `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）、`REDI_HEALTH_QUEUE_STALE_HOURS`（默认 2）、`REDI_HEALTH_VALIDATING_STUCK_HOURS` / `REDI_RENEW_VALIDATING_STUCK_HOURS`；`--json` 的 `summary` 回显当前配置 |

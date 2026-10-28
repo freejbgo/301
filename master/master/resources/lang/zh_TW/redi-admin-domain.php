@@ -153,6 +153,7 @@ return [
             'row_group_owner' => ':label：目標分組與域名所屬帳號不一致',
             'row_force_https' => ':label：憑證尚未生效，不能開啟強制 HTTPS',
             'row_delete' => ':label：:reason',
+            'group_skip_url_too_many' => '該分組共有 :count 個域名，按組改跳轉單次最多 :max 個。請拆分分組或使用篩選批量修改。',
         ],
     ],
     'batch_filter' => [
@@ -190,6 +191,7 @@ return [
             'action_invalid' => '無效操作',
             'no_match' => '當前篩選下沒有匹配的域名',
             'filter_required_destructive' => '批量停用/刪除須先設置至少一項列表篩選（避免誤操作整表前 500 條）',
+            'filter_required_sensitive' => '該批量操作須先設置至少一項列表篩選（避免誤操作整表前 500 條）',
         ],
         'warnings' => [
             'unfiltered' => '（未設列表篩選，僅按 ID 順序處理前 :max 條）',

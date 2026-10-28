@@ -164,6 +164,28 @@ redi_sync_master_env() {
 }
 
 # 被干扰域名场景：确保 config.json 中 lagran.enabled 为 true（不依赖 perl）。
+redi_lagran_json_enabled_off() {
+  local cfg="$1"
+  [[ -f "$cfg" ]] || return 1
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - "$cfg" <<'PY'
+import json, sys
+path = sys.argv[1]
+with open(path, encoding="utf-8") as f:
+    data = json.load(f)
+lag = data.get("lagran") or {}
+v = lag.get("enabled", True)
+if v is False:
+    sys.exit(0)
+if isinstance(v, str) and v.strip().lower() in ("0", "false", "no", "off"):
+    sys.exit(0)
+sys.exit(1)
+PY
+    return $?
+  fi
+  grep -qE '"enabled"[[:space:]]*:[[:space:]]*(false|"false"|"off"|"no"|"0")' "$cfg" 2>/dev/null
+}
+
 redi_ensure_lagran_enabled() {
   local cfg="$1"
   [[ -f "$cfg" ]] || return 0
@@ -174,7 +196,11 @@ path = sys.argv[1]
 with open(path, encoding="utf-8") as f:
     data = json.load(f)
 lag = data.setdefault("lagran", {})
-if lag.get("enabled") is False:
+v = lag.get("enabled", True)
+off = v is False or (
+    isinstance(v, str) and v.strip().lower() in ("0", "false", "no", "off")
+)
+if off:
     lag["enabled"] = True
 with open(path, "w", encoding="utf-8") as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
@@ -182,9 +208,27 @@ with open(path, "w", encoding="utf-8") as f:
 PY
     return 0
   fi
-  if grep -qE '"enabled"[[:space:]]*:[[:space:]]*false' "$cfg" 2>/dev/null; then
-    sed -i -E 's/("enabled"[[:space:]]*:[[:space:]]*)false/\1true/' "$cfg" || return 1
+  if grep -qE '"enabled"[[:space:]]*:[[:space:]]*(false|"false"|"off"|"no"|"0")' "$cfg" 2>/dev/null; then
+    sed -i -E 's/("enabled"[[:space:]]*:[[:space:]]*)(false|"false"|"off"|"no"|"0")/\1true/' "$cfg" || return 1
   fi
+}
+
+# 节点 deploy 冒烟：与 env.sh 中 REDI_DB_TLS 对齐的 mysql 客户端参数（数组名 redi_mysql_tls_args）。
+redi_mysql_tls_args_from_env() {
+  redi_mysql_tls_args=()
+  local tls="${REDI_DB_TLS:-}"
+  [[ -n "$tls" ]] || return 0
+  case "$(echo "$tls" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|required|verify)
+      redi_mysql_tls_args=(--ssl-mode=REQUIRED)
+      ;;
+    skip-verify|skip_verify|insecure|skip)
+      redi_mysql_tls_args=(--ssl-mode=REQUIRED --ssl-verify-server-cert=OFF)
+      ;;
+    *)
+      echo "警告: 未知 REDI_DB_TLS=$tls，冒烟仍用明文 mysql" >&2
+      ;;
+  esac
 }
 
 redi_systemd_usable() {
