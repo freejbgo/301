@@ -181,6 +181,19 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 设计 | `applyEditsOwned` 合并多次操作的 `updated` 计数 | 表示「字段变更次数」而非「域名数」，提示文案已按条数展示 |
 | 设计 | 节点批量重试 `updated` 为 deployment 行数 | 与单行「重试失败证书」一致 |
 
+## 11. 二次复核（截断 + 筛选重新下发后）
+
+| 结论 | 说明 |
+|------|------|
+| 通过 | 域名 500 上限与 `truncated_suffix`；筛选 `matched/truncated` 与勾选 limiter 分工正确，未见双重计数 |
+| 通过 | 筛选停用/删除须 `hasAnyFilter`；迁组后 `DomainCertificateAdminSync` 已接 |
+| 通过 | `dispatchOwned` / `redeployOwned` 返回 `truncated`；单测含 limiter、filter 删除守卫、筛选截断 |
+| 低风险 | 无筛选仍可按筛选做申请/重新下发/启用（最多 500）；超管需注意 |
+| 低风险 | 分组（200）、节点（100）批量仍静默截断，未用 `truncated_suffix` |
+| 待 CI | 云环境无 PHP，合并前请跑 `master/master` 全量 `phpunit` |
+
+**合并建议**：无阻塞项；建议 smoke：勾选 >500、筛选 >500 重新下发、批量迁组后看证书归属。
+
 ---
 
 **总结**：项目在证书批量与排队方面原先已完备；本次把 **域名 / 分组 / 节点** 的高频批量运维补齐，并增加 **按筛选批量** 以减轻多页勾选成本。更大规模或跨模块编排适合后续用队列任务 + 审计日志扩展。
