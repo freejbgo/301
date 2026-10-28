@@ -188,11 +188,22 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 通过 | 域名 500 上限与 `truncated_suffix`；筛选 `matched/truncated` 与勾选 limiter 分工正确，未见双重计数 |
 | 通过 | 筛选停用/删除须 `hasAnyFilter`；迁组后 `DomainCertificateAdminSync` 已接 |
 | 通过 | `dispatchOwned` / `redeployOwned` 返回 `truncated`；单测含 limiter、filter 删除守卫、筛选截断 |
-| 低风险 | 无筛选仍可按筛选做申请/重新下发/启用（最多 500）；超管需注意 |
-| 低风险 | 分组（200）、节点（100）批量仍静默截断，未用 `truncated_suffix` |
+| 已修 | 无筛选仍可按筛选做申请/重新下发/启用（最多 500） | 成功提示追加 `batch_filter.warnings.unfiltered` |
+| 已修 | 分组（200）、节点（100）批量静默截断 | `AppendsGroupBatchTruncationNotice` / `AppendsNodeBatchTruncationNotice` |
 | 待 CI | 云环境无 PHP，合并前请跑 `master/master` 全量 `phpunit` |
 
-**合并建议**：无阻塞项；建议 smoke：勾选 >500、筛选 >500 重新下发、批量迁组后看证书归属。
+## 12. 第三轮（能修的都搞一下）
+
+| 项 | 处理 |
+|----|------|
+| `applyEditsOwned` 三次 normalize | 单次 `normalizeOwnedIds`，迁组/跳转/HTTPS 走 `apply*OnOwnedIds` |
+| 分组批量异常文案 | `ValidationException` 保留字段错误；其它异常用 `save_failed`，不暴露原文 |
+| 分组 `GroupBatchMutator` | 接入 `BatchSelectionLimiter`（200），结果带 `truncated` |
+| 节点 `NodeBatchMutator` | 勾选 ID 规范化返回 `truncated`；Token 批量仍 cap 20 |
+| i18n | `batch_filter.warnings.unfiltered`（中/英/繁）；分组 `save_failed`（中/英/繁） |
+| 单测 | 新增 `GroupBatchMutatorTest` |
+
+**合并建议**：无阻塞项；建议 smoke：勾选 >500 域名、>200 分组、>100 节点，无筛选按筛选批量申请证书看警告文案。
 
 ---
 
