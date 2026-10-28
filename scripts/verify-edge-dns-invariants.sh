@@ -17,10 +17,10 @@ for f in "$reconcile" "$sync" "$cf"; do
   [[ -f "$f" ]] || fail "missing $f"
 done
 
-grep -q '没有可同步的节点 IP' "$reconcile" || fail "A reconcile must reject empty pool IPv4"
+grep -q "dns.no_node_ips" "$reconcile" || fail "A reconcile must reject empty pool IPv4"
 grep -q 'reconcileAAAARecordValues' "$reconcile" || fail "missing AAAA reconcile"
 grep -q 'enabledPublicIps' "$sync" || fail "EdgeDnsSyncService must use enabledPublicIps"
-grep -q '没有启用的节点公网 IPv4' "$sync" || fail "EdgeDnsSyncService must fail fast without pool IPv4"
+grep -q "dns.no_enabled_ipv4" "$sync" || fail "EdgeDnsSyncService must fail fast without pool IPv4"
 grep -q 'orangeCloudAaaaIds' "$cf" || fail "Cloudflare must strip proxied AAAA before reconcile"
 
 grep -q 'invalidateAllDnsSyncedAt' "${REPO_ROOT}/master/master/app/Services/TenantEdgeService.php" \

@@ -17,6 +17,14 @@
 
 逐项勾选见 **[LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)** §A–E。
 
+## 发布前门禁（仓库内）
+
+合并或打标签前在仓库根目录执行（与 CI / Release 工作流核心步骤一致；无 Docker 时会跳过部分 DB 容器校验）：
+
+```bash
+./scripts/dev-preflight.sh
+```
+
 ## 验收命令（真机）
 
 ```bash

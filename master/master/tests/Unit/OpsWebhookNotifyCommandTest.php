@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Support\RediErrorMessage;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -17,17 +18,17 @@ class OpsWebhookNotifyCommandTest extends TestCase
 
         $exit = Artisan::call('redi:ops-webhook', ['--task' => 'redi:renew-certificates']);
         $this->assertSame(1, $exit);
-        $this->assertStringContainsString('Webhook 未配置', Artisan::output());
+        $this->assertStringContainsString(RediErrorMessage::get('cli.ops_webhook_failed'), Artisan::output());
     }
 
     public function test_ops_webhook_sends_to_ops_url(): void
     {
         config([
-            'redi.ops_webhook_url' => 'https://hooks.example/ops',
-            'redi.health_webhook_url' => 'https://hooks.example/health',
+            'redi.ops_webhook_url' => 'https://example.com/ops',
+            'redi.health_webhook_url' => 'https://example.com/health',
         ]);
 
-        Http::fake(['https://hooks.example/*' => Http::response([], 200)]);
+        Http::fake(['https://example.com/*' => Http::response([], 200)]);
 
         $exit = Artisan::call('redi:ops-webhook', [
             '--task' => 'redi:prune-acme-challenges',
@@ -35,7 +36,7 @@ class OpsWebhookNotifyCommandTest extends TestCase
         ]);
         $this->assertSame(0, $exit);
 
-        Http::assertSent(fn ($request) => $request->url() === 'https://hooks.example/ops'
+        Http::assertSent(fn ($request) => $request->url() === 'https://example.com/ops'
             && ($request->data()['task'] ?? '') === 'redi:prune-acme-challenges');
     }
 }

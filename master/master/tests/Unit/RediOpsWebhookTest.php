@@ -11,18 +11,18 @@ class RediOpsWebhookTest extends TestCase
     public function test_notify_task_failure_uses_ops_url(): void
     {
         config([
-            'redi.ops_webhook_url' => 'https://hooks.example/ops',
+            'redi.ops_webhook_url' => 'https://example.com/ops',
             'redi.health_webhook_url' => '',
         ]);
 
-        Http::fake(['https://hooks.example/*' => Http::response(['ok' => true], 200)]);
+        Http::fake(['https://example.com/*' => Http::response(['ok' => true], 200)]);
 
         $this->assertTrue(RediOpsWebhook::notifyTaskFailure('redi:renew-certificates', 'boom'));
 
         Http::assertSent(function ($request) {
             $data = $request->data();
 
-            return $request->url() === 'https://hooks.example/ops'
+            return $request->url() === 'https://example.com/ops'
                 && ($data['source'] ?? '') === 'redi-cron'
                 && ($data['task'] ?? '') === 'redi:renew-certificates';
         });
@@ -32,18 +32,18 @@ class RediOpsWebhookTest extends TestCase
     {
         config([
             'redi.ops_webhook_url' => '',
-            'redi.health_webhook_url' => 'https://hooks.example/health',
+            'redi.health_webhook_url' => 'https://example.com/health',
         ]);
 
-        Http::fake(['https://hooks.example/*' => Http::response([], 200)]);
+        Http::fake(['https://example.com/*' => Http::response([], 200)]);
 
         $this->assertTrue(RediOpsWebhook::notifyTaskFailure('redi:health'));
     }
 
     public function test_notify_task_failure_strips_control_chars_from_task(): void
     {
-        config(['redi.ops_webhook_url' => 'https://hooks.example/ops']);
-        Http::fake(['https://hooks.example/*' => Http::response([], 200)]);
+        config(['redi.ops_webhook_url' => 'https://example.com/ops']);
+        Http::fake(['https://example.com/*' => Http::response([], 200)]);
 
         RediOpsWebhook::notifyTaskFailure("redi:renew\r\ncertificates", 'x');
 
@@ -56,9 +56,9 @@ class RediOpsWebhookTest extends TestCase
 
     public function test_notify_task_failure_strips_control_chars_from_message(): void
     {
-        config(['redi.ops_webhook_url' => 'https://hooks.example/ops']);
+        config(['redi.ops_webhook_url' => 'https://example.com/ops']);
 
-        Http::fake(['https://hooks.example/*' => Http::response([], 200)]);
+        Http::fake(['https://example.com/*' => Http::response([], 200)]);
 
         RediOpsWebhook::notifyTaskFailure('redi:prune-acme-challenges', "fail\r\nline");
 
@@ -72,7 +72,7 @@ class RediOpsWebhookTest extends TestCase
     public function test_webhook_url_rejects_control_chars_in_config(): void
     {
         config([
-            'redi.ops_webhook_url' => "https://hooks.example/ops\n",
+            'redi.ops_webhook_url' => "https://example.com/ops\n",
             'redi.health_webhook_url' => '',
         ]);
 
@@ -87,7 +87,7 @@ class RediOpsWebhookTest extends TestCase
     {
         Http::fake();
 
-        $this->assertFalse(RediOpsWebhook::post(['ok' => true], "https://hooks.example/h\n"));
+        $this->assertFalse(RediOpsWebhook::post(['ok' => true], "https://example.com/h\n"));
 
         Http::assertNothingSent();
     }
@@ -108,14 +108,14 @@ class RediOpsWebhookTest extends TestCase
 
     public function test_post_sanitizes_issue_messages_in_payload(): void
     {
-        config(['redi.health_webhook_url' => 'https://hooks.example/health']);
-        Http::fake(['https://hooks.example/*' => Http::response([], 200)]);
+        config(['redi.health_webhook_url' => 'https://example.com/health']);
+        Http::fake(['https://example.com/*' => Http::response([], 200)]);
 
         RediOpsWebhook::post([
             'issues' => [
                 ['level' => 'warning', 'code' => 'x', 'message' => "m\r\nsg"],
             ],
-        ], 'https://hooks.example/health');
+        ], 'https://example.com/health');
 
         Http::assertSent(function ($request) {
             $issues = $request->data()['issues'] ?? [];

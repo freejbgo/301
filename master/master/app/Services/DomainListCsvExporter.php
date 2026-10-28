@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * Domain CSV export; rows are loaded via {@see DomainListFilter::filteredQuery()}
+ * (tenant scope from RediAdminDomain::query()).
+ */
 class DomainListCsvExporter
 {
     /**

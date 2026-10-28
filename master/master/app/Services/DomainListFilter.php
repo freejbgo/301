@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Support\AdminTenantContext;
 use App\Models\RediAdminDomain;
+use Dcat\Admin\Admin;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -21,9 +22,9 @@ class DomainListFilter
             ->orderBy('id');
 
         if (! AdminTenantContext::isPlatformAdministrator()) {
-            $adminId = AdminTenantContext::sessionAdminId();
-            if ($adminId > 0) {
-                $query->where('admin_id', $adminId);
+            $user = Admin::user();
+            if ($user) {
+                $query->where('admin_id', (int) $user->id);
             }
         }
 

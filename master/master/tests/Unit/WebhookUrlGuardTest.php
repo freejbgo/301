@@ -17,6 +17,11 @@ class WebhookUrlGuardTest extends TestCase
         $this->assertFalse(WebhookUrlGuard::isSafeOutboundWebhookUrl('http://10.0.0.1/hook'));
     }
 
+    public function test_rejects_unresolvable_documentation_host(): void
+    {
+        $this->assertFalse(WebhookUrlGuard::isSafeOutboundWebhookUrl('https://hooks.example/hook'));
+    }
+
     public function test_accepts_public_https_url_when_dns_resolves(): void
     {
         $this->assertTrue(WebhookUrlGuard::isSafeOutboundWebhookUrl('https://example.com/hook'));
