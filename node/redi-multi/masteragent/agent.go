@@ -164,6 +164,13 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 	if err := getJSON(client, cfg, "/api/nodes/acme-challenges", &out, registered); err != nil {
 		return err
 	}
+	if len(out.Challenges) == 0 {
+		if err := noteEmptyChallengeList(); err != nil {
+			return err
+		}
+		acme.ReplaceAll(nil)
+		return nil
+	}
 	items := make([]acme.Item, 0, len(out.Challenges))
 	domains := make([]string, 0, len(out.Challenges))
 	for _, c := range out.Challenges {
@@ -186,6 +193,10 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 		})
 		domains = append(domains, domain)
 	}
+	if len(items) == 0 {
+		return fmt.Errorf("master returned %d acme-challenges but none passed local validation", len(out.Challenges))
+	}
+	resetEmptyChallengeStreak()
 	acme.ReplaceAll(items)
 	if len(domains) > 0 {
 		if err := postJSON(client, cfg, "/api/nodes/challenges-synced", map[string]interface{}{

@@ -43,6 +43,7 @@ class Http01PropagationWaiter
                 try {
                     $response = Http::timeout(8)
                         ->withHeaders(['User-Agent' => 'redi-master-acme-probe/1.0'])
+                        ->withoutRedirecting()
                         ->get($publicUrl);
                     $probeBody = $response->body();
                     if ($response->successful()

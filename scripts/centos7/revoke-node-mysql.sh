@@ -23,9 +23,9 @@ redi_is_ipv4 "$NODE_IP" || {
   exit 1
 }
 
-ROOT_PASS="${MYSQL_ROOT_PASSWORD:-}"
+ROOT_PASS="${MYSQL_ROOT_PASSWORD:-${MYSQL_ROOT_PASS:-}}"
 if [[ -z "$ROOT_PASS" ]]; then
-  echo "请设置环境变量 MYSQL_ROOT_PASSWORD" >&2
+  echo "请设置环境变量 MYSQL_ROOT_PASSWORD（或 vars.env 中的 MYSQL_ROOT_PASS）" >&2
   exit 1
 fi
 

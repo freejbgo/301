@@ -187,4 +187,37 @@ class Http01PropagationWaiterTest extends TestCase
 
         app(Http01PropagationWaiter::class)->wait('no-sync.example', 'tok', 'body', 0);
     }
+
+    public function test_wait_does_not_follow_http_redirect_on_probe(): void
+    {
+        $domain = 'redirect-probe.example';
+        $token = 'probe-token';
+        $body = 'challenge-body';
+
+        \DB::table('redi_nodes')->insert([
+            'enabled' => true,
+            'last_heartbeat_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \DB::table('redi_acme_challenge_node_sync')->insert([
+            'node_id' => 1,
+            'domain_name' => $domain,
+            'synced_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Http::fake([
+            'http://'.$domain.'/.well-known/acme-challenge/'.$token => Http::response('', 302, [
+                'Location' => 'http://127.0.0.1/evil',
+            ]),
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('HTTP-01 未在');
+
+        app(Http01PropagationWaiter::class)->wait($domain, $token, $body, 0);
+    }
 }

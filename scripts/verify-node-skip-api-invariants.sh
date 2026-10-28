@@ -21,6 +21,7 @@ grep -q 'host.AcmeHostKey' "$API" || fail "GetSkipUrl must use AcmeHostKey"
 grep -q 'redi_node_bump_skip' "$API" || fail "GetSkipUrl must CALL redi_node_bump_skip"
 grep -q 'mysqlconnect.Reconnect' "$API" || fail "GetSkipUrl must reconnect on DB error"
 grep -q 'TestGetSkipUrlRejectsInvalidHostWithoutDb' "$TEST" || fail "api tests must cover invalid hosts"
-grep -q 'redi_node_bump_skip' "$PROC" || fail "procedure sync must cover bump_skip"
+grep -q 'CHAR_LENGTH(TRIM(v_skip))' "${REPO_ROOT}/db/redi_admin.sql" \
+  || fail "redi_node_bump_skip must only bump for non-empty http(s) skip_url"
 
 echo "verify-node-skip-api-invariants: OK"

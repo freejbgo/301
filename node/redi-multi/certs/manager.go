@@ -17,15 +17,21 @@ type Entry struct {
 }
 
 var (
-	mu      sync.RWMutex
-	entries = map[string]Entry{}
-	byID    = map[int]Entry{}
+	mu           sync.RWMutex
+	entries      = map[string]Entry{}
+	byID         = map[int]Entry{}
+	parsedByCert = map[int]*tls.Certificate{}
 )
+
+func clearParsedCacheLocked() {
+	parsedByCert = map[int]*tls.Certificate{}
+}
 
 func ReplaceAll(list []Entry) {
 	mu.Lock()
 	entries = map[string]Entry{}
 	byID = map[int]Entry{}
+	clearParsedCacheLocked()
 	upsertIntoMaps(entries, byID, list)
 	mu.Unlock()
 }
@@ -34,6 +40,7 @@ func ReplaceAll(list []Entry) {
 func UpsertMany(list []Entry) {
 	mu.Lock()
 	upsertIntoMaps(entries, byID, list)
+	clearParsedCacheLocked()
 	mu.Unlock()
 }
 
@@ -57,6 +64,7 @@ func SyncFromMaster(valid []Entry, remoteIDs []int) {
 		}
 	}
 	upsertIntoMaps(entries, byID, valid)
+	clearParsedCacheLocked()
 	mu.Unlock()
 }
 
@@ -98,15 +106,33 @@ func GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	}
 	mu.RLock()
 	e, ok := entries[host]
-	mu.RUnlock()
 	if !ok {
+		mu.RUnlock()
 		return nil, fmt.Errorf("no certificate for %s", host)
 	}
-	cert, err := tls.X509KeyPair(e.Certificate, e.PrivateKey)
+	if cached, hit := parsedByCert[e.CertID]; hit {
+		mu.RUnlock()
+		return cached, nil
+	}
+	certPEM := append([]byte(nil), e.Certificate...)
+	keyPEM := append([]byte(nil), e.PrivateKey...)
+	certID := e.CertID
+	mu.RUnlock()
+
+	cert, err := tls.X509KeyPair(certPEM, keyPEM)
 	if err != nil {
 		return nil, err
 	}
-	return &cert, nil
+
+	mu.Lock()
+	if cached, hit := parsedByCert[certID]; hit {
+		mu.Unlock()
+		return cached, nil
+	}
+	parsed := cert
+	parsedByCert[certID] = &parsed
+	mu.Unlock()
+	return &parsed, nil
 }
 
 func InstallEntry(e Entry) error {
@@ -126,7 +152,7 @@ func InstallEntry(e Entry) error {
 	}
 	entries[d] = e
 	byID[e.CertID] = e
+	delete(parsedByCert, e.CertID)
 	mu.Unlock()
 	return nil
 }
-

@@ -156,6 +156,24 @@ redi_ensure_lagran_enabled "${APP}/config.json" || die "无法将 config.json �
 
 setcap cap_net_admin+ep "${APP}/bin/redi-multi"
 
+step "测试到主控数据库的连接"
+db_cnf=$(mktemp)
+chmod 600 "$db_cnf"
+cat > "$db_cnf" <<EOF
+[client]
+host=${MASTER_IP}
+user=redi_node
+password=${DB_PASS}
+database=redi_admin
+EOF
+if mysql --defaults-extra-file="$db_cnf" -e "CALL redi_node_bump_skip('__redi_deploy_smoke__')" >/dev/null; then
+  echo "数据库连接正常（redi_node EXECUTE redi_node_bump_skip）"
+else
+  rm -f "$db_cnf"
+  die "连不上 ${MASTER_IP} 或 redi_node 无 EXECUTE 权限。请先在主控：NODE_IPS 含本机公网 IP 后 deploy-master.sh 或 grant-nodes-from-vars.sh（或 grant-node-mysql.sh + firewalld-allow），并放行云安全组 3306"
+fi
+rm -f "$db_cnf"
+
 cat > /etc/systemd/system/redi-multi.service <<EOF
 [Unit]
 Description=301 redirect node (redi-multi)
@@ -185,6 +203,7 @@ for _ in 1 2 3 4 5 6 7 8; do
 done
 if [[ "$active" != 1 ]]; then
   systemctl status redi-multi --no-pager || true
+  systemctl stop redi-multi 2>/dev/null || true
   die "redi-multi 没有保持运行。80 或 443 可能已被占用"
 fi
 
@@ -205,28 +224,10 @@ if redi_lagran_expected_enabled; then
   if journalctl -u redi-multi -n 40 --no-pager 2>/dev/null | grep -q '\[lagran\] disabled'; then
     echo "警告: 日志含 [lagran] disabled，请检查 REDI_LAGRAN_DISABLED 与 lagran.enabled"
   fi
-  if journalctl -u redi-multi -n 80 --no-pager 2>/dev/null | grep -q 'iptables OUTPUT rules were not installed'; then
-    echo "警告: lagran NFQUEUE 已启动但 OUTPUT 规则未写入，请检查 cap_net_admin / root 与 journalctl -u redi-multi"
+  if journalctl -u redi-multi -n 80 --no-pager 2>/dev/null | grep -qE 'iptables OUTPUT rules were not installed|aborting lagran'; then
+    echo "警告: lagran 未安装 OUTPUT 规则或已中止启动，请检查 cap_net_admin / root 与 journalctl -u redi-multi"
   fi
 fi
-
-step "测试到主控数据库的连接"
-db_cnf=$(mktemp)
-chmod 600 "$db_cnf"
-cat > "$db_cnf" <<EOF
-[client]
-host=${MASTER_IP}
-user=redi_node
-password=${DB_PASS}
-database=redi_admin
-EOF
-if mysql --defaults-extra-file="$db_cnf" -e "CALL redi_node_bump_skip('__redi_deploy_smoke__')" >/dev/null; then
-  echo "数据库连接正常（redi_node EXECUTE redi_node_bump_skip）"
-else
-  rm -f "$db_cnf"
-  die "连不上 ${MASTER_IP} 或 redi_node 无 EXECUTE 权限。请先在主控：NODE_IPS 含本机公网 IP 后 deploy-master.sh 或 grant-nodes-from-vars.sh（或 grant-node-mysql.sh + firewalld-allow），并放行云安全组 3306"
-fi
-rm -f "$db_cnf"
 
 echo
 echo "节点已安装到 ${APP}"

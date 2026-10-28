@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Support\OpsDisplaySanitizer;
 use App\Support\RediErrorMessage;
+use App\Support\WebhookUrlGuard;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -36,7 +37,12 @@ class RediOpsWebhook
             return '';
         }
 
-        return trim($raw);
+        $url = trim($raw);
+        if (! WebhookUrlGuard::isSafeOutboundWebhookUrl($url)) {
+            return '';
+        }
+
+        return $url;
     }
 
     /**
