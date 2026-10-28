@@ -226,12 +226,20 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 通过 | 证书批量 | 20s 错峰 + 全局 ACME 锁未动；筛选/勾选 `truncated` 叠加逻辑正确（筛选已 cap 500 时 dispatch 侧 truncated 通常为 0） |
 | 通过 | 审计覆盖 | 域名/分组/节点勾选批量、批量修改、按筛选五类动作（含 cert/redeploy）成功即写 `admin_batch` |
 | 通过 | 审计安全 | 不记 Token/筛选值；勾选模式有 `id_sample`（≤25） |
-| 低风险 | 批量修改 `skipped` | 仍按「字段操作」累加，同一域名多字段无变更时可能大于域名数 |
+| 已修 | 批量修改 `skipped` | §15：`skipped_ids` 去重，已变更域名不计入跳过 |
 | 低风险 | 按筛选审计 | 无 `id_sample`，仅 `filter_keys` + 条数；追溯依赖当时列表筛选条件 |
-| 低风险 | 未覆盖 | **批量添加域名**、分组行内 **按组改跳转** 未写审计（非本次勾选/筛选批量路径） |
+| 已修 | 批量添加域名审计 | §15：`batch_create`；分组行内 **按组改跳转** 仍未覆盖 |
 | 待 CI | 单测 | 云环境无 PHP；合并前跑全量 `phpunit`（含 `AdminBatchOperationAuditTest`） |
 
 **合并建议**：无阻塞；合并后抽一条勾选批量与一条按筛选批量，确认 `storage/logs/admin-batch.log` 有对应记录。
+
+## 15. 批量修改 skipped + 批量添加审计
+
+| 项 | 处理 |
+|----|------|
+| `applyEditsOwned` `skipped` | 各字段 `skipped_ids` 合并去重，并减去已变更域名 |
+| 单测 | `test_apply_edits_skipped_counts_unique_domains` |
+| 批量添加域名 | `BatchCreateDomains` → `auditBatchCreateDomains`（`action=batch_create`，不记录 lines 正文） |
 
 ---
 
