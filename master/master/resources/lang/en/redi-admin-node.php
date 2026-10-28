@@ -38,6 +38,40 @@ return [
             'error_not_found' => 'Node not found',
             'success' => 'New token generated (full value shown once; set REDI_NODE_TOKEN on the node): :masked',
         ],
+        'batch_enable' => [
+            'title' => 'Batch enable',
+            'error_none' => 'No nodes to enable',
+            'success' => 'Enabled :count node(s)',
+        ],
+        'batch_disable' => [
+            'title' => 'Batch disable',
+            'confirm' => 'Disabling cancels in-flight cert deploy work on those nodes. Continue?',
+            'error_none' => 'No nodes to disable',
+            'success' => 'Disabled :count node(s)',
+        ],
+        'batch_requeue_failed' => [
+            'title' => 'Batch retry failed certs',
+            'confirm' => 'Mark failed deployments on selected nodes as pending. Continue?',
+            'error_none' => 'No failed deployments to requeue on selected nodes',
+            'success' => 'Requeued :count failed deployment(s)',
+        ],
+        'batch_rotate_token' => [
+            'title' => 'Batch rotate tokens',
+            'confirm' => 'Up to :max nodes; old tokens stop immediately. Plaintext tokens appear in the success message. Continue?',
+            'error_none' => 'No nodes to process',
+            'success' => 'New tokens for :count node(s) (set REDI_NODE_TOKEN on each node):',
+        ],
+        'batch_common' => [
+            'skipped' => ' (skipped :count unchanged)',
+            'skipped_nodes' => ' (:count node(s) had nothing to requeue)',
+        ],
+    ],
+    'batch_mutator' => [
+        'errors' => [
+            'no_nodes' => 'No nodes to process',
+            'token_cap' => 'Batch token rotate is limited to :max nodes',
+            'requeue_empty' => ':label: no failed deployments',
+        ],
     ],
     'form' => [
         'fields' => [

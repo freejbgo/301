@@ -263,6 +263,42 @@ class DomainBatchMutator
      * @param  array<int, int|string>  $domainIds
      * @return array{updated: int, skipped: int, errors: string[]}
      */
+    /**
+     * @param  array<int, int|string>  $domainIds
+     * @return array{updated: int, skipped: int, errors: string[]}
+     */
+    public function deleteOwned(
+        array $domainIds,
+        int $sessionAdminId,
+        ?bool $isPlatformAdministrator = null
+    ): array {
+        $result = ['updated' => 0, 'skipped' => 0, 'errors' => []];
+
+        $ids = $this->normalizeOwnedIds($domainIds, $sessionAdminId, $isPlatformAdministrator);
+        if ($ids === []) {
+            $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.no_domains');
+
+            return $result;
+        }
+
+        $domains = RediAdminDomain::query()->whereIn('id', $ids)->orderBy('id')->get();
+
+        foreach ($domains as $domain) {
+            $label = OpsDisplaySanitizer::field($domain->original_url, '—', 253);
+            try {
+                $domain->delete();
+                $result['updated']++;
+            } catch (\Throwable $e) {
+                $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.row_delete', [
+                    'label' => $label,
+                    'reason' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $result;
+    }
+
     public function applyEditsOwned(
         array $domainIds,
         int $sessionAdminId,

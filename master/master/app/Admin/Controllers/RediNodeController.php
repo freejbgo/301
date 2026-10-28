@@ -2,6 +2,10 @@
 
 namespace App\Admin\Controllers;
 
+use App\Admin\Actions\Grid\BatchDisableNodes;
+use App\Admin\Actions\Grid\BatchEnableNodes;
+use App\Admin\Actions\Grid\BatchRequeueNodeFailedCerts;
+use App\Admin\Actions\Grid\BatchRotateNodeTokens;
 use App\Admin\Actions\Grid\RequeueNodeFailedCerts;
 use App\Admin\Actions\Grid\RotateNodeToken;
 use App\Admin\Concerns\EnsuresAdministrator;
@@ -107,6 +111,13 @@ class RediNodeController extends AdminController
                     .'<input type="hidden" name="_redirect" value="'.e(admin_base_path('nodes')).'">'
                     .'<button type="submit" class="btn btn-warning btn-sm">'.e(admin_trans_label('requeue_btn')).'</button></form>'
                 );
+            });
+
+            $grid->batchActions(function ($batch) {
+                $batch->add(new BatchEnableNodes());
+                $batch->add(new BatchDisableNodes());
+                $batch->add(new BatchRequeueNodeFailedCerts());
+                $batch->add(new BatchRotateNodeTokens());
             });
 
             $grid->disableViewButton();

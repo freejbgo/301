@@ -15,6 +15,7 @@ return [
         'expired'            => '已过期',
         'expiring_soon'      => '即将到期',
         'batch_add_domains'  => '批量添加域名',
+        'batch_filter'       => '按筛选批量操作',
         'copy_cname_success' => '已复制 CNAME 目标',
         'onboarding_admin_create' => '请先选择<strong>所属租户的分组</strong>并保存。保存后在列表「CNAME 目标」列查看该租户的边缘域名。',
         'cname_hint_admin'   => '域名所属租户账号下所有域名共用此 CNAME 目标（改分组迁户后以保存结果为准）',
@@ -107,6 +108,13 @@ return [
             'success' => '已更新 :count 个域名',
             'error_all' => '未能更新任何域名',
         ],
+        'batch_delete' => [
+            'title' => '批量删除',
+            'confirm' => '将永久删除选中域名及关联证书记录，不可恢复。继续？',
+            'error_none' => '没有可删除的域名',
+            'error_all' => '未能删除任何域名',
+            'success' => '已删除 :count 个域名',
+        ],
         'batch_mutator' => [
             'skipped_suffix' => '（跳过 :count 个无需变更）',
             'partial_errors' => '另有 :count 条未成功：',
@@ -142,6 +150,41 @@ return [
             'row_save' => ':label：:reason',
             'row_group_owner' => ':label：目标分组与域名所属账号不一致',
             'row_force_https' => ':label：证书尚未生效，不能开启强制 HTTPS',
+            'row_delete' => ':label：:reason',
+        ],
+    ],
+    'batch_filter' => [
+        'fields' => [
+            'action' => '操作',
+        ],
+        'help' => [
+            'action' => '对当前列表筛选条件下最多 :max 条域名执行（与导出 CSV 使用相同筛选；请先点「搜索」再打开本弹窗）',
+        ],
+        'actions' => [
+            'apply_cert' => '批量申请证书',
+            'enable' => '批量启用',
+            'disable' => '批量停用',
+            'delete' => '批量删除',
+        ],
+        'success' => [
+            'apply_cert' => '已将 :count 个域名加入证书队列（筛选上限 :cap 条）',
+            'enable' => '已启用 :count 个域名（筛选上限 :cap 条）',
+            'disable' => '已停用 :count 个域名（筛选上限 :cap 条）',
+            'delete' => '已删除 :count 个域名（筛选上限 :cap 条）',
+        ],
+        'error_none' => [
+            'enable' => '筛选结果中没有可启用的域名',
+            'disable' => '筛选结果中没有可停用的域名',
+            'delete' => '筛选结果中没有可删除的域名',
+        ],
+        'error_all' => [
+            'enable' => '筛选结果中的域名均未能启用',
+            'disable' => '筛选结果中的域名均未能停用',
+            'delete' => '筛选结果中的域名均未能删除',
+        ],
+        'errors' => [
+            'action_invalid' => '无效操作',
+            'no_match' => '当前筛选下没有匹配的域名',
         ],
     ],
     'export' => [

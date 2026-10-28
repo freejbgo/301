@@ -25,6 +25,37 @@ return [
         'owner_invalid'      => '请选择有效的租户账号',
         'owner_not_tenant'   => '不能将分组挂在超级管理员账号下',
     ],
+    'actions' => [
+        'batch_enable' => [
+            'title' => '批量启用',
+            'error_none' => '没有可启用的分组',
+            'success' => '已启用 :count 个分组',
+        ],
+        'batch_disable' => [
+            'title' => '批量停用',
+            'confirm' => '停用后新建域名时无法选择这些分组。继续？',
+            'error_none' => '没有可停用的分组',
+            'success' => '已停用 :count 个分组',
+        ],
+        'batch_delete' => [
+            'title' => '批量删除',
+            'confirm' => '仅可删除无域名的空分组。继续？',
+            'error_none' => '没有可删除的分组（或分组下仍有域名）',
+            'success' => '已删除 :count 个分组',
+        ],
+        'batch_common' => [
+            'skipped' => '（跳过 :count 个无需变更）',
+            'partial_errors' => '另有 :count 条未成功',
+        ],
+    ],
+    'batch_mutator' => [
+        'errors' => [
+            'status_invalid' => '状态无效',
+            'no_groups' => '没有可操作的分组',
+            'row_save' => ':label：:reason',
+            'row_delete' => ':label：:reason',
+        ],
+    ],
     'url_set' => [
         'confirm_title'   => '您确定要提交表单吗',
         'confirm_content' => '将更新该分组内所有域名的跳转链接',

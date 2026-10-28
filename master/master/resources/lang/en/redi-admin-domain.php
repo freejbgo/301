@@ -15,6 +15,7 @@ return [
         'expired'            => 'Expired',
         'expiring_soon'      => 'Expiring soon',
         'batch_add_domains'  => 'Batch add domains',
+        'batch_filter'       => 'Batch by current filters',
         'copy_cname_success' => 'CNAME target copied',
         'onboarding_admin_create' => 'Select the <strong>tenant group</strong> and save first. After save, check the tenant edge hostname in the “CNAME target” column.',
         'cname_hint_admin'   => 'All domains under this tenant share one CNAME target (updates after group/tenant changes).',
@@ -107,6 +108,13 @@ return [
             'success' => 'Updated :count domain(s)',
             'error_all' => 'No domains were updated',
         ],
+        'batch_delete' => [
+            'title' => 'Batch delete',
+            'confirm' => 'Permanently delete selected domains and related certificate rows. Continue?',
+            'error_none' => 'No domains to delete',
+            'error_all' => 'No domains were deleted',
+            'success' => 'Deleted :count domain(s)',
+        ],
         'batch_mutator' => [
             'skipped_suffix' => ' (skipped :count unchanged)',
             'partial_errors' => ':count more failed:',
@@ -142,6 +150,39 @@ return [
             'row_save' => ':label: :reason',
             'row_group_owner' => ':label: target group belongs to another account',
             'row_force_https' => ':label: certificate not active; cannot enable force HTTPS',
+            'row_delete' => ':label: :reason',
+        ],
+    ],
+    'batch_filter' => [
+        'fields' => ['action' => 'Action'],
+        'help' => [
+            'action' => 'Apply to up to :max domains matching list filters (same as CSV export; click Search first, then open this dialog)',
+        ],
+        'actions' => [
+            'apply_cert' => 'Batch apply certificates',
+            'enable' => 'Batch enable',
+            'disable' => 'Batch disable',
+            'delete' => 'Batch delete',
+        ],
+        'success' => [
+            'apply_cert' => 'Queued :count domain(s) for certificates (filter cap :cap)',
+            'enable' => 'Enabled :count domain(s) (filter cap :cap)',
+            'disable' => 'Disabled :count domain(s) (filter cap :cap)',
+            'delete' => 'Deleted :count domain(s) (filter cap :cap)',
+        ],
+        'error_none' => [
+            'enable' => 'No domains to enable in filter results',
+            'disable' => 'No domains to disable in filter results',
+            'delete' => 'No domains to delete in filter results',
+        ],
+        'error_all' => [
+            'enable' => 'No domains could be enabled from filter results',
+            'disable' => 'No domains could be disabled from filter results',
+            'delete' => 'No domains could be deleted from filter results',
+        ],
+        'errors' => [
+            'action_invalid' => 'Invalid action',
+            'no_match' => 'No domains match the current filters',
         ],
     ],
     'export' => [

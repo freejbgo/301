@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Layout\Content;
 use App\Admin\Actions\Modal\BatchDomainModal;
+use App\Admin\Actions\Modal\BatchFilterDomainModal;
 use App\Models\RediDomainCert;
 use App\Services\DomainDnsPointingGuard;
 use App\Services\DomainOriginalUrlGuard;
@@ -26,6 +27,7 @@ use App\Admin\Actions\Grid\BatchApplyCertificate;
 use App\Admin\Actions\Grid\BatchDisableDomains;
 use App\Admin\Actions\Grid\BatchEditDomains;
 use App\Admin\Actions\Grid\BatchEnableDomains;
+use App\Admin\Actions\Grid\BatchDeleteDomains;
 use App\Admin\Actions\Grid\BatchRedeployCertificate;
 use App\Admin\Actions\Grid\RedeployCertificate;
 use App\Jobs\IssueDomainCertificateJob;
@@ -60,6 +62,7 @@ class RediAdminDomainController extends AdminController
             
             $grid->tools(function (Grid\Tools $tools) {
                 $tools->append(new BatchDomainModal());
+                $tools->append(new BatchFilterDomainModal());
                 $exportQuery = http_build_query(array_filter(
                     request()->only(['group_id', 'original_url', 'skip_url', 'status', 'cert_filter']),
                     function ($v) {
@@ -79,6 +82,7 @@ class RediAdminDomainController extends AdminController
                 $batch->add(new BatchEditDomains());
                 $batch->add(new BatchApplyCertificate());
                 $batch->add(new BatchRedeployCertificate());
+                $batch->add(new BatchDeleteDomains());
             });
 
             $grid->actions(function (Grid\Displayers\Actions $actions) {

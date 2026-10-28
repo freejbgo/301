@@ -131,6 +131,15 @@ class DomainBatchMutatorTest extends TestCase
         $this->assertSame(2, (int) RediAdminDomain::query()->find(1)->group_id);
     }
 
+    public function test_delete_owned_domain(): void
+    {
+        $mutator = new DomainBatchMutator();
+        $result = $mutator->deleteOwned([1], 10, false);
+
+        $this->assertSame(1, $result['updated']);
+        $this->assertNull(RediAdminDomain::query()->find(1));
+    }
+
     public function test_force_https_requires_active_cert(): void
     {
         $mutator = new DomainBatchMutator();

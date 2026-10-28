@@ -38,6 +38,40 @@ return [
             'error_not_found' => '节点不存在',
             'success' => '新 Token 已生成（完整串仅本次响应可见，请立即写入节点 REDI_NODE_TOKEN）：:masked',
         ],
+        'batch_enable' => [
+            'title' => '批量启用',
+            'error_none' => '没有可启用的节点',
+            'success' => '已启用 :count 个节点',
+        ],
+        'batch_disable' => [
+            'title' => '批量停用',
+            'confirm' => '停用后会取消该节点上的证书部署任务。继续？',
+            'error_none' => '没有可停用的节点',
+            'success' => '已停用 :count 个节点',
+        ],
+        'batch_requeue_failed' => [
+            'title' => '批量重试失败证书',
+            'confirm' => '将选中节点上 failed 部署改回 pending。继续？',
+            'error_none' => '所选节点均无失败部署可重试',
+            'success' => '已重新排队 :count 条失败部署',
+        ],
+        'batch_rotate_token' => [
+            'title' => '批量重置 Token',
+            'confirm' => '最多处理 :max 个节点；旧 Token 立即失效，成功消息中会列出明文 Token。继续？',
+            'error_none' => '没有可操作的节点',
+            'success' => '已为 :count 个节点生成新 Token（请立即写入各节点 REDI_NODE_TOKEN）：',
+        ],
+        'batch_common' => [
+            'skipped' => '（跳过 :count 个无需变更）',
+            'skipped_nodes' => '（:count 个节点无失败记录）',
+        ],
+    ],
+    'batch_mutator' => [
+        'errors' => [
+            'no_nodes' => '没有可操作的节点',
+            'token_cap' => '批量重置 Token 单次最多 :max 个节点',
+            'requeue_empty' => ':label：无 failed 部署',
+        ],
     ],
     'form' => [
         'fields' => [

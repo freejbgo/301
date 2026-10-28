@@ -38,6 +38,40 @@ return [
             'error_not_found' => '節點不存在',
             'success' => '新 Token 已生成（完整串僅本次響應可見，請立即寫入節點 REDI_NODE_TOKEN）：:masked',
         ],
+        'batch_enable' => [
+            'title' => '批量啟用',
+            'error_none' => '沒有可啟用的節點',
+            'success' => '已啟用 :count 個節點',
+        ],
+        'batch_disable' => [
+            'title' => '批量停用',
+            'confirm' => '停用後會取消該節點上的憑證部署任務。繼續？',
+            'error_none' => '沒有可停用的節點',
+            'success' => '已停用 :count 個節點',
+        ],
+        'batch_requeue_failed' => [
+            'title' => '批量重試失敗憑證',
+            'confirm' => '將選中節點上 failed 部署改回 pending。繼續？',
+            'error_none' => '所選節點均無失敗部署可重試',
+            'success' => '已重新排隊 :count 條失敗部署',
+        ],
+        'batch_rotate_token' => [
+            'title' => '批量重置 Token',
+            'confirm' => '最多處理 :max 個節點；舊 Token 立即失效，成功訊息中會列出明文 Token。繼續？',
+            'error_none' => '沒有可操作的節點',
+            'success' => '已為 :count 個節點生成新 Token（請立即寫入各節點 REDI_NODE_TOKEN）：',
+        ],
+        'batch_common' => [
+            'skipped' => '（跳過 :count 個無需變更）',
+            'skipped_nodes' => '（:count 個節點無失敗記錄）',
+        ],
+    ],
+    'batch_mutator' => [
+        'errors' => [
+            'no_nodes' => '沒有可操作的節點',
+            'token_cap' => '批量重置 Token 單次最多 :max 個節點',
+            'requeue_empty' => ':label：無 failed 部署',
+        ],
     ],
     'form' => [
         'fields' => [

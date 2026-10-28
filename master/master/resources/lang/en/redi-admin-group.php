@@ -25,6 +25,37 @@ return [
         'owner_invalid'      => 'Select a valid tenant account',
         'owner_not_tenant'   => 'Groups cannot be owned by the platform administrator account',
     ],
+    'actions' => [
+        'batch_enable' => [
+            'title' => 'Batch enable',
+            'error_none' => 'No groups to enable',
+            'success' => 'Enabled :count group(s)',
+        ],
+        'batch_disable' => [
+            'title' => 'Batch disable',
+            'confirm' => 'Disabled groups cannot be chosen when adding domains. Continue?',
+            'error_none' => 'No groups to disable',
+            'success' => 'Disabled :count group(s)',
+        ],
+        'batch_delete' => [
+            'title' => 'Batch delete',
+            'confirm' => 'Only empty groups (no domains) can be deleted. Continue?',
+            'error_none' => 'No groups deleted (groups may still contain domains)',
+            'success' => 'Deleted :count group(s)',
+        ],
+        'batch_common' => [
+            'skipped' => ' (skipped :count unchanged)',
+            'partial_errors' => ':count more failed',
+        ],
+    ],
+    'batch_mutator' => [
+        'errors' => [
+            'status_invalid' => 'Invalid status',
+            'no_groups' => 'No groups to process',
+            'row_save' => ':label: :reason',
+            'row_delete' => ':label: :reason',
+        ],
+    ],
     'url_set' => [
         'confirm_title'   => 'Submit this form?',
         'confirm_content' => 'Redirect URL will apply to all domains in this group.',

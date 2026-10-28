@@ -88,27 +88,7 @@ class DomainListCsvExporter
      */
     public static function filteredQuery(Request $request): Builder
     {
-        $query = RediAdminDomain::query()
-            ->with('certificate')
-            ->orderBy('id');
-
-        if ($request->filled('group_id')) {
-            $query->where('group_id', (int) $request->input('group_id'));
-        }
-        if ($request->filled('original_url')) {
-            $query->where('original_url', 'like', '%'.addcslashes((string) $request->input('original_url'), '%_\\').'%');
-        }
-        if ($request->filled('skip_url')) {
-            $query->where('skip_url', 'like', '%'.addcslashes((string) $request->input('skip_url'), '%_\\').'%');
-        }
-        if ($request->filled('status')) {
-            $query->where('status', (int) $request->input('status'));
-        }
-        if ($request->filled('cert_filter')) {
-            RediAdminDomain::applyCertificateListFilter($query, (string) $request->input('cert_filter'));
-        }
-
-        return $query;
+        return DomainListFilter::filteredQuery($request);
     }
 
     /**
