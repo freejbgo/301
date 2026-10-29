@@ -9,7 +9,7 @@
 #   4) sudo bash scripts/centos7/deploy-node.sh
 #
 # 发布包：vars.env 的 REDI_NODE_TAR（推荐，见 docs/RELEASE-PACKAGES.md），否则 node/redi-multi.tar.gz、/tmp/redi-multi.tar.gz。
-# 重复执行会按 vars.env 重写 env.sh，并更新 config.json 的 server_ip 和 default_redirect_url。
+# 重复执行会按 vars.env 重写 env.sh，并更新 config.json 的 server_ip（台账/验收）与 default_redirect_url。
 # 更新节点程序：开发机 build-release-tarballs.sh 或 build-node-tar.sh 后重跑本脚本（或替换 bin/redi-multi 并 systemctl restart redi-multi）。
 set -euo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
@@ -141,6 +141,7 @@ umask 077
     echo "REDI_MASTER_INSECURE=1"
   fi
   echo "REDI_NODE_TOKEN=${REDI_NODE_TOKEN}"
+  echo "REDI_CONFIG=${APP}/config.json"
 } > "${APP}/env.sh"
 chmod 600 "${APP}/env.sh"
 umask "$prev_umask"

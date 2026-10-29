@@ -212,7 +212,7 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 | `redi-multi` | `active` |
 | 监听 | **80、443** 由进程占用；**8080** 仅本机/内网，**安全组不要对公网开放 8080** |
 | firewalld | 仅 `ssh` `http` `https` |
-| `config.json` `server_ip` | 等于 `5.6.7.8` |
+| `config.json` `server_ip` | 等于 `5.6.7.8`（与后台节点 IP 一致，供对照；二进制不读） |
 | `lagran.enabled` | **true**（被干扰域名场景默认） |
 | `getcap` | 含 `cap_net_admin` |
 | lagran 日志 | 无长期 `[lagran] disabled`（`deploy-node.sh` 也会校验） |

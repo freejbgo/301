@@ -124,7 +124,7 @@ cd /opt/redi-multi/redi-multi
 cp -n config.json.example config.json
 ```
 
-`config.json` 里把 `server_ip` 改成这台机器的主公网 IPv4，`default_redirect_url` 改成未命中域名时的默认页。`addr` 保持 `0.0.0.0:80`，`tls_addr` 保持 `0.0.0.0:443`。
+`config.json`：把 `server_ip` 写成与后台节点主公网 IPv4 一致（**供验收对照，程序不读**），`default_redirect_url` 改成未命中域名时的默认页。`addr` 保持 `0.0.0.0:80`，`tls_addr` 保持 `0.0.0.0:443`，`api_listen` 保持 `127.0.0.1:8080`（勿绑 `0.0.0.0`）。
 
 环境文件路径要和 systemd 单元一致。CentOS 7 的 `EnvironmentFile` 不要写 `export`：
 

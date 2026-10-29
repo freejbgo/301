@@ -52,4 +52,5 @@ Cron、Webhook 与验收见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)�
 
 - 仅允许 `http` / `https`；拒绝字面私网/保留 IP、`localhost`、`.local` / `.internal` 等主机名。
 - 对域名会做 DNS 解析（A/AAAA）；**解析失败**、**无记录**，或 **任一记录指向私网/保留地址** 时 **不发送** POST（fail-closed，防 SSRF）。
-- 因此 Cron 里 `|| redi:ops-webhook` 可能因 URL 不合法而静默跳过；排障时检查 `.env` 中的 Webhook URL 是否为公网可解析主机，并见 [SECURITY.md](../SECURITY.md) 表格中的 Webhook 环境变量行。
+- 发送时对当时解析到的公网 IP 使用 **CURLOPT_RESOLVE** 固定连接（仍 POST 配置里的原 URL，TLS/SNI 正常；减轻 DNS rebinding）。见 [SECURITY.md](../SECURITY.md)。
+- 因此 Cron 里 `|| redi:ops-webhook` 可能因 URL 不合法而静默跳过；排障时检查 `.env` 中的 Webhook URL 是否为公网可解析主机。

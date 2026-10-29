@@ -12,6 +12,5 @@
     "ack": true,
     "psh_ack": true,
     "fin_ack": true
-  },
-  "redirector": {}
+  }
 }

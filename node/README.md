@@ -27,8 +27,11 @@
 | `REDI_AGENT_EMPTY_CERT_CLEAR_AFTER` | 可选，默认 `3`；主控连续空证书列表 N 次后才清空本机 TLS 内存（`1` = 立即清空） |
 | `REDI_AGENT_EMPTY_CHALLENGE_CLEAR_AFTER` | 可选，默认 `3`；主控连续空 ACME 挑战列表 N 次后才清空本地挑战 |
 | `REDI_AGENT_EMPTY_RULES_CLEAR_AFTER` | 可选，默认 `3`；主控连续空 redirect-rules N 次后才清空 force_https 映射 |
+| `REDI_CONFIG` | 可选，`config.json` 绝对路径（默认进程工作目录下的 `config.json`；systemd 已设 `WorkingDirectory` 时一般不必设） |
+| `REDI_API_LISTEN_INSECURE` | 可选，设为 `1` 才允许 `api_listen` 绑定非 loopback（**生产禁止**；`/api.js` 会触库） |
+| `REDI_DB_ALLOW_EMPTY_PASSWORD` | 可选，设为 `1` 才允许空 `REDI_DB_PASSWORD`（**仅 lab**） |
 
-`config.json` 里把 `server_ip` 改成这台机器的主公网 IPv4，`default_redirect_url` 改成未命中域名时的默认页。示例见 `redi-multi/config.json.example`。
+`config.json` 里的 **`server_ip`** 建议与后台「节点管理」主公网 IPv4、`vars.env` 的 `NODE_PUBLIC_IP` 一致，供验收脚本与运维对照；**二进制不读取该字段**，公网 IP 以主控后台为准。`default_redirect_url` 为未命中域名时的默认跳转。示例见 `redi-multi/config.json.example`。
 
 `debug` 须为 JSON **布尔值**（`true` / `false`），不能写 `"0"` / `"1"` 等字符串；类型错误时进程会在启动时 `log.Fatalf`（与 lagran 里部分字段的宽松解析不同）。
 
@@ -42,7 +45,7 @@
 |------|------|
 | `addr` | HTTP，默认 `0.0.0.0:80`（Linux 上已双栈）。可用 `REDI_HTTP_LISTEN` 覆盖 |
 | `tls_addr` | HTTPS，默认 `0.0.0.0:443`。`""` 或 JSON `null` 关闭 HTTPS |
-| `api_listen` | 默认 `127.0.0.1:8080`（仅本机调试 Echo）；生产跳转走 80/443 同源 `/api.js` |
+| `api_listen` | 默认 `127.0.0.1:8080`（仅本机 Echo）；生产跳转走 80/443 同源 `/api.js`。非 loopback 须显式 `REDI_API_LISTEN_INSECURE=1`（生产禁止） |
 | `lagran.port` | 出站 TCP 源端口，给 iptables `--sport` 用。字符串 `"80,443"` 或数字 `80` |
 | `lagran.enabled` | 默认 **true**；仅本地调试可 `REDI_LAGRAN_DISABLED=1` 或设为 false |
 
@@ -50,8 +53,8 @@ lagran 需要 root 或 `CAP_NET_ADMIN`（`deploy-node.sh` 会 `setcap`）。
 
 ## 跳转与产品行为
 
-- 正常跳转：**HTTP 200 + 页面内 JS**，不是业务层 301；**强制 HTTPS** 才在 TLS 层 **301**（见 [CONSOLE.md](../docs/CONSOLE.md) §8）。
-- 访客在 80/443 请求 `/api.js?d=...`；仅 **启用** 域名会增加 `skip_num`。强制 HTTPS 时 HTTP→HTTPS 本身不计数。
+- 正常跳转：**HTTP 200 + 页面内 JS**，不是业务层 301；**强制 HTTPS** 在节点 **已安装该域名 TLS 证书** 后才会对 HTTP **301** 到 HTTPS（见 [CONSOLE.md](../docs/CONSOLE.md) §8）。
+- 访客在 80/443 请求 `/api.js?d=...`（**须带非空 `d`**）；仅 **启用** 域名会增加 `skip_num`。强制 HTTPS 时 HTTP→HTTPS 本身不计数。
 - `/c.js`、`/api.js` 在 80/443 与 8080 均有 IP 限速；`/api.js` 另有按域名限速（见 [SECURITY.md](../SECURITY.md)）。
 
 ## 和主控的连接
