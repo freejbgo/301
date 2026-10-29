@@ -85,19 +85,18 @@ class RediOpsWebhook
             return false;
         }
 
-        $pathQuery = $pin['path'].$pin['query'];
-        $defaultPort = $pin['scheme'] === 'https' ? 443 : 80;
-        $portSuffix = $pin['port'] === $defaultPort ? '' : ':'.$pin['port'];
-
         try {
             foreach ($pin['ips'] as $ip) {
-                $bracketIp = str_contains($ip, ':') ? '['.$ip.']' : $ip;
-                $targetUrl = $pin['scheme'].'://'.$bracketIp.$portSuffix.$pathQuery;
+                $resolveEntry = self::curlResolveEntry($pin['host'], $pin['port'], $ip);
                 $response = Http::timeout(10)
                     ->acceptJson()
-                    ->withOptions(['allow_redirects' => false])
-                    ->withHeaders(['Host' => $pin['host']])
-                    ->post($targetUrl, $payload);
+                    ->withOptions([
+                        'allow_redirects' => false,
+                        'curl' => [
+                            CURLOPT_RESOLVE => [$resolveEntry],
+                        ],
+                    ])
+                    ->post($url, $payload);
 
                 if ($response->successful()) {
                     return true;
@@ -116,6 +115,11 @@ class RediOpsWebhook
 
             return false;
         }
+    }
+
+    protected static function curlResolveEntry(string $host, int $port, string $ip): string
+    {
+        return $host.':'.$port.':'.$ip;
     }
 
     public static function notifyTaskFailure(string $task, string $message = ''): bool

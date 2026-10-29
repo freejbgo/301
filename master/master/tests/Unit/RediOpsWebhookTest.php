@@ -21,10 +21,8 @@ class RediOpsWebhookTest extends TestCase
 
         Http::assertSent(function ($request) {
             $data = $request->data();
-            $hostHeader = $request->header('Host')[0] ?? '';
 
-            return $hostHeader === 'example.com'
-                && str_contains($request->url(), '/ops')
+            return str_contains($request->url(), 'https://example.com/ops')
                 && ($data['source'] ?? '') === 'redi-cron'
                 && ($data['task'] ?? '') === 'redi:renew-certificates';
         });

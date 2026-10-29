@@ -33,7 +33,7 @@ class RediHealthNotifierTest extends TestCase
         Http::assertSent(function ($request) {
             $hostHeader = $request->header('Host')[0] ?? '';
 
-            return $hostHeader === 'example.com' && str_contains($request->url(), '/health');
+            return str_contains($request->url(), 'https://example.com/health');
         });
     }
 
@@ -95,8 +95,7 @@ class RediHealthNotifierTest extends TestCase
             $data = $request->data();
             $hostHeader = $request->header('Host')[0] ?? '';
 
-            return $hostHeader === 'example.com'
-                && str_contains($request->url(), '/health')
+            return str_contains($request->url(), 'https://example.com/health')
                 && ($data['source'] ?? '') === 'redi-health'
                 && ($data['ok'] ?? true) === false
                 && str_contains((string) ($data['issues'][0]['message'] ?? ''), 'a.com');

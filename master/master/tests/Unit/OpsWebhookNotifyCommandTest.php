@@ -39,8 +39,7 @@ class OpsWebhookNotifyCommandTest extends TestCase
         Http::assertSent(function ($request) {
             $hostHeader = $request->header('Host')[0] ?? '';
 
-            return $hostHeader === 'example.com'
-                && str_contains($request->url(), '/ops')
+            return str_contains($request->url(), 'https://example.com/ops')
                 && ($request->data()['task'] ?? '') === 'redi:prune-acme-challenges';
         });
     }
