@@ -3,6 +3,7 @@
 #
 # lagran 需要 root 或 CAP_NET_ADMIN。不需要时在 env.sh 设置 REDI_LAGRAN_DISABLED=1
 # （或 config.json 里 lagran.enabled=false），此时可评估用非 root 用户运行。
+# env.sh 中 REDI_CONFIG 指向 config.json；勿将 api_listen 绑到 0.0.0.0（见 DEPLOY-centos7.md）。
 
 [Unit]
 Description=301 redirect node (redi-multi)

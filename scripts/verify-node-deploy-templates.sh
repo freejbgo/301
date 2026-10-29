@@ -27,6 +27,7 @@ grep -q 'redi_node_bump_skip' "$DEPLOY" || fail "deploy-node: missing DB smoke C
 grep -q 'REDI_DB_USER=redi_node' "$DEPLOY" || fail "deploy-node: env.sh must use redi_node (not redi_admin)"
 grep -qE 'ldd.*bin/redi-multi' "$DEPLOY" || fail "deploy-node: must verify static binary (ldd check)"
 grep -q 'GLIBC' "$DEPLOY" || fail "deploy-node: must reject dynamic libc on CentOS 7"
+grep -q 'REDI_CONFIG=\${APP}/config.json' "$DEPLOY" || fail "deploy-node: env.sh must set REDI_CONFIG"
 grep -q 'REDI_MASTER_INSECURE' "$DEPLOY" || fail "deploy-node: must document REDI_MASTER_INSECURE lab path"
 grep -q '必须使用 https://' "$DEPLOY" || fail "deploy-node: must require https for REDI_MASTER_URL by default"
 
@@ -56,7 +57,7 @@ grep -q 'redi_ensure_lagran_enabled' "$LIB" || fail "lib.sh: missing redi_ensure
 # env.example 与 deploy 写入的键对齐
 ENV_EX="${REPO_ROOT}/node/redi-multi/env.example"
 [[ -f "$ENV_EX" ]] || fail "missing node/redi-multi/env.example"
-for key in REDI_DB_HOST REDI_DB_USER REDI_DB_PASSWORD REDI_DB_NAME REDI_MASTER_URL REDI_NODE_TOKEN REDI_LAGRAN_DISABLED; do
+for key in REDI_DB_HOST REDI_DB_USER REDI_DB_PASSWORD REDI_DB_NAME REDI_MASTER_URL REDI_NODE_TOKEN REDI_LAGRAN_DISABLED REDI_CONFIG; do
   grep -q "$key" "$ENV_EX" || fail "env.example: missing ${key}"
 done
 for empty_key in REDI_AGENT_EMPTY_CERT_CLEAR_AFTER REDI_AGENT_EMPTY_CHALLENGE_CLEAR_AFTER REDI_AGENT_EMPTY_RULES_CLEAR_AFTER; do

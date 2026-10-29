@@ -76,7 +76,7 @@ sudo bash scripts/centos7/deploy-master.sh
 sudo bash scripts/centos7/deploy-node.sh
 ```
 
-脚本会安装 firewalld、iptables、`setcap` 和 MySQL 客户端，尝试加载 `nfnetlink_queue`（编进内核时加载失败可以忽略），解压发布包（**不含**打包进 tar 的本机 `config.json`，从 `config.json.example` 生成），写 `env.sh`（没有 `export`），更新 `config.json` 的 `server_ip` / `default_redirect_url`、确保 **lagran 开启**，执行 `setcap cap_net_admin+ep`，启动后在校验 **cap_net_admin** 与 lagran 日志。防火墙只开放 22、80、443，不开放 8080。
+脚本会安装 firewalld、iptables、`setcap` 和 MySQL 客户端，尝试加载 `nfnetlink_queue`（编进内核时加载失败可以忽略），解压发布包（**不含**打包进 tar 的本机 `config.json`，从 `config.json.example` 生成），写 `env.sh`（没有 `export`，含 `REDI_CONFIG` 指向 `config.json`），更新 `config.json` 的 `server_ip`（与 `NODE_PUBLIC_IP` 一致，供验收；**二进制不读**）/ `default_redirect_url`、确保 **lagran 开启**，执行 `setcap cap_net_admin+ep`，启动后在校验 **cap_net_admin** 与 lagran 日志。防火墙只开放 22、80、443，不开放 8080。
 
 Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证书同步也不会做。补上 Token 后再执行一次脚本。
 
@@ -155,6 +155,11 @@ sudo systemctl start redi-multi
 | `REDI_AGENT_EMPTY_CERT_CLEAR_AFTER` | 主控连续返回空证书列表多少次后才清空本机 TLS 内存（默认 **3**；`1` = 立即清空，与旧版相同） |
 | `REDI_AGENT_EMPTY_CHALLENGE_CLEAR_AFTER` | 主控连续返回空 ACME 挑战列表多少次后才清空本机挑战（默认 **3**） |
 | `REDI_AGENT_EMPTY_RULES_CLEAR_AFTER` | 主控连续返回空 redirect-rules 多少次后才清空本机 force_https 映射（默认 **3**） |
+| `REDI_CONFIG` | `config.json` 绝对路径（`deploy-node.sh` 会写入；一般不必改） |
+| `REDI_API_LISTEN_INSECURE` | 设为 `1` 才允许 `api_listen` 非 loopback（**生产禁止**） |
+| `REDI_DB_ALLOW_EMPTY_PASSWORD` | 设为 `1` 才允许空 DB 密码（**仅 lab**） |
+
+节点 `/api.js` 要求 **非空** `d` 参数；空参数返回 `400`。API 模式 DNS 同步在写入厂商前会校验全部租户 `edge_fqdn` 落在当前 `edge_zone` 下（见 [CONSOLE.md](docs/CONSOLE.md) §2）。
 
 节点 `deploy-node.sh` 的 MySQL 冒烟会读取 `vars.env` 中的 **`REDI_DB_TLS`**（`redi_mysql_tls_args_from_env`），与 `env.sh` 写入值一致。
 
@@ -221,7 +226,7 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health --json
 - 只有把 `addr` 写成**某一个具体 IPv4**（不是 `0.0.0.0`）时，才会真的只听 IPv4；改回 `0.0.0.0` **不会**关掉 IPv6。
 - 若仍要手改通配监听，写成 **`[::]:80`** / **`[::]:443`**（带方括号），**不要**写成 `::80` / `::443`（lagran 端口会解析错）。
 - **不要**同时绑定 `0.0.0.0:80` 与 `[::]:80`（443 同理）。
-- **`api_listen` 保持 `127.0.0.1:8080`**，不要改成 `[::]` 或 `0.0.0.0`。
+- **`api_listen` 保持 `127.0.0.1:8080`**，不要改成 `[::]` 或 `0.0.0.0`（非 loopback 须进程环境 `REDI_API_LISTEN_INSECURE=1`，生产禁止）。
 
 ### lagran 与防火墙
 
