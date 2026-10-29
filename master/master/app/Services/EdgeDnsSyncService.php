@@ -70,6 +70,8 @@ class EdgeDnsSyncService
             throw new RuntimeException(RediErrorMessage::get('dns.no_enabled_ipv4'));
         }
 
+        $this->assertNoSkewedTenantEdges($edges, $zone, $zoneLabel);
+
         $provider = $providerOverride ?? DnsProviderFactory::make($platform);
         $provider->testConnection();
 
@@ -179,6 +181,38 @@ class EdgeDnsSyncService
         }
 
         RediDnsSyncLog::record('sync_pool_and_tenant_cname', 'ok', $logMessage);
+    }
+
+    /**
+     * @param  Collection<int, RediTenantEdge>  $edges
+     */
+    protected function assertNoSkewedTenantEdges(Collection $edges, string $zone, string $zoneLabel): void
+    {
+        $skipped = 0;
+        foreach ($edges as $edge) {
+            $fqdn = HostNameValidator::toCanonicalAscii((string) $edge->edge_fqdn);
+            if ($fqdn === '') {
+                continue;
+            }
+            if (! HostNameValidator::isValidHostLabel($fqdn) || ! Str::endsWith($fqdn, '.'.$zone)) {
+                $skipped++;
+                Log::warning('EdgeDnsSync: tenant edge FQDN not under edge_zone (pre-check)', [
+                    'edge_id' => $edge->id,
+                    'fqdn' => OpsDisplaySanitizer::field($fqdn, '', 253),
+                    'edge_zone' => OpsDisplaySanitizer::field($zone, '', 253),
+                ]);
+            }
+        }
+
+        if ($skipped > 0) {
+            throw new RuntimeException(
+                RediErrorMessage::get('dns.tenant_sync_aborted', [
+                    'count' => $skipped,
+                    'zone' => $zoneLabel,
+                    'hint' => RediErrorMessage::get('dns.pool_partial_hint_precheck'),
+                ])
+            );
+        }
     }
 
     protected function publishPoolAaaaEnabled(): bool

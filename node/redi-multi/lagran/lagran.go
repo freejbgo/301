@@ -21,6 +21,13 @@ const (
 	windowFa uint16 = 1
 )
 
+type queuePoolSpec struct {
+	label   string
+	from    int
+	to      int
+	boolKey string
+}
+
 func Run() {
 	if !Enabled() {
 		logrus.Warn("[lagran] disabled (REDI_LAGRAN_DISABLED or lagran.enabled=false)")
@@ -31,45 +38,39 @@ func Run() {
 		logrus.Error("[lagran] iptables OUTPUT rules were not installed; aborting lagran (check cap_net_admin / root)")
 		return
 	}
-	type queuePool struct {
-		label   string
-		from    int
-		to      int
-		boolKey string
-	}
-	specs := []queuePool{
+	specs := []queuePoolSpec{
 		{label: "p1", from: 1000, to: 1128, boolKey: "syn_ack"},
 		{label: "p2", from: 2000, to: 2128, boolKey: "ack"},
 		{label: "p3", from: 3000, to: 3128, boolKey: "psh_ack"},
 		{label: "p4", from: 4000, to: 4128, boolKey: "fin_ack"},
 	}
-	var pools []*ants.PoolWithFunc
+	active := make([]queuePoolSpec, 0, len(specs))
 	for _, spec := range specs {
-		if !config.LagranBool(spec.boolKey, true) {
-			continue
+		if config.LagranBool(spec.boolKey, true) {
+			active = append(active, spec)
 		}
+	}
+	pools := make([]*ants.PoolWithFunc, 0, len(active))
+	for _, spec := range active {
 		p, err := ants.NewPoolWithFunc(128, func(i interface{}) {
 			packetHandle(i.(int))
 		})
 		if err != nil {
-			logrus.Errorf("[lagran] %s pool: %v (aborting lagran startup; no iptables rules)", spec.label, err)
+			logrus.Errorf("[lagran] %s pool: %v (aborting lagran startup)", spec.label, err)
+			for _, prev := range pools {
+				prev.Release()
+			}
 			UnsetIptable(sport)
 			return
 		}
 		pools = append(pools, p)
 	}
-	poolIdx := 0
-	for _, spec := range specs {
-		if !config.LagranBool(spec.boolKey, true) {
-			continue
-		}
-		p := pools[poolIdx]
-		poolIdx++
+	for i, spec := range active {
+		p := pools[i]
 		logrus.Debugf("[lagran] Starting Task %s", spec.label)
-		for i := spec.from; i < spec.to; i++ {
-			_ = p.Invoke(i)
+		for q := spec.from; q < spec.to; q++ {
+			_ = p.Invoke(q)
 		}
-		// NFQUEUE handlers block for process lifetime; do not Release() when Run returns.
 	}
 }
 

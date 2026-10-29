@@ -48,7 +48,7 @@ class SafeRelativeRedirect
             return null;
         }
 
-        return $path;
+        return self::normalizeSafeRelativePath($path);
     }
 
     private static function containsUnsafeChars(string $value): bool
@@ -61,9 +61,28 @@ class SafeRelativeRedirect
 
     private static function isSafeRelativePath(string $path): bool
     {
-        return $path !== ''
-            && str_starts_with($path, '/')
-            && ! str_starts_with($path, '//')
-            && ! str_contains($path, '\\');
+        $normalized = self::normalizeSafeRelativePath($path);
+
+        return $normalized !== null;
+    }
+
+    private static function normalizeSafeRelativePath(string $path): ?string
+    {
+        if ($path === '' || ! str_starts_with($path, '/')) {
+            return null;
+        }
+        if (str_contains($path, '\\')) {
+            return null;
+        }
+        $decoded = rawurldecode($path);
+        if ($decoded === '' || ! str_starts_with($decoded, '/')
+            || str_starts_with($decoded, '//') || str_contains($decoded, '\\')) {
+            return null;
+        }
+        if (str_starts_with($path, '//')) {
+            return null;
+        }
+
+        return $path;
     }
 }

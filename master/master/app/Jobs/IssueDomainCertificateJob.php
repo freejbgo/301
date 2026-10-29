@@ -146,11 +146,12 @@ class IssueDomainCertificateJob implements ShouldQueue
                 $customerHost,
                 (string) $cert->domain_name,
             ]);
-            if ($stillValid && in_array($previousStatus, [
+            $keptOldCert = $stillValid && in_array($previousStatus, [
                 RediDomainCert::STATUS_ACTIVE,
                 RediDomainCert::STATUS_ISSUED,
                 RediDomainCert::STATUS_DEPLOYING,
-            ], true)) {
+            ], true);
+            if ($keptOldCert) {
                 $cert->status = $previousStatus;
                 RediCertLastError::applyRaw(
                     $cert,
@@ -166,7 +167,11 @@ class IssueDomainCertificateJob implements ShouldQueue
                 );
             }
             $cert->save();
-            throw $e;
+            if (! $keptOldCert) {
+                throw $e;
+            }
+
+            return;
         }
     }
 }

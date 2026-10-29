@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,7 +21,7 @@ func TestHandleApiJsEchoPathSingleGlobalRateCount(t *testing.T) {
 
 	ip := "203.0.113.21"
 	for i := 0; i < rateLimit; i++ {
-		req := httptest.NewRequest(http.MethodGet, "/api.js", nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api.js?d=host%d.test", i), nil)
 		req.RemoteAddr = ip + ":12345"
 		rec := httptest.NewRecorder()
 		e.ServeHTTP(rec, req)
@@ -28,7 +29,7 @@ func TestHandleApiJsEchoPathSingleGlobalRateCount(t *testing.T) {
 			t.Fatalf("request %d: unexpected 429 before global limit", i)
 		}
 	}
-	req := httptest.NewRequest(http.MethodGet, "/api.js", nil)
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api.js?d=host%d.test", rateLimit), nil)
 	req.RemoteAddr = ip + ":12345"
 	rec := httptest.NewRecorder()
 	e.ServeHTTP(rec, req)
@@ -77,7 +78,7 @@ func TestRateLimitMiddlewareBlocksBurst(t *testing.T) {
 
 	burst := rateLimit + 5
 	for i := 0; i < burst; i++ {
-		req := httptest.NewRequest(http.MethodGet, "/api.js", nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api.js?d=host%d.test", rateLimit), nil)
 		req.RemoteAddr = "203.0.113.10:12345"
 		rec := httptest.NewRecorder()
 		e.ServeHTTP(rec, req)

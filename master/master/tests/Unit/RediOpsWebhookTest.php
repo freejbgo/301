@@ -15,14 +15,16 @@ class RediOpsWebhookTest extends TestCase
             'redi.health_webhook_url' => '',
         ]);
 
-        Http::fake(['https://example.com/*' => Http::response(['ok' => true], 200)]);
+        Http::fake(fn () => Http::response(['ok' => true], 200));
 
         $this->assertTrue(RediOpsWebhook::notifyTaskFailure('redi:renew-certificates', 'boom'));
 
         Http::assertSent(function ($request) {
             $data = $request->data();
+            $hostHeader = $request->header('Host')[0] ?? '';
 
-            return $request->url() === 'https://example.com/ops'
+            return $hostHeader === 'example.com'
+                && str_contains($request->url(), '/ops')
                 && ($data['source'] ?? '') === 'redi-cron'
                 && ($data['task'] ?? '') === 'redi:renew-certificates';
         });
@@ -35,7 +37,7 @@ class RediOpsWebhookTest extends TestCase
             'redi.health_webhook_url' => 'https://example.com/health',
         ]);
 
-        Http::fake(['https://example.com/*' => Http::response([], 200)]);
+        Http::fake(fn () => Http::response([], 200));
 
         $this->assertTrue(RediOpsWebhook::notifyTaskFailure('redi:health'));
     }
@@ -43,7 +45,7 @@ class RediOpsWebhookTest extends TestCase
     public function test_notify_task_failure_strips_control_chars_from_task(): void
     {
         config(['redi.ops_webhook_url' => 'https://example.com/ops']);
-        Http::fake(['https://example.com/*' => Http::response([], 200)]);
+        Http::fake(fn () => Http::response([], 200));
 
         RediOpsWebhook::notifyTaskFailure("redi:renew\r\ncertificates", 'x');
 
@@ -58,7 +60,7 @@ class RediOpsWebhookTest extends TestCase
     {
         config(['redi.ops_webhook_url' => 'https://example.com/ops']);
 
-        Http::fake(['https://example.com/*' => Http::response([], 200)]);
+        Http::fake(fn () => Http::response([], 200));
 
         RediOpsWebhook::notifyTaskFailure('redi:prune-acme-challenges', "fail\r\nline");
 
@@ -109,7 +111,7 @@ class RediOpsWebhookTest extends TestCase
     public function test_post_sanitizes_issue_messages_in_payload(): void
     {
         config(['redi.health_webhook_url' => 'https://example.com/health']);
-        Http::fake(['https://example.com/*' => Http::response([], 200)]);
+        Http::fake(fn () => Http::response([], 200));
 
         RediOpsWebhook::post([
             'issues' => [
@@ -123,5 +125,4 @@ class RediOpsWebhookTest extends TestCase
             return ($issues[0]['message'] ?? '') === 'msg';
         });
     }
-
 }

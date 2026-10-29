@@ -235,12 +235,15 @@ class EdgeDnsSyncServiceTest extends TestCase
 
         $provider = new class implements DnsProviderInterface
         {
+            public int $poolCalls = 0;
+
             public function testConnection(): void
             {
             }
 
             public function upsertARecords(string $fqdn, array $ipv4): void
             {
+                $this->poolCalls++;
             }
 
             public function upsertCname(string $name, string $zone, string $targetFqdn): void
@@ -254,6 +257,8 @@ class EdgeDnsSyncServiceTest extends TestCase
         } catch (RuntimeException $e) {
             $this->assertStringContainsString('outside platform zone', $e->getMessage());
         }
+
+        $this->assertSame(0, $provider->poolCalls);
 
         $this->assertNull(\DB::table('redi_tenant_edge')->where('id', 1)->value('dns_synced_at'));
     }
@@ -490,7 +495,7 @@ class EdgeDnsSyncServiceTest extends TestCase
         $this->assertStringContainsString('AAAA x2', (string) $log);
     }
 
-    public function test_outside_zone_abort_mentions_aaaa_after_it_ran(): void
+    public function test_outside_zone_abort_before_pool_when_tenant_skew(): void
     {
         config(['redi.publish_pool_aaaa' => true]);
         \DB::table('redi_platform_dns')->insert([
@@ -519,9 +524,12 @@ class EdgeDnsSyncServiceTest extends TestCase
             app(EdgeDnsSyncService::class)->syncAll($provider);
             $this->fail('expected exception');
         } catch (RuntimeException $e) {
-            $this->assertStringContainsString('Pool A', $e->getMessage());
-            $this->assertStringContainsString('AAAA', $e->getMessage());
+            $this->assertStringContainsString('outside platform zone', $e->getMessage());
+            $this->assertStringContainsString('No vendor DNS changes were made', $e->getMessage());
         }
+
+        $this->assertSame(0, $provider->aCalls);
+        $this->assertSame(0, $provider->aaaaCalls);
     }
 
     private function seedPlatformAndNode(): void

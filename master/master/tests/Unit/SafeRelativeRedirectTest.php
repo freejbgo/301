@@ -81,6 +81,12 @@ class SafeRelativeRedirectTest extends TestCase
         $this->assertNull(SafeRelativeRedirect::normalizeForRedirect('https://master.example.com'));
     }
 
+    public function test_rejects_encoded_protocol_relative_path(): void
+    {
+        $this->assertFalse(SafeRelativeRedirect::isSafe('/%2f%2fevil.example/phish'));
+        $this->assertNull(SafeRelativeRedirect::normalizeForRedirect('/%2f%2fevil.example/phish'));
+    }
+
     public function test_accepts_same_host_absolute_url_with_trailing_slash_only(): void
     {
         config(['app.url' => 'https://master.example.com']);

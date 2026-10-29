@@ -32,7 +32,7 @@ func noteEmptyCertificateList() error {
 	thresh := emptyCertClearThreshold()
 	emptyCertMu.Unlock()
 	if streak < thresh {
-		return fmt.Errorf("empty certificate list from master (debounce %d/%d)", streak, thresh)
+		return fmt.Errorf("%w (%d/%d)", errEmptyListDebounce, streak, thresh)
 	}
 	emptyCertMu.Lock()
 	emptyCertStreak = 0

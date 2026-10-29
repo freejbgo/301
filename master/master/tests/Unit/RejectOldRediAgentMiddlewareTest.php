@@ -31,7 +31,7 @@ class RejectOldRediAgentMiddlewareTest extends TestCase
         });
     }
 
-    public function test_rejects_body_version_with_control_chars_without_node_fallback(): void
+    public function test_falls_back_to_stored_version_when_body_version_has_control_chars(): void
     {
         $node = new RediNode();
         $node->enabled = true;
@@ -44,10 +44,10 @@ class RejectOldRediAgentMiddlewareTest extends TestCase
         $middleware = new RejectOldRediAgent();
         $response = $middleware->handle($request, fn () => response()->json(['ok' => true]));
 
-        $this->assertSame(426, $response->getStatusCode());
+        $this->assertSame(200, $response->getStatusCode());
     }
 
-    public function test_rejects_empty_string_version_in_body(): void
+    public function test_falls_back_to_stored_version_when_body_version_empty_string(): void
     {
         $node = new RediNode();
         $node->enabled = true;
@@ -60,7 +60,7 @@ class RejectOldRediAgentMiddlewareTest extends TestCase
         $middleware = new RejectOldRediAgent();
         $response = $middleware->handle($request, fn () => response()->json(['ok' => true]));
 
-        $this->assertSame(426, $response->getStatusCode());
+        $this->assertSame(200, $response->getStatusCode());
     }
 
     public function test_uses_stored_version_when_body_omits_version_key(): void

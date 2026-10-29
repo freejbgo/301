@@ -126,7 +126,7 @@ class RediHealthCommandTest extends TestCase
     public function test_health_notify_exits_zero_when_webhook_delivered(): void
     {
         config(['redi.health_webhook_url' => 'https://example.com/health']);
-        Http::fake(['https://example.com/*' => Http::response([], 200)]);
+        Http::fake(fn () => Http::response([], 200));
 
         \DB::table('redi_nodes')->insert([
             'name' => 'stale',
@@ -143,7 +143,7 @@ class RediHealthCommandTest extends TestCase
     public function test_health_json_notify_exits_zero_when_webhook_delivered(): void
     {
         config(['redi.health_webhook_url' => 'https://example.com/health']);
-        Http::fake(['https://example.com/*' => Http::response([], 200)]);
+        Http::fake(fn () => Http::response([], 200));
 
         \DB::table('redi_nodes')->insert([
             'name' => 'stale',

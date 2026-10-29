@@ -99,4 +99,94 @@ class WebhookUrlGuard
 
         return true;
     }
+
+    /**
+     * Resolve hostname to public IPs for outbound webhook pinning (mitigate DNS rebinding).
+     *
+     * @return list<string>
+     */
+    public static function resolvePublicIpsForHost(string $host): array
+    {
+        $host = strtolower(trim($host));
+        if ($host === '' || ! self::isAllowedHostname($host)) {
+            return [];
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            if (filter_var(
+                $host,
+                FILTER_VALIDATE_IP,
+                FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+            ) === false) {
+                return [];
+            }
+
+            return [$host];
+        }
+
+        if (! function_exists('dns_get_record')) {
+            return [];
+        }
+
+        $records = @dns_get_record($host, DNS_A + DNS_AAAA);
+        if (! is_array($records) || $records === []) {
+            return [];
+        }
+
+        $ips = [];
+        foreach ($records as $rec) {
+            $ip = (string) ($rec['ip'] ?? $rec['ipv6'] ?? '');
+            if ($ip === '') {
+                continue;
+            }
+            if (filter_var(
+                $ip,
+                FILTER_VALIDATE_IP,
+                FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+            ) === false) {
+                return [];
+            }
+            $ips[] = $ip;
+        }
+
+        return array_values(array_unique($ips));
+    }
+
+    /**
+     * @return array{host: string, scheme: string, port: int, path: string, query: string, ips: list<string>}|null
+     */
+    public static function pinnedWebhookTarget(string $url): ?array
+    {
+        if (! self::isSafeOutboundWebhookUrl($url)) {
+            return null;
+        }
+
+        $parts = parse_url($url);
+        if (! is_array($parts)) {
+            return null;
+        }
+
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        $scheme = strtolower((string) ($parts['scheme'] ?? 'https'));
+        $port = (int) ($parts['port'] ?? ($scheme === 'https' ? 443 : 80));
+        $path = (string) ($parts['path'] ?? '/');
+        if ($path === '') {
+            $path = '/';
+        }
+        $query = isset($parts['query']) && $parts['query'] !== '' ? '?'.$parts['query'] : '';
+
+        $ips = self::resolvePublicIpsForHost($host);
+        if ($ips === []) {
+            return null;
+        }
+
+        return [
+            'host' => $host,
+            'scheme' => $scheme,
+            'port' => $port,
+            'path' => $path,
+            'query' => $query,
+            'ips' => $ips,
+        ];
+    }
 }

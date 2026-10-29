@@ -78,21 +78,39 @@ class RediOpsWebhook
 
         $logLabel = ($url === self::healthWebhookUrl()) ? 'redi health webhook' : 'redi ops webhook';
 
-        try {
-            $response = Http::timeout(10)
-                ->acceptJson()
-                ->post($url, $payload);
+        $pin = WebhookUrlGuard::pinnedWebhookTarget($url);
+        if ($pin === null) {
+            Log::warning($logLabel.' rejected: could not pin public IP for URL');
 
-            if (! $response->successful()) {
+            return false;
+        }
+
+        $pathQuery = $pin['path'].$pin['query'];
+        $defaultPort = $pin['scheme'] === 'https' ? 443 : 80;
+        $portSuffix = $pin['port'] === $defaultPort ? '' : ':'.$pin['port'];
+
+        try {
+            foreach ($pin['ips'] as $ip) {
+                $bracketIp = str_contains($ip, ':') ? '['.$ip.']' : $ip;
+                $targetUrl = $pin['scheme'].'://'.$bracketIp.$portSuffix.$pathQuery;
+                $response = Http::timeout(10)
+                    ->acceptJson()
+                    ->withOptions(['allow_redirects' => false])
+                    ->withHeaders(['Host' => $pin['host']])
+                    ->post($targetUrl, $payload);
+
+                if ($response->successful()) {
+                    return true;
+                }
+
                 Log::warning($logLabel.' failed', [
                     'status' => $response->status(),
                     'body' => OpsDisplaySanitizer::logSnippet($response->body()),
+                    'pinned_ip' => OpsDisplaySanitizer::field($ip, '', 64),
                 ]);
-
-                return false;
             }
 
-            return true;
+            return false;
         } catch (\Throwable $e) {
             Log::warning($logLabel.' error: '.OpsDisplaySanitizer::logSnippet($e->getMessage(), 300));
 
