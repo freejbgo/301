@@ -45,3 +45,11 @@ Cron、Webhook 与验收见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)�
 | `queue_database_single_host` | 队列用 database 且与 DB 同机（多 worker 建议 Redis） |
 | `agent_version_gate_off` | 生产下 `REDI_MIN_AGENT_VERSION` 为空 |
 | `dns_api_tenants_unsynced` | DNS API 模式下仍有租户 edge 未 `dns_synced_at`（可能需重试同步；见 [CONSOLE.md](CONSOLE.md) §2） |
+
+## 运维 Webhook（`REDI_HEALTH_WEBHOOK_URL` / `REDI_OPS_WEBHOOK_URL`）
+
+`redi:health --notify` 与 `redi:ops-webhook` 在 POST 前会经 `WebhookUrlGuard` 校验目标 URL：
+
+- 仅允许 `http` / `https`；拒绝字面私网/保留 IP、`localhost`、`.local` / `.internal` 等主机名。
+- 对域名会做 DNS 解析（A/AAAA）；**解析失败**、**无记录**，或 **任一记录指向私网/保留地址** 时 **不发送** POST（fail-closed，防 SSRF）。
+- 因此 Cron 里 `|| redi:ops-webhook` 可能因 URL 不合法而静默跳过；排障时检查 `.env` 中的 Webhook URL 是否为公网可解析主机，并见 [SECURITY.md](../SECURITY.md) §凭证与出站。

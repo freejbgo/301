@@ -91,7 +91,7 @@ bash scripts/verify-redi-db-deploy-path.sh
 `redi:health` 的 `issues` / `hints` 各 `code` 含义见 [HEALTH-REFERENCE.md](HEALTH-REFERENCE.md)。摘要：
 
 - 生产配置：`APP_DEBUG`、ACME 邮箱 / Staging、`edge_zone`（见 [HEALTH-REFERENCE.md](HEALTH-REFERENCE.md)）
-- Cron **08:30** `redi:health --notify`：建议配置 `REDI_HEALTH_WEBHOOK_URL`（未配置且有 issues 时退出 1，由 `|| redi:ops-webhook` 兜底）
+- Cron **08:30** `redi:health --notify`：建议配置 `REDI_HEALTH_WEBHOOK_URL`（未配置且有 issues 时退出 1，由 `|| redi:ops-webhook` 兜底）。Webhook 目标须公网可解析且 DNS 仅指向公网 IP，否则 **不会 POST**（见 [HEALTH-REFERENCE.md](HEALTH-REFERENCE.md) §运维 Webhook、[SECURITY.md](../SECURITY.md)）
 - `failed_jobs` > 0 → 严重（`queue_failed_jobs`）
 - `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）→ `queue_backlog`；`available_at` 超过 `REDI_HEALTH_QUEUE_STALE_HOURS`（默认 2）未执行 → `queue_stale`（仅 `QUEUE_CONNECTION=database`）
 
