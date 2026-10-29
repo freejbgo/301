@@ -26,6 +26,10 @@ bash scripts/verify-ops-english-invariants.sh
 
 约定说明见 [I18N.md](I18N.md)。
 
+## 控制台与 Artisan 的租户边界
+
+后台 HTTP 请求里，带 `BelongsToAdminTenant` 的模型（如域名、分组）会自动按当前登录 `admin_id` 过滤。**Artisan 命令、队列 Job、Webhook 回调没有登录态**，不会套用该全局作用域；读写租户数据须继续走 `*Owned` / `AdminTenantContext` 等既有校验，避免在 CLI 或出站任务里跨租户泄漏。证书行 `RediDomainCert` 无该 trait，归属以关联域名与证书服务层过滤为准。
+
 ## 分步（调试时）
 
 ```bash

@@ -30,6 +30,8 @@
 
 `config.json` 里把 `server_ip` 改成这台机器的主公网 IPv4，`default_redirect_url` 改成未命中域名时的默认页。示例见 `redi-multi/config.json.example`。
 
+`debug` 须为 JSON **布尔值**（`true` / `false`），不能写 `"0"` / `"1"` 等字符串；类型错误时进程会在启动时 `log.Fatalf`（与 lagran 里部分字段的宽松解析不同）。
+
 给 systemd 用的环境文件写成 `KEY=值`，不要加 `export`。CentOS 7 的 `EnvironmentFile` 不认 `export`。
 
 一台机器只跑一个进程、一个 Token。同一台机器的其他公网 IP 填在后台该节点的「其他公网 IP」，不要再启动一份程序。

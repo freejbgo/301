@@ -190,14 +190,10 @@ return [
         'errors' => [
             'action_invalid' => 'Invalid action',
             'no_match' => 'No domains match the current filters',
-            'filter_required_destructive' => 'Batch disable/delete requires at least one list filter (avoids touching the first 500 rows by mistake)',
             'filter_required_sensitive' => 'This batch action requires at least one list filter (avoids touching the first 500 rows by mistake)',
         ],
-        'warnings' => [
-            'unfiltered' => ' (no list filter; only the first :max rows by ID are processed)',
-        ],
         'confirm_title' => 'Confirm filter-based batch',
-        'confirm_content' => 'Applies to up to 500 domains matching current filters. Use filters before disable or delete.',
+        'confirm_content' => 'Applies to up to 500 domains matching current list filters. Click Search first so the URL carries filter parameters. Certificate, redeploy, enable, disable, and delete all require at least one filter.',
     ],
     'export' => [
         'headers' => [
