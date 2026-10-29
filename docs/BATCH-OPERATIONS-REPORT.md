@@ -220,7 +220,7 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 级别 | 项 | 结论 |
 |------|-----|------|
 | 通过 | 租户隔离 | 各 `*Owned` / `normalizeOwnedIds` 仍按 `admin_id` 或超管放行；勾选 ID 与筛选 ID 均二次过滤 |
-| 通过 | 破坏性筛选 | 停用/删除仍须 `DomainListFilter::hasAnyFilter` |
+| 通过 | 破坏性筛选 | 申请/重新下发/启用/停用/删除均须 `DomainListFilter::hasAnyFilter` |
 | 通过 | 批量修改 `updated` | `mergeEditResults` 对 `changed_ids` 去重；单测覆盖三字段同域 |
 | 通过 | 节点批量重试 | `updated`=节点数、`deployments_requeued`=部署数；审计 `metricsFromMutator` 带两字段 |
 | 通过 | 证书批量 | 20s 错峰 + 全局 ACME 锁未动；筛选/勾选 `truncated` 叠加逻辑正确（筛选已 cap 500 时 dispatch 侧 truncated 通常为 0） |

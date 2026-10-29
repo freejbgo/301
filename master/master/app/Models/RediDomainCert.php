@@ -12,7 +12,7 @@ class RediDomainCert extends Model
 {
     /**
      * 租户归属通过关联域名 {@see RediAdminDomain}（及证书队列/部署路径上的 admin_id 校验）保证；
-     * 本模型未使用 {@see BelongsToAdminTenant} 全局作用域，控制台与 API 须继续走 *Owned 服务层过滤。
+     * 本模型未使用 {@see \App\Models\Concerns\BelongsToAdminTenant} 全局作用域，控制台与 API 须继续走 *Owned 服务层过滤。
      */
     protected static function booted(): void
     {
