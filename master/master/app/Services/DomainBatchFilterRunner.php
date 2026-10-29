@@ -69,7 +69,7 @@ class DomainBatchFilterRunner
                     'count' => $dispatch['dispatched'],
                     'cap' => DomainBatchMutator::MAX_IDS_PER_BATCH,
                 ]);
-                $msg = $this->finishSuccessMessage($msg, $filterTruncated + $dispatch['truncated'], $filterRequest);
+                $msg = $this->finishSuccessMessage($msg, $filterTruncated + $dispatch['truncated']);
                 $this->auditFilterRun('apply_cert', $sessionAdminId, $dispatch['dispatched'], [
                     'skipped' => 0,
                     'truncated' => $filterTruncated + $dispatch['truncated'],
@@ -101,7 +101,7 @@ class DomainBatchFilterRunner
                         'skipped' => $redeploy['skipped'],
                     ]);
                 }
-                $msg = $this->finishSuccessMessage($msg, $filterTruncated + $redeploy['truncated'], $filterRequest);
+                $msg = $this->finishSuccessMessage($msg, $filterTruncated + $redeploy['truncated']);
                 $this->auditFilterRun('redeploy', $sessionAdminId, $redeploy['queued'], [
                     'skipped' => (int) $redeploy['skipped'],
                     'truncated' => $filterTruncated + $redeploy['truncated'],
@@ -142,16 +142,9 @@ class DomainBatchFilterRunner
         return BatchSelectionLimiter::appendTruncationNotice($message, $truncated);
     }
 
-    protected function finishSuccessMessage(string $message, int $truncated, Request $filterRequest): string
+    protected function finishSuccessMessage(string $message, int $truncated): string
     {
-        $message = $this->withTruncation($message, $truncated);
-        if (! DomainListFilter::hasAnyFilter($filterRequest)) {
-            $message .= __('redi-admin-domain.batch_filter.warnings.unfiltered', [
-                'max' => DomainBatchMutator::MAX_IDS_PER_BATCH,
-            ]);
-        }
-
-        return $message;
+        return $this->withTruncation($message, $truncated);
     }
 
     /**
@@ -190,8 +183,7 @@ class DomainBatchFilterRunner
 
         $msg = $this->finishSuccessMessage(
             $msg,
-            $filterTruncated + (int) ($result['truncated'] ?? 0),
-            $filterRequest ?? request()
+            $filterTruncated + (int) ($result['truncated'] ?? 0)
         );
 
         $request = $filterRequest ?? request();

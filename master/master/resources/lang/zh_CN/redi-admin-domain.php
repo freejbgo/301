@@ -192,14 +192,10 @@ return [
         'errors' => [
             'action_invalid' => '无效操作',
             'no_match' => '当前筛选下没有匹配的域名',
-            'filter_required_destructive' => '批量停用/删除须先设置至少一项列表筛选（避免误操作整表前 500 条）',
             'filter_required_sensitive' => '该批量操作须先设置至少一项列表筛选（避免误操作整表前 500 条）',
         ],
-        'warnings' => [
-            'unfiltered' => '（未设列表筛选，仅按 ID 顺序处理前 :max 条）',
-        ],
         'confirm_title' => '确认按筛选批量操作',
-        'confirm_content' => '将对当前筛选条件下最多 500 条域名执行所选操作。删除与停用请先使用列表筛选缩小范围。',
+        'confirm_content' => '将对当前列表筛选下最多 500 条域名执行所选操作。请先点「搜索」使 URL 带上筛选参数。申请证书、重新下发、启用、停用、删除均须至少一项筛选。',
     ],
     'export' => [
         'headers' => [

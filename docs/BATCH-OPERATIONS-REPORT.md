@@ -50,7 +50,7 @@
 
 | 操作 | 类名 | 说明 |
 |------|------|------|
-| 按筛选批量操作 | `BatchFilterDomainModal` | 与 CSV 相同筛选键；单次最多 **500** 条 ID；支持申请证书/启用/停用/删除 |
+| 按筛选批量操作 | `BatchFilterDomainModal` | 与 CSV 相同筛选键；单次最多 **500** 条 ID；支持申请证书、**重新下发**、启用、停用、删除 |
 
 **共享服务**
 
@@ -136,7 +136,6 @@ flowchart LR
 |----|-------------|
 | 跨页「全选全部记录」而不限 500 | 需异步任务 + 进度条；当前用「按筛选批量」覆盖大部分场景 |
 | 筛选批量：批量修改弹窗字段 | 交互复杂；勾选「批量修改」或分组级改跳转仍可用 |
-| 筛选批量：重新下发证书 | 可复用 `DomainCertificateRedeployQueue`，按需加 action |
 | 节点批量改 IP / 备注 | 无统一校验 UI；仍建议单行编辑 |
 | 平台 DNS / 设置页批量 | 非列表型资源，不在本次范围 |
 | 租户侧节点操作 | 节点列表本身仅管理员可进（`EnsuresAdministrator`） |
@@ -147,6 +146,7 @@ flowchart LR
 2. **批量证书**：确认 `redi-queue` 运行、节点在线、解析预检通过。  
 3. **批量重置 Token**：务必在成功提示中复制各节点 Token，旧 Token 立即失效。  
 4. **删除分组**：先迁走或删除组内域名。
+5. **分组 / 节点勾选批量**：无列表筛选守卫；单次分别最多 **200** / **100** 条（超出会在成功提示中说明），请缩小勾选范围或分批操作。
 
 ## 9. 变更文件索引（核心）
 
@@ -172,7 +172,7 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 级别 | 项 | 处理 |
 |------|-----|------|
 | 高 | 批量迁组未同步 `redi_domain_cert.admin_id` / 部署对齐 | 已抽 `DomainCertificateAdminSync`，迁组后与单条表单保存一致 |
-| 高 | 「按筛选批量」无筛选时会对前 500 条做停用/删除 | 停用/删除强制 `DomainListFilter::hasAnyFilter`；表单增加二次确认 |
+| 高 | 「按筛选批量」无筛选时会对前 500 条做敏感操作 | 申请/重新下发/启用/停用/删除均强制 `DomainListFilter::hasAnyFilter`；表单二次确认 |
 | 中 | 批量删除异常向用户暴露原始异常信息 | 非校验类异常改为通用「保存失败」文案 |
 | 中 | `DomainBatchMutator` 重复 docblock | 已删除 |
 | 低 | 按筛选批量未覆盖「批量修改」 | 仍用勾选「批量修改」 |
@@ -186,11 +186,11 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 结论 | 说明 |
 |------|------|
 | 通过 | 域名 500 上限与 `truncated_suffix`；筛选 `matched/truncated` 与勾选 limiter 分工正确，未见双重计数 |
-| 通过 | 筛选停用/删除须 `hasAnyFilter`；迁组后 `DomainCertificateAdminSync` 已接 |
+| 通过 | 筛选批量敏感操作须 `hasAnyFilter`；迁组后 `DomainCertificateAdminSync` 已接 |
 | 通过 | `dispatchOwned` / `redeployOwned` 返回 `truncated`；单测含 limiter、filter 删除守卫、筛选截断 |
 | 已修 | 无筛选时按筛选批量误触前 500 条 | 申请/重新下发/启用/停用/删除均须 `hasAnyFilter`（`filter_required_sensitive`） |
 | 已修 | 分组（200）、节点（100）批量静默截断 | `AppendsGroupBatchTruncationNotice` / `AppendsNodeBatchTruncationNotice` |
-| 待 CI | 云环境无 PHP，合并前请跑 `master/master` 全量 `phpunit` |
+| 已验 | 本地 `dev-preflight` | 合并前在仓库根目录跑 `./scripts/dev-preflight.sh`（含全量 PHPUnit） |
 
 ## 12. 第三轮（能修的都搞一下）
 
@@ -200,10 +200,10 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 分组批量异常文案 | `ValidationException` 保留字段错误；其它异常用 `save_failed`，不暴露原文 |
 | 分组 `GroupBatchMutator` | 接入 `BatchSelectionLimiter`（200），结果带 `truncated` |
 | 节点 `NodeBatchMutator` | 勾选 ID 规范化返回 `truncated`；Token 批量仍 cap 20 |
-| i18n | `batch_filter.warnings.unfiltered`（中/英/繁）；分组 `save_failed`（中/英/繁） |
+| i18n | 分组 `save_failed`（中/英/繁）；按筛选批量 `filter_required_sensitive` / `confirm_content` |
 | 单测 | 新增 `GroupBatchMutatorTest` |
 
-**合并建议**：无阻塞项；建议 smoke：勾选 >500 域名、>200 分组、>100 节点，无筛选按筛选批量申请证书看警告文案。
+**合并建议**：无阻塞项；建议 smoke：勾选 >500 域名、>200 分组、>100 节点，无筛选时按筛选批量应被 `filter_required_sensitive` 拒绝。
 
 ## 13. 语义修正 + 审计日志
 
@@ -220,7 +220,7 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 级别 | 项 | 结论 |
 |------|-----|------|
 | 通过 | 租户隔离 | 各 `*Owned` / `normalizeOwnedIds` 仍按 `admin_id` 或超管放行；勾选 ID 与筛选 ID 均二次过滤 |
-| 通过 | 破坏性筛选 | 停用/删除仍须 `DomainListFilter::hasAnyFilter` |
+| 通过 | 破坏性筛选 | 申请/重新下发/启用/停用/删除均须 `DomainListFilter::hasAnyFilter` |
 | 通过 | 批量修改 `updated` | `mergeEditResults` 对 `changed_ids` 去重；单测覆盖三字段同域 |
 | 通过 | 节点批量重试 | `updated`=节点数、`deployments_requeued`=部署数；审计 `metricsFromMutator` 带两字段 |
 | 通过 | 证书批量 | 20s 错峰 + 全局 ACME 锁未动；筛选/勾选 `truncated` 叠加逻辑正确（筛选已 cap 500 时 dispatch 侧 truncated 通常为 0） |
@@ -229,7 +229,7 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 已修 | 批量修改 `skipped` | §15：`skipped_ids` 去重，已变更域名不计入跳过 |
 | 低风险 | 按筛选审计 | 无 `id_sample`，仅 `filter_keys` + 条数；追溯依赖当时列表筛选条件 |
 | 已修 | 批量添加域名审计 | §15：`batch_create`；分组行 **按组改跳转** → §16 `url_set_by_group` |
-| 待 CI | 单测 | 云环境无 PHP；合并前跑全量 `phpunit`（含 `AdminBatchOperationAuditTest`） |
+| 已验 | 单测 | 合并前 `./scripts/dev-preflight.sh`（含 `AdminBatchOperationAuditTest`） |
 
 **合并建议**：无阻塞；合并后抽一条勾选批量与一条按筛选批量，确认 `storage/logs/admin-batch.log` 有对应记录。
 
@@ -263,7 +263,7 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 已修 | `UrlSetByGroup` 写库 | §18：`setSkipUrlForGroupOwned` + 模型 `save` |
 | 低风险 | `skip_url !=` 条件 | 已改为 ORM 比较（§18 前为 `DB::update`） |
 | 已修 | 批量修改全跳过 | §18：成功 + `batch_edit` 审计 |
-| 待 CI | 单测 | 未新增 UrlSetByGroup / BatchCreate 审计单测；合并前跑全量 `phpunit` |
+| 已验 | 单测 | 合并前 `./scripts/dev-preflight.sh` |
 
 ## 18. 批量修改全跳过 + 按组改跳转走模型
 
@@ -290,7 +290,7 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 低风险 | 批量修改混合结果 | `updated=0` 且同时有 `errors` 与 `skipped>0` 仍走 **error_all**（不展示「全跳过」成功）——符合「有失败即失败」 |
 | 低风险 | 超大分组改跳转 | 组内域名数无上限，极端规模可能慢/超时（与改前全表 update 同类风险） |
 | 低风险 | 批量修改成功文案 | 有部分 `errors` 时仅追加条数，不展开明细（§18 前亦如此） |
-| 待 CI | 单测 | 缺「全跳过成功」表单级用例；合并前跑全量 `phpunit` |
+| 已验 | 单测 | 合并前 `./scripts/dev-preflight.sh` |
 
 **合并建议**：无阻塞。Smoke：批量修改三字段不变 → 绿色成功 + 日志 `batch_edit`（`updated=0, skipped>0`）；分组改跳转 → 单条域名 `skip_url` 非法应行级失败而非整表 SQL。
 
