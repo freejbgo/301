@@ -186,7 +186,7 @@ docs/BATCH-OPERATIONS-REPORT.md
 | 结论 | 说明 |
 |------|------|
 | 通过 | 域名 500 上限与 `truncated_suffix`；筛选 `matched/truncated` 与勾选 limiter 分工正确，未见双重计数 |
-| 通过 | 筛选停用/删除须 `hasAnyFilter`；迁组后 `DomainCertificateAdminSync` 已接 |
+| 通过 | 筛选批量敏感操作须 `hasAnyFilter`；迁组后 `DomainCertificateAdminSync` 已接 |
 | 通过 | `dispatchOwned` / `redeployOwned` 返回 `truncated`；单测含 limiter、filter 删除守卫、筛选截断 |
 | 已修 | 无筛选时按筛选批量误触前 500 条 | 申请/重新下发/启用/停用/删除均须 `hasAnyFilter`（`filter_required_sensitive`） |
 | 已修 | 分组（200）、节点（100）批量静默截断 | `AppendsGroupBatchTruncationNotice` / `AppendsNodeBatchTruncationNotice` |
