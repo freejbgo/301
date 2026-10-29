@@ -32,7 +32,7 @@ func noteEmptyChallengeList() error {
 	thresh := emptyChallengeClearThreshold()
 	emptyChallengeMu.Unlock()
 	if streak < thresh {
-		return fmt.Errorf("empty acme-challenges list from master (debounce %d/%d)", streak, thresh)
+		return fmt.Errorf("%w (%d/%d)", errEmptyListDebounce, streak, thresh)
 	}
 	emptyChallengeMu.Lock()
 	emptyChallengeStreak = 0

@@ -80,6 +80,7 @@ return [
         'pool_partial_hint_a_aaaa' => 'Pool A and AAAA may already be updated at vendor; fix and retry',
         'pool_partial_hint_a' => 'Pool A may already be updated at vendor; fix and retry',
         'pool_partial_hint_cname' => 'Pool A and successful CNAME rows may already be updated at vendor; fix and retry',
+        'pool_partial_hint_precheck' => 'No vendor DNS changes were made; fix tenant edge hostnames and retry',
         'ipv6_migration_required' => 'Node IPv6 column not migrated; cannot publish pool AAAA',
         'invalid_node_ipv6' => 'Enabled node has unpublishable IPv6; fix node config in admin',
         'configure_platform_zone' => 'Configure platform zone under DNS & node pool first',

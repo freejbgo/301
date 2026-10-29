@@ -24,7 +24,10 @@ class RediAgentVersionGate
     public static function resolveFromInput(array $input, ?string $storedVersion = null): ?string
     {
         if (array_key_exists('version', $input)) {
-            return self::sanitize($input['version']);
+            $fromBody = self::sanitize($input['version']);
+            if ($fromBody !== null) {
+                return $fromBody;
+            }
         }
 
         return $storedVersion !== null ? self::sanitize($storedVersion) : null;

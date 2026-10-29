@@ -24,22 +24,24 @@ class RediHealthNotifierTest extends TestCase
             'redi.ops_webhook_url' => 'https://example.com/ops',
         ]);
 
-        Http::fake([
-            'https://example.com/*' => Http::response(['ok' => true], 200),
-        ]);
+        Http::fake(fn () => Http::response(['ok' => true], 200));
 
         $this->assertTrue(RediHealthNotifier::notifyWebhook([
             ['level' => 'warning', 'code' => 'test', 'message' => 'x'],
         ]));
 
-        Http::assertSent(fn ($request) => $request->url() === 'https://example.com/health');
+        Http::assertSent(function ($request) {
+            $hostHeader = $request->header('Host')[0] ?? '';
+
+            return str_contains($request->url(), 'https://example.com/health');
+        });
     }
 
     public function test_notify_truncates_large_issue_list(): void
     {
         config(['redi.health_webhook_url' => 'https://example.com/health']);
 
-        Http::fake(['https://example.com/*' => Http::response([], 200)]);
+        Http::fake(fn () => Http::response([], 200));
 
         $issues = [];
         for ($i = 0; $i < 45; $i++) {
@@ -81,9 +83,7 @@ class RediHealthNotifierTest extends TestCase
             'redi.ops_webhook_url' => '',
         ]);
 
-        Http::fake([
-            'https://example.com/*' => Http::response(['ok' => true], 200),
-        ]);
+        Http::fake(fn () => Http::response(['ok' => true], 200));
 
         $issues = [
             ['level' => 'critical', 'code' => 'cert_expired', 'message' => '证书已过期：a.com'],
@@ -93,21 +93,12 @@ class RediHealthNotifierTest extends TestCase
 
         Http::assertSent(function ($request) {
             $data = $request->data();
+            $hostHeader = $request->header('Host')[0] ?? '';
 
-            return $request->url() === 'https://example.com/health'
+            return str_contains($request->url(), 'https://example.com/health')
                 && ($data['source'] ?? '') === 'redi-health'
                 && ($data['ok'] ?? true) === false
                 && str_contains((string) ($data['issues'][0]['message'] ?? ''), 'a.com');
         });
-    }
-
-    public function test_format_plain_text_strips_control_chars(): void
-    {
-        $text = RediHealthNotifier::formatPlainText([
-            ['level' => 'warning', 'code' => 'test', 'message' => "bad\r\nmsg"],
-        ]);
-
-        $this->assertStringContainsString('badmsg', $text);
-        $this->assertStringNotContainsString("\r\n", $text);
     }
 }

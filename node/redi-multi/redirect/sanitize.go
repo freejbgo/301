@@ -20,11 +20,11 @@ func sanitizeHost(host string) string {
 	if strings.Contains(host, ":") && !strings.Contains(host, "]") {
 		return ""
 	}
-	canonical := hostutil.CanonicalLookupHost(host)
-	if canonical == "" {
+	key := hostutil.AcmeHostKey(host)
+	if key == "" {
 		return ""
 	}
-	return canonical
+	return key
 }
 
 func sanitizeRequestPath(path string) string {

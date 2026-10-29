@@ -34,7 +34,7 @@
 | 平台 DNS 表单 | 仅超级管理员可提交（与「DNS 与节点池」页面一致） |
 | DNS API 同步 | 厂商记录 **先增/改、后删**；Pool A 与租户 CNAME 分步执行。租户 `edge_fqdn` 不在平台 zone 下会 **中止**（全部无效时不写厂商；部分无效时 Pool/已写 CNAME 可能已更新）。任一步失败则 **不更新** `dns_synced_at`（需修正后重试）。`dns_mode=api` 时未知 `dns_driver` 会 **抛错**（不会静默退回手动模式） |
 | 域名停用 | `status=2` 时清除该域 ACME 挑战、节点 sync 行及 `redi_cert_deployments`，证书 active/deploying 降为 issued 并写明取消部署；**任意状态**下若停用前仍有部署行则写入同一取消提示；从停用 **改回** `status=1` 且 PEM 可用时会自动 `queueDeploy`（非新建即启用） |
-| `REDI_HEALTH_WEBHOOK_URL` / `REDI_OPS_WEBHOOK_URL` | 仅允许 **公网可解析** 的 `http(s)` 目标；拒绝字面私网 IP、`localhost`、`.internal` / `.local` 等；域名须 DNS 解析且仅指向公网 IP，否则 **不 POST**（见 `WebhookUrlGuard`、[HEALTH-REFERENCE.md](docs/HEALTH-REFERENCE.md) §运维 Webhook） |
+| `REDI_HEALTH_WEBHOOK_URL` / `REDI_OPS_WEBHOOK_URL` | 仅允许 **公网可解析** 的 `http(s)` 目标；拒绝字面私网 IP、`localhost`、`.internal` / `.local` 等；域名须 DNS 解析且仅指向公网 IP，否则 **不 POST**（见 `WebhookUrlGuard`、[HEALTH-REFERENCE.md](docs/HEALTH-REFERENCE.md) §运维 Webhook）；发送时对当时解析到的公网 IP 使用 **CURLOPT_RESOLVE 固定连接**（仍请求原 URL，TLS/SNI 正常；减轻 DNS rebinding） |
 | Session Cookie | HTTPS 后台请设 `SESSION_SECURE_COOKIE=true`（见 `.env.example`） |
 | 证书存储 | `redi_domain_certs` 中 PEM 经 Laravel `Crypt` 加密；备份库即备份密钥材料 |
 | ACME | 主控 `storage/app/acme` 存 LE 账户；签发前要求节点上报挑战已同步，并探测公网域名 HTTP-01 |

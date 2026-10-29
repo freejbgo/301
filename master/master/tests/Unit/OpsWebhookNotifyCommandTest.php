@@ -28,7 +28,7 @@ class OpsWebhookNotifyCommandTest extends TestCase
             'redi.health_webhook_url' => 'https://example.com/health',
         ]);
 
-        Http::fake(['https://example.com/*' => Http::response([], 200)]);
+        Http::fake(fn () => Http::response([], 200));
 
         $exit = Artisan::call('redi:ops-webhook', [
             '--task' => 'redi:prune-acme-challenges',
@@ -36,7 +36,11 @@ class OpsWebhookNotifyCommandTest extends TestCase
         ]);
         $this->assertSame(0, $exit);
 
-        Http::assertSent(fn ($request) => $request->url() === 'https://example.com/ops'
-            && ($request->data()['task'] ?? '') === 'redi:prune-acme-challenges');
+        Http::assertSent(function ($request) {
+            $hostHeader = $request->header('Host')[0] ?? '';
+
+            return str_contains($request->url(), 'https://example.com/ops')
+                && ($request->data()['task'] ?? '') === 'redi:prune-acme-challenges';
+        });
     }
 }

@@ -101,6 +101,9 @@ func buildMySQLConfig(userName, password, ipAddress, port, dbName, charset strin
 func openPool() (*sqlx.DB, error) {
 	userName := envOr("REDI_DB_USER", "redi_node")
 	password := envOr("REDI_DB_PASSWORD", "")
+	if password == "" && strings.TrimSpace(os.Getenv("REDI_DB_ALLOW_EMPTY_PASSWORD")) != "1" {
+		return nil, fmt.Errorf("mysql: REDI_DB_PASSWORD is empty (set REDI_DB_ALLOW_EMPTY_PASSWORD=1 for lab only)")
+	}
 	ipAddress := envOr("REDI_DB_HOST", "127.0.0.1")
 	port := envOr("REDI_DB_PORT", "3306")
 	dbName := envOr("REDI_DB_NAME", "redi_admin")

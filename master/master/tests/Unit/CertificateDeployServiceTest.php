@@ -432,6 +432,55 @@ class CertificateDeployServiceTest extends TestCase
         $this->assertStringContainsString(RediErrorMessage::get('cert.ack_not_deployable'), (string) $cert->fresh()->last_error);
     }
 
+    public function test_refresh_cert_status_stays_deploying_when_enabled_node_still_pending(): void
+    {
+        $live = RediNode::query()->create([
+            'enabled' => true,
+            'public_ip' => '1.2.3.4',
+            'last_heartbeat_at' => now(),
+        ]);
+        $cold = RediNode::query()->create([
+            'enabled' => true,
+            'public_ip' => '5.6.7.8',
+            'last_heartbeat_at' => null,
+        ]);
+        $domainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'edge.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $cert = RediDomainCert::query()->create([
+            'domain_id' => $domainId,
+            'domain_name' => 'edge.example',
+            'status' => RediDomainCert::STATUS_DEPLOYING,
+        ]);
+        $cert->setCertificatePem("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----");
+        $cert->setPrivateKeyPem("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----");
+        $cert->save();
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $cert->id,
+            'node_id' => $live->id,
+            'status' => 'ok',
+            'deployed_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_cert_deployments')->insert([
+            'cert_id' => $cert->id,
+            'node_id' => $cold->id,
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $method = new \ReflectionMethod(CertificateDeployService::class, 'refreshCertStatusFromDeployments');
+        $method->setAccessible(true);
+        $method->invoke(app(CertificateDeployService::class), $cert->fresh()->load('domain'));
+
+        $this->assertSame(RediDomainCert::STATUS_DEPLOYING, $cert->fresh()->status);
+    }
+
     public function test_mark_node_ack_is_idempotent_when_already_ok(): void
     {
         $node = RediNode::query()->create(['enabled' => true, 'public_ip' => '1.2.3.4']);

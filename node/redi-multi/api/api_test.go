@@ -52,10 +52,16 @@ func TestAllowRateRejectsEmptyIP(t *testing.T) {
 }
 
 func TestApiJsQueryValid(t *testing.T) {
-	if !apiJsQueryValid("") {
-		t.Fatal("empty query should be valid")
+	if apiJsQueryValid("") {
+		t.Fatal("empty query should be invalid")
+	}
+	if apiJsQueryValid("   ") {
+		t.Fatal("blank query should be invalid")
 	}
 	if apiJsQueryValid("x\n") {
 		t.Fatal("control chars should be invalid")
+	}
+	if !apiJsQueryValid("example.test") {
+		t.Fatal("expected valid encoded domain")
 	}
 }

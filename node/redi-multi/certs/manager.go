@@ -82,6 +82,20 @@ func upsertIntoMaps(hostMap map[string]Entry, idMap map[int]Entry, list []Entry)
 	}
 }
 
+func HasTLSMaterial(host string) bool {
+	if hostutil.ContainsControlChars(host) {
+		return false
+	}
+	host = hostutil.AcmeHostKey(host)
+	if host == "" {
+		return false
+	}
+	mu.RLock()
+	_, ok := entries[host]
+	mu.RUnlock()
+	return ok
+}
+
 func ForceHTTPS(host string) bool {
 	if hostutil.ContainsControlChars(host) {
 		return false

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -37,18 +38,39 @@ func Start() {
 	// /api.js 在 handleApiJs 内经 allowApiJsDomainRate 计入全局 IP 限速；勿再挂 rateLimitMiddleware（会双计）。
 	e.GET("/api.js", handleApiJs)
 
-	listen := os.Getenv("REDI_API_LISTEN")
-	if listen == "" {
-		listen = config.ApiListen
-	}
+	listen := strings.TrimSpace(config.ApiListen)
 	if listen == "" {
 		listen = "127.0.0.1:8080"
 	}
-	listen = strings.TrimSpace(listen)
 	if host.ContainsControlChars(listen) {
-		e.Logger.Fatal("invalid REDI_API_LISTEN: control characters")
+		e.Logger.Fatal("invalid api_listen: control characters")
+	}
+	if err := assertApiListenAllowed(listen); err != nil {
+		e.Logger.Fatal(err)
 	}
 	e.Logger.Fatal(e.Start(listen))
+}
+
+func assertApiListenAllowed(listen string) error {
+	hostPart, _, err := net.SplitHostPort(listen)
+	if err != nil {
+		return fmt.Errorf("invalid api_listen %q: %w", listen, err)
+	}
+	if strings.EqualFold(hostPart, "localhost") {
+		hostPart = "127.0.0.1"
+	}
+	ip := net.ParseIP(hostPart)
+	if ip == nil {
+		return fmt.Errorf("invalid api_listen host %q", hostPart)
+	}
+	if ip.IsLoopback() {
+		return nil
+	}
+	if strings.TrimSpace(os.Getenv("REDI_API_LISTEN_INSECURE")) == "1" {
+		logrus.Warnf("[api] api_listen %q is not loopback; /api.js exposes DB-backed skip API", listen)
+		return nil
+	}
+	return fmt.Errorf("api_listen %q must bind loopback only (set REDI_API_LISTEN_INSECURE=1 to override)", listen)
 }
 
 func setJSResponseHeaders(c echo.Context) {
@@ -130,6 +152,9 @@ func handleApiJs(c echo.Context) error {
 }
 
 func apiJsQueryValid(encoded string) bool {
+	if strings.TrimSpace(encoded) == "" {
+		return false
+	}
 	return len(encoded) <= 4096 && !host.ContainsControlChars(encoded)
 }
 
@@ -139,11 +164,10 @@ func allowApiJsDomainRate(ip, encodedDomain string) bool {
 		return false
 	}
 	key := ip + "|" + strings.TrimSpace(encodedDomain)
-	if key != ip+"|" {
-		now := time.Now()
-		cutoff := now.Add(-1 * time.Minute)
-		rateMu.Lock()
-		hits := domainRateHits[key]
+	now := time.Now()
+	cutoff := now.Add(-1 * time.Minute)
+	rateMu.Lock()
+	hits := domainRateHits[key]
 		var kept []time.Time
 		for _, t := range hits {
 			if t.After(cutoff) {
@@ -161,7 +185,6 @@ func allowApiJsDomainRate(ip, encodedDomain string) bool {
 			pruneDomainRateMap(cutoff)
 		}
 		rateMu.Unlock()
-	}
 	return allowRate(ip)
 }
 

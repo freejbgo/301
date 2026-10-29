@@ -78,26 +78,48 @@ class RediOpsWebhook
 
         $logLabel = ($url === self::healthWebhookUrl()) ? 'redi health webhook' : 'redi ops webhook';
 
-        try {
-            $response = Http::timeout(10)
-                ->acceptJson()
-                ->post($url, $payload);
+        $pin = WebhookUrlGuard::pinnedWebhookTarget($url);
+        if ($pin === null) {
+            Log::warning($logLabel.' rejected: could not pin public IP for URL');
 
-            if (! $response->successful()) {
+            return false;
+        }
+
+        try {
+            foreach ($pin['ips'] as $ip) {
+                $resolveEntry = self::curlResolveEntry($pin['host'], $pin['port'], $ip);
+                $response = Http::timeout(10)
+                    ->acceptJson()
+                    ->withOptions([
+                        'allow_redirects' => false,
+                        'curl' => [
+                            CURLOPT_RESOLVE => [$resolveEntry],
+                        ],
+                    ])
+                    ->post($url, $payload);
+
+                if ($response->successful()) {
+                    return true;
+                }
+
                 Log::warning($logLabel.' failed', [
                     'status' => $response->status(),
                     'body' => OpsDisplaySanitizer::logSnippet($response->body()),
+                    'pinned_ip' => OpsDisplaySanitizer::field($ip, '', 64),
                 ]);
-
-                return false;
             }
 
-            return true;
+            return false;
         } catch (\Throwable $e) {
             Log::warning($logLabel.' error: '.OpsDisplaySanitizer::logSnippet($e->getMessage(), 300));
 
             return false;
         }
+    }
+
+    protected static function curlResolveEntry(string $host, int $port, string $ip): string
+    {
+        return $host.':'.$port.':'.$ip;
     }
 
     public static function notifyTaskFailure(string $task, string $message = ''): bool

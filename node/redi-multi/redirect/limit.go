@@ -25,5 +25,6 @@ func releaseConnection() {
 	select {
 	case <-connSlots:
 	default:
+		logrus.Warn("[redirect] releaseConnection without matching acquire")
 	}
 }

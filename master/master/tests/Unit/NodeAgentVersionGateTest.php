@@ -46,10 +46,10 @@ class NodeAgentVersionGateTest extends TestCase
         $this->assertSame('0.1.3', $resolved);
     }
 
-    public function test_resolve_from_input_does_not_fallback_when_body_version_invalid(): void
+    public function test_resolve_from_input_falls_back_when_body_version_invalid(): void
     {
         $resolved = RediAgentVersionGate::resolveFromInput(['version' => "0.1.3\n"], '0.1.3');
-        $this->assertNull($resolved);
+        $this->assertSame('0.1.3', $resolved);
     }
 
     public function test_rejects_version_below_min(): void

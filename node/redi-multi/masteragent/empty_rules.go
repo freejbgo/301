@@ -32,7 +32,7 @@ func noteEmptyRedirectRulesList() error {
 	thresh := emptyRulesClearThreshold()
 	emptyRulesMu.Unlock()
 	if streak < thresh {
-		return fmt.Errorf("empty redirect-rules list from master (debounce %d/%d)", streak, thresh)
+		return fmt.Errorf("%w (%d/%d)", errEmptyListDebounce, streak, thresh)
 	}
 	emptyRulesMu.Lock()
 	emptyRulesStreak = 0

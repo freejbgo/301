@@ -3,6 +3,7 @@ package redirect
 import (
 	"fmt"
 	"net"
+	"net/http"
 	"time"
 	"redi-multi/acme"
 	"redi-multi/api"
@@ -67,6 +68,7 @@ func processConn(conn net.Conn, tls bool) {
 	}
 	host := sanitizeHost(req.Host)
 	if host == "" {
+		writeStatus(conn, http.StatusBadRequest, "Bad Request")
 		return
 	}
 	rawURI := req.Path
@@ -90,10 +92,13 @@ func processConn(conn net.Conn, tls bool) {
 	if tls {
 		scheme = "https"
 	}
-	if !tls && (certs.ForceHTTPS(host) || rules.ForceHTTPS(host)) {
-		location := sanitizeLocationURL("https://" + host + path + query)
-		writeRedirect(conn, 301, location)
-		return
+	if !tls {
+		wantHTTPS := certs.ForceHTTPS(host) || rules.ForceHTTPS(host)
+		if wantHTTPS && certs.HasTLSMaterial(host) {
+			location := sanitizeLocationURL("https://" + host + path + query)
+			writeRedirect(conn, 301, location)
+			return
+		}
 	}
 
 	content := htmlContent(scheme)
@@ -112,6 +117,18 @@ func writePlain(conn net.Conn, body string) {
 	body = hostutil.StripControlChars(body)
 	length := fmt.Sprintf("%v", len(body))
 	_, _ = conn.Write([]byte("HTTP/1.1 200 OK\r\n" +
+		"Content-Type: text/plain\r\n" +
+		"Content-Length: " + length + "\r\n" +
+		"Connection: close\r\n\r\n" + body))
+}
+
+func writeStatus(conn net.Conn, code int, body string) {
+	body = hostutil.StripControlChars(body)
+	if body == "" {
+		body = http.StatusText(code)
+	}
+	length := fmt.Sprintf("%v", len(body))
+	_, _ = conn.Write([]byte(fmt.Sprintf("HTTP/1.1 %d %s\r\n", code, http.StatusText(code)) +
 		"Content-Type: text/plain\r\n" +
 		"Content-Length: " + length + "\r\n" +
 		"Connection: close\r\n\r\n" + body))

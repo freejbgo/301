@@ -67,6 +67,8 @@ class CertificateDeployService
     /** @var array{pending: int, failed: int}|null */
     protected static $actionableDeploymentStatusCounts = null;
 
+    protected static ?\Illuminate\Support\Carbon $actionableDeploymentStatusCountsAt = null;
+
     /**
      * `redi:health` / JSON summary：仅统计边缘仍能拉取证书的部署行。
      */
@@ -148,12 +150,16 @@ class CertificateDeployService
     public static function forgetActionableDeploymentMetrics(): void
     {
         self::$actionableDeploymentStatusCounts = null;
+        self::$actionableDeploymentStatusCountsAt = null;
     }
 
     protected static function hydrateActionableDeploymentStatusCounts(): void
     {
         if (! app()->runningUnitTests() && self::$actionableDeploymentStatusCounts !== null) {
-            return;
+            if (self::$actionableDeploymentStatusCountsAt !== null
+                && self::$actionableDeploymentStatusCountsAt->diffInSeconds(now()) < 30) {
+                return;
+            }
         }
 
         $counts = ['pending' => 0, 'failed' => 0];
@@ -180,6 +186,7 @@ class CertificateDeployService
             });
 
         self::$actionableDeploymentStatusCounts = $counts;
+        self::$actionableDeploymentStatusCountsAt = now();
     }
 
     protected static function certStatusAllowsNodePull(RediDomainCert $cert): bool
@@ -624,18 +631,17 @@ class CertificateDeployService
     {
         $cert->loadMissing('domain');
 
-        $liveNodeIds = RediNode::enabled()
-            ->where('last_heartbeat_at', '>=', now()->subMinutes(15))
-            ->pluck('id');
+        $enabledNodeIds = RediNode::enabled()->pluck('id');
 
-        $livePending = RediCertDeployment::where('cert_id', $cert->id)
-            ->where('status', 'pending')
-            ->whereIn('node_id', $liveNodeIds)
-            ->exists();
+        $enabledPending = $enabledNodeIds->isNotEmpty()
+            && RediCertDeployment::where('cert_id', $cert->id)
+                ->where('status', 'pending')
+                ->whereIn('node_id', $enabledNodeIds)
+                ->exists();
 
         $domainActive = $cert->domain && (int) $cert->domain->status === 1;
 
-        if ($livePending) {
+        if ($enabledPending) {
             $cert->status = RediDomainCert::STATUS_DEPLOYING;
             if (! $domainActive && $cert->domain) {
                 RediCertLastError::apply($cert, 'cert.domain_disabled_pending');

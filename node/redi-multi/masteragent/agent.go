@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -110,6 +111,9 @@ func tick(client *http.Client, cfg config, registered *bool, revs *revisionState
 	if split {
 		if rev.ChallengesRevision != "" && rev.ChallengesRevision != revs.challenges {
 			if err := pullChallenges(client, cfg, registered); err != nil {
+				if errors.Is(err, errEmptyListDebounce) {
+					revs.challenges = rev.ChallengesRevision
+				}
 				warnThrottled("pull-challenges", "[masteragent] pull challenges: %v", err)
 			} else {
 				revs.challenges = rev.ChallengesRevision
@@ -117,6 +121,9 @@ func tick(client *http.Client, cfg config, registered *bool, revs *revisionState
 		}
 		if rev.RulesRevision != "" && rev.RulesRevision != revs.rules {
 			if err := pullRedirectRules(client, cfg, registered); err != nil {
+				if errors.Is(err, errEmptyListDebounce) {
+					revs.rules = rev.RulesRevision
+				}
 				warnThrottled("pull-rules", "[masteragent] pull redirect rules: %v", err)
 			} else {
 				revs.rules = rev.RulesRevision
@@ -124,6 +131,9 @@ func tick(client *http.Client, cfg config, registered *bool, revs *revisionState
 		}
 		if rev.CertificatesRevision != "" && rev.CertificatesRevision != revs.certificates {
 			if err := pullCertificates(client, cfg, registered); err != nil {
+				if errors.Is(err, errEmptyListDebounce) {
+					revs.certificates = rev.CertificatesRevision
+				}
 				warnThrottled("pull-certificates", "[masteragent] pull certificates: %v", err)
 			} else {
 				revs.certificates = rev.CertificatesRevision
@@ -391,16 +401,9 @@ func setMasterAgentHeaders(req *http.Request) {
 	req.Header.Set("User-Agent", "redi-multi/"+agentVersion)
 }
 
-// 仅 401 视为 Token 失效；ack 等业务 403/409 不应触发重新 register。
+// 仅 401 视为 Token 失效；业务 403/409（含 ack）不应触发重新 register。
 func shouldClearRegistration(path string, status int) bool {
-	if status == http.StatusUnauthorized {
-		return true
-	}
-	if status == http.StatusForbidden && !strings.HasSuffix(path, "/ack") {
-		return true
-	}
-
-	return false
+	return status == http.StatusUnauthorized
 }
 
 func stringsTrimRightSlash(s string) string {
