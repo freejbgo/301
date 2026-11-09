@@ -52,7 +52,7 @@ func Run() {
 }
 
 type revisionState struct {
-	legacy       string
+	combinedRevision string
 	challenges   string
 	rules        string
 	certificates string
@@ -140,9 +140,9 @@ func tick(client *http.Client, cfg config, registered *bool, revs *revisionState
 			}
 		}
 		if rev.Revision != "" {
-			revs.legacy = rev.Revision
+			revs.combinedRevision = rev.Revision
 		}
-	} else if rev.Revision != "" && rev.Revision != revs.legacy {
+	} else if rev.Revision != "" && rev.Revision != revs.combinedRevision {
 		var pullErr error
 		if err := pullChallenges(client, cfg, registered); err != nil {
 			pullErr = err
@@ -157,7 +157,7 @@ func tick(client *http.Client, cfg config, registered *bool, revs *revisionState
 			warnThrottled("pull-certificates", "[masteragent] pull certificates: %v", err)
 		}
 		if pullErr == nil {
-			revs.legacy = rev.Revision
+			revs.combinedRevision = rev.Revision
 		}
 	}
 	return nil

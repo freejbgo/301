@@ -64,6 +64,7 @@ ls -lh /tmp/master.tar.gz /tmp/redi-multi.tar.gz
 
 ```bash
 cp scripts/centos7/vars.example.env scripts/centos7/vars.env
+# 生产机房也可：cp scripts/centos7/vars.production.example.env scripts/centos7/vars.env
 chmod 600 scripts/centos7/vars.env
 vi scripts/centos7/vars.env
 ```

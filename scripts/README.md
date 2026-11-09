@@ -14,6 +14,7 @@
 | [verify-acceptance-centos7-doc.sh](verify-acceptance-centos7-doc.sh) | 静态校验 [ACCEPTANCE-CENTOS7-DEPLOY.md](../docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 含 Cron webhook/`--task`、grant-nodes、`redi_node` 等关键表述 |
 | [verify-deploy-centos7-doc.sh](verify-deploy-centos7-doc.sh) | 静态校验 [DEPLOY-centos7.md](../DEPLOY-centos7.md) / 绿场说明与 `deploy-*.sh`、`redi_admin.sql`、Cron 时刻一致 |
 | [verify-product-docs.sh](verify-product-docs.sh) | 产品文档集存在、已移除 AUDIT/开发进度主文档且无残留链接 |
+| [verify-greenfield-install-doc.sh](verify-greenfield-install-doc.sh) | [GREENFIELD-INSTALL.md](../docs/GREENFIELD-INSTALL.md) 绿场路径与 OPS 链表述 |
 | [verify-launch-checklist-doc.sh](verify-launch-checklist-doc.sh) | `LAUNCH-CHECKLIST` 与 PRODUCTION / node|master README 互链 |
 | [verify-redi-artisan-cron.sh](verify-redi-artisan-cron.sh) | `php artisan … --help` 确认 Cron/运维引用的 `redi:*` 命令已注册（含 `redi:health --notify`） |
 | [verify-node-skip-api-invariants.sh](verify-node-skip-api-invariants.sh) | 节点数据面 `skip_url` / `bump_skip` 与主机名键约定 |

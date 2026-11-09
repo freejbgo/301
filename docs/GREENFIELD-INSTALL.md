@@ -1,6 +1,6 @@
 # 绿场安装说明
 
-**全新环境**：按 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) 部署，数据库 **一次导入** `db/redi_admin.sql` 即可；`deploy-master.sh` 仍会执行 `migrate --force`，导入后通常无待执行迁移。详细脚本说明见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)。
+**全新环境**：按 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) 部署，数据库 **一次导入** `db/redi_admin.sql` 即可；`deploy-master.sh` 仍会执行 `migrate --force`，导入后通常无待执行迁移。详细脚本说明见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)。**绿场首装可跳过** [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)（仅在环境已在跑、需跟上新 tar 时阅读）。
 
 ## 相关文档
 
