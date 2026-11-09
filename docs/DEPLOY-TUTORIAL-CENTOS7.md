@@ -134,6 +134,8 @@ vi scripts/centos7/vars.env
 
 | 变量 | 说明 |
 |------|------|
+| `MASTER_IP` | 主控公网 IPv4（写入 `env.sh` 的 `REDI_DB_HOST`，用于连库与部署后 `redi_node_bump_skip` 冒烟） |
+| `DB_PASS` | 与主控 `vars.env` 相同的 MySQL 密码（`redi_node` 用户，仅 `EXECUTE` 存储过程） |
 | `NODE_PUBLIC_IP` | 本节点公网 IPv4 |
 | `DEFAULT_REDIRECT_URL` | 未命中域名时的默认跳转 URL |
 | `REDI_MASTER_URL` | 生产用 **`https://主控域名`**；主控尚无证书时 lab 可 `REDI_MASTER_INSECURE=1` + `http://主控IP` |
