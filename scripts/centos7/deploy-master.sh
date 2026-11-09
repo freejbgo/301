@@ -416,6 +416,6 @@ echo "初始后台账号见 DEPLOY.md（导入 SQL 后的默认 admin 密码）�
 echo "后台语言: 登录页或侧栏可切换 简/繁/英（见 docs/I18N.md、docs/CONSOLE.md §界面语言）。"
 echo "Cron: /etc/cron.d/redi-renew（03:10 续期 / 04:10 prune / 08:30 health --notify；勿另配 schedule:run）"
 echo "验收: grep -E 'renew|prune|health' /etc/cron.d/redi-renew && ! grep -q 'schedule:run' /etc/cron.d/redi-renew"
-echo "建议: 在 ${APP}/.env 配置 REDI_HEALTH_WEBHOOK_URL（08:30 health --notify；见 docs/UPGRADE-IN-PLACE.md §4）"
+echo "建议: 在 ${APP}/.env 配置 REDI_HEALTH_WEBHOOK_URL（08:30 health --notify；见 docs/LAUNCH-CHECKLIST.md、docs/PRODUCTION-READINESS.md）"
 echo "仅同步 NODE_IPS（MySQL/firewalld）而不重装: sudo bash scripts/centos7/grant-nodes-from-vars.sh"
 echo "建好节点并复制 Token 后，再到节点机器执行 deploy-node.sh。"

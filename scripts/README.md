@@ -43,7 +43,7 @@
 | [verify-ops-english-invariants.sh](verify-ops-english-invariants.sh) | 运维层 `Console` / `Support` / `Http` / `Jobs` / `Services` 禁止字符串字面量中文（DNSPod 中国线路名在 `config/redi.php`） |
 | [verify-release-workflow-invariants.sh](verify-release-workflow-invariants.sh) | `release.yml` 与 `build-*-tar` / 冒烟门禁约定 |
 | [verify-ci-preflight-parity.sh](verify-ci-preflight-parity.sh) | `dev-preflight` 中的 `verify-*.sh` 须在 `ci.yml` / `release.yml` 出现 |
-| [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | 已上线主控：升级 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`；可传参 `bash …/patch-master-cron-ops-webhook.sh <artisan目录>`）；结束会打印 Cron / `redi:health --notify` 验收提示 |
+| [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | **仅** Cron 落后于当前模板的已上线主控（绿场 `deploy-master.sh` 已写入正确 cron，**首装勿用**）；升级 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`） |
 | [centos7/vars.example.env](centos7/vars.example.env) | 部署变量模板（`vars.env`）；Webhook URL 写在主控 `.env`，见文件内注释 |
 | [centos7/deploy-master.sh](centos7/deploy-master.sh) / [deploy-node.sh](centos7/deploy-node.sh) | CentOS 7 主控/节点一键部署 |
 | [centos7/grant-nodes-from-vars.sh](centos7/grant-nodes-from-vars.sh) | 按 `vars.env` 的 `NODE_IPS` 同步 MySQL + firewalld（**root**；`MYSQL_ROOT_PASS` 读 vars，不重装主控；`NODE_IPS` 为空时撤销已记录 IP，同 `deploy-master`） |

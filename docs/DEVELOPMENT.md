@@ -47,3 +47,16 @@ bash scripts/verify-ci-preflight-parity.sh
 **打发布包（推荐上线取包方式）：** 见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md) — `bash scripts/build-release-tarballs.sh`（或 `build-*-tar.sh`）；`deploy-*.sh` 在开发机上缺包时会经 `ensure-release-tarballs.sh` 尝试本地构建。GitHub Release（`v*` tag）为可选项。
 
 PHPUnit 以 `phpunit` **退出码**为准；条数随 `main` 演进，勿手抄固定数字。
+
+## 开发机手工部署（非 CentOS 生产）
+
+机房 **CentOS 7 生产** 请只用 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) + `deploy-*.sh`，不要按本节在服务器上克隆仓库。
+
+仅在开发机手搓环境调试时：
+
+1. **数据库**：`mysql < db/mysql_setup.example.sql`，再 `mysql redi_admin < db/redi_admin.sql`（绿场须含 `redi_node_bump_skip`）。
+2. **主控**：`cd master/master`，复制 `.env.example` → `.env`，`composer install`，`php artisan key:generate`，`php artisan migrate --force`，`php artisan storage:link`。
+3. **队列**：`php artisan queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600`。
+4. **节点**：本地 `./scripts/build-node-tar.sh` 或 `go build` 后按 [node/README.md](../node/README.md) 配置 `env.sh` 与 `config.json`。
+
+网站根为 `master/master/public`；与生产路径 `/opt/301/master` 不同，勿混用 cron 示例路径。

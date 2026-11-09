@@ -1,8 +1,8 @@
 # 节点程序
 
-本仓库的跳转节点面向 **被干扰、被重置、访问不稳的域名**（需要改 TCP 窗口的 **lagran** 配合 80/443 跳转），不是给「完全正常、无干扰」的纯 301 场景设计的。部署时请保持 **lagran 开启**，并给二进制 `CAP_NET_ADMIN`（见 [../DEPLOY.md](../DEPLOY.md)）。
+本仓库的跳转节点面向 **被干扰、被重置、访问不稳的域名**（需要改 TCP 窗口的 **lagran** 配合 80/443 跳转），不是给「完全正常、无干扰」的纯 301 场景设计的。部署时请保持 **lagran 开启**，并给二进制 `CAP_NET_ADMIN`。
 
-**文档：** 生产 [DEPLOY-centos7.md](../DEPLOY-centos7.md) · 架构 [../docs/PLATFORM-ARCHITECTURE.md](../docs/PLATFORM-ARCHITECTURE.md) · 平台边界 [../docs/CONSOLE.md](../docs/CONSOLE.md) §8 · 上线清单 [../docs/LAUNCH-CHECKLIST.md](../docs/LAUNCH-CHECKLIST.md)
+**文档：** 从零教程 [../docs/DEPLOY-TUTORIAL-CENTOS7.md](../docs/DEPLOY-TUTORIAL-CENTOS7.md) · 脚本 [../DEPLOY-centos7.md](../DEPLOY-centos7.md) · 架构 [../docs/PLATFORM-ARCHITECTURE.md](../docs/PLATFORM-ARCHITECTURE.md) · 平台边界 [../docs/CONSOLE.md](../docs/CONSOLE.md) §8 · 上线清单 [../docs/LAUNCH-CHECKLIST.md](../docs/LAUNCH-CHECKLIST.md)
 
 发布包是 **`redi-multi.tar.gz`**。解压后目录为 `redi-multi/`，里面有源码、`config.json.example`、`env.example` 和编译好的 `bin/redi-multi`。首次部署从 example 复制 `config.json`（`deploy-node.sh` 会自动复制）。**`redirector` 字段不参与运行**，跳转来自 MySQL 与 `default_redirect_url`。线上运行这个二进制，不要 `go run main.go`。
 
@@ -50,6 +50,8 @@
 | `lagran.enabled` | 默认 **true**；仅本地调试可 `REDI_LAGRAN_DISABLED=1` 或设为 false |
 
 lagran 需要 root 或 `CAP_NET_ADMIN`（`deploy-node.sh` 会 `setcap`）。
+
+HTTP/HTTPS 监听器在 `accept` 后对 socket 设置 **`SO_RCVBUF=1`**（见 `http/http.go`）：在 lagran 改写出站 TCP 窗口的场景下，刻意缩小入站接收缓冲，减轻对端灌包占满连接的风险；**不是配置笔误**。
 
 ## 跳转与产品行为
 

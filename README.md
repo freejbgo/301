@@ -6,7 +6,7 @@
 
 主控源码在 `master/master/`。**仓库内不提交发布包**（`*.tar.gz` 已 gitignore）。上线推荐开发机 `bash scripts/dev-preflight.sh` 后 `bash scripts/build-release-tarballs.sh`，`scp` 到机房并在 `vars.env` 配置 `REDI_MASTER_TAR` / `REDI_NODE_TAR`（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)）。可选从 [GitHub Releases](https://github.com/freejbgo/301/releases) 取同结构 tar（`v*` tag + Actions）。
 
-**生产环境仅支持 CentOS 7.9（及其他 7.x）裸机**，用 `yum` + `deploy-*.sh`，**无需 Docker**。主控与节点脚本见 [scripts/centos7/deploy-master.sh](scripts/centos7/deploy-master.sh)、[scripts/centos7/deploy-node.sh](scripts/centos7/deploy-node.sh)，步骤见 [DEPLOY-centos7.md](DEPLOY-centos7.md)。
+**生产环境仅支持 CentOS 7.9（及其他 7.x）裸机**，用 `yum` + `deploy-*.sh`，**无需 Docker**。**从零部署请跟** [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md)；脚本见 [scripts/centos7/deploy-master.sh](scripts/centos7/deploy-master.sh)、[scripts/centos7/deploy-node.sh](scripts/centos7/deploy-node.sh)、[DEPLOY-centos7.md](DEPLOY-centos7.md)。
 
 | 文档 | 内容 |
 |------|------|
@@ -17,6 +17,7 @@
 | [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md) | 上线说明与验收命令（详情） |
 | [docs/CONSOLE.md](docs/CONSOLE.md) | 控制台操作与平台边界 §8 |
 | [docs/I18N.md](docs/I18N.md) | 后台三语与运维英文文案约定 |
-| [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) | 已上线环境增量升级 |
+| [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md) | 绿场库与首登要点 |
+| [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) | **已上线**环境换发布包（首装可跳过） |
 | [SECURITY.md](SECURITY.md) | 密码、端口、Agent |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 发版前 `dev-preflight` |

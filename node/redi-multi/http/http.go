@@ -16,6 +16,7 @@ func Start() {
 			return c.Control(func(fd uintptr) {
 				//syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, unix.SO_REUSEADDR, 1)
 				//syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, unix.SO_REUSEPORT, 1)
+				// 极小 SO_RCVBUF：配合 lagran 调整出站窗口时，刻意限制入站缓冲，避免对端大量数据占满 socket（非笔误）。
 				syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, unix.SO_RCVBUF, 1)
 				linger := syscall.Linger{
 					Onoff:  1,
