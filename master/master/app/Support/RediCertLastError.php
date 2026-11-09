@@ -16,9 +16,6 @@ final class RediCertLastError
 
     public const CREDENTIAL_UNREADABLE = 'cert.credential_unreadable';
 
-    /** @deprecated Use {@see self::DOMAIN_DISABLED_CANCEL} and {@see messageForCode()} */
-    public const LEGACY_DOMAIN_DISABLED_CANCEL_MSG = 'Domain disabled; cancelled certificate deploy queue on nodes';
-
     public static function messageForCode(string $code, array $replace = []): string
     {
         return RediErrorMessage::get($code, $replace);
@@ -61,16 +58,7 @@ final class RediCertLastError
         }
 
         $expected = self::messageForCode($code);
-        if ((string) $cert->last_error === $expected) {
-            return true;
-        }
-
-        if ($code === self::DOMAIN_DISABLED_CANCEL
-            && (string) $cert->last_error === self::LEGACY_DOMAIN_DISABLED_CANCEL_MSG) {
-            return true;
-        }
-
-        return false;
+        return (string) $cert->last_error === $expected;
     }
 
     /**
@@ -81,7 +69,7 @@ final class RediCertLastError
         $codes = [];
         $ref = new \ReflectionClass(self::class);
         foreach ($ref->getReflectionConstants() as $constant) {
-            if (! $constant->isPublic() || $constant->getName() === 'LEGACY_DOMAIN_DISABLED_CANCEL_MSG') {
+            if (! $constant->isPublic()) {
                 continue;
             }
             $value = $constant->getValue();

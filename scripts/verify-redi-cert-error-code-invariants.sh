@@ -16,8 +16,8 @@ if rg -n 'last_error\s*===\s*' "$APP" -g '*.php' 2>/dev/null | grep -v 'Support/
   fail 'do not compare cert last_error with ===; use RediCertLastError::matches() or last_error_code'
 fi
 
-if rg -n 'DISABLE_DEPLOY_CANCEL_MSG' "$APP" -g '*.php' 2>/dev/null | grep -v 'Models/RediAdminDomain.php'; then
-  fail 'use RediCertLastError::DOMAIN_DISABLED_CANCEL instead of DISABLE_DEPLOY_CANCEL_MSG outside the model'
+if rg -n 'DISABLE_DEPLOY_CANCEL_MSG|LEGACY_DOMAIN_DISABLED_CANCEL_MSG|NODE_DISABLED_DEPLOY_CLEAR_MSG' "$APP" -g '*.php' 2>/dev/null; then
+  fail 'use RediCertLastError codes instead of removed legacy deploy message constants'
 fi
 
 echo "verify-redi-cert-error-code-invariants: ok"
