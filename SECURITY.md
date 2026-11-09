@@ -1,6 +1,6 @@
 # 301 系统安全说明
 
-**新手请先看 [DEPLOY.md](DEPLOY.md)**，按步骤部署即可。
+**新手请先看 [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md)**（从零部署）；索引见 [DEPLOY.md](DEPLOY.md)、[docs/README.md](docs/README.md)。
 
 ## 已在代码/库里做好的事
 

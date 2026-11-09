@@ -51,6 +51,8 @@ REDI_MASTER_URL="http://1.2.3.4"
 REDI_NODE_TOKEN=""
 ```
 
+**联调专用：** 上表 `MASTER_URL` / `REDI_MASTER_URL` 为 `http://` 且 `REDI_MASTER_INSECURE=1` 仅用于主控尚未签 HTTPS 证书时。**对外上线前**须改 `https://`、`ADMIN_HTTPS=true`、去掉 `REDI_MASTER_INSECURE`，并同步节点 `env.sh`（见 [SECURITY.md](SECURITY.md)）。
+
 ```bash
 sudo bash scripts/centos7/deploy-master.sh
 ```

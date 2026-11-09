@@ -1,8 +1,8 @@
 # 文档索引
 
-按场景选路径即可。文档描述 **当前产品行为**，不包含二次开发进度或问题修复台账。
+按场景选路径即可。文档只描述 **当前产品** 的安装与运营；无二次开发台账、问题修复周报或「从初代程序迁移」专章（全新机房按绿场路径即可）。
 
-## 新环境上线
+## 新环境上线（绿场）
 
 1. **[DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md)** — **分步教程（打 tar → 主控 → 节点 → 后台）**  
 2. [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md) — 绿场 `redi_admin.sql`  

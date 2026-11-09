@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -26,7 +25,7 @@ func Init() {
 	if configPath == "" {
 		configPath = "config.json"
 	}
-	config, err := ioutil.ReadFile(configPath)
+	config, err := os.ReadFile(configPath)
 	if err != nil {
 		log.Fatal("Error when opening file: ", err)
 	}
