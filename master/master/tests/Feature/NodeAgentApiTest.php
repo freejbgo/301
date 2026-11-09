@@ -159,6 +159,22 @@ class NodeAgentApiTest extends TestCase
         ]);
     }
 
+    public function test_challenges_synced_caps_domain_list_at_200(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+
+        $domains = array_map(
+            static fn (int $i) => 'missing'.$i.'.example',
+            range(1, 205)
+        );
+        $response = $this->withToken($token)
+            ->postJson('/api/nodes/challenges-synced', ['domains' => $domains])
+            ->assertOk();
+
+        $response->assertJsonPath('synced_count', 0);
+        $response->assertJsonPath('ignored_count', 200);
+    }
+
     public function test_acme_challenges_omits_empty_token_rows(): void
     {
         [, $token] = $this->createNodeWithToken();

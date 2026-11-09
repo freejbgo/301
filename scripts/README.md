@@ -42,6 +42,7 @@
 | [verify-redi-cert-error-code-invariants.sh](verify-redi-cert-error-code-invariants.sh) | 禁止用 `last_error ===` 全文做分支；证书错误须走 `RediCertLastError` |
 | [verify-ops-english-invariants.sh](verify-ops-english-invariants.sh) | 运维层 `Console` / `Support` / `Http` / `Jobs` / `Services` 禁止字符串字面量中文（DNSPod 中国线路名在 `config/redi.php`） |
 | [verify-release-workflow-invariants.sh](verify-release-workflow-invariants.sh) | `release.yml` 与 `build-*-tar` / 冒烟门禁约定 |
+| [verify-ensure-release-tarballs.sh](verify-ensure-release-tarballs.sh) | `REDI_ALLOW_ON_SERVER_TAR_BUILD` 时产物须复制到 `REDI_*_TAR` |
 | [verify-ci-preflight-parity.sh](verify-ci-preflight-parity.sh) | `dev-preflight` 中的 `verify-*.sh` 须在 `ci.yml` / `release.yml` 出现 |
 | [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | **仅** Cron 落后于当前模板的已上线主控（绿场 `deploy-master.sh` 已写入正确 cron，**首装勿用**）；升级 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`） |
 | [centos7/vars.example.env](centos7/vars.example.env) | 部署变量模板（`vars.env`）；Webhook URL 写在主控 `.env`，见文件内注释 |

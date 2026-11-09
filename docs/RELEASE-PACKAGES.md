@@ -34,7 +34,7 @@ REDI_NODE_TAR=/tmp/redi-multi.tar.gz
 
 然后按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 执行 `deploy-master.sh` / `deploy-node.sh`。
 
-仅更新某一侧时，可单独执行 `scripts/build-master-tar.sh` 或 `scripts/build-node-tar.sh`（见各脚本头注释）。缺 tar 时 `deploy-*.sh` **默认直接失败**；仅在 `vars.env` 设 `REDI_ALLOW_ON_SERVER_TAR_BUILD=1` 时才会在机房尝试 `ensure-release-tarballs.sh`（实验室/容器用）。
+仅更新某一侧时，可单独执行 `scripts/build-master-tar.sh` 或 `scripts/build-node-tar.sh`（见各脚本头注释）。缺 tar 时 `deploy-*.sh` **默认直接失败**；仅在 `vars.env` 设 `REDI_ALLOW_ON_SERVER_TAR_BUILD=1` 时才会在机房尝试 `ensure-release-tarballs.sh`（实验室/容器用）。构建产物默认在仓库内 `master/master.tar.gz`、`node/redi-multi.tar.gz`；若 `REDI_*_TAR` 指向其他绝对路径（如 `/tmp/master.tar.gz`），`ensure-release-tarballs.sh` 会在构建后 **复制** 到该路径。
 
 ## 2. 包内容
 

@@ -4,6 +4,18 @@
 # 开发机打 tar 前建议先跑 scripts/dev-preflight.sh（见 docs/DEVELOPMENT.md）。
 # shellcheck shell=bash
 
+redi_stage_built_tar() {
+  local built="$1"
+  local dest="$2"
+
+  [[ -f "$built" ]] || return 1
+  if [[ "$built" != "$dest" ]]; then
+    mkdir -p "$(dirname "$dest")"
+    cp -f "$built" "$dest"
+  fi
+  return 0
+}
+
 redi_ensure_master_tar() {
   local repo_root="$1"
   local tar_path="$2"
@@ -30,9 +42,12 @@ redi_ensure_master_tar() {
     (cd "${repo_root}/master/master" && composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader)
   fi
   (cd "$repo_root" && bash scripts/build-master-tar.sh)
+  local built="${repo_root}/master/master.tar.gz"
   if [[ ! -f "$tar_path" ]]; then
-    [[ -n "$die_fn" ]] && "$die_fn" "构建后仍缺少 $tar_path"
-    return 1
+    if ! redi_stage_built_tar "$built" "$tar_path"; then
+      [[ -n "$die_fn" ]] && "$die_fn" "构建后仍缺少 $tar_path（产物应在 ${built}）"
+      return 1
+    fi
   fi
   echo "已生成 $tar_path"
 }
@@ -60,9 +75,12 @@ redi_ensure_node_tar() {
     return 1
   fi
   (cd "$repo_root" && bash scripts/build-node-tar.sh)
+  local built="${repo_root}/node/redi-multi.tar.gz"
   if [[ ! -f "$tar_path" ]]; then
-    [[ -n "$die_fn" ]] && "$die_fn" "构建后仍缺少 $tar_path"
-    return 1
+    if ! redi_stage_built_tar "$built" "$tar_path"; then
+      [[ -n "$die_fn" ]] && "$die_fn" "构建后仍缺少 $tar_path（产物应在 ${built}）"
+      return 1
+    fi
   fi
   echo "已生成 $tar_path"
 }
