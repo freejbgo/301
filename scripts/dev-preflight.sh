@@ -114,6 +114,9 @@ for f in \
   scripts/verify-grant-nodes-templates.sh \
   scripts/verify-acceptance-centos7-doc.sh \
   scripts/verify-deploy-centos7-doc.sh \
+  scripts/verify-product-docs.sh \
+  scripts/verify-greenfield-install-doc.sh \
+  scripts/verify-launch-checklist-doc.sh \
   scripts/verify-redi-artisan-cron.sh \
   scripts/verify-masteragent-invariants.sh \
   scripts/verify-acme-code-invariants.sh \
@@ -187,6 +190,7 @@ bash scripts/verify-acceptance-centos7-doc.sh
 echo "==> CentOS7 部署教程与脚本"
 bash scripts/verify-deploy-centos7-doc.sh
 bash scripts/verify-product-docs.sh
+bash scripts/verify-greenfield-install-doc.sh
 bash scripts/verify-launch-checklist-doc.sh
 
 echo "==> SQL 与节点存储过程校验"

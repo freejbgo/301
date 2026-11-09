@@ -90,8 +90,8 @@ func TestTickPullsOnlyChangedSplitRevision(t *testing.T) {
 	}
 }
 
-func TestTickLegacyCombinedRevision(t *testing.T) {
-	const legacyRev = "legacy-combined-rev"
+func TestTickCombinedRevisionOnly(t *testing.T) {
+	const combinedRev = "combined-rev-only"
 	certPEM, keyPEM := testCertKeyPEM(t)
 
 	var mu sync.Mutex
@@ -110,7 +110,7 @@ func TestTickLegacyCombinedRevision(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write([]byte(`{"ok":true}`))
 		case "GET /api/nodes/revision":
-			_ = json.NewEncoder(w).Encode(map[string]string{"revision": legacyRev})
+			_ = json.NewEncoder(w).Encode(map[string]string{"revision": combinedRev})
 		case "GET /api/nodes/redirect-rules":
 			rulesPulls++
 			_ = json.NewEncoder(w).Encode(map[string]interface{}{
@@ -153,16 +153,16 @@ func TestTickLegacyCombinedRevision(t *testing.T) {
 		t.Fatalf("first tick: %v", err)
 	}
 	if rulesPulls != 1 || challengePulls != 1 || certPulls != 1 {
-		t.Fatalf("expected legacy revision to pull all feeds once, got rules=%d challenges=%d certs=%d", rulesPulls, challengePulls, certPulls)
+		t.Fatalf("expected combined revision to pull all feeds once, got rules=%d challenges=%d certs=%d", rulesPulls, challengePulls, certPulls)
 	}
-	if revs.legacy != legacyRev {
-		t.Fatalf("expected legacy revision %q, got %q", legacyRev, revs.legacy)
+	if revs.combinedRevision != combinedRev {
+		t.Fatalf("expected combined revision %q, got %q", combinedRev, revs.combinedRevision)
 	}
 
 	if err := tick(client, cfg, &registered, &revs); err != nil {
 		t.Fatalf("second tick: %v", err)
 	}
 	if rulesPulls != 1 || challengePulls != 1 || certPulls != 1 {
-		t.Fatalf("expected no second pulls on unchanged legacy revision, got rules=%d challenges=%d certs=%d", rulesPulls, challengePulls, certPulls)
+		t.Fatalf("expected no second pulls on unchanged combined revision, got rules=%d challenges=%d certs=%d", rulesPulls, challengePulls, certPulls)
 	}
 }
