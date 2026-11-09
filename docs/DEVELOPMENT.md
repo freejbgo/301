@@ -6,7 +6,15 @@
 
 ## 发版前一键检查
 
-在**发版机**（任意 Linux，有 composer + Go；无 Docker 也可以）执行。与 GitHub **CI** / **`v*` release** 核心门禁对齐：`node` + `master-phpunit`（8.4/8.0）+ `centos7-scripts`（含 `verify-*`）；Docker 仅用于可选的 DB 容器校验与 CentOS 7 容器冒烟，**跳过不影响在 7.9 真机上线**。
+在**发版机**（任意 Linux，有 composer + Go）执行。与 GitHub **CI** / **`v*` release** 对齐：
+
+| CI job | 内容 |
+|--------|------|
+| **`dev-preflight`** | 本脚本全量（Go + PHPUnit 8.4 + `composer audit` + 全部 `verify-*` + Docker DB 冒烟） |
+| **`master-phpunit-php80`** | PHP 8.0 双跑 PHPUnit |
+| **`centos7-integration`** | 打 tar + CentOS 7 容器冒烟 |
+
+发版机无 Docker 时 `verify-redi-db-deploy-path.sh` 会跳过；**CI 上会通过 `VERIFY_REDI_REQUIRE_DOCKER=1` 强制跑通**。
 
 ```bash
 bash scripts/dev-preflight.sh
