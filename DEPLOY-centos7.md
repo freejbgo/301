@@ -15,7 +15,7 @@
 
 - 主控包：`master/master.tar.gz`（含 `vendor`，无 `.env`）。
 - 节点包：`node/redi-multi.tar.gz`（CentOS 7 静态 `bin/redi-multi`）。
-- 仓库 **不跟踪** tar。`deploy-*.sh` 默认找仓库内上述路径或 `/tmp`；**生产机应上传 tar 并写 `REDI_*_TAR`**，勿在机房依赖 composer/Go 自动打包。
+- 仓库 **不跟踪** tar。**生产机**应上传 tar、写 `REDI_*_TAR`（模板 [scripts/centos7/vars.production.example.env](scripts/centos7/vars.production.example.env)）。缺 tar 时 **默认拒绝** 机房内自动打包；仅实验室在 `vars.env` 设 `REDI_ALLOW_ON_SERVER_TAR_BUILD=1`。
 
 源码在仓库的 `master/master/`。那是给开发和重新打包用的。自动安装不要把仓库克隆到 `/opt/301`，否则会和发布包解压出来的 `/opt/301/master` 叠在一起。
 

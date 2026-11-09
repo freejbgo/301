@@ -25,7 +25,7 @@ bash scripts/build-release-tarballs.sh # 等价于 build-node-tar + composer --n
 scp master/master.tar.gz node/redi-multi.tar.gz root@<主机>:/tmp/
 ```
 
-在该机 `scripts/centos7/vars.env` 中指定（生产机通常 **没有** composer/Go，不要指望脚本在机房自动打包）：
+在该机 `scripts/centos7/vars.env` 中指定（生产用 [scripts/centos7/vars.production.example.env](../scripts/centos7/vars.production.example.env)；缺 tar 时 **默认失败**，勿在机房自动打包）：
 
 ```bash
 REDI_MASTER_TAR=/tmp/master.tar.gz
@@ -34,7 +34,7 @@ REDI_NODE_TAR=/tmp/redi-multi.tar.gz
 
 然后按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 执行 `deploy-master.sh` / `deploy-node.sh`。
 
-仅更新某一侧时，可单独执行 `scripts/build-master-tar.sh` 或 `scripts/build-node-tar.sh`（见各脚本头注释）。`deploy-*.sh` 在缺包且本机有工具链时会尝试调用 `ensure-release-tarballs.sh` 自动构建；**机房上应始终用已上传的 tar。**
+仅更新某一侧时，可单独执行 `scripts/build-master-tar.sh` 或 `scripts/build-node-tar.sh`（见各脚本头注释）。缺 tar 时 `deploy-*.sh` **默认直接失败**；仅在 `vars.env` 设 `REDI_ALLOW_ON_SERVER_TAR_BUILD=1` 时才会在机房尝试 `ensure-release-tarballs.sh`（实验室/容器用）。
 
 ## 2. 包内容
 

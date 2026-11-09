@@ -10,7 +10,7 @@
 |------|------|
 | 1 | 发版机：`bash scripts/dev-preflight.sh` → `bash scripts/build-release-tarballs.sh`（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)） |
 | 2 | **分步教程**：[docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md) |
-| 3 | 脚本与可选配置：[DEPLOY-centos7.md](DEPLOY-centos7.md)、填空 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md) |
+| 3 | 脚本与可选配置：[DEPLOY-centos7.md](DEPLOY-centos7.md)；生产 `vars`：[scripts/centos7/vars.production.example.env](scripts/centos7/vars.production.example.env) |
 | 4 | 绿场数据库与首登：[docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md) |
 | 5 | 真机验收：[docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)、业务 F1–F8：[docs/ACCEPTANCE-EDGE-POOL.md](docs/ACCEPTANCE-EDGE-POOL.md) |
 | 6 | 一页检查单：[docs/LAUNCH-CHECKLIST.md](docs/LAUNCH-CHECKLIST.md) |
