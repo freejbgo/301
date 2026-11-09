@@ -20,9 +20,12 @@ for f in \
   docs/PRODUCTION-READINESS.md \
   docs/LAUNCH-CHECKLIST.md \
   docs/RELEASE-PACKAGES.md \
-  docs/DEPLOY-TUTORIAL-CENTOS7.md; do
+  docs/DEPLOY-TUTORIAL-CENTOS7.md \
+  docs/OPS-RELEASE-UPDATE.md; do
   [[ -f "$REPO_ROOT/$f" ]] || fail "missing $f"
 done
+
+[[ ! -f "$REPO_ROOT/docs/UPGRADE-IN-PLACE.md" ]] || fail 'rename UPGRADE-IN-PLACE.md to docs/OPS-RELEASE-UPDATE.md'
 
 for gone in \
   docs/AUDIT-CENTOS7-PRODUCTION.md \
@@ -60,6 +63,8 @@ grep -qF '## 8. 平台边界与运营约定' "$REPO_ROOT/docs/CONSOLE.md" \
 grep -qF '## 已知限制与计划增强' "$REPO_ROOT/docs/PRODUCTION-READINESS.md" \
   || fail 'PRODUCTION-READINESS must document known limits'
 grep -qF 'I18N.md' "$REPO_ROOT/docs/README.md" || fail 'docs/README must link I18N.md'
+grep -qF 'OPS-RELEASE-UPDATE.md' "$REPO_ROOT/docs/README.md" \
+  || fail 'docs/README must link OPS-RELEASE-UPDATE.md'
 grep -qF 'PLATFORM-ARCHITECTURE.md' "$REPO_ROOT/docs/ACCEPTANCE-EDGE-POOL.md" \
   || fail 'ACCEPTANCE-EDGE-POOL must link PLATFORM-ARCHITECTURE'
 

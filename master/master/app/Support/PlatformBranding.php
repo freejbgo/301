@@ -92,6 +92,74 @@ class PlatformBranding
         return $out;
     }
 
+    /**
+     * 将旧版仅存顶层的 system_name/page_title/login_title 迁入 locales.zh_CN。
+     *
+     * @return array{status: string, migrated: bool}
+     */
+    public static function migrateFlatStoredToLocales(bool $dryRun = false): array
+    {
+        $row = DB::table('admin_settings')->where('slug', self::SETTINGS_SLUG)->first();
+        if (! $row || $row->value === '') {
+            return ['status' => 'empty', 'migrated' => false];
+        }
+
+        $decoded = json_decode($row->value, true);
+        if (! is_array($decoded)) {
+            return ['status' => 'invalid_json', 'migrated' => false];
+        }
+
+        $locales = is_array($decoded['locales'] ?? null) ? $decoded['locales'] : [];
+        foreach ($locales as $block) {
+            if (! is_array($block)) {
+                continue;
+            }
+            foreach (['system_name', 'page_title', 'login_title'] as $field) {
+                if (trim((string) ($block[$field] ?? '')) !== '') {
+                    return ['status' => 'already_locales', 'migrated' => false];
+                }
+            }
+        }
+
+        $name = trim((string) ($decoded['system_name'] ?? ''));
+        if ($name === '') {
+            return ['status' => 'nothing_to_migrate', 'migrated' => false];
+        }
+
+        $page = trim((string) ($decoded['page_title'] ?? ''));
+        $login = trim((string) ($decoded['login_title'] ?? ''));
+        if ($page === '') {
+            $page = $name;
+        }
+        if ($login === '') {
+            $login = $name;
+        }
+
+        $decoded['locales'] = $locales;
+        $decoded['locales']['zh_CN'] = [
+            'system_name' => $name,
+            'page_title' => $page,
+            'login_title' => $login,
+        ];
+        $decoded['system_name'] = $name;
+        $decoded['page_title'] = $page;
+        $decoded['login_title'] = $login;
+
+        if ($dryRun) {
+            return ['status' => 'dry_run', 'migrated' => true];
+        }
+
+        $now = now();
+        DB::table('admin_settings')->where('slug', self::SETTINGS_SLUG)->update([
+            'value' => json_encode($decoded, JSON_UNESCAPED_UNICODE),
+            'updated_at' => $now,
+        ]);
+        Cache::forget(self::CACHE_KEY);
+        Cache::forget('platform_branding_v1');
+
+        return ['status' => 'migrated', 'migrated' => true];
+    }
+
     public static function save(array $input): void
     {
         $locales = [];

@@ -37,7 +37,7 @@ class AcmeChallengeCleanup
         $challengeIds = $directNames === []
             ? []
             : RediAcmeChallenge::query()->whereIn('domain_name', $directNames)->pluck('id')->all();
-        $legacyChallengeIds = RediAcmeChallenge::query()
+        $hostKeyMatchedChallengeIds = RediAcmeChallenge::query()
             ->when($directNames !== [], fn ($query) => $query->whereNotIn('domain_name', $directNames))
             ->get(['id', 'domain_name'])
             ->filter(function ($row) use ($list, $exactList) {
@@ -45,7 +45,7 @@ class AcmeChallengeCleanup
             })
             ->pluck('id')
             ->all();
-        $challengeIds = array_values(array_unique(array_merge($challengeIds, $legacyChallengeIds)));
+        $challengeIds = array_values(array_unique(array_merge($challengeIds, $hostKeyMatchedChallengeIds)));
         if ($challengeIds !== []) {
             RediAcmeChallenge::query()->whereIn('id', $challengeIds)->delete();
         }
@@ -53,7 +53,7 @@ class AcmeChallengeCleanup
         $syncIds = $directNames === []
             ? []
             : RediAcmeChallengeNodeSync::query()->whereIn('domain_name', $directNames)->pluck('id')->all();
-        $legacySyncIds = RediAcmeChallengeNodeSync::query()
+        $hostKeyMatchedSyncIds = RediAcmeChallengeNodeSync::query()
             ->when($directNames !== [], fn ($query) => $query->whereNotIn('domain_name', $directNames))
             ->get(['id', 'domain_name'])
             ->filter(function ($row) use ($list, $exactList) {
@@ -61,7 +61,7 @@ class AcmeChallengeCleanup
             })
             ->pluck('id')
             ->all();
-        $syncIds = array_values(array_unique(array_merge($syncIds, $legacySyncIds)));
+        $syncIds = array_values(array_unique(array_merge($syncIds, $hostKeyMatchedSyncIds)));
         if ($syncIds !== []) {
             RediAcmeChallengeNodeSync::query()->whereIn('id', $syncIds)->delete();
         }

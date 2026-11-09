@@ -48,7 +48,7 @@
 
 ## 上线后换发布包
 
-仅当环境**已在跑**、需要跟上新 tar 时，见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md)（绿场首装不必阅读）。
+仅当环境**已在跑**、需要跟上新 tar 时，见 [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md)（绿场首装不必阅读）。
 
 ## 开发机手工装库（非生产）
 
