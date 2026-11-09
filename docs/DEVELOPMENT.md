@@ -44,6 +44,6 @@ bash scripts/verify-ci-preflight-parity.sh
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用。
 
-**打发布包（推荐上线取包方式）：** 见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md) — `bash scripts/build-release-tarballs.sh`（或 `build-*-tar.sh`）；`deploy-*.sh` 在开发机上缺包时会经 `ensure-release-tarballs.sh` 尝试本地构建。GitHub Release（`v*` tag）为可选项。
+**打发布包（推荐上线取包方式）：** 见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md) — `bash scripts/build-release-tarballs.sh`（或 `build-*-tar.sh`）。机房部署须上传 tar；缺包时默认失败，实验室可设 `REDI_ALLOW_ON_SERVER_TAR_BUILD=1` 触发 `ensure-release-tarballs.sh`。GitHub Release（`v*` tag）为可选项。
 
 PHPUnit 以 `phpunit` **退出码**为准；条数随 `main` 演进，勿手抄固定数字。

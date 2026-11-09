@@ -4,7 +4,8 @@
 # 分步教程：docs/DEPLOY-TUTORIAL-CENTOS7.md（步骤 2–3）
 # 在仓库根目录执行（勿把 git 克隆到 MASTER_INSTALL_ROOT，默认 /opt/301）：
 #   1) 发版机：bash scripts/build-release-tarballs.sh && scp master.tar.gz 等到本机 /tmp/
-#   2) cp scripts/centos7/vars.example.env scripts/centos7/vars.env
+#   2) cp scripts/centos7/vars.production.example.env scripts/centos7/vars.env  # 生产
+#      或 vars.example.env（仅实验室 HTTP 联调）
 #   3) chmod 600 scripts/centos7/vars.env && vi vars.env  # 设 REDI_MASTER_TAR=/tmp/master.tar.gz 等
 #   4) sudo bash scripts/centos7/deploy-master.sh
 #
@@ -416,6 +417,6 @@ echo "初始后台账号见 DEPLOY.md（导入 SQL 后的默认 admin 密码）�
 echo "后台语言: 登录页或侧栏可切换 简/繁/英（见 docs/I18N.md、docs/CONSOLE.md §界面语言）。"
 echo "Cron: /etc/cron.d/redi-renew（03:10 续期 / 04:10 prune / 08:30 health --notify；勿另配 schedule:run）"
 echo "验收: grep -E 'renew|prune|health' /etc/cron.d/redi-renew && ! grep -q 'schedule:run' /etc/cron.d/redi-renew"
-echo "建议: 在 ${APP}/.env 配置 REDI_HEALTH_WEBHOOK_URL（08:30 health --notify；见 docs/UPGRADE-IN-PLACE.md §4）"
+echo "建议: 在 ${APP}/.env 配置 REDI_HEALTH_WEBHOOK_URL（08:30 health --notify；见 docs/OPS-RELEASE-UPDATE.md §5）"
 echo "仅同步 NODE_IPS（MySQL/firewalld）而不重装: sudo bash scripts/centos7/grant-nodes-from-vars.sh"
 echo "建好节点并复制 Token 后，再到节点机器执行 deploy-node.sh。"

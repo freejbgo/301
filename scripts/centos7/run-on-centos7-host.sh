@@ -37,6 +37,7 @@ NODE_IPS=""
 MASTER_INSTALL_ROOT="/opt/301"
 MASTER_URL="http://${MASTER_IP}"
 ADMIN_HTTPS="false"
+REDI_ALLOW_ON_SERVER_TAR_BUILD="1"
 EOF
 podman cp /tmp/redi-vars-master.env "$C7:/tmp/redi-vars-master.env"
 if podman exec "$C7" bash -lc 'cp /tmp/redi-vars-master.env /workspace/scripts/centos7/vars.env && bash /workspace/scripts/centos7/deploy-master.sh'; then

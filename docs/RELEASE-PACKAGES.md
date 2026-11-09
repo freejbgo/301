@@ -32,9 +32,9 @@ REDI_MASTER_TAR=/tmp/master.tar.gz
 REDI_NODE_TAR=/tmp/redi-multi.tar.gz
 ```
 
-然后按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 执行 `deploy-master.sh` / `deploy-node.sh`。
+然后按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 执行 `deploy-master.sh` / `deploy-node.sh`。生产填空见 [scripts/centos7/vars.production.example.env](../scripts/centos7/vars.production.example.env)。
 
-仅更新某一侧时，可单独执行 `scripts/build-master-tar.sh` 或 `scripts/build-node-tar.sh`（见各脚本头注释）。`deploy-*.sh` 在缺包且本机有工具链时会尝试调用 `ensure-release-tarballs.sh` 自动构建；**机房上应始终用已上传的 tar。**
+仅更新某一侧时，可单独执行 `scripts/build-master-tar.sh` 或 `scripts/build-node-tar.sh`（见各脚本头注释）。缺 tar 时 `deploy-*.sh` **默认直接失败**；仅在 `vars.env` 设 `REDI_ALLOW_ON_SERVER_TAR_BUILD=1` 时才会在机房尝试 `ensure-release-tarballs.sh`（实验室/容器用）。
 
 ## 2. 包内容
 
@@ -62,4 +62,4 @@ Workflow 会跑 Go / PHPUnit（8.4 与 8.0）、`composer audit`、与 CI 对齐
 
 ## 4. 升级与回滚
 
-已上线环境换包： [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。保留上一版 tar；回滚见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) §回滚。
+首装后换包： [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)。保留上一版 tar；回滚见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) §回滚。

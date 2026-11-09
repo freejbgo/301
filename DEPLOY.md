@@ -5,9 +5,11 @@
 
 按这个顺序做：先主控和数据库，再节点，最后到后台把 DNS、节点和域名配好。控制台里每一步点哪里，见 [docs/CONSOLE.md](docs/CONSOLE.md)。
 
-**生产仅支持 CentOS 7.9（7.x）裸机**：**从零部署按** [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md) **步骤 1–7** 做。脚本说明见 [DEPLOY-centos7.md](DEPLOY-centos7.md)，填空示例 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。真机验收 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)；上线清单 [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md)。
+**生产仅支持 CentOS 7.9（7.x）裸机**：**从零部署按** [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md) **步骤 1–7** 做。脚本说明见 [DEPLOY-centos7.md](DEPLOY-centos7.md)；生产 `vars.env` 用 [scripts/centos7/vars.production.example.env](scripts/centos7/vars.production.example.env)。真机验收 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)；上线清单 [docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md)。
 
-**主控已在跑、只想跟上新发布包**：见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md)。文档索引见 [docs/README.md](docs/README.md)。
+**禁止** 在生产机上 `git clone` 后手工 `composer install` / `go build`：程序以 **发版 tar** 为准（`REDI_MASTER_TAR` / `REDI_NODE_TAR`）。首装后换包见 [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md)。文档索引 [docs/README.md](docs/README.md)。
+
+下文 §1–§4 为 **架构说明与非 CentOS 手工参考**；CentOS 7 请只用 `deploy-*.sh`。
 
 部署前在开发机执行 `bash scripts/dev-preflight.sh`，再 `bash scripts/build-release-tarballs.sh`，将 tar 传到服务器并在 `vars.env` 设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR`（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)）。可选：对 `main` 打 **`v*` tag** 由 [`.github/workflows/release.yml`](.github/workflows/release.yml) 上传 [GitHub Releases](https://github.com/freejbgo/301/releases)（Actions 不可用时用本地 tar 即可）。
 
@@ -44,7 +46,7 @@ mysql -u root -p redi_admin < db/redi_admin.sql
 ```
 
 - **绿场**：`redi_admin.sql` = Dcat 菜单 + 业务表 + 默认 `admin` + **`redi_node_bump_skip` 存储过程**（无需为建库再单独 migrate）。详见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。
-- 导入 SQL 后可用下面命令确认过程已存在；CentOS `deploy-master.sh` 会执行 `migrate --force`（绿场通常无待执行迁移，无需你单独跑 migrate）。已上线跟版本见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md)。
+- 导入 SQL 后可用下面命令确认过程已存在；CentOS `deploy-master.sh` 会执行 `migrate --force`（绿场通常无待执行迁移，无需你单独跑 migrate）。首装后换 tar 见 [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md)。
 - 验证过程（可选）：
 
 ```bash
@@ -107,7 +109,7 @@ php artisan queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600
 
 `/etc/cron.d/` 里必须写用户名。发布包安装的程序目录是 `/opt/301/master`；git 克隆时把路径换成 `master/master`。生产须 **三行**（03:10 续期、04:10 清理 ACME、08:30 `redi:health --notify`），且建议 `bash -c 'cd … && php artisan … || php artisan redi:ops-webhook …'`（与 `deploy-master` 一致）。health 行在 webhook 已成功上报 issues 时退出 0，避免重复告警；未配置 `REDI_HEALTH_WEBHOOK_URL` 时仍可由 `||` 触发 ops 告警。
 
-完整内容与验收 `grep` 见 `scripts/centos7/deploy-master.sh` 或 [UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) §4。
+完整内容与验收 `grep` 见 `scripts/centos7/deploy-master.sh` 或 [OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md) §4。
 
 主控域名的 HTTPS 证书用面板或 certbot 签在 Nginx 上。这张证书只保护后台，和客户域名的跳转证书不是同一张。
 

@@ -193,7 +193,7 @@ getcap /opt/redi-multi/redi-multi/bin/redi-multi | grep -q cap_net_admin
 | 场景 | 做法 |
 |------|------|
 | **加一台节点** | 主控 `NODE_IPS` 加 IP → `deploy-master.sh` 或 `grant-nodes-from-vars.sh` → 后台新建节点 → 新机器步骤 5 |
-| **只换程序** | 发版机重新 `build-release-tarballs.sh` → `scp` → 改 `REDI_*_TAR` → 主控/节点重跑对应 `deploy-*.sh`（或见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)） |
+| **只换程序** | 发版机重新 `build-release-tarballs.sh` → `scp` → 改 `REDI_*_TAR` → 主控/节点重跑对应 `deploy-*.sh`（或见 [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)） |
 | **lagran 异常** | `scripts/centos7/lagran-diagnose.sh`（见 DEPLOY-centos7 §8） |
 
 ---

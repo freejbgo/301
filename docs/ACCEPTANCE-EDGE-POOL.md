@@ -65,4 +65,4 @@
 | DNS API 同步失败 | [CONSOLE.md](CONSOLE.md) §2「同步失败后的检查」 |
 | 真机 CentOS 安装与 Cron | [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) |
 | 上线命令与 health | [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) |
-| 节点 Agent 退避 / 空证书防抖 | [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md) §3、`node/README.md` |
+| 节点 Agent 退避 / 空证书防抖 | [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md) §3、`node/README.md` |

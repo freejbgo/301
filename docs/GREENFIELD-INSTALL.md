@@ -1,6 +1,6 @@
 # 绿场安装说明
 
-按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 部署并 **一次导入** `db/redi_admin.sql` 即可；一般无需单独梳理迁移编号。日后换发布包见 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)。
+本仓库按 **全新安装** 交付：按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 部署并 **一次导入** `db/redi_admin.sql` 即可，无历史库迁移步骤。日后换 tar 见 [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)。
 
 ## 文档索引
 
@@ -54,7 +54,7 @@ CentOS 的 `deploy-master.sh` 在 `migrate` 之后会检查该过程是否存在
 
 ## 首装之后若要换发布包
 
-绿场 **首装完成** 后，一般只需按验收文档运营；**换 tar / 跟仓库新版本** 才需要 [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（含何时再跑 `migrate`）。节点 MySQL 账号为 **`redi_node`** 时，在主控更新 `vars.env` 的 `NODE_IPS` 后执行 `grant-nodes-from-vars.sh` 或 `deploy-master.sh`；单 IP 可用 `grant-node-mysql.sh`（仅 `EXECUTE` 存储过程）。
+绿场 **首装完成** 后，一般只需按验收文档运营；**换 tar / 跟仓库新版本** 才需要 [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)（含何时再跑 `migrate`）。节点 MySQL 账号为 **`redi_node`** 时，在主控更新 `vars.env` 的 `NODE_IPS` 后执行 `grant-nodes-from-vars.sh` 或 `deploy-master.sh`；单 IP 可用 `grant-node-mysql.sh`（仅 `EXECUTE` 存储过程）。
 
 主控 cron（`deploy-master.sh` 写入 `/etc/cron.d/redi-renew`）：**03:10** 证书续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`（需 `REDI_HEALTH_WEBHOOK_URL` 方能在有 issues 时静默退出 0；勿配置 `php artisan schedule:run`）。节点 `GetSkipUrl` 与主控一致对 Host 做 **punycode** 归一。
 

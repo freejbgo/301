@@ -7,6 +7,7 @@ DOC="${REPO_ROOT}/DEPLOY-centos7.md"
 GREEN="${REPO_ROOT}/docs/GREENFIELD-INSTALL.md"
 SQL="${REPO_ROOT}/db/redi_admin.sql"
 VARS="${REPO_ROOT}/scripts/centos7/vars.example.env"
+VARS_PROD="${REPO_ROOT}/scripts/centos7/vars.production.example.env"
 DEPLOY_MASTER="${REPO_ROOT}/scripts/centos7/deploy-master.sh"
 DEPLOY_NODE="${REPO_ROOT}/scripts/centos7/deploy-node.sh"
 
@@ -29,14 +30,14 @@ for needle in \
   'scripts/centos7/lagran-cleanup-iptables.sh' \
   'docs/ACCEPTANCE-CENTOS7-DEPLOY.md' \
   'docs/ACCEPTANCE-EDGE-POOL.md' \
-  'docs/UPGRADE-IN-PLACE.md' \
+  'docs/OPS-RELEASE-UPDATE.md' \
   'build-release-tarballs.sh' \
   'REDI_MASTER_TAR' \
   '不需要 Docker' \
   '同步失败后的检查' \
   'redi_node_bump_skip' \
   '不必手工 migrate' \
-  'UPGRADE-IN-PLACE.md' \
+  'OPS-RELEASE-UPDATE.md' \
   'REDI_MASTER_INSECURE' \
   'REDI_DB_TLS' \
   'REDI_AGENT_EMPTY_CERT_CLEAR_AFTER' \
@@ -69,6 +70,11 @@ grep -qF 'docs/I18N.md' "$DEPLOY_MASTER" \
 
 grep -qF 'redi_node_bump_skip' "$SQL" \
   || fail "redi_admin.sql must define or reference redi_node_bump_skip"
+
+[[ -f "$VARS_PROD" ]] || fail "missing vars.production.example.env"
+grep -qF 'REDI_MASTER_TAR=' "$VARS_PROD" || fail "vars.production.example.env must set REDI_MASTER_TAR"
+grep -qF 'vars.production.example.env' "${REPO_ROOT}/docs/README.md" \
+  || fail "docs/README must link vars.production.example.env"
 
 for key in MASTER_INSTALL_ROOT NODE_INSTALL_ROOT MASTER_IP DB_PASS NODE_IPS REDI_MASTER_URL; do
   grep -q "^${key}=" "$VARS" || fail "vars.example.env missing ${key} (DEPLOY §1)"

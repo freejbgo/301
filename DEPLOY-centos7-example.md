@@ -1,4 +1,6 @@
-# CentOS 7 填空示例
+# CentOS 7 填空示例（实验室 / HTTP 联调）
+
+**生产 HTTPS 首装**请改用 [scripts/centos7/vars.production.example.env](scripts/centos7/vars.production.example.env)（须填写 `REDI_*_TAR`）。
 
 主控 `1.2.3.4`，第一台节点 `5.6.7.8`。把 IP 和密码换成你的。
 

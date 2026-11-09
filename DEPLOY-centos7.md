@@ -15,11 +15,11 @@
 
 - 主控包：`master/master.tar.gz`（含 `vendor`，无 `.env`）。
 - 节点包：`node/redi-multi.tar.gz`（CentOS 7 静态 `bin/redi-multi`）。
-- 仓库 **不跟踪** tar。`deploy-*.sh` 默认找仓库内上述路径或 `/tmp`；**生产机应上传 tar 并写 `REDI_*_TAR`**，勿在机房依赖 composer/Go 自动打包。
+- 仓库 **不跟踪** tar。**生产机**应上传 tar、写 `REDI_*_TAR`（模板 [scripts/centos7/vars.production.example.env](scripts/centos7/vars.production.example.env)）。缺 tar 时默认 **拒绝** 机房内自动打包；仅实验室在 `vars.env` 设 `REDI_ALLOW_ON_SERVER_TAR_BUILD=1`。
 
 源码在仓库的 `master/master/`。那是给开发和重新打包用的。自动安装不要把仓库克隆到 `/opt/301`，否则会和发布包解压出来的 `/opt/301/master` 叠在一起。
 
-填好 IP 的示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。**真机 CentOS 7.9 逐步验收**见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)。**边缘池 F1–F8**见 [docs/ACCEPTANCE-EDGE-POOL.md](docs/ACCEPTANCE-EDGE-POOL.md)。**主控已在跑、只跟上新发布包**见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md)。后台操作见 [docs/CONSOLE.md](docs/CONSOLE.md)（DNS API 同步失败见 §2「同步失败后的检查」）。
+填好 IP 的示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。**真机 CentOS 7.9 逐步验收**见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)。**边缘池 F1–F8**见 [docs/ACCEPTANCE-EDGE-POOL.md](docs/ACCEPTANCE-EDGE-POOL.md)。**主控已在跑、只跟上新发布包**见 [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md)。后台操作见 [docs/CONSOLE.md](docs/CONSOLE.md)（DNS API 同步失败见 §2「同步失败后的检查」）。
 
 ## 开发机 / 发版前（与 CI 一致）
 
@@ -55,7 +55,7 @@ sudo bash scripts/centos7/deploy-master.sh
 3. 安装 MariaDB 10.6。CentOS 7 自带的 5.5 导不进这份 `utf8mb4` 库。
 4. 设置 root 密码，关闭反向域名解析，数据库监听 IPv4。3306 不对全网开放，只放行 `NODE_IPS`。
 5. 库是空的才导入 `db/redi_admin.sql`（菜单 + 业务表 + 默认 `admin`（`locale` 列）+ 证书 **`last_error_code`** + 节点存储过程 **`redi_node_bump_skip`**，含节点 IPv6 列；`migrations` 表已与当前发布包对齐）。已经有 `admin_users` 时不会覆盖。
-6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（绿场导入 SQL 后一般为无待执行迁移，**不必手工 migrate**）、`storage:link`，并 **检查存储过程是否存在**（应由上一步 SQL 导入；不存在则脚本失败退出）。跟新发布包时的库变更见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md)。
+6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（绿场导入 SQL 后一般为无待执行迁移，**不必手工 migrate**）、`storage:link`，并 **检查存储过程是否存在**（应由上一步 SQL 导入；不存在则脚本失败退出）。跟新发布包时的库变更见 [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md)。
 7. 配置 PHP-FPM（用户 `nginx`，sock `/var/run/php-fpm/www.sock`）和 Nginx。开启 SELinux 时会放行网站访问网络和数据库。
 8. 安装队列 `redi-queue`：`queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600`（worker 每小时由 systemd 重启，避免长期内存增长）。`/etc/cron.d/redi-renew` 每天 **03:10** 续期证书、**04:10** 清理 ACME、**08:30** `redi:health --notify`（webhook 发送成功或无 issues 时 **退出 0**；未配置 URL 且有 issues 或 artisan 异常时 `|| redi:ops-webhook`）；直接 `php artisan …`，**勿**配置 `php artisan schedule:run`（续期/清理/health 仅由本文件触发；`Kernel` 内已无 schedule 任务）。多台机器跑 `queue:work` 时主控 `.env` 须 `CACHE_DRIVER=redis`（ACME 全局锁）。
 9. 防火墙开放 22、80、443。
@@ -163,7 +163,7 @@ sudo systemctl start redi-multi
 
 节点 `deploy-node.sh` 的 MySQL 冒烟会读取 `vars.env` 中的 **`REDI_DB_TLS`**（`redi_mysql_tls_args_from_env`），与 `env.sh` 写入值一致。
 
-详见 [node/redi-multi/env.example](node/redi-multi/env.example) 与 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) §3。
+详见 [node/redi-multi/env.example](node/redi-multi/env.example) 与 [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md) §3。
 
 ## 10. 多机 / 多 worker 队列（可选）
 
@@ -191,7 +191,7 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health --json
 # 证书部署 failed 行重试：后台或 php artisan redi:requeue-failed-deployments（见 PRODUCTION-READINESS.md）
 ```
 
-已上线主控若 Cron 仍是旧写法，可 `sudo bash scripts/patch-master-cron-ops-webhook.sh`（见 [docs/UPGRADE-IN-PLACE.md](docs/UPGRADE-IN-PLACE.md) §4）。
+已上线主控若 Cron 仍是旧写法，可 `sudo bash scripts/patch-master-cron-ops-webhook.sh`（见 [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md) §4）。
 
 ## 12. 节点 IPv6 与 Pool AAAA（可选）
 
