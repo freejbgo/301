@@ -9,69 +9,23 @@ permissions:
   contents: write
 
 jobs:
-  node:
+  dev-preflight:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: node/redi-multi/go.mod
-      - name: Vet and test node
-        working-directory: node/redi-multi
-        run: |
-          go vet ./...
-          go test ./...
-
-  master-phpunit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"
           tools: composer:v2
-      - name: Install dependencies
-        working-directory: master/master
-        run: composer install --no-interaction --prefer-dist
-      - name: Composer audit
-        working-directory: master/master
-        run: composer audit --no-interaction
-      - name: PHPUnit
-        working-directory: master/master
-        run: ./vendor/bin/phpunit --testsuite Unit,Feature
-      - name: Cron artisan commands registered
-        run: bash scripts/verify-redi-artisan-cron.sh
-      - name: ACME code invariants
-        run: bash scripts/verify-acme-code-invariants.sh
-      - name: Edge DNS invariants
-        run: bash scripts/verify-edge-dns-invariants.sh
-      - name: Tenant edge / ACME queue invariants
-        run: bash scripts/verify-tenant-edge-queue-invariants.sh
-      - name: Preflight invariant scripts (parity with dev-preflight)
-        run: |
-          set -euo pipefail
-          for s in \
-            verify-masteragent-invariants.sh \
-            verify-renew-ops-invariants.sh \
-            verify-acme-prune-requeue-invariants.sh \
-            verify-health-tenant-invariants.sh \
-            verify-cert-deploy-invariants.sh \
-            verify-production-readiness-doc.sh \
-            verify-cname-cert-job-invariants.sh \
-            verify-dns-providers-invariants.sh \
-            verify-node-skip-api-invariants.sh \
-            verify-admin-api-invariants.sh \
-            verify-admin-i18n-invariants.sh \
-            verify-redi-lang-parity.sh \
-            verify-redi-errors-invariants.sh \
-            verify-redi-cert-error-code-invariants.sh \
-            verify-ops-english-invariants.sh \
-            verify-release-workflow-invariants.sh \
-            verify-node-api-js-invariants.sh \
-            verify-redirect-platform-invariants.sh; do
-            bash "scripts/${s}"
-          done
-          bash scripts/verify-ci-preflight-parity.sh
+      - name: ripgrep (verify-admin-i18n-invariants)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
+      - name: Dev preflight (发版终验)
+        env:
+          VERIFY_REDI_REQUIRE_DOCKER: "1"
+        run: bash scripts/dev-preflight.sh
 
   master-phpunit-php80:
     runs-on: ubuntu-latest
@@ -88,51 +42,10 @@ jobs:
         working-directory: master/master
         run: ./vendor/bin/phpunit --testsuite Unit,Feature
 
-  centos7-scripts:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Deploy script syntax (CentOS 7)
-        run: |
-          for f in scripts/dev-preflight.sh scripts/ensure-release-tarballs.sh scripts/verify-redi-db-deploy-path.sh scripts/verify-master-cron-templates.sh scripts/verify-node-deploy-templates.sh scripts/verify-lagran-iptables-invariants.sh scripts/verify-redirect-conn-limit.sh scripts/verify-console-dns-sync-doc.sh scripts/verify-customer-cname-doc.sh scripts/verify-grant-nodes-templates.sh scripts/verify-acceptance-centos7-doc.sh scripts/verify-deploy-centos7-doc.sh scripts/verify-redi-artisan-cron.sh scripts/verify-masteragent-invariants.sh scripts/verify-acme-code-invariants.sh scripts/verify-renew-ops-invariants.sh scripts/verify-acme-prune-requeue-invariants.sh scripts/verify-edge-dns-invariants.sh scripts/verify-cname-cert-job-invariants.sh scripts/verify-dns-providers-invariants.sh scripts/verify-node-skip-api-invariants.sh scripts/verify-node-api-js-invariants.sh scripts/verify-redirect-platform-invariants.sh scripts/verify-acceptance-edge-pool-doc.sh scripts/verify-tenant-edge-queue-invariants.sh scripts/verify-health-tenant-invariants.sh scripts/verify-cert-deploy-invariants.sh scripts/verify-production-readiness-doc.sh scripts/verify-product-docs.sh scripts/verify-launch-checklist-doc.sh scripts/verify-admin-api-invariants.sh scripts/verify-admin-i18n-invariants.sh scripts/verify-ops-english-invariants.sh scripts/verify-release-workflow-invariants.sh scripts/verify-ci-preflight-parity.sh scripts/build-release-tarballs.sh scripts/build-master-tar.sh scripts/build-node-tar.sh scripts/patch-master-cron-ops-webhook.sh scripts/centos7/*.sh; do bash -n "$f" || exit 1; done
-          python3 scripts/centos7/lagran_ports.py node/redi-multi/config.json.example | grep -q '80'
-          bash scripts/verify-master-cron-templates.sh
-          bash scripts/verify-node-deploy-templates.sh
-          bash scripts/verify-lagran-iptables-invariants.sh
-          bash scripts/verify-redirect-conn-limit.sh
-          bash scripts/verify-console-dns-sync-doc.sh
-          bash scripts/verify-customer-cname-doc.sh
-          bash scripts/verify-grant-nodes-templates.sh
-          bash scripts/verify-acceptance-centos7-doc.sh
-          bash scripts/verify-deploy-centos7-doc.sh
-          bash scripts/verify-edge-dns-invariants.sh
-          bash scripts/verify-acceptance-edge-pool-doc.sh
-          bash scripts/verify-tenant-edge-queue-invariants.sh
-          bash scripts/verify-cert-deploy-invariants.sh
-          bash scripts/verify-production-readiness-doc.sh
-          bash scripts/verify-product-docs.sh
-          bash scripts/verify-launch-checklist-doc.sh
-          bash scripts/verify-masteragent-invariants.sh
-          bash scripts/verify-renew-ops-invariants.sh
-          bash scripts/verify-acme-prune-requeue-invariants.sh
-          bash scripts/verify-health-tenant-invariants.sh
-          bash scripts/verify-cname-cert-job-invariants.sh
-          bash scripts/verify-dns-providers-invariants.sh
-          bash scripts/verify-node-skip-api-invariants.sh
-          bash scripts/verify-node-api-js-invariants.sh
-          bash scripts/verify-redirect-platform-invariants.sh
-          bash scripts/verify-admin-api-invariants.sh
-          bash scripts/verify-admin-i18n-invariants.sh
-          bash scripts/verify-ops-english-invariants.sh
-          bash scripts/verify-release-workflow-invariants.sh
-          bash scripts/verify-ci-preflight-parity.sh
-          php scripts/verify-redi-node-procedure-sync.php
-          bash scripts/verify-redi-db-deploy-path.sh
-
   centos7-integration:
     runs-on: ubuntu-latest
-    needs: [node, master-phpunit, master-phpunit-php80, centos7-scripts]
-    if: always() && needs.node.result == 'success' && needs.master-phpunit.result == 'success' && needs.master-phpunit-php80.result == 'success' && needs.centos7-scripts.result == 'success'
+    needs: [dev-preflight, master-phpunit-php80]
+    if: always() && needs.dev-preflight.result == 'success' && needs.master-phpunit-php80.result == 'success'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -156,7 +69,7 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    needs: [node, master-phpunit, master-phpunit-php80, centos7-scripts, centos7-integration]
+    needs: [dev-preflight, master-phpunit-php80, centos7-integration]
     steps:
       - uses: actions/checkout@v4
 

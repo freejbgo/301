@@ -29,6 +29,7 @@ echo "==> PHPUnit (master/master, PHP $(php -r 'echo PHP_VERSION;'))"
 (
   cd master/master
   composer install --no-interaction --prefer-dist
+  composer audit --no-interaction
   ./vendor/bin/phpunit --testsuite Unit,Feature
 )
 

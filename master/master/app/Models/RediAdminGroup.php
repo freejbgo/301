@@ -62,10 +62,4 @@ class RediAdminGroup extends Model
     {
         return $this->hasMany(RediAdminDomain::class, 'group_id');
     }
-
-    /** @deprecated Use domains() */
-    public function domain()
-    {
-        return $this->domains();
-    }
 }

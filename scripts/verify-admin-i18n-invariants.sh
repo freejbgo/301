@@ -5,6 +5,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ADMIN_APP="${REPO_ROOT}/master/master/app/Admin"
 ADMIN_MODELS="${REPO_ROOT}/master/master/app/Models"
+GROUP_MODEL="${REPO_ROOT}/master/master/app/Models/RediAdminGroup.php"
 ADMIN_CFG="${REPO_ROOT}/master/master/config/admin.php"
 LOCALE_MW="${REPO_ROOT}/master/master/app/Http/Middleware/SetAdminLocale.php"
 PARITY_TEST="${REPO_ROOT}/master/master/tests/Unit/RediLangParityTest.php"
@@ -20,9 +21,14 @@ fail() {
 
 command -v rg >/dev/null 2>&1 || fail "ripgrep (rg) required"
 
-for f in "$ADMIN_CFG" "$LOCALE_MW" "$PARITY_TEST" "$EVENTS" "$APP_PROVIDER" "$MENU_PARTIAL"; do
+for f in "$ADMIN_CFG" "$LOCALE_MW" "$PARITY_TEST" "$EVENTS" "$APP_PROVIDER" "$MENU_PARTIAL" "$GROUP_MODEL"; do
   [[ -f "$f" ]] || fail "missing $f"
 done
+
+grep -q 'function domains' "$GROUP_MODEL" || fail 'RediAdminGroup must expose domains()'
+if grep -qE 'function domain\(' "$GROUP_MODEL"; then
+  fail 'RediAdminGroup must not keep deprecated domain() alias'
+fi
 
 middleware_block="$(awk "/        'middleware' => \[/,/        \],/" "$ADMIN_CFG" | head -n -1)"
 echo "$middleware_block" | grep -q 'SetAdminLocale' || fail 'route middleware must include SetAdminLocale'

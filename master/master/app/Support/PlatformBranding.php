@@ -50,10 +50,6 @@ class PlatformBranding
         $stored = self::getStored();
         $locales = is_array($stored['locales'] ?? null) ? $stored['locales'] : [];
 
-        $legacyName = trim((string) ($stored['system_name'] ?? ''));
-        $legacyPage = trim((string) ($stored['page_title'] ?? ''));
-        $legacyLogin = trim((string) ($stored['login_title'] ?? ''));
-
         $out = [
             'logo' => (string) ($stored['logo'] ?? ''),
             'logo_mini' => (string) ($stored['logo_mini'] ?? ''),
@@ -61,17 +57,15 @@ class PlatformBranding
             'locales' => [],
         ];
 
-        $hasStoredText = $legacyName !== '' || $legacyPage !== '' || $legacyLogin !== '';
-        if (! $hasStoredText) {
-            foreach ($locales as $block) {
-                if (! is_array($block)) {
-                    continue;
-                }
-                foreach (['system_name', 'page_title', 'login_title'] as $field) {
-                    if (trim((string) ($block[$field] ?? '')) !== '') {
-                        $hasStoredText = true;
-                        break 2;
-                    }
+        $hasStoredText = false;
+        foreach ($locales as $block) {
+            if (! is_array($block)) {
+                continue;
+            }
+            foreach (['system_name', 'page_title', 'login_title'] as $field) {
+                if (trim((string) ($block[$field] ?? '')) !== '') {
+                    $hasStoredText = true;
+                    break 2;
                 }
             }
         }
@@ -81,12 +75,6 @@ class PlatformBranding
             $name = trim((string) ($block['system_name'] ?? ''));
             $page = trim((string) ($block['page_title'] ?? ''));
             $login = trim((string) ($block['login_title'] ?? ''));
-
-            if ($name === '' && $code === 'zh_CN' && $legacyName !== '' && $locales === []) {
-                $name = $legacyName;
-                $page = $legacyPage;
-                $login = $legacyLogin;
-            }
 
             if (! $hasStoredText) {
                 $name = self::defaultFieldForLocale($code, 'system_name');
@@ -116,11 +104,6 @@ class PlatformBranding
                 'page_title' => trim((string) ($block['page_title'] ?? '')),
                 'login_title' => trim((string) ($block['login_title'] ?? '')),
             ];
-        }
-
-        $legacyName = trim((string) ($input['system_name'] ?? ''));
-        if ($legacyName !== '' && $locales['zh_CN']['system_name'] === '') {
-            $locales['zh_CN']['system_name'] = $legacyName;
         }
 
         $primaryName = $locales['zh_CN']['system_name'];
@@ -241,7 +224,6 @@ class PlatformBranding
     protected static function resolveField(array $stored, string $locale, string $field): string
     {
         $locales = is_array($stored['locales'] ?? null) ? $stored['locales'] : [];
-        $candidates = [];
 
         if (is_array($locales[$locale] ?? null)) {
             $block = $locales[$locale];
@@ -259,10 +241,6 @@ class PlatformBranding
             if ($fromCn !== '') {
                 return $fromCn;
             }
-        }
-        $legacy = trim((string) ($stored[$field] ?? ''));
-        if ($legacy !== '') {
-            return $legacy;
         }
 
         return self::defaultFieldForLocale($locale, $field);

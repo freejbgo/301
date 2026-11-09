@@ -18,10 +18,12 @@ done
 
 grep -q 'container-integration-test.sh' "$REL" || fail "release must run CentOS container smoke"
 grep -q 'composer audit' "$REL" || fail "release publish must run composer audit"
-grep -q 'verify-redi-artisan-cron.sh' "$REL" || fail "release master-phpunit must run verify-redi-artisan-cron"
+grep -qE 'verify-redi-artisan-cron\.sh|dev-preflight\.sh' "$REL" \
+  || fail "release must run dev-preflight or verify-redi-artisan-cron"
 grep -q 'master/vendor/autoload.php' "$REL" || fail "release must verify master tar contents"
 grep -q 'redi-multi/bin/redi-multi' "$REL" || fail "release must verify node tar contents"
-grep -q 'verify-redi-node-procedure-sync.php' "$REL" || fail "release centos7-scripts must sync procedure"
+grep -qE 'verify-redi-node-procedure-sync\.php|dev-preflight\.sh' "$REL" \
+  || fail "release must run dev-preflight or verify-redi-node-procedure-sync"
 grep -q 'CGO_ENABLED=0' "$NODE_TAR" || fail "node tar build must be static CGO_ENABLED=0"
 grep -q 'master/.env' "$MASTER_TAR" || fail "master tar must exclude .env"
 grep -q 'config.json.example' "$NODE_TAR" || fail "node pack must document config.json.example"
