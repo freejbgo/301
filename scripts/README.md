@@ -18,8 +18,8 @@
 | [verify-redi-artisan-cron.sh](verify-redi-artisan-cron.sh) | `php artisan … --help` 确认 Cron/运维引用的 `redi:*` 命令已注册（含 `redi:health --notify`） |
 | [verify-node-skip-api-invariants.sh](verify-node-skip-api-invariants.sh) | 节点数据面 `skip_url` / `bump_skip` 与主机名键约定 |
 | [verify-node-api-js-invariants.sh](verify-node-api-js-invariants.sh) | 节点 `/c.js`、`/api.js` 限速与 redirector 出站 URL 约定 |
-| [verify-redirect-conn-limit.sh](verify-redirect-conn-limit.sh) | 80/443 accept 前预占连接槽约定 |
-| [verify-lagran-iptables-invariants.sh](verify-lagran-iptables-invariants.sh) | lagran `setIptable` IPv4 返回值与 ip6tables 告警约定 |
+| [verify-redirect-conn-limit.sh](verify-redirect-conn-limit.sh) | 80/443 连接槽预占、`redirect` 消毒与 HTTP→HTTPS 前置条件 |
+| [verify-lagran-iptables-invariants.sh](verify-lagran-iptables-invariants.sh) | lagran `Enabled` / `setIptable` 中止、`REDI_LAGRAN_DISABLED` 与 ip6tables 告警 |
 | [verify-console-dns-sync-doc.sh](verify-console-dns-sync-doc.sh) | [CONSOLE.md](../docs/CONSOLE.md) DNS API 同步失败运维段落 |
 | [verify-customer-cname-doc.sh](verify-customer-cname-doc.sh) | [CUSTOMER-CNAME-HTTPS.md](../docs/CUSTOMER-CNAME-HTTPS.md) 与 CONSOLE 互链 |
 | [verify-masteragent-invariants.sh](verify-masteragent-invariants.sh) | Go masteragent：证书拉取、ack 与注册状态约定 |

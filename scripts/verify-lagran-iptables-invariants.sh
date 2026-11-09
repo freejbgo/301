@@ -5,6 +5,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LAGRAN="${REPO_ROOT}/node/redi-multi/lagran/lagran.go"
 RULES="${REPO_ROOT}/node/redi-multi/lagran/iptables_rules.go"
+ENABLED="${REPO_ROOT}/node/redi-multi/lagran/enabled.go"
 
 fail() {
   echo "verify-lagran-iptables-invariants: $*" >&2
@@ -13,9 +14,13 @@ fail() {
 
 [[ -f "$LAGRAN" ]] || fail "missing lagran.go"
 [[ -f "$RULES" ]] || fail "missing iptables_rules.go"
+[[ -f "$ENABLED" ]] || fail "missing enabled.go"
 
 grep -q 'func appendLagranRules.*bool' "$RULES" || fail "appendLagranRules must return bool"
 grep -q 'return v4ok' "$LAGRAN" || fail "setIptable must return IPv4 rule install result"
 grep -q 'ip6tables new error' "$LAGRAN" || fail "setIptable must warn on ip6tables failure without failing v4"
+grep -q 'if !Enabled()' "$LAGRAN" || fail "Run must respect lagran.Enabled()"
+grep -q 'if !setIptable(sport)' "$LAGRAN" || fail "Run must abort when IPv4 iptables rules fail"
+grep -q 'REDI_LAGRAN_DISABLED' "$ENABLED" || fail "lagran must honor REDI_LAGRAN_DISABLED"
 
 echo "verify-lagran-iptables-invariants: OK"

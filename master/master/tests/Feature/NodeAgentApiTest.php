@@ -2828,6 +2828,67 @@ class NodeAgentApiTest extends TestCase
         $this->assertNotContains($certId, $ids);
     }
 
+    public function test_certificates_omit_disabled_domains(): void
+    {
+        [$node, $token] = $this->createNodeWithToken();
+
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+
+        $liveDomainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'live-cert.example',
+            'status' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $pausedDomainId = \DB::table('redi_admin_domain')->insertGetId([
+            'original_url' => 'paused-cert.example',
+            'status' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $liveCertId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $liveDomainId,
+            'domain_name' => 'live-cert.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\nlive\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\nlive\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $pausedCertId = \DB::table('redi_domain_certs')->insertGetId([
+            'domain_id' => $pausedDomainId,
+            'domain_name' => 'paused-cert.example',
+            'status' => 'active',
+            'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\npaused\n-----END CERTIFICATE-----"),
+            'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\npaused\n-----END PRIVATE KEY-----"),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        foreach ([$liveCertId, $pausedCertId] as $certId) {
+            \DB::table('redi_cert_deployments')->insert([
+                'cert_id' => $certId,
+                'node_id' => $node->id,
+                'status' => 'ok',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $response = $this->withToken($token)->getJson('/api/nodes/certificates');
+        $response->assertOk();
+        $ids = array_column($response->json('certificates'), 'cert_id');
+        $this->assertContains($liveCertId, $ids);
+        $this->assertNotContains($pausedCertId, $ids);
+    }
+
     public function test_redirect_rules_omit_disabled_domains(): void
     {
         [, $token] = $this->createNodeWithToken();

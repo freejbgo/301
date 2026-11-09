@@ -25,6 +25,9 @@ grep -q 'certs.ReplaceAll(nil)' "$AGENT" || fail "empty cert list must clear in-
 grep -q 'noteEmptyCertificateList' "$AGENT" || fail "empty cert list must debounce before ReplaceAll(nil)"
 grep -q 'noteEmptyChallengeList' "$AGENT" || fail "empty acme-challenges list must debounce before ReplaceAll"
 grep -q 'noteEmptyRedirectRulesList' "$AGENT" || fail "empty redirect-rules list must debounce before ReplaceForceHTTPS"
+grep -q 'host.ContainsControlChars(r.OriginalURL)' "$AGENT" || fail "pullRedirectRules must skip control chars in host"
+grep -q 'host.AcmeHostKey(r.OriginalURL)' "$AGENT" || fail "pullRedirectRules must normalize host with AcmeHostKey"
+grep -q 'rules.ReplaceForceHTTPS' "$AGENT" || fail "pullRedirectRules must call rules.ReplaceForceHTTPS"
 grep -q 'nextPollIntervalAfterError' "${REPO_ROOT}/node/redi-multi/masteragent/backoff.go" || fail "masteragent must backoff on tick errors"
 grep -q 'warnThrottled' "${REPO_ROOT}/node/redi-multi/masteragent/log_throttle.go" || fail "masteragent must throttle pull warnings"
 grep -q 'warnThrottled("pull-certificates"' "$AGENT" || fail "pull certificates must use warnThrottled"
@@ -38,5 +41,10 @@ grep -q 'rev.Revision != "" && rev.Revision != revs.legacy' "$AGENT" \
 TICK_TEST="${REPO_ROOT}/node/redi-multi/masteragent/tick_test.go"
 [[ -f "$TICK_TEST" ]] || fail "missing tick_test.go"
 grep -q 'TestTickLegacyCombinedRevision' "$TICK_TEST" || fail "tick_test must cover legacy combined revision"
+
+EMPTY_RULES="${REPO_ROOT}/node/redi-multi/masteragent/empty_rules_test.go"
+[[ -f "$EMPTY_RULES" ]] || fail "missing empty_rules_test.go"
+grep -q 'TestEmptyRedirectRulesListDebouncesBeforeClear' "$EMPTY_RULES" \
+  || fail "empty_rules_test must debounce before clearing force_https map"
 
 echo "verify-masteragent-invariants: OK"
