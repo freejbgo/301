@@ -21,5 +21,7 @@ grep -q 'TryAcquireConnection' "$HTTP" || fail "http accept must pre-acquire con
 grep -q 'ProcessWithAcquiredSlot' "$HTTP" || fail "http must use ProcessWithAcquiredSlot"
 grep -q 'TryAcquireConnection' "$HTTPS" || fail "https accept must pre-acquire connection slot"
 grep -q 'ProcessWithAcquiredSlot' "$HTTPS" || fail "https must use ProcessWithAcquiredSlot"
+grep -q 'SO_RCVBUF' "$HTTP" || fail "http listener must set SO_RCVBUF (lagran)"
+grep -q 'SO_RCVBUF' "$HTTPS" || fail "https listener must set SO_RCVBUF (lagran)"
 
 echo "verify-redirect-conn-limit: OK"
