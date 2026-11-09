@@ -23,7 +23,9 @@ for needle in \
   'verify-redi-db-deploy-path.sh' \
   '导出 CSV' \
   '同步失败后的检查' \
-  'dns_api_tenants_unsynced'; do
+  'dns_api_tenants_unsynced' \
+  'OPS-RELEASE-UPDATE.md' \
+  'cert_validating_stuck'; do
   grep -qF -- "$needle" "$DOC" || fail "PRODUCTION-READINESS missing: ${needle}"
 done
 

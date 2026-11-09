@@ -18,6 +18,6 @@
 | [docs/CONSOLE.md](docs/CONSOLE.md) | 控制台操作与平台边界 §8 |
 | [docs/I18N.md](docs/I18N.md) | 后台三语与运维英文文案约定 |
 | [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md) | 绿场库与首登要点 |
-| [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md) | **已上线**环境换发布包（首装可跳过） |
+| [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md) | **首装后**换发布包（绿场首装可跳过） |
 | [SECURITY.md](SECURITY.md) | 密码、端口、Agent |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 发版前 `dev-preflight` |

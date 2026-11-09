@@ -2,7 +2,7 @@
 
 本文档汇总 **阻塞上线** 与 **验收必做** 项，与 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 配合使用。**生产环境仅维护 CentOS 7.9（7.x）部署路径。**
 
-- **已上线升级（不重装）**：[OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)（含 `scripts/patch-master-cron-ops-webhook.sh`）
+- **首装后换发布包（不重装）**：[OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)（含 `scripts/patch-master-cron-ops-webhook.sh`）
 - **一页打勾清单**：[LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)（[Canvas 可勾选副本](https://cursor.com/canvas/store-0707e8bc-7570-4527-8e26-d32c04eb4d4e/e877d821-4edb-4d1f-9d65-4e1382e20da4)）
 
 ## 阻塞上线（P0 摘要）
@@ -94,6 +94,7 @@ bash scripts/verify-redi-db-deploy-path.sh
 - Cron **08:30** `redi:health --notify`：建议配置 `REDI_HEALTH_WEBHOOK_URL`（未配置且有 issues 时退出 1，由 `|| redi:ops-webhook` 兜底）。Webhook 目标须公网可解析且 DNS 仅指向公网 IP，否则 **不会 POST**（见 [HEALTH-REFERENCE.md](HEALTH-REFERENCE.md) §运维 Webhook、[SECURITY.md](../SECURITY.md)）
 - `failed_jobs` > 0 → 严重（`queue_failed_jobs`）
 - `jobs` 积压 ≥ `REDI_HEALTH_QUEUE_PENDING_THRESHOLD`（默认 80）→ `queue_backlog`；`available_at` 超过 `REDI_HEALTH_QUEUE_STALE_HOURS`（默认 2）未执行 → `queue_stale`（仅 `QUEUE_CONNECTION=database`）
+- `cert_validating_stuck`：验证中过久 → 节点 Agent 是否在线、`challenges-synced` 是否在约 **3 分钟**内上报、公网 HTTP-01 是否可达（[CONSOLE.md](CONSOLE.md) §5、[HEALTH-REFERENCE.md](HEALTH-REFERENCE.md)）
 
 多 worker 见 [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md)；节点 DB TLS 见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §9。
 
