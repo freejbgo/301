@@ -62,4 +62,4 @@ Workflow 会跑 Go / PHPUnit（8.4 与 8.0）、`composer audit`、与 CI 对齐
 
 ## 4. 升级与回滚
 
-已上线环境换包： [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)。保留上一版 tar；回滚见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) §回滚。
+环境已在跑、需跟上新 tar：[OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)。保留上一版 tar；回滚见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) §回滚。

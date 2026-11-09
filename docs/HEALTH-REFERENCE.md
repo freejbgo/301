@@ -31,7 +31,7 @@ Cron、Webhook 与验收见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)�
 | `cert_deploy_failed` | critical | 节点证书安装 failed（仅统计仍可下发的证书，与 pending 规则一致） |
 | `cert_expired` | critical | 已过期且域名仍启用 |
 | `cert_expiring` | warning | 在 `--days` 窗口内即将到期 |
-| `cert_validating_stuck` | warning | validating 超过 `REDI_HEALTH_VALIDATING_STUCK_HOURS` |
+| `cert_validating_stuck` | warning | validating 超过 `REDI_HEALTH_VALIDATING_STUCK_HOURS`；先查各节点 Agent 在线、公网 HTTP-01 可达，以及 `challenges-synced` 是否在约 **3 分钟**内上报（过期 sync 不计入，见 [CONSOLE.md](CONSOLE.md) §5） |
 | `cert_domain_name_drift` | warning | 证书 `domain_name` 与域名 `original_url` 不一致且 health 未能自动对齐 |
 | `queue_failed_jobs` | critical | `failed_jobs` 非空 |
 | `queue_backlog` | warning | `jobs` 积压超过阈值 |

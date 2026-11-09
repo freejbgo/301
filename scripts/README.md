@@ -36,6 +36,7 @@
 | [verify-health-tenant-invariants.sh](verify-health-tenant-invariants.sh) | `redi:health` / 租户首页 / 批量域名跨租户与展示安全约定 |
 | [verify-cert-deploy-invariants.sh](verify-cert-deploy-invariants.sh) | `reconcileCertDeployStatus` / `certIsNodePullable`、启用守卫、`csvSafeCell` |
 | [verify-production-readiness-doc.sh](verify-production-readiness-doc.sh) | 静态校验 [PRODUCTION-READINESS.md](../docs/PRODUCTION-READINESS.md) 关键验收表述 |
+| [verify-health-reference-doc.sh](verify-health-reference-doc.sh) | [HEALTH-REFERENCE.md](../docs/HEALTH-REFERENCE.md) 与 CONSOLE validating 排障一致 |
 | [verify-admin-api-invariants.sh](verify-admin-api-invariants.sh) | 后台登录与节点 Agent API 限速约定 |
 | [verify-admin-i18n-invariants.sh](verify-admin-i18n-invariants.sh) | 后台 `app/Admin` / `app/Models` 禁止字符串字面量中文、`config/admin.php` 英文回退、locale 中间件与登录同步约定；域名批量/启用校验不得走 `RediErrorMessage` |
 | [verify-redi-lang-parity.sh](verify-redi-lang-parity.sh) | `redi-*` 与 Dcat `menu`/`global`/`extension` 三语键对齐（同 `RediLangParityTest`，无 composer 可跑） |
