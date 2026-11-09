@@ -95,11 +95,13 @@ bash scripts/verify-ops-english-invariants.sh
 
 echo "==> release.yml / 发布包约定"
 bash scripts/verify-release-workflow-invariants.sh
+bash scripts/verify-ensure-release-tarballs.sh
 
 echo "==> 仓库脚本语法 + CentOS 7 部署脚本"
 for f in \
   scripts/dev-preflight.sh \
   scripts/ensure-release-tarballs.sh \
+  scripts/verify-ensure-release-tarballs.sh \
   scripts/verify-redi-db-deploy-path.sh \
   scripts/build-master-tar.sh \
   scripts/build-node-tar.sh \

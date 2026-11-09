@@ -72,6 +72,12 @@ class RediOpsWebhook
                 if (isset($row['message'])) {
                     $row['message'] = OpsDisplaySanitizer::stripControlChars((string) $row['message']);
                 }
+                if (isset($row['code'])) {
+                    $row['code'] = OpsDisplaySanitizer::stripControlChars((string) $row['code']);
+                }
+                if (isset($row['level'])) {
+                    $row['level'] = OpsDisplaySanitizer::stripControlChars((string) $row['level']);
+                }
                 $payload['issues'][$i] = $row;
             }
         }

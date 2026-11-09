@@ -25,6 +25,12 @@ grep -q 'originalUrlIfValid' "$job" || fail "IssueDomainCertificateJob must gate
 grep -q "domain_name = ''" "$job" || fail "IssueDomainCertificateJob must clear domain_name when host invalid"
 grep -q 'withoutRedirecting' "$waiter" || fail "Http01PropagationWaiter must not follow redirects on HTTP-01 probe"
 grep -q 'acmeHostKey' "$waiter" || fail "Http01PropagationWaiter must normalize domain with acmeHostKey"
+grep -q 'subMinutes(15)' "$waiter" || fail "Http01PropagationWaiter must require fresh node heartbeat"
+grep -q 'subMinutes(3)' "$waiter" || fail "Http01PropagationWaiter must ignore stale challenge sync rows"
+
+ack="${APP}/Http/Controllers/Api/NodeAgentController.php"
+[[ -f "$ack" ]] || fail "missing NodeAgentController"
+grep -q 'array_slice($rawDomains, 0, 200)' "$ack" || fail "challenges-synced must cap domain list at 200"
 grep -q 'acmeHostKey' "$challenge" || fail "RediAcmeChallenge upsert must use acmeHostKey"
 
 [[ -f "$GO_API" ]] || fail "missing api.go"

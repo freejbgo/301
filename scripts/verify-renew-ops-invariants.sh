@@ -29,6 +29,7 @@ grep -q 'scopeRenewalDue' "$cert" || fail "RediDomainCert must define renewalDue
 grep -q 'STATUS_VALIDATING' "$cert" || fail "renewalDue must handle validating stuck"
 grep -q 'freshCertWithPersistedRealign' "$renew" || fail "renew must realign cert before queue"
 grep -q 'stripControlChars' "$webhook" || fail "webhook must strip control chars"
+grep -q "OpsDisplaySanitizer::field(\$task" "$webhook" || fail "notifyTaskFailure must sanitize task name"
 grep -q 'normalizeWebhookUrl' "$webhook" || fail "webhook must normalize URLs"
 grep -q 'notifyTaskFailure' "$opsCmd" || fail "ops-webhook command must delegate to RediOpsWebhook"
 grep -q 'cert_validating_stuck' "$health" || fail "health must report validating stuck"
