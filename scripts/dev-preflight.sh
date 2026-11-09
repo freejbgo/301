@@ -37,6 +37,7 @@ bash scripts/verify-node-skip-api-invariants.sh
 bash scripts/verify-node-api-js-invariants.sh
 bash scripts/verify-redirect-conn-limit.sh
 bash scripts/verify-console-dns-sync-doc.sh
+bash scripts/verify-console-platform-boundaries.sh
 bash scripts/verify-customer-cname-doc.sh
 
 echo "==> PHPUnit (master/master, PHP $(php -r 'echo PHP_VERSION;'))"
@@ -123,6 +124,7 @@ for f in \
   scripts/verify-node-api-js-invariants.sh \
   scripts/verify-redirect-conn-limit.sh \
   scripts/verify-console-dns-sync-doc.sh \
+  scripts/verify-console-platform-boundaries.sh \
   scripts/verify-customer-cname-doc.sh \
   scripts/verify-cname-cert-job-invariants.sh \
   scripts/verify-redirect-platform-invariants.sh \

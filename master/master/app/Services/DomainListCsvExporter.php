@@ -72,7 +72,7 @@ class DomainListCsvExporter
                     (int) $domain->status === 1 ? 'enabled' : 'disabled',
                     $domain->group_id,
                     self::csvSafeCell((string) ($domain->admin_name ?? '')),
-                    $cert ? $cert->status : 'none',
+                    self::csvSafeCell($cert ? (string) $cert->status : 'none'),
                     $cert && $cert->expires_at ? $cert->expires_at->format('Y-m-d') : '',
                     self::csvSafeCell($cnameTarget),
                     $dnsOk,
