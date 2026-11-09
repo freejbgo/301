@@ -21,6 +21,7 @@
 | [verify-redirect-conn-limit.sh](verify-redirect-conn-limit.sh) | 80/443 连接槽预占、`redirect` 消毒与 HTTP→HTTPS 前置条件 |
 | [verify-lagran-iptables-invariants.sh](verify-lagran-iptables-invariants.sh) | lagran `Enabled` / `setIptable` 中止、`REDI_LAGRAN_DISABLED` 与 ip6tables 告警 |
 | [verify-console-dns-sync-doc.sh](verify-console-dns-sync-doc.sh) | [CONSOLE.md](../docs/CONSOLE.md) DNS API 同步失败运维段落 |
+| [verify-console-platform-boundaries.sh](verify-console-platform-boundaries.sh) | CONSOLE §8 与 PLATFORM-ARCHITECTURE / LAUNCH-CHECKLIST 平台边界一致 |
 | [verify-customer-cname-doc.sh](verify-customer-cname-doc.sh) | [CUSTOMER-CNAME-HTTPS.md](../docs/CUSTOMER-CNAME-HTTPS.md) 与 CONSOLE 互链 |
 | [verify-masteragent-invariants.sh](verify-masteragent-invariants.sh) | Go masteragent：证书拉取、ack 与注册状态约定 |
 | [verify-acme-code-invariants.sh](verify-acme-code-invariants.sh) | 静态校验 ACME 签发/HTTP-01/挑战 upsert 与节点 `GetSkipUrl` 使用 `acmeHostKey`/`AcmeHostKey` |
