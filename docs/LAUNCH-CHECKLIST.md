@@ -17,7 +17,7 @@
 
 ## B. 部署与进程
 
-- [ ] 绿场或升级路径完成：**CentOS 7.x 裸机**（常用 7.9），未依赖 Docker；见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) / [UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)
+- [ ] 绿场或升级路径完成：**CentOS 7.x 裸机**（常用 7.9），未依赖 Docker；见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) / [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)
 - [ ] 主控：`nginx`、`php-fpm`、`mariadb`、`redi-queue` 均为 active
 - [ ] `redi-queue` 含 `--max-time=3600`
 - [ ] `/etc/cron.d/redi-renew` 含 renew / prune / health，**无** `schedule:run`，**无** `master/master` 路径

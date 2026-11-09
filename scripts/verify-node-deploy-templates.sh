@@ -67,6 +67,6 @@ grep -q 'redi_mysql_tls_args_from_env' "${REPO_ROOT}/scripts/centos7/deploy-node
   || fail "deploy-node.sh must honor REDI_DB_TLS in DB smoke test"
 grep -q 'redi_mysql_tls_args_from_env' "${REPO_ROOT}/scripts/centos7/lib.sh" \
   || fail "lib.sh must define redi_mysql_tls_args_from_env"
-grep -q 'UPGRADE-IN-PLACE' "$DEPLOY" || fail "deploy-node: must mention UPGRADE-IN-PLACE for optional Agent env"
+grep -q 'OPS-RELEASE-UPDATE' "$DEPLOY" || fail "deploy-node: must mention OPS-RELEASE-UPDATE for optional Agent env"
 
 echo "verify-node-deploy-templates: OK"

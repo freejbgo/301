@@ -2,7 +2,7 @@
 
 本文档汇总 **阻塞上线** 与 **验收必做** 项，与 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 配合使用。**生产环境仅维护 CentOS 7.9（7.x）部署路径。**
 
-- **已上线升级（不重装）**：[UPGRADE-IN-PLACE.md](UPGRADE-IN-PLACE.md)（含 `scripts/patch-master-cron-ops-webhook.sh`）
+- **已上线升级（不重装）**：[OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)（含 `scripts/patch-master-cron-ops-webhook.sh`）
 - **一页打勾清单**：[LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)（[Canvas 可勾选副本](https://cursor.com/canvas/store-0707e8bc-7570-4527-8e26-d32c04eb4d4e/e877d821-4edb-4d1f-9d65-4e1382e20da4)）
 
 ## 阻塞上线（P0 摘要）

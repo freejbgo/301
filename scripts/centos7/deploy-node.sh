@@ -241,4 +241,4 @@ else
   echo "主控 API 自测: curl -fsS \"${REDI_MASTER_URL}/api/nodes/revision\" -H \"Authorization: Bearer <REDI_NODE_TOKEN>\""
 fi
 echo "同一台机器的其他公网 IP 填在后台该节点的「其他公网 IP」，不要再部署第二个进程。"
-echo "可选 Agent 环境变量（空证书防抖等）见 node/redi-multi/env.example 与 docs/UPGRADE-IN-PLACE.md §3；改 env.sh 后 systemctl restart redi-multi。"
+echo "可选 Agent 环境变量（空证书防抖等）见 node/redi-multi/env.example 与 docs/OPS-RELEASE-UPDATE.md §3；改 env.sh 后 systemctl restart redi-multi。"

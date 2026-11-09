@@ -30,14 +30,14 @@ for needle in \
   'scripts/centos7/lagran-cleanup-iptables.sh' \
   'docs/ACCEPTANCE-CENTOS7-DEPLOY.md' \
   'docs/ACCEPTANCE-EDGE-POOL.md' \
-  'docs/UPGRADE-IN-PLACE.md' \
+  'docs/OPS-RELEASE-UPDATE.md' \
   'build-release-tarballs.sh' \
   'REDI_MASTER_TAR' \
   '不需要 Docker' \
   '同步失败后的检查' \
   'redi_node_bump_skip' \
   '不必手工 migrate' \
-  'UPGRADE-IN-PLACE.md' \
+  'OPS-RELEASE-UPDATE.md' \
   'REDI_MASTER_INSECURE' \
   'REDI_DB_TLS' \
   'REDI_AGENT_EMPTY_CERT_CLEAR_AFTER' \
