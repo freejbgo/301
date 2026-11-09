@@ -16,9 +16,6 @@ class RediAdminDomain extends Model
     use BelongsToAdminTenant;
     use HasDateTimeFormatter;
 
-    /** @deprecated Use {@see RediCertLastError::DOMAIN_DISABLED_CANCEL} */
-    public const DISABLE_DEPLOY_CANCEL_MSG = RediCertLastError::LEGACY_DOMAIN_DISABLED_CANCEL_MSG;
-
     protected static function booted(): void
     {
         static::saving(function (self $domain) {

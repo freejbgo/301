@@ -46,6 +46,7 @@ class CertificateDeployServiceTest extends TestCase
             $table->text('private_key')->nullable();
             $table->string('status')->default('active');
             $table->text('last_error')->nullable();
+            $table->string('last_error_code')->nullable();
             $table->timestamps();
         });
 
@@ -1167,7 +1168,8 @@ class CertificateDeployServiceTest extends TestCase
             'domain_id' => $domainId,
             'domain_name' => 'edge.example',
             'status' => RediDomainCert::STATUS_ISSUED,
-            'last_error' => \App\Models\RediAdminDomain::DISABLE_DEPLOY_CANCEL_MSG,
+            'last_error' => \App\Support\RediErrorMessage::get(\App\Support\RediCertLastError::DOMAIN_DISABLED_CANCEL),
+            'last_error_code' => \App\Support\RediCertLastError::DOMAIN_DISABLED_CANCEL,
             'certificate' => Crypt::encryptString("-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----"),
             'private_key' => Crypt::encryptString("-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----"),
             'created_at' => now(),
@@ -1178,7 +1180,8 @@ class CertificateDeployServiceTest extends TestCase
         app(CertificateDeployService::class)->handleDomainReenabledFromDisabled($domain);
 
         $fresh = RediDomainCert::query()->find($certId);
-        $this->assertNotSame(\App\Models\RediAdminDomain::DISABLE_DEPLOY_CANCEL_MSG, $fresh->last_error);
+        $this->assertNull($fresh->last_error);
+        $this->assertNull($fresh->last_error_code);
         $this->assertSame(RediDomainCert::STATUS_DEPLOYING, $fresh->status);
         $this->assertDatabaseHas('redi_cert_deployments', [
             'cert_id' => $certId,
@@ -1220,7 +1223,7 @@ class CertificateDeployServiceTest extends TestCase
         $fresh = RediDomainCert::query()->find($certId);
         $this->assertSame(RediDomainCert::STATUS_ISSUED, $fresh->status);
         $this->assertSame(
-            CertificateDeployService::NODE_DISABLED_DEPLOY_CLEAR_MSG,
+            \App\Support\RediErrorMessage::get(\App\Support\RediCertLastError::NODE_DISABLED_CLEARED),
             $fresh->last_error
         );
     }
@@ -1326,7 +1329,7 @@ class CertificateDeployServiceTest extends TestCase
         $fresh = RediDomainCert::query()->find($certId);
         $this->assertSame(RediDomainCert::STATUS_ISSUED, $fresh->status);
         $this->assertSame(
-            CertificateDeployService::NODE_DISABLED_DEPLOY_CLEAR_MSG,
+            \App\Support\RediErrorMessage::get(\App\Support\RediCertLastError::NODE_DISABLED_CLEARED),
             $fresh->last_error
         );
     }

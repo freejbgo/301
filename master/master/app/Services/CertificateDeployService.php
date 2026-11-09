@@ -253,9 +253,6 @@ class CertificateDeployService
         $this->refreshCertStatusFromDeployments($cert);
     }
 
-    /** @deprecated Use {@see RediCertLastError::NODE_DISABLED_CLEARED} */
-    public const NODE_DISABLED_DEPLOY_CLEAR_MSG = 'Node disabled; related deployment rows cleared';
-
     /**
      * 节点 `enabled=false`：删除该节点部署行并回写受影响证书状态。
      */

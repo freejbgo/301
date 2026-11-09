@@ -28,7 +28,7 @@ class RediCertLastErrorTest extends TestCase
         });
     }
 
-    public function test_matches_by_code_and_legacy_message(): void
+    public function test_matches_by_code_and_localized_message(): void
     {
         $cert = new RediDomainCert();
         $cert->last_error_code = RediCertLastError::DOMAIN_DISABLED_CANCEL;
@@ -36,10 +36,10 @@ class RediCertLastErrorTest extends TestCase
 
         $this->assertTrue(RediCertLastError::matches($cert, RediCertLastError::DOMAIN_DISABLED_CANCEL));
 
-        $legacy = new RediDomainCert();
-        $legacy->last_error = RediCertLastError::LEGACY_DOMAIN_DISABLED_CANCEL_MSG;
+        $byMessage = new RediDomainCert();
+        $byMessage->last_error = RediErrorMessage::get(RediCertLastError::DOMAIN_DISABLED_CANCEL);
 
-        $this->assertTrue(RediCertLastError::matches($legacy, RediCertLastError::DOMAIN_DISABLED_CANCEL));
+        $this->assertTrue(RediCertLastError::matches($byMessage, RediCertLastError::DOMAIN_DISABLED_CANCEL));
     }
 
     public function test_declared_codes_resolve_in_redi_errors(): void

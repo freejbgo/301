@@ -25,7 +25,7 @@ grep -q 'pruneNonPullableDeployments' "$deploy" || fail "missing pruneNonPullabl
 grep -q 'assertCanEnable' "$guard" || fail "DomainDnsPointingGuard must assertCanEnable"
 grep -q 'originalUrlIfValid' "$guard" || fail "enable guard must use originalUrlIfValid"
 grep -q 'csvSafeCell' "$exporter" || fail "CSV export must sanitize formula cells"
-grep -q 'DISABLE_DEPLOY_CANCEL_MSG' "$domain" || fail "domain disable deploy message constant"
+grep -q 'RediCertLastError::DOMAIN_DISABLED_CANCEL' "$domain" || fail "domain disable must use RediCertLastError::DOMAIN_DISABLED_CANCEL"
 grep -q 'function markNodeAck' "$deploy" || fail "missing markNodeAck"
 grep -q 'refreshCertStatusFromDeployments' "$deploy" || fail "missing refreshCertStatusFromDeployments"
 grep -q 'handleDomainReenabledFromDisabled' "$deploy" || fail "missing handleDomainReenabledFromDisabled"

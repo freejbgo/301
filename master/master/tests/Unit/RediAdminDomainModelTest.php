@@ -4,6 +4,8 @@ namespace Tests\Unit;
 
 use App\Models\RediAdminDomain;
 use App\Models\RediDomainCert;
+use App\Support\RediCertLastError;
+use App\Support\RediErrorMessage;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
@@ -59,6 +61,7 @@ class RediAdminDomainModelTest extends TestCase
             $table->string('domain_name');
             $table->string('status')->default('none');
             $table->text('last_error')->nullable();
+            $table->string('last_error_code')->nullable();
             $table->text('certificate')->nullable();
             $table->text('private_key')->nullable();
             $table->timestamp('expires_at')->nullable();
@@ -285,7 +288,10 @@ class RediAdminDomainModelTest extends TestCase
         $domain->status = 2;
         $domain->save();
 
-        $this->assertSame(RediAdminDomain::DISABLE_DEPLOY_CANCEL_MSG, RediDomainCert::query()->find($certId)->last_error);
+        $this->assertSame(
+            RediErrorMessage::get(RediCertLastError::DOMAIN_DISABLED_CANCEL),
+            RediDomainCert::query()->find($certId)->last_error
+        );
         $this->assertSame(RediDomainCert::STATUS_FAILED, RediDomainCert::query()->find($certId)->status);
     }
 
@@ -323,7 +329,10 @@ class RediAdminDomainModelTest extends TestCase
         $domain->status = 2;
         $domain->save();
 
-        $this->assertSame(RediAdminDomain::DISABLE_DEPLOY_CANCEL_MSG, RediDomainCert::query()->find($certId)->last_error);
+        $this->assertSame(
+            RediErrorMessage::get(RediCertLastError::DOMAIN_DISABLED_CANCEL),
+            RediDomainCert::query()->find($certId)->last_error
+        );
         $this->assertSame(RediDomainCert::STATUS_ISSUED, RediDomainCert::query()->find($certId)->status);
     }
 
@@ -341,7 +350,8 @@ class RediAdminDomainModelTest extends TestCase
             'domain_id' => $domain->id,
             'domain_name' => 'back.example',
             'status' => RediDomainCert::STATUS_ISSUED,
-            'last_error' => RediAdminDomain::DISABLE_DEPLOY_CANCEL_MSG,
+            'last_error' => RediErrorMessage::get(RediCertLastError::DOMAIN_DISABLED_CANCEL),
+            'last_error_code' => RediCertLastError::DOMAIN_DISABLED_CANCEL,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
