@@ -13,6 +13,20 @@ fi
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
+redi_run_composer() {
+  if command -v composer >/dev/null 2>&1; then
+    composer "$@"
+    return
+  fi
+  local phar="${REPO_ROOT}/master/master/composer.phar"
+  if [[ -f "$phar" ]]; then
+    php "$phar" "$@"
+    return
+  fi
+  echo "dev-preflight: 需要 composer（或 master/master/composer.phar）" >&2
+  exit 1
+}
+
 echo "==> Go vet + test (node/redi-multi)"
 (
   cd node/redi-multi
@@ -28,8 +42,8 @@ bash scripts/verify-customer-cname-doc.sh
 echo "==> PHPUnit (master/master, PHP $(php -r 'echo PHP_VERSION;'))"
 (
   cd master/master
-  composer install --no-interaction --prefer-dist
-  composer audit --no-interaction
+  redi_run_composer install --no-interaction --prefer-dist
+  redi_run_composer audit --no-interaction
   ./vendor/bin/phpunit --testsuite Unit,Feature
 )
 
