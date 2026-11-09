@@ -12,6 +12,10 @@ redi_ensure_master_tar() {
   if [[ -f "$tar_path" ]]; then
     return 0
   fi
+  if [[ "${REDI_ALLOW_ON_SERVER_TAR_BUILD:-}" != "1" ]]; then
+    [[ -n "$die_fn" ]] && "$die_fn" "未找到主控发布包: $tar_path。请在发版机 build-release-tarballs.sh 后 scp 并设置 REDI_MASTER_TAR；仅实验室可在 vars.env 设 REDI_ALLOW_ON_SERVER_TAR_BUILD=1 允许机房内打包"
+    return 1
+  fi
   echo "未找到主控发布包: $tar_path"
   echo "尝试在仓库内执行 scripts/build-master-tar.sh（需 composer 与网络）…"
   if [[ ! -x "${repo_root}/scripts/build-master-tar.sh" ]]; then
@@ -40,6 +44,10 @@ redi_ensure_node_tar() {
 
   if [[ -f "$tar_path" ]]; then
     return 0
+  fi
+  if [[ "${REDI_ALLOW_ON_SERVER_TAR_BUILD:-}" != "1" ]]; then
+    [[ -n "$die_fn" ]] && "$die_fn" "未找到节点发布包: $tar_path。请在发版机上传 redi-multi.tar.gz 并设置 REDI_NODE_TAR；实验室可设 REDI_ALLOW_ON_SERVER_TAR_BUILD=1"
+    return 1
   fi
   echo "未找到节点发布包: $tar_path"
   echo "尝试在仓库内执行 scripts/build-node-tar.sh（需 Go 工具链）…"
