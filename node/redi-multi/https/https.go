@@ -19,8 +19,11 @@ func Start(listen string) {
 	cfg := net.ListenConfig{
 		Control: func(network, address string, c syscall.RawConn) error {
 			return c.Control(func(fd uintptr) {
+				// 与 http 监听器一致：极小 SO_RCVBUF 配合 lagran；见 node/README.md
+				syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, unix.SO_RCVBUF, 1)
 				linger := syscall.Linger{Onoff: 1, Linger: 0}
 				syscall.SetsockoptLinger(int(fd), syscall.SOL_SOCKET, unix.SO_LINGER, &linger)
+				syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, unix.TCP_NODELAY, 1)
 			})
 		},
 	}
