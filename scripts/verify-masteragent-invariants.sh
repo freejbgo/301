@@ -31,5 +31,12 @@ grep -q 'warnThrottled("pull-certificates"' "$AGENT" || fail "pull certificates 
 grep -q 'shouldClearRegistration' "$AGENT" || fail "missing shouldClearRegistration"
 grep -q 'ack 403 must not clear registration' "$REG" || fail "registration_test must guard ack 403"
 grep -q 'ack 409 must not clear registration' "$REG" || fail "registration_test must guard ack 409"
+grep -q 'revs.legacy' "$AGENT" || fail "tick must track legacy combined revision"
+grep -q 'rev.Revision != "" && rev.Revision != revs.legacy' "$AGENT" \
+  || fail "tick must pull all feeds when only combined revision changes"
+
+TICK_TEST="${REPO_ROOT}/node/redi-multi/masteragent/tick_test.go"
+[[ -f "$TICK_TEST" ]] || fail "missing tick_test.go"
+grep -q 'TestTickLegacyCombinedRevision' "$TICK_TEST" || fail "tick_test must cover legacy combined revision"
 
 echo "verify-masteragent-invariants: OK"

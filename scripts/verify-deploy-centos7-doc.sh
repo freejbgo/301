@@ -78,10 +78,18 @@ grep -qF 'vars.production.example.env' "${REPO_ROOT}/docs/README.md" \
 grep -qF 'REDI_ALLOW_ON_SERVER_TAR_BUILD' "${REPO_ROOT}/scripts/ensure-release-tarballs.sh" \
   || fail "ensure-release-tarballs must gate on-server build"
 
-for key in MASTER_INSTALL_ROOT NODE_INSTALL_ROOT MASTER_IP DB_PASS NODE_IPS REDI_MASTER_URL; do
+for key in MASTER_INSTALL_ROOT NODE_INSTALL_ROOT MASTER_IP DB_PASS NODE_IPS REDI_MASTER_URL \
+  NODE_PUBLIC_IP DEFAULT_REDIRECT_URL; do
   grep -q "^${key}=" "$VARS" || fail "vars.example.env missing ${key} (DEPLOY §1)"
   grep -qF "$key" "$DOC" || fail "DEPLOY-centos7.md should document vars.env key ${key}"
 done
+
+grep -q 'MASTER_IP:?' "$DEPLOY_NODE" || fail "deploy-node.sh must require MASTER_IP"
+grep -q 'DB_PASS:?' "$DEPLOY_NODE" || fail "deploy-node.sh must require DB_PASS"
+grep -qF 'MASTER_IP' "${REPO_ROOT}/docs/DEPLOY-TUTORIAL-CENTOS7.md" \
+  || fail "DEPLOY-TUTORIAL must document MASTER_IP for nodes"
+grep -qF 'DB_PASS' "${REPO_ROOT}/docs/DEPLOY-TUTORIAL-CENTOS7.md" \
+  || fail "DEPLOY-TUTORIAL must document DB_PASS for nodes"
 
 # Cron 时刻与文档 human 表述一致（deploy-master heredoc）
 grep -q '10 3 \* \* \*' "$DEPLOY_MASTER" || fail "deploy-master: renew cron must be 03:10"

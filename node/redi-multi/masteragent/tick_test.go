@@ -89,3 +89,80 @@ func TestTickPullsOnlyChangedSplitRevision(t *testing.T) {
 		t.Fatalf("expected rules revision updated to %q, got %q", rulesRevB, revs.rules)
 	}
 }
+
+func TestTickLegacyCombinedRevision(t *testing.T) {
+	const legacyRev = "legacy-combined-rev"
+	certPEM, keyPEM := testCertKeyPEM(t)
+
+	var mu sync.Mutex
+	rulesPulls := 0
+	certPulls := 0
+	challengePulls := 0
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		switch r.Method + " " + r.URL.Path {
+		case "POST /api/nodes/heartbeat":
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{"ok":true}`))
+		case "POST /api/nodes/challenges-synced", "POST /api/nodes/ack":
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`{"ok":true}`))
+		case "GET /api/nodes/revision":
+			_ = json.NewEncoder(w).Encode(map[string]string{"revision": legacyRev})
+		case "GET /api/nodes/redirect-rules":
+			rulesPulls++
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"rules": []map[string]interface{}{
+					{"original_url": "legacy.example", "force_https": false},
+				},
+			})
+		case "GET /api/nodes/acme-challenges":
+			challengePulls++
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"challenges": []map[string]interface{}{
+					{"domain_name": "legacy.example", "token": "t", "response_body": "b"},
+				},
+			})
+		case "GET /api/nodes/certificates":
+			certPulls++
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"certificates": []map[string]interface{}{
+					{
+						"cert_id":     1,
+						"domain":      "legacy.example",
+						"certificate": certPEM,
+						"private_key": keyPEM,
+						"force_https": false,
+					},
+				},
+			})
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+
+	cfg := config{MasterURL: srv.URL, Token: "1.testtoken"}
+	client := srv.Client()
+	registered := true
+	revs := revisionState{}
+
+	if err := tick(client, cfg, &registered, &revs); err != nil {
+		t.Fatalf("first tick: %v", err)
+	}
+	if rulesPulls != 1 || challengePulls != 1 || certPulls != 1 {
+		t.Fatalf("expected legacy revision to pull all feeds once, got rules=%d challenges=%d certs=%d", rulesPulls, challengePulls, certPulls)
+	}
+	if revs.legacy != legacyRev {
+		t.Fatalf("expected legacy revision %q, got %q", legacyRev, revs.legacy)
+	}
+
+	if err := tick(client, cfg, &registered, &revs); err != nil {
+		t.Fatalf("second tick: %v", err)
+	}
+	if rulesPulls != 1 || challengePulls != 1 || certPulls != 1 {
+		t.Fatalf("expected no second pulls on unchanged legacy revision, got rules=%d challenges=%d certs=%d", rulesPulls, challengePulls, certPulls)
+	}
+}

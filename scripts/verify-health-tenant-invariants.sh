@@ -14,11 +14,14 @@ home="${APP}/Admin/Controllers/HomeController.php"
 health="${APP}/Services/RediHealthReport.php"
 tenant="${APP}/Services/TenantOpsSummary.php"
 batch="${APP}/Admin/Forms/BatchCreateDomains.php"
+batchEdit="${APP}/Admin/Forms/BatchEditDomains.php"
 batchSvc="${APP}/Services/DomainBatchCreator.php"
+batchMut="${APP}/Services/DomainBatchMutator.php"
+batchFilter="${APP}/Services/DomainBatchFilterRunner.php"
 urlGroup="${APP}/Admin/Forms/UrlSetByGroup.php"
 sanitizer="${APP}/Support/OpsDisplaySanitizer.php"
 
-for f in "$home" "$health" "$tenant" "$batch" "$batchSvc" "$urlGroup" "$sanitizer"; do
+for f in "$home" "$health" "$tenant" "$batch" "$batchEdit" "$batchSvc" "$batchMut" "$batchFilter" "$urlGroup" "$sanitizer"; do
   [[ -f "$f" ]] || fail "missing $f"
 done
 
@@ -30,6 +33,11 @@ grep -q "where('admin_id', \$adminId)" "$tenant" || fail "TenantOpsSummary must 
 grep -q 'isPlatformAdministrator' "$batch" || fail "BatchCreateDomains must check platform vs tenant"
 grep -q "where('admin_id', \$adminId)" "$batchSvc" || fail "DomainBatchCreator must verify group admin_id"
 grep -q 'MAX_LINES_PER_BATCH' "$batchSvc" || fail "DomainBatchCreator batch limit"
+grep -q 'applyEditsOwned' "$batchEdit" || fail "BatchEditDomains must use DomainBatchMutator::applyEditsOwned"
+grep -q 'normalizeOwnedIds' "$batchMut" || fail "DomainBatchMutator must normalize owned domain ids"
+grep -q "where('admin_id', \$sessionAdminId)" "$batchMut" || fail "DomainBatchMutator must scope domains by admin_id"
+grep -q 'DomainListFilter::hasAnyFilter' "$batchFilter" || fail "DomainBatchFilterRunner must require list filters for sensitive ops"
+grep -q 'filter_required_sensitive' "$batchFilter" || fail "DomainBatchFilterRunner must gate sensitive batch without filter"
 grep -q 'isPlatformAdministrator' "$urlGroup" || fail "UrlSetByGroup must check tenant ownership"
 grep -q 'sanitizeHealthIssues' "$sanitizer" || fail "OpsDisplaySanitizer health helper"
 
