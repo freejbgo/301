@@ -1,6 +1,6 @@
 # 上线检查单（一页）
 
-打印或在预发环境逐项打勾。**首次部署步骤**见 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md)。详细说明与命令见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)；真机步骤见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md)、[ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)。平台边界见 [CONSOLE.md](CONSOLE.md) §8。
+**主推签收单：** 装完教程后按 §A–E 打勾即可宣告上线准备就绪。分步安装见 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md)；命令背景见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)。若要逐步核对每条 deploy 结果，另见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md)；业务 F1–F8 见 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)。平台边界见 [CONSOLE.md](CONSOLE.md) §8。
 
 在 Cursor 中可使用可勾选副本：[301 上线检查单](https://cursor.com/canvas/store-0707e8bc-7570-4527-8e26-d32c04eb4d4e/e877d821-4edb-4d1f-9d65-4e1382e20da4)（进度会保存在 Canvas 侧）。
 

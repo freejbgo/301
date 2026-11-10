@@ -52,6 +52,8 @@ fi
 grep -qF 'docs/README.md' "$REPO_ROOT/README.md" || fail 'README must link docs/README.md'
 grep -qF 'GREENFIELD-PRODUCT.md' "$REPO_ROOT/README.md" || fail 'README must link GREENFIELD-PRODUCT.md'
 grep -qF 'GREENFIELD-PRODUCT.md' "$REPO_ROOT/docs/README.md" || fail 'docs/README must link GREENFIELD-PRODUCT'
+grep -qF '按角色怎么读' "$REPO_ROOT/docs/GREENFIELD-PRODUCT.md" \
+  || fail 'GREENFIELD-PRODUCT must document role-based reading order'
 grep -qF 'RELEASE-PACKAGES.md' "$REPO_ROOT/docs/DEVELOPMENT.md" \
   || fail 'DEVELOPMENT must link RELEASE-PACKAGES'
 grep -qF 'build-release-tarballs.sh' "$REPO_ROOT/docs/RELEASE-PACKAGES.md" \

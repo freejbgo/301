@@ -1,6 +1,8 @@
-# CentOS 7.9 真机全量部署验收清单
+# CentOS 7.9 真机安装验收清单
 
-在 **两台（或以上）CentOS 7.9** 云主机/虚拟机上，用仓库自带脚本完成主控 + 首台节点的安装，并逐项打勾。业务侧 HTTP-01、DNS、证书等深度验收见 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)（F1–F8）。
+**定位：** 在跟完 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) 之后，用本清单 **逐项打勾、查漏**；不是第二套安装教程。快速签收可用 [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)。
+
+在 **两台（或以上）CentOS 7.9** 上，用 `deploy-master.sh` / `deploy-node.sh` 完成主控 + 节点后逐项核对。业务侧 HTTP-01、DNS、证书等见 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)（F1–F8）。
 
 | 角色 | 示例 IP | 说明 |
 |------|---------|------|
