@@ -10,7 +10,7 @@
 | 1 | [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) — **唯一推荐的分步教程** |
 | 2 | [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md) — 一次导入 `redi_admin.sql`、首登 |
 | 3 | [DEPLOY-centos7.md](../DEPLOY-centos7.md) — 脚本细节与可选章节 |
-| 4 | [DEPLOY-centos7-example.md](../DEPLOY-centos7-example.md) / [vars.production.example.env](../scripts/centos7/vars.production.example.env) — `vars.env` 示例 |
+| 4 | [vars.example.env](../scripts/centos7/vars.example.env)、[vars.production.example.env](../scripts/centos7/vars.production.example.env) — `vars.env` 模板 |
 
 部署路径摘要：[DEPLOY.md](../DEPLOY.md)。
 
@@ -20,8 +20,7 @@
 |------|--------|
 | [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) | **上线前**一页打勾（多数团队的主签收单） |
 | [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) | 检查单里某项需要命令与背景说明时 |
-| [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) | 跟完教程后 **逐项核对** 主控/节点安装（非第二套安装教程） |
-| [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) | 业务闭环 **F1–F8**（DNS、跳转、证书） |
+| [ACCEPTANCE.md](ACCEPTANCE.md) | **§A** 安装逐项核对 + **§B** 业务 F1–F8 |
 
 ## 首装后换发布包
 

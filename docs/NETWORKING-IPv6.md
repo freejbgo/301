@@ -8,7 +8,7 @@
 
 访客数据面：lagran 在 `OUTPUT` 按 **TCP 源端口** 匹配，IPv4 与 IPv6 共用 NFQUEUE 队列号；`iptables` 与 `ip6tables` 规则成对（诊断/清理见 `lagran-diagnose.sh`、`lagran-cleanup-iptables.sh`）。
 
-**部署与逐步验收：** [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12、[ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) §7。
+**部署与逐步验收：** [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12、[ACCEPTANCE.md](ACCEPTANCE.md) §A.7。
 
 ---
 

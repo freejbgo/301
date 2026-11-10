@@ -11,7 +11,7 @@
 | [verify-master-cron-templates.sh](verify-master-cron-templates.sh) | 静态校验 `deploy-master` / `patch-master-cron` 的 Cron 模板（无 `schedule:run`、无 `master/master` 路径、三条任务 + `ops-webhook` 兜底且 `--task=` 与 artisan 命令一致、`--max-time=3600`） |
 | [verify-node-deploy-templates.sh](verify-node-deploy-templates.sh) | 静态校验 `deploy-node`、`vars.example.env`、`env.example` 与 lagran 脚本（HTTPS Agent、静态 ldd、`redi_node`、setcap、lagran_ports.py、`REDI_DB_PASSWORD`） |
 | [verify-grant-nodes-templates.sh](verify-grant-nodes-templates.sh) | 静态校验 `grant-nodes-from-vars` 与 `deploy-master` 共用 `redi_sync_node_ips_access`、`vars.example` 的 `NODE_IPS`/`MYSQL_ROOT_PASS`/`DB_PASS` |
-| [verify-acceptance-centos7-doc.sh](verify-acceptance-centos7-doc.sh) | 静态校验 [ACCEPTANCE-CENTOS7-DEPLOY.md](../docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 含 Cron webhook/`--task`、grant-nodes、`redi_node` 等关键表述 |
+| [verify-acceptance-doc.sh](verify-acceptance-doc.sh) | 静态校验 [ACCEPTANCE.md](../docs/ACCEPTANCE.md) §A/§B 与 Cron、Edge 关键表述 |
 | [verify-deploy-centos7-doc.sh](verify-deploy-centos7-doc.sh) | 静态校验 [DEPLOY-centos7.md](../DEPLOY-centos7.md) / 绿场说明与 `deploy-*.sh`、`redi_admin.sql`、Cron 时刻一致 |
 | [verify-product-docs.sh](verify-product-docs.sh) | 产品文档集存在、已移除 AUDIT/开发进度主文档且无残留链接 |
 | [verify-greenfield-install-doc.sh](verify-greenfield-install-doc.sh) | [GREENFIELD-INSTALL.md](../docs/GREENFIELD-INSTALL.md) 绿场路径与 OPS 链表述 |
@@ -33,7 +33,6 @@
 | [verify-dns-providers-invariants.sh](verify-dns-providers-invariants.sh) | DNS API 驱动与 Edge 同步工厂约定 |
 | [verify-cname-cert-job-invariants.sh](verify-cname-cert-job-invariants.sh) | CNAME 预检与 `IssueDomainCertificateJob` 签发链约定 |
 | [verify-redirect-platform-invariants.sh](verify-redirect-platform-invariants.sh) | PHP/Go 跳转 URL、`force HTTPS` 与平台 DNS 表单约定 |
-| [verify-acceptance-edge-pool-doc.sh](verify-acceptance-edge-pool-doc.sh) | 静态校验 [ACCEPTANCE-EDGE-POOL.md](../docs/ACCEPTANCE-EDGE-POOL.md) F 项与 Cron/Pool AAAA 表述 |
 | [verify-tenant-edge-queue-invariants.sh](verify-tenant-edge-queue-invariants.sh) | 租户 `pool_host` 变更失效 `dns_synced_at`、`IssueDomainCertificateJob` 双锁、CNAME 预检与 OPS 文档 |
 | [verify-health-tenant-invariants.sh](verify-health-tenant-invariants.sh) | `redi:health` / 租户首页 / 批量域名跨租户与展示安全约定 |
 | [verify-cert-deploy-invariants.sh](verify-cert-deploy-invariants.sh) | `reconcileCertDeployStatus` / `certIsNodePullable`、启用守卫、`csvSafeCell` |

@@ -74,8 +74,8 @@ bash scripts/verify-cname-cert-job-invariants.sh
 echo "==> 跳转 URL / 平台 DNS / force HTTPS 约定"
 bash scripts/verify-redirect-platform-invariants.sh
 
-echo "==> Edge Pool 验收清单文档"
-bash scripts/verify-acceptance-edge-pool-doc.sh
+echo "==> 验收清单文档"
+bash scripts/verify-acceptance-doc.sh
 
 echo "==> 租户 edge / ACME 队列约定"
 bash scripts/verify-tenant-edge-queue-invariants.sh
@@ -113,7 +113,7 @@ for f in \
   scripts/verify-node-deploy-templates.sh \
   scripts/verify-lagran-iptables-invariants.sh \
   scripts/verify-grant-nodes-templates.sh \
-  scripts/verify-acceptance-centos7-doc.sh \
+  scripts/verify-acceptance-doc.sh \
   scripts/verify-deploy-centos7-doc.sh \
   scripts/verify-product-docs.sh \
   scripts/verify-greenfield-install-doc.sh \
@@ -134,7 +134,6 @@ for f in \
   scripts/verify-customer-cname-doc.sh \
   scripts/verify-cname-cert-job-invariants.sh \
   scripts/verify-redirect-platform-invariants.sh \
-  scripts/verify-acceptance-edge-pool-doc.sh \
   scripts/verify-tenant-edge-queue-invariants.sh \
   scripts/verify-health-tenant-invariants.sh \
   scripts/verify-cert-deploy-invariants.sh \
@@ -187,7 +186,7 @@ echo "==> grant-nodes / vars 模板"
 bash scripts/verify-grant-nodes-templates.sh
 
 echo "==> CentOS7 真机验收清单文档"
-bash scripts/verify-acceptance-centos7-doc.sh
+bash scripts/verify-acceptance-doc.sh
 
 echo "==> CentOS7 部署教程与脚本"
 bash scripts/verify-deploy-centos7-doc.sh

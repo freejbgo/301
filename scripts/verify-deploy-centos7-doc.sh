@@ -28,8 +28,7 @@ for needle in \
   'scripts/centos7/run-on-centos7-host.sh' \
   'scripts/centos7/lagran-diagnose.sh' \
   'scripts/centos7/lagran-cleanup-iptables.sh' \
-  'docs/ACCEPTANCE-CENTOS7-DEPLOY.md' \
-  'docs/ACCEPTANCE-EDGE-POOL.md' \
+  'docs/ACCEPTANCE.md' \
   'docs/OPS-RELEASE-UPDATE.md' \
   'build-release-tarballs.sh' \
   'REDI_MASTER_TAR' \
