@@ -151,7 +151,7 @@ sudo bash scripts/centos7/deploy-node.sh
 
 应看到 **`使用节点发布包: /tmp/redi-multi.tar.gz`**，且 `systemctl is-active redi-multi` 为 `active`。
 
-**最小文件集（不想整库 clone 时）：** 节点至少要有 `scripts/centos7/deploy-node.sh`、`lib.sh`、`vars.env`、以及 `redi-multi.tar.gz`；主控至少要有 `scripts/centos7/`、`db/redi_admin.sql`、主控 tar。推荐仍 clone 整库，便于升级脚本与文档路径一致。
+**最小文件集（不想整库 clone 时）：** 节点至少要有 `scripts/centos7/deploy-node.sh`、`lib.sh`、`vars.env`、以及 `redi-multi.tar.gz`；主控至少要有 `scripts/centos7/`、`db/redi_admin.sql`、主控 tar。推荐仍 clone 整库，便于换包脚本与文档路径一致。
 
 ---
 

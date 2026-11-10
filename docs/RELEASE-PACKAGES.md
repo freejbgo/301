@@ -60,6 +60,6 @@ Workflow 会跑 Go / PHPUnit（8.4 与 8.0）、`composer audit`、与 CI 对齐
 | push tag 后无 Release | 看 Actions；修复后删错误 tag 或打新 patch tag |
 | 节点 `ldd` 报 glibc | 必须用本仓库 `build-node-tar.sh` 或 Release 附件，勿混用其他 Go 构建 |
 
-## 4. 升级与回滚
+## 4. 换包与回滚
 
 环境已在跑、需跟上新 tar：[OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)。保留上一版 tar；回滚见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) §回滚。

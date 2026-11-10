@@ -4,6 +4,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DOC="${REPO_ROOT}/docs/GREENFIELD-INSTALL.md"
+PRODUCT="${REPO_ROOT}/docs/GREENFIELD-PRODUCT.md"
 
 fail() {
   echo "verify-greenfield-install-doc: $*" >&2
@@ -11,6 +12,8 @@ fail() {
 }
 
 [[ -f "$DOC" ]] || fail "missing GREENFIELD-INSTALL.md"
+[[ -f "$PRODUCT" ]] || fail "missing GREENFIELD-PRODUCT.md"
+grep -qF 'GREENFIELD-INSTALL.md' "$PRODUCT" || fail "GREENFIELD-PRODUCT must link GREENFIELD-INSTALL"
 
 grep -qF 'DEPLOY-TUTORIAL-CENTOS7.md' "$DOC" || fail "GREENFIELD must link step tutorial"
 grep -qF 'redi_admin.sql' "$DOC" || fail "GREENFIELD must document redi_admin.sql"

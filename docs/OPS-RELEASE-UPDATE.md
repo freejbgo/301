@@ -57,7 +57,7 @@ REDI_DNS_PRECHECK_ALLOW_A_TO_POOL=true
 
 ## 3. 节点 Agent
 
-- 所有节点升级到含 **Agent 0.1.3** 的 `redi-multi`。
+- 所有节点替换为发布包内 **Agent 0.1.3+** 的 `redi-multi`（与当前 tar 一致即可）。
 - 节点 `env.sh` 可选（见 `node/redi-multi/env.example` 与 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §9）：
   - `REDI_AGENT_EMPTY_CERT_CLEAR_AFTER`
   - `REDI_AGENT_EMPTY_CHALLENGE_CLEAR_AFTER`

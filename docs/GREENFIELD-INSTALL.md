@@ -6,6 +6,7 @@
 
 | 文档 | 用途 |
 |------|------|
+| [GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md) | **当全新产品** 阅读文档的边界说明 |
 | [DEPLOY.md](../DEPLOY.md) | 部署索引与流量模型摘要 |
 | [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) | **从零分步教程（推荐）** |
 | [DEPLOY-centos7-example.md](../DEPLOY-centos7-example.md) | `vars.env` 填空示例 |

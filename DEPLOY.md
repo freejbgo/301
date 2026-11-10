@@ -2,7 +2,7 @@
 
 面向 **被干扰、访问不稳的客户域名**：客户 CNAME 到你们的边缘池，由节点提供跳转页，并默认开启 **lagran** 调整出站 TCP 窗口。控制台操作见 [docs/CONSOLE.md](docs/CONSOLE.md)。
 
-**生产仅支持 CentOS 7.x 裸机**（`yum` + 发布 tar + `deploy-*.sh`，**不用 Docker**）。请把本仓库当作**从未上线过的全新产品**来装：数据库以 **一次导入** `db/redi_admin.sql` 为准，不按「从旧版迁移」理解步骤。
+**生产仅支持 CentOS 7.x 裸机**（`yum` + 发布 tar + `deploy-*.sh`，**不用 Docker**）。请把本仓库当作**从未上线过的全新产品**来装（见 [docs/GREENFIELD-PRODUCT.md](docs/GREENFIELD-PRODUCT.md)）：数据库以 **一次导入** `db/redi_admin.sql` 为准，不按历史迁移理解步骤。
 
 ## 从零上线（推荐路径）
 

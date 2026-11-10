@@ -21,7 +21,8 @@ for f in \
   docs/LAUNCH-CHECKLIST.md \
   docs/RELEASE-PACKAGES.md \
   docs/DEPLOY-TUTORIAL-CENTOS7.md \
-  docs/OPS-RELEASE-UPDATE.md; do
+  docs/OPS-RELEASE-UPDATE.md \
+  docs/GREENFIELD-PRODUCT.md; do
   [[ -f "$REPO_ROOT/$f" ]] || fail "missing $f"
 done
 
@@ -49,6 +50,8 @@ if grep -rE 'AUDIT-CENTOS7-PRODUCTION|DEVELOPMENT-EDGE-POOL-HTTPS|IPV6-DUALSTACK
 fi
 
 grep -qF 'docs/README.md' "$REPO_ROOT/README.md" || fail 'README must link docs/README.md'
+grep -qF 'GREENFIELD-PRODUCT.md' "$REPO_ROOT/README.md" || fail 'README must link GREENFIELD-PRODUCT.md'
+grep -qF 'GREENFIELD-PRODUCT.md' "$REPO_ROOT/docs/README.md" || fail 'docs/README must link GREENFIELD-PRODUCT'
 grep -qF 'RELEASE-PACKAGES.md' "$REPO_ROOT/docs/DEVELOPMENT.md" \
   || fail 'DEVELOPMENT must link RELEASE-PACKAGES'
 grep -qF 'build-release-tarballs.sh' "$REPO_ROOT/docs/RELEASE-PACKAGES.md" \
