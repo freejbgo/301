@@ -46,7 +46,7 @@ func Init() {
 	}
 	Redirector = jsonStringMapOptional(payload, "redirector")
 	if len(Redirector) > 0 {
-		log.Printf("config: redirector JSON is ignored at runtime (legacy field)")
+		log.Printf("config: redirector JSON is ignored at runtime (rules come from MySQL)")
 	}
 
 	if raw, ok := payload["lagran"].(map[string]interface{}); ok && raw != nil {

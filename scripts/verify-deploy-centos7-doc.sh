@@ -90,6 +90,8 @@ grep -qF 'MASTER_IP' "${REPO_ROOT}/docs/DEPLOY-TUTORIAL-CENTOS7.md" \
   || fail "DEPLOY-TUTORIAL must document MASTER_IP for nodes"
 grep -qF 'DB_PASS' "${REPO_ROOT}/docs/DEPLOY-TUTORIAL-CENTOS7.md" \
   || fail "DEPLOY-TUTORIAL must document DB_PASS for nodes"
+grep -qF 'vars.production.example.env' "${REPO_ROOT}/docs/DEPLOY-TUTORIAL-CENTOS7.md" \
+  || fail "DEPLOY-TUTORIAL must mention vars.production.example.env"
 
 # Cron 时刻与文档 human 表述一致（deploy-master heredoc）
 grep -q '10 3 \* \* \*' "$DEPLOY_MASTER" || fail "deploy-master: renew cron must be 03:10"
