@@ -1,9 +1,10 @@
 # 文档索引
 
-按场景选路径即可。文档只描述 **当前产品** 的安装与运营；无二次开发台账、问题修复周报或「从初代程序迁移」专章（全新机房按绿场路径即可）。
+按场景选路径即可。请先读 **[GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md)**（把本仓库当全新产品）。其余文档只描述 **当前版本** 的安装与运营；无二次开发台账、问题修复周报或「从初代程序迁移」专章。
 
 ## 新环境上线（绿场）
 
+0. [GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md) — **产品边界与文档地图**  
 1. **[DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md)** — **分步教程（打 tar → 主控 → 节点 → 后台）**  
 2. [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md) — 绿场 `redi_admin.sql`  
 3. [DEPLOY-centos7.md](../DEPLOY-centos7.md) — 脚本细节与可选配置  

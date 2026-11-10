@@ -48,7 +48,7 @@
 | [verify-release-workflow-invariants.sh](verify-release-workflow-invariants.sh) | `release.yml` 与 `build-*-tar` / 冒烟门禁约定 |
 | [verify-ensure-release-tarballs.sh](verify-ensure-release-tarballs.sh) | `REDI_ALLOW_ON_SERVER_TAR_BUILD` 时产物须复制到 `REDI_*_TAR` |
 | [verify-ci-preflight-parity.sh](verify-ci-preflight-parity.sh) | `dev-preflight` 中的 `verify-*.sh` 须在 `ci.yml` / `release.yml` 出现 |
-| [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | **仅** Cron 落后于当前模板的已上线主控（绿场 `deploy-master.sh` 已写入正确 cron，**首装勿用**）；升级 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`） |
+| [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | **仅**在跑主控且 Cron 落后于模板时（绿场 `deploy-master.sh` **首装勿用**）；改写 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`） |
 | [centos7/vars.example.env](centos7/vars.example.env) | 部署变量模板（`vars.env`）；Webhook URL 写在主控 `.env`，见文件内注释 |
 | [centos7/deploy-master.sh](centos7/deploy-master.sh) / [deploy-node.sh](centos7/deploy-node.sh) | CentOS 7 主控/节点一键部署 |
 | [centos7/grant-nodes-from-vars.sh](centos7/grant-nodes-from-vars.sh) | 按 `vars.env` 的 `NODE_IPS` 同步 MySQL + firewalld（**root**；`MYSQL_ROOT_PASS` 读 vars，不重装主控；`NODE_IPS` 为空时撤销已记录 IP，同 `deploy-master`） |
