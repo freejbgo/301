@@ -19,7 +19,7 @@
 
 源码在仓库的 `master/master/`。那是给开发和重新打包用的。自动安装不要把仓库克隆到 `/opt/301`，否则会和发布包解压出来的 `/opt/301/master` 叠在一起。
 
-填好 IP 的示例见 [DEPLOY-centos7-example.md](DEPLOY-centos7-example.md)。**真机 CentOS 7.9 逐步验收**见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)。**边缘池 F1–F8**见 [docs/ACCEPTANCE-EDGE-POOL.md](docs/ACCEPTANCE-EDGE-POOL.md)。**主控已在跑、只跟上新发布包**见 [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md)。后台操作见 [docs/CONSOLE.md](docs/CONSOLE.md)（DNS API 同步失败见 §2「同步失败后的检查」）。
+`vars.env` 填空见 [scripts/centos7/vars.example.env](scripts/centos7/vars.example.env) 与 [scripts/centos7/vars.production.example.env](scripts/centos7/vars.production.example.env)。**真机验收**见 [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)（§A 安装、§B F1–F8）。**主控已在跑、只跟上新发布包**见 [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md)。后台操作见 [docs/CONSOLE.md](docs/CONSOLE.md)（DNS API 同步失败见 §2「同步失败后的检查」）。
 
 ## 开发机 / 发版前（与 CI 一致）
 
@@ -121,7 +121,7 @@ bash scripts/build-release-tarballs.sh
 sudo bash scripts/centos7/run-on-centos7-host.sh
 ```
 
-脚本使用 `--network host`，避免部分环境下 podman 桥接网无外网导致 `yum` 失败。日志在容器内 `/tmp/redi-c7-integration.log`。完整 `deploy-master.sh` / `deploy-node.sh` 仍须在真实 CentOS 7.9 上按 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md) 验收。
+脚本使用 `--network host`，避免部分环境下 podman 桥接网无外网导致 `yum` 失败。日志在容器内 `/tmp/redi-c7-integration.log`。完整 `deploy-master.sh` / `deploy-node.sh` 仍须在真实 CentOS 7.9 上按 [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md) 验收。
 
 ## 8. 节点 lagran 运维（可选）
 
@@ -177,7 +177,7 @@ sudo systemctl start redi-multi
 
 ## 11. 主控安装后快速验收
 
-默认程序目录为 `/opt/301/master`（`vars.env` 的 `MASTER_INSTALL_ROOT=/opt/301`）。完整清单见 [docs/ACCEPTANCE-CENTOS7-DEPLOY.md](docs/ACCEPTANCE-CENTOS7-DEPLOY.md)。
+默认程序目录为 `/opt/301/master`（`vars.env` 的 `MASTER_INSTALL_ROOT=/opt/301`）。完整清单见 [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)。
 
 ```bash
 systemctl is-active nginx php-fpm mariadb redi-queue

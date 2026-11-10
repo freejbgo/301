@@ -40,5 +40,5 @@ CNAME 生效且证书申请成功后，访问将自动支持 **HTTPS** 跳转；
 |------|------|
 | 客户 CNAME 已填对仍「未指向」 | 检查 Pool A / 租户 token CNAME 是否已在厂商 DNS 生效；[CONSOLE.md](CONSOLE.md) §2–§3 |
 | API 同步失败或 `dns_synced_at` 未更新 | [CONSOLE.md](CONSOLE.md) §2 **「同步失败后的检查」**；`redi:health --json` 的 `dns_api_tenants_unsynced` |
-| 上线与证书验收 | [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) F1–F8、[ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) |
+| 上线与证书验收 | [ACCEPTANCE.md](ACCEPTANCE.md) §A / §B |
 | 发给客户的说明 | 仅转发本文 **「您需要做的」** 至 **「HTTPS」** 各节即可 |

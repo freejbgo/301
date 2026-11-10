@@ -22,7 +22,8 @@ for f in \
   docs/RELEASE-PACKAGES.md \
   docs/DEPLOY-TUTORIAL-CENTOS7.md \
   docs/OPS-RELEASE-UPDATE.md \
-  docs/GREENFIELD-PRODUCT.md; do
+  docs/GREENFIELD-PRODUCT.md \
+  docs/ACCEPTANCE.md; do
   [[ -f "$REPO_ROOT/$f" ]] || fail "missing $f"
 done
 
@@ -70,8 +71,14 @@ grep -qF '## 已知限制与计划增强' "$REPO_ROOT/docs/PRODUCTION-READINESS.
 grep -qF 'I18N.md' "$REPO_ROOT/docs/README.md" || fail 'docs/README must link I18N.md'
 grep -qF 'OPS-RELEASE-UPDATE.md' "$REPO_ROOT/docs/README.md" \
   || fail 'docs/README must link OPS-RELEASE-UPDATE.md'
-grep -qF 'PLATFORM-ARCHITECTURE.md' "$REPO_ROOT/docs/ACCEPTANCE-EDGE-POOL.md" \
-  || fail 'ACCEPTANCE-EDGE-POOL must link PLATFORM-ARCHITECTURE'
+grep -qF 'PLATFORM-ARCHITECTURE.md' "$REPO_ROOT/docs/ACCEPTANCE.md" \
+  || fail 'ACCEPTANCE.md must link PLATFORM-ARCHITECTURE'
+[[ ! -f "$REPO_ROOT/docs/ACCEPTANCE-CENTOS7-DEPLOY.md" ]] \
+  || fail 'removed ACCEPTANCE-CENTOS7-DEPLOY.md still present'
+[[ ! -f "$REPO_ROOT/docs/ACCEPTANCE-EDGE-POOL.md" ]] \
+  || fail 'removed ACCEPTANCE-EDGE-POOL.md still present'
+[[ ! -f "$REPO_ROOT/DEPLOY-centos7-example.md" ]] \
+  || fail 'removed DEPLOY-centos7-example.md still present'
 
 if grep -qE 'V6-[0-9]{2}|## 3\. 陷阱' "$REPO_ROOT/docs/NETWORKING-IPv6.md"; then
   fail 'NETWORKING-IPv6.md should stay operator-focused (no V6-xx dev ledger)'

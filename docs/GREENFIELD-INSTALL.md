@@ -9,9 +9,8 @@
 | [GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md) | **当全新产品** 阅读文档的边界说明 |
 | [DEPLOY.md](../DEPLOY.md) | 部署索引与流量模型摘要 |
 | [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) | **从零分步教程（推荐）** |
-| [DEPLOY-centos7-example.md](../DEPLOY-centos7-example.md) | `vars.env` 填空示例 |
-| [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) | 真机逐步验收 |
-| [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) | 边缘池 F1–F8 |
+| [vars.production.example.env](../scripts/centos7/vars.production.example.env) | 生产向 `vars.env` 模板 |
+| [ACCEPTANCE.md](ACCEPTANCE.md) | 真机 §A + 边缘池 §B F1–F8 |
 | [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) | 一页上线打勾 |
 | [docs/README.md](README.md) | 完整索引（含日常运营文档） |
 

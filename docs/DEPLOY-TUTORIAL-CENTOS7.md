@@ -1,6 +1,6 @@
 # CentOS 7 从零部署教程（裸机 7.9）
 
-按 **步骤 1 → 7** 顺序做即可上线。生产机 **只需 CentOS 7.x（常用 7.9）**，**不要装 Docker**。细节与可选章节见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)；填空示例见 [DEPLOY-centos7-example.md](../DEPLOY-centos7-example.md)。
+按 **步骤 1 → 7** 顺序做即可上线。生产机 **只需 CentOS 7.x（常用 7.9）**，**不要装 Docker**。细节与可选章节见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)；`vars.env` 见 [vars.production.example.env](../scripts/centos7/vars.production.example.env)。
 
 | 角色 | 系统 | 需要什么 |
 |------|------|----------|
@@ -165,7 +165,7 @@ sudo bash scripts/centos7/deploy-node.sh
 3. **分组 / 域名** — 超级管理员建分组；租户添加客户域名，把 **CNAME 目标** 发给客户（客户 CNAME 到 `{token}.平台域`，不要 A 到节点 IP）。
 4. 预检 **已指向** 后，点 **申请证书**。
 
-客户侧文案：[CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md)。边缘池验收：[ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)。
+客户侧文案：[CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md)。边缘池验收：[ACCEPTANCE.md](ACCEPTANCE.md) §B。
 
 主控有 HTTPS 域名后：改主控 `.env` 的 `APP_URL`、节点 `REDI_MASTER_URL` 为 **https://**，去掉 `REDI_MASTER_INSECURE`，节点再跑一次 `deploy-node.sh`。
 
@@ -187,7 +187,7 @@ systemctl is-active redi-multi
 getcap /opt/redi-multi/redi-multi/bin/redi-multi | grep -q cap_net_admin
 ```
 
-完整打勾清单：[ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md)、[LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)。
+完整打勾清单：[ACCEPTANCE.md](ACCEPTANCE.md) §A、[LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)。
 
 ---
 
