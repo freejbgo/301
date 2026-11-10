@@ -1,41 +1,49 @@
 # 文档索引
 
-按场景选路径即可。请先读 **[GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md)**（把本仓库当全新产品）。其余文档只描述 **当前版本** 的安装与运营；无二次开发台账、问题修复周报或「从初代程序迁移」专章。
+请先读 **[GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md)**（全新产品边界 + **按角色阅读顺序**）。下文按 **首装 → 签收 → 运营 → 参考** 排列；无二次开发台账、问题修复周报或「从初代程序迁移」专章。
 
-## 新环境上线（绿场）
+## 首装（绿场）
 
-0. [GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md) — **产品边界与文档地图**  
-1. **[DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md)** — **分步教程（打 tar → 主控 → 节点 → 后台）**  
-2. [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md) — 绿场 `redi_admin.sql`  
-3. [DEPLOY-centos7.md](../DEPLOY-centos7.md) — 脚本细节与可选配置  
-4. [DEPLOY-centos7-example.md](../DEPLOY-centos7-example.md) — 实验室 `vars.env` 示例；生产用 [vars.production.example.env](../scripts/centos7/vars.production.example.env)  
-5. [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) — 真机打勾  
-6. [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) — 业务 F1–F8  
-7. [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) — **一页上线打勾**（详细说明见 PRODUCTION-READINESS）  
-8. [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) — 阻塞项与验收命令  
+| 顺序 | 文档 |
+|------|------|
+| 0 | [GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md) — 怎么读文档 |
+| 1 | [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) — **唯一推荐的分步教程** |
+| 2 | [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md) — 一次导入 `redi_admin.sql`、首登 |
+| 3 | [DEPLOY-centos7.md](../DEPLOY-centos7.md) — 脚本细节与可选章节 |
+| 4 | [DEPLOY-centos7-example.md](../DEPLOY-centos7-example.md) / [vars.production.example.env](../scripts/centos7/vars.production.example.env) — `vars.env` 示例 |
+
+部署路径摘要：[DEPLOY.md](../DEPLOY.md)。
+
+## 签收与验收
+
+| 文档 | 何时用 |
+|------|--------|
+| [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) | **上线前**一页打勾（多数团队的主签收单） |
+| [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) | 检查单里某项需要命令与背景说明时 |
+| [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md) | 跟完教程后 **逐项核对** 主控/节点安装（非第二套安装教程） |
+| [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md) | 业务闭环 **F1–F8**（DNS、跳转、证书） |
 
 ## 首装后换发布包
 
-[OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)
+仅当环境**已在跑**：[OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)。
 
 ## 日常运营
 
 | 文档 | 用途 |
 |------|------|
-| [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) | 上线打勾（可配合 Canvas 检查单） |
 | [CONSOLE.md](CONSOLE.md) | 后台操作、DNS 同步排障、平台边界 §8 |
 | [CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md) | 发给客户的 CNAME 说明 |
 | [HEALTH-REFERENCE.md](HEALTH-REFERENCE.md) | `redi:health` 各 code |
 | [OPS-MULTI-WORKER-QUEUE.md](OPS-MULTI-WORKER-QUEUE.md) | 多 worker / Redis |
-| [NETWORKING-IPv6.md](NETWORKING-IPv6.md) | Pool AAAA 与双栈 |
+| [NETWORKING-IPv6.md](NETWORKING-IPv6.md) | Pool AAAA 与双栈（可选能力） |
 
-## 理解与开发
+## 开发与参考
 
 | 文档 | 用途 |
 |------|------|
-| [PLATFORM-ARCHITECTURE.md](PLATFORM-ARCHITECTURE.md) | DNS 模型、节点 API、数据表 |
-| [DEVELOPMENT.md](DEVELOPMENT.md) | `dev-preflight` 与发版 |
 | [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md) | 本地双 tar + scp；可选 GitHub Release |
+| [DEVELOPMENT.md](DEVELOPMENT.md) | `dev-preflight` 与发版 |
+| [PLATFORM-ARCHITECTURE.md](PLATFORM-ARCHITECTURE.md) | DNS 模型、节点 API、数据表（**首装不必先读**） |
 | [I18N.md](I18N.md) | 后台三语与运维英文约定 |
 | [SECURITY.md](../SECURITY.md) | 密码、端口、Agent |
 | [scripts/README.md](../scripts/README.md) | verify 脚本 |

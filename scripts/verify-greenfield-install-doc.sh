@@ -14,7 +14,9 @@ fail() {
 [[ -f "$DOC" ]] || fail "missing GREENFIELD-INSTALL.md"
 [[ -f "$PRODUCT" ]] || fail "missing GREENFIELD-PRODUCT.md"
 grep -qF 'GREENFIELD-INSTALL.md' "$PRODUCT" || fail "GREENFIELD-PRODUCT must link GREENFIELD-INSTALL"
+grep -qF '按角色怎么读' "$PRODUCT" || fail "GREENFIELD-PRODUCT must document role-based reading order"
 
+grep -qF 'GREENFIELD-PRODUCT.md' "$DOC" || fail "GREENFIELD-INSTALL must link GREENFIELD-PRODUCT"
 grep -qF 'DEPLOY-TUTORIAL-CENTOS7.md' "$DOC" || fail "GREENFIELD must link step tutorial"
 grep -qF 'redi_admin.sql' "$DOC" || fail "GREENFIELD must document redi_admin.sql"
 grep -qF 'schedule:run' "$DOC" || fail "GREENFIELD must warn against schedule:run"

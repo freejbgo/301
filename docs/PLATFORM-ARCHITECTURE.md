@@ -1,6 +1,6 @@
 # 平台架构与能力说明
 
-部署见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)；后台与**平台边界**见 [CONSOLE.md](CONSOLE.md)（含 §8）。业务验收见 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)（F1–F8）。文档索引见 [README.md](README.md)。
+**首装不必先读本页**（按 [GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md) 的推荐顺序即可）。部署见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)；后台与**平台边界**见 [CONSOLE.md](CONSOLE.md)（含 §8）。业务验收见 [ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)（F1–F8）。文档索引见 [README.md](README.md)。
 
 ## 能力范围
 

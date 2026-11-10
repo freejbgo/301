@@ -1,5 +1,7 @@
 # 开发与发版自检
 
+**首次装生产机房** 请从 [GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md) 与 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) 开始；本文面向改代码、打 tar、与 CI 对齐。
+
 仓库布局：**主控** `master/master/`（Laravel + Dcat）、**节点** `node/redi-multi/`（Go）、**库表** `db/redi_admin.sql`、**CentOS 7 部署** `scripts/centos7/`。
 
 平台能力与 API 说明见 [PLATFORM-ARCHITECTURE.md](PLATFORM-ARCHITECTURE.md)。**生产只在 CentOS 7.x 裸机**跑 `deploy-*.sh`，不需要 Docker。真机验收见 [ACCEPTANCE-CENTOS7-DEPLOY.md](ACCEPTANCE-CENTOS7-DEPLOY.md)、[ACCEPTANCE-EDGE-POOL.md](ACCEPTANCE-EDGE-POOL.md)。
