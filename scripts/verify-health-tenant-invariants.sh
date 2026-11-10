@@ -18,10 +18,11 @@ batchEdit="${APP}/Admin/Forms/BatchEditDomains.php"
 batchSvc="${APP}/Services/DomainBatchCreator.php"
 batchMut="${APP}/Services/DomainBatchMutator.php"
 batchFilter="${APP}/Services/DomainBatchFilterRunner.php"
+batchFilterFeature="${REPO_ROOT}/master/master/tests/Feature/DomainBatchOperationsTest.php"
 urlGroup="${APP}/Admin/Forms/UrlSetByGroup.php"
 sanitizer="${APP}/Support/OpsDisplaySanitizer.php"
 
-for f in "$home" "$health" "$tenant" "$batch" "$batchEdit" "$batchSvc" "$batchMut" "$batchFilter" "$urlGroup" "$sanitizer"; do
+for f in "$home" "$health" "$tenant" "$batch" "$batchEdit" "$batchSvc" "$batchMut" "$batchFilter" "$batchFilterFeature" "$urlGroup" "$sanitizer"; do
   [[ -f "$f" ]] || fail "missing $f"
 done
 
@@ -38,6 +39,10 @@ grep -q 'normalizeOwnedIds' "$batchMut" || fail "DomainBatchMutator must normali
 grep -q "where('admin_id', \$sessionAdminId)" "$batchMut" || fail "DomainBatchMutator must scope domains by admin_id"
 grep -q 'DomainListFilter::hasAnyFilter' "$batchFilter" || fail "DomainBatchFilterRunner must require list filters for sensitive ops"
 grep -q 'filter_required_sensitive' "$batchFilter" || fail "DomainBatchFilterRunner must gate sensitive batch without filter"
+grep -q 'test_filter_batch_delete_rejected_without_list_filter' "$batchFilterFeature" \
+  || fail "Feature tests must cover filterless sensitive batch rejection"
+grep -q 'test_filter_batch_disable_scopes_to_session_admin' "$batchFilterFeature" \
+  || fail "Feature tests must cover tenant scope on filter batch disable"
 grep -q 'isPlatformAdministrator' "$urlGroup" || fail "UrlSetByGroup must check tenant ownership"
 grep -q 'sanitizeHealthIssues' "$sanitizer" || fail "OpsDisplaySanitizer health helper"
 
