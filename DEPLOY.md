@@ -8,7 +8,7 @@
 
 | 步骤 | 文档 |
 |------|------|
-| 0 | **小白整段粘贴**：[docs/DEPLOY-BEGINNER-CENTOS7.md](docs/DEPLOY-BEGINNER-CENTOS7.md)（CentOS 7，改 IP 后粘贴；与下面教程同一套 `deploy-*.sh`） |
+| 0 | **主控一条命令**：[master.sh](master.sh)。**节点一条命令**：[node.sh](node.sh)（主控装完后屏幕会打出带密钥的完整命令）。说明见 [docs/DEPLOY-BEGINNER-CENTOS7.md](docs/DEPLOY-BEGINNER-CENTOS7.md) |
 | 1 | 发版机：`bash scripts/dev-preflight.sh` → `bash scripts/build-release-tarballs.sh`（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)） |
 | 2 | **分步教程**：[docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md) |
 | 3 | 脚本与可选配置：[DEPLOY-centos7.md](DEPLOY-centos7.md)；生产 `vars`：[scripts/centos7/vars.production.example.env](scripts/centos7/vars.production.example.env) |

@@ -1,8 +1,17 @@
 # 发布包（主控 + 节点）
 
-生产部署使用 **`master.tar.gz`**（主控）与 **`redi-multi.tar.gz`**（节点）。仓库 **不提交** tar（已 gitignore）。
+生产部署使用 **`master.tar.gz`**（主控）与 **`redi-multi.tar.gz`**（节点）。
 
-**推荐路径：** 在发版机本地打 tar → `scp` 到 **CentOS 7.9（或其它 7.x）裸机** → 在 `vars.env` 设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` → 跑 `deploy-*.sh`。机房**不需要 Docker**；不依赖 GitHub Actions 配额或已有 Release。
+一条命令安装直接用仓库里已经打好的包：
+
+| 路径 | 内容 |
+|------|------|
+| `pkg/master.tar.gz` | 主控，含 `vendor`，不含 `.env` |
+| `pkg/redi-multi.tar.gz` | 节点，含静态 `bin/redi-multi` |
+
+`master.sh` 克隆仓库后把这两个文件复制到 `/tmp` 再执行 `deploy-master.sh`。开发机临时产物 `master/master.tar.gz`、`node/redi-multi.tar.gz` 仍 gitignore，不提交。
+
+**分步路径：** 在发版机本地打 tar → `scp` 到 **CentOS 7.9（或其它 7.x）裸机** → 在 `vars.env` 设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` → 跑 `deploy-*.sh`。机房**不需要 Docker**；不依赖 GitHub Actions 配额或已有 Release。
 
 ## 1. 开发机打包并上传（默认）
 
@@ -12,7 +21,7 @@ bash scripts/dev-preflight.sh          # 与 CI 核心门禁一致，发版前�
 bash scripts/build-release-tarballs.sh # 等价于 build-node-tar + composer --no-dev + build-master-tar
 ```
 
-产物（勿提交 git）：
+产物（这两份勿提交 git；`build-release-tarballs.sh` 会另复制到 `pkg/`，`pkg/` 里的要提交）：
 
 | 路径 | 部署时解压目标 |
 |------|----------------|

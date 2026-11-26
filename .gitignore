@@ -13,6 +13,6 @@ master/master/storage/framework/views/*
 scripts/centos7/vars.env
 scripts/centos7/.container-vars.env
 
-# 发布包本地构建产物，勿提交（发版时打 tag 由 release workflow 上传 Release）
+# 开发机临时产物，勿提交。一条命令用的安装包在 pkg/，需要提交。
 master/master.tar.gz
 node/redi-multi.tar.gz
