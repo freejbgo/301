@@ -3,9 +3,9 @@
 #
 # 一条命令安装：docs/DEPLOY-BEGINNER-CENTOS7.md。本文对应的手工路径见 DEPLOY-centos7.md。
 # 在仓库根目录执行（勿把 git 克隆到 MASTER_INSTALL_ROOT，默认 /opt/301）：
-#   1) 把 pkg/master.tar.gz 拷到本机 /tmp/master.tar.gz（或发版机 build-release-tarballs.sh 后 scp）
+#   1) REDI_MASTER_TAR 留空：有 master/master.tar.gz 用它，否则用 pkg/master.tar.gz
 #   2) cp scripts/centos7/vars.example.env scripts/centos7/vars.env
-#   3) chmod 600 scripts/centos7/vars.env && vi vars.env  # 设 REDI_MASTER_TAR=/tmp/master.tar.gz 等
+#   3) chmod 600 scripts/centos7/vars.env && vi vars.env
 #   4) sudo bash scripts/centos7/deploy-master.sh
 #
 # 重复执行是安全的：已有库不会被 SQL 覆盖（空库一次导入 redi_admin.sql，含 redi_node_bump_skip），已有 .env 和 APP_KEY 会保留。
@@ -40,7 +40,15 @@ fi
 # shellcheck disable=SC1090
 source "$VARS_FILE"
 
-TAR="${REDI_MASTER_TAR:-${REPO_ROOT}/master/master.tar.gz}"
+if [[ -n "${REDI_MASTER_TAR:-}" ]]; then
+  TAR="$REDI_MASTER_TAR"
+elif [[ -s "${REPO_ROOT}/master/master.tar.gz" ]]; then
+  TAR="${REPO_ROOT}/master/master.tar.gz"
+elif [[ -s "${REPO_ROOT}/pkg/master.tar.gz" ]]; then
+  TAR="${REPO_ROOT}/pkg/master.tar.gz"
+else
+  TAR="${REPO_ROOT}/master/master.tar.gz"
+fi
 
 : "${MASTER_IP:?vars.env 需要 MASTER_IP}"
 : "${DB_PASS:?vars.env 需要 DB_PASS}"

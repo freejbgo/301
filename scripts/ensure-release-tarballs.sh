@@ -25,7 +25,7 @@ redi_ensure_master_tar() {
     return 0
   fi
   if [[ "${REDI_ALLOW_ON_SERVER_TAR_BUILD:-}" != "1" ]]; then
-    [[ -n "$die_fn" ]] && "$die_fn" "未找到主控发布包: $tar_path。请在发版机 build-release-tarballs.sh 后 scp 并设置 REDI_MASTER_TAR；仅实验室可在 vars.env 设 REDI_ALLOW_ON_SERVER_TAR_BUILD=1 允许机房内打包"
+    [[ -n "$die_fn" ]] && "$die_fn" "未找到主控发布包: $tar_path。克隆仓库后可留空 REDI_MASTER_TAR 以使用 pkg/master.tar.gz，或在发版机 build-release-tarballs.sh 后 scp 并设置 REDI_MASTER_TAR；仅实验室可在 vars.env 设 REDI_ALLOW_ON_SERVER_TAR_BUILD=1 允许机房内打包"
     return 1
   fi
   echo "未找到主控发布包: $tar_path"
@@ -61,7 +61,7 @@ redi_ensure_node_tar() {
     return 0
   fi
   if [[ "${REDI_ALLOW_ON_SERVER_TAR_BUILD:-}" != "1" ]]; then
-    [[ -n "$die_fn" ]] && "$die_fn" "未找到节点发布包: $tar_path。请在发版机上传 redi-multi.tar.gz 并设置 REDI_NODE_TAR；实验室可设 REDI_ALLOW_ON_SERVER_TAR_BUILD=1"
+    [[ -n "$die_fn" ]] && "$die_fn" "未找到节点发布包: $tar_path。克隆仓库后可留空 REDI_NODE_TAR 以使用 pkg/redi-multi.tar.gz，或在发版机上传 redi-multi.tar.gz 并设置 REDI_NODE_TAR；实验室可设 REDI_ALLOW_ON_SERVER_TAR_BUILD=1"
     return 1
   fi
   echo "未找到节点发布包: $tar_path"
