@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 在开发机一次性打出主控 + 节点发布包（不依赖 GitHub Actions / Releases）。
-# 产物：master/master.tar.gz、node/redi-multi.tar.gz（已 gitignore，勿提交）。
+# 临时产物：master/master.tar.gz、node/redi-multi.tar.gz（已 gitignore）。
+# 同时复制到 pkg/，这是仓库里给 master.sh 直接下载安装的包，要提交。
 #
 # 建议先：bash scripts/dev-preflight.sh
 # 部署：见 docs/DEPLOY-TUTORIAL-CENTOS7.md 步骤 1–2（scp + vars.env 的 REDI_*_TAR）
@@ -19,6 +20,11 @@ if [[ ! -f "${APP}/vendor/autoload.php" ]]; then
   (cd "$APP" && composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader)
 fi
 bash scripts/build-master-tar.sh
+
+mkdir -p "${ROOT}/pkg"
+cp -f "${ROOT}/master/master.tar.gz" "${ROOT}/pkg/master.tar.gz"
+cp -f "${ROOT}/node/redi-multi.tar.gz" "${ROOT}/pkg/redi-multi.tar.gz"
+echo "==> 已更新 pkg/master.tar.gz 与 pkg/redi-multi.tar.gz（提交这两个文件）"
 
 echo ""
 echo "完成。上传机房示例："

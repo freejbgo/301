@@ -2,7 +2,7 @@
 
 按 **步骤 1 → 7** 顺序做即可上线。生产机 **只需 CentOS 7.x（常用 7.9）**，**不要装 Docker**。细节与可选章节见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)；`vars.env` 见 [vars.production.example.env](../scripts/centos7/vars.production.example.env)。
 
-不会改配置文件时，主控用一条命令：`curl -fsSL https://github.com/freejbgo/301/raw/main/master.sh -o master.sh && chmod +x master.sh && bash master.sh`。说明见 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md)。
+不会改配置文件时，主控不用填 IP，一条命令：`curl -fsSL https://github.com/freejbgo/301/raw/main/master.sh -o master.sh && chmod +x master.sh && bash master.sh`。安装包用仓库里的 `pkg/*.tar.gz`。说明见 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md)。
 
 | 角色 | 系统 | 需要什么 |
 |------|------|----------|

@@ -6,9 +6,9 @@
 
 客户域名 CNAME 到 `{token}.平台主域名`，再 CNAME 到 `pool.平台主域名`。pool 的 A 记录指向启用节点的公网 IP。
 
-主控源码在 `master/master/`。**仓库内不提交发布包**（`*.tar.gz` 已 gitignore）。上线推荐开发机 `bash scripts/dev-preflight.sh` 后 `bash scripts/build-release-tarballs.sh`，`scp` 到机房并在 `vars.env` 配置 `REDI_MASTER_TAR` / `REDI_NODE_TAR`（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)）。可选从 [GitHub Releases](https://github.com/freejbgo/301/releases) 取同结构 tar（`v*` tag + Actions）。
+主控源码在 `master/master/`。一条命令安装用的包在 [pkg/master.tar.gz](pkg/master.tar.gz) 和 [pkg/redi-multi.tar.gz](pkg/redi-multi.tar.gz)，已经打好并提交。开发机临时产物 `master/master.tar.gz`、`node/redi-multi.tar.gz` 仍不提交。分步安装仍可在发版机 `bash scripts/dev-preflight.sh` 后 `bash scripts/build-release-tarballs.sh`，再 `scp` 到机房（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)）。
 
-**生产环境仅支持 CentOS 7.9（及其他 7.x）裸机**，用 `yum` + `deploy-*.sh`，**无需 Docker**。仓库公开后，主控一条命令：
+**生产环境仅支持 CentOS 7.9（及其他 7.x）裸机**，用 `yum` + `deploy-*.sh`，**无需 Docker**。仓库公开后，主控不用填 IP，一条命令：
 
 ```bash
 curl -fsSL https://github.com/freejbgo/301/raw/main/master.sh -o master.sh && chmod +x master.sh && bash master.sh

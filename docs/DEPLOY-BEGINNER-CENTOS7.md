@@ -1,24 +1,12 @@
 # 小白安装（CentOS 7）
 
-主控只要一条命令，和 CDNFLY 的 `master.sh` 一样。在 **主控** 上用 root 执行：
+主控只要一条命令，和 CDNFLY 的 `master.sh` 一样。不用填 IP，不用在服务器上编译。安装包已经放在仓库的 `pkg/master.tar.gz` 和 `pkg/redi-multi.tar.gz`。在 **主控** 上用 root 执行：
 
 ```bash
 curl -fsSL https://github.com/freejbgo/301/raw/main/master.sh -o master.sh && chmod +x master.sh && bash master.sh
 ```
 
-仓库需要是公开的，这台机器要能访问 GitHub。系统是 **CentOS 7.9**（7.x 也可以），SSH 用 **22** 端口。命令会自己换软件源、打包、装 Nginx / PHP / MariaDB。一般 10 到 30 分钟，最后一行是 `主控安装完成`。
-
-自动识别这台机器的公网 IP。识别失败时改成：
-
-```bash
-curl -fsSL https://github.com/freejbgo/301/raw/main/master.sh -o master.sh && chmod +x master.sh && MASTER_IP=主控公网IP bash master.sh
-```
-
-已经知道第一台节点的公网 IP 时，可以顺便放行数据库：
-
-```bash
-curl -fsSL https://github.com/freejbgo/301/raw/main/master.sh -o master.sh && chmod +x master.sh && NODE_IP=节点公网IP bash master.sh
-```
+仓库需要是公开的，这台机器要能访问 GitHub。系统是 **CentOS 7.9**（7.x 也可以），SSH 用 **22** 端口。命令会自己识别公网 IP、下载安装包、装 Nginx / PHP / MariaDB。最后一行是 `主控安装完成`。
 
 装完后：
 
@@ -46,7 +34,7 @@ curl -fsSL https://github.com/freejbgo/301/raw/main/master.sh -o master.sh && ch
 1. 用户名填 `admin`，密码填 `Redi301@Install2026`，登录。
 2. 页面要求改密码时，设一个新密码，记下来。新密码不要再用 `Redi301@Install2026`。
 3. 左侧打开 **站点配置 → 节点管理**。
-4. 点新建。名称随便写，例如 `node-1`。**主公网 IP** 填节点那台机器的公网 IP（和安装主控时的节点 IP 相同；当时没填的话，就填这台节点的公网 IP）。启用打开。保存。
+4. 点新建。名称随便写，例如 `node-1`。**主公网 IP** 填节点那台机器的公网 IP。启用打开。保存。
 5. 弹出的 **Token** 只显示这一次。立刻复制到记事本。关掉窗口就看不到了。丢了就在这一行上做「轮换」，用新 Token，旧的同时失效。
 
 Token 是一长串字母和数字，中间没有空格。
@@ -59,7 +47,7 @@ Token 是一长串字母和数字，中间没有空格。
 
 - `MASTER_IP`：主控公网 IP
 - `NODE_IP`：这台节点自己的公网 IP
-- `REDI_NODE_TOKEN`：第 3 步复制的 Token
+- `REDI_NODE_TOKEN`：上面复制的 Token
 
 粘贴后如果出现 `password:` 或 `root@主控IP's password:`，输入 **主控的 root 密码**。输入时屏幕不显示字符，输完回车。这是节点在向主控拷贝安装包和数据库密码。节点不用再访问 GitHub。
 
@@ -346,10 +334,11 @@ bash /root/redi-step-add-node.sh
 |------------|------|
 | `请先把 MASTER_IP` / `填主控公网IP` | 代码块里的 IP 还是说明文字。改成数字 IP 后再整段粘贴 |
 | `这个脚本只用于 CentOS 7` | 系统不是 CentOS 7。重装成 CentOS 7.9 后再做 |
-| `下载代码失败` | 先把仓库设为公开，主控要能访问 github.com，然后重新执行上面的一条命令 |
+| `下载代码失败` 或 `仓库里没有安装包` | 先把仓库设为公开，主控要能访问 github.com，然后重新执行上面的一条命令 |
+| `没能自动识别公网 IP` | 再执行一次：`MASTER_IP=主控公网IP bash master.sh` |
 | `磁盘剩余不足` | 系统盘扩容到至少 20GB |
 | `需要 PHP 8.0` | 把这一行上面的 yum 报错保留，在主控重新执行 master.sh |
-| `连不上` 且提到 `redi_node` 或 `3306` | 云安全组：主控的 3306 来源要包含这台节点的公网 IP。节点公网 IP 要放行。在主控执行 `NODE_IP=节点公网IP bash master.sh`，再到节点重做安装节点那段 |
+| `连不上` 且提到 `redi_node` 或 `3306` | 云安全组：主控的 3306 来源要包含这台节点的公网 IP。在主控按下面「再加一台节点」把这个 IP 放行，再到节点重做安装节点那段 |
 | `redi-multi 没有保持运行` | 节点上 80 或 443 已被别的网站程序占用。停掉占用的程序后，再粘贴一次安装节点那段 |
 | `主控上还没有安装脚本` | 先在主控把 master.sh 跑完，再在节点粘贴安装节点那段 |
 | `password:` 一直失败 | 输入的是主控 root 密码。主控若关闭了密码登录，要先允许 root 用密码从节点 SSH 过来，或把节点公钥写进主控 `/root/.ssh/authorized_keys` |
