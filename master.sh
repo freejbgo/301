@@ -23,10 +23,35 @@ valid_ip() {
 }
 
 is_private() {
+  local a b
   case "$1" in
     10.*|127.*|0.*|169.254.*|192.168.*|172.1[6-9].*|172.2[0-9].*|172.3[0-1].*) return 0 ;;
-    *) return 1 ;;
   esac
+  # 100.64.0.0/10 是运营商级 NAT。有的云主机把它配在网卡上，不能当成公网入口。
+  IFS=. read -r a b _ _ <<< "$1"
+  if [[ "$a" == "100" && "${b:-}" =~ ^[0-9]+$ ]]; then
+    ((10#$b >= 64 && 10#$b <= 127)) && return 0
+  fi
+  return 1
+}
+
+# 从一段回包里取第一个公网 IPv4。内网地址直接跳过。
+first_public_ip() {
+  local blob="$1" ip
+  while [[ "$blob" =~ ([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}) ]]; do
+    ip="${BASH_REMATCH[1]}"
+    if valid_ip "$ip" && ! is_private "$ip"; then
+      printf '%s\n' "$ip"
+      return 0
+    fi
+    blob="${blob#*"${ip}"}"
+  done
+  return 1
+}
+
+curl_text() {
+  local url="$1" max="${2:-4}"
+  curl -4 -fsS --connect-timeout 2 --max-time "$max" "$url" 2>/dev/null || true
 }
 
 use_centos7_vault() {
@@ -96,19 +121,80 @@ detect_local_public_ip() {
   return 1
 }
 
-detect_public_ip() {
-  local url ip
-  if ip="$(detect_local_public_ip)"; then
-    printf '%s\n' "$ip"
-    return 0
-  fi
-  for url in "https://4.ipw.cn" "https://ip.sb" "https://ifconfig.me/ip" "https://api.ipify.org" "https://ipv4.icanhazip.com"; do
-    ip="$(curl -4 -fsS --max-time 8 "$url" 2>/dev/null | tr -d '[:space:]' || true)"
-    if valid_ip "$ip" && ! is_private "$ip"; then
+# 网卡上没有公网地址时，云控制台分配的公网 IP 写在元数据里。
+detect_metadata_public_ip() {
+  local url body ip token
+  local urls=(
+    "http://100.100.100.200/latest/meta-data/eipv4"
+    "http://100.100.100.200/latest/meta-data/public-ipv4"
+    "http://metadata.tencentyun.com/latest/meta-data/public-ipv4"
+    "http://169.254.169.254/latest/meta-data/public-ipv4"
+  )
+  for url in "${urls[@]}"; do
+    body="$(curl_text "$url" 2)"
+    if ip="$(first_public_ip "$body")"; then
       printf '%s\n' "$ip"
       return 0
     fi
   done
+  token="$(curl -4 -fsS --connect-timeout 1 --max-time 2 -X PUT \
+    -H "X-aws-ec2-metadata-token-ttl-seconds: 60" \
+    "http://169.254.169.254/latest/api/token" 2>/dev/null || true)"
+  if [[ -n "$token" ]]; then
+    body="$(curl -4 -fsS --connect-timeout 1 --max-time 2 \
+      -H "X-aws-ec2-metadata-token: ${token}" \
+      "http://169.254.169.254/latest/meta-data/public-ipv4" 2>/dev/null || true)"
+    if ip="$(first_public_ip "$body")"; then
+      printf '%s\n' "$ip"
+      return 0
+    fi
+  fi
+  return 1
+}
+
+# 访问公网，对方看到的来源地址就是这台机器的外部 IP。回包里夹着说明文字也可以。
+detect_egress_public_ip() {
+  local url body ip
+  local urls=(
+    "https://4.ipw.cn"
+    "http://members.3322.org/dyndns/getip"
+    "https://myip.ipip.net"
+    "https://ip.sb"
+    "https://ifconfig.me/ip"
+    "https://api.ipify.org"
+    "https://ipv4.icanhazip.com"
+  )
+  for url in "${urls[@]}"; do
+    body="$(curl_text "$url" 5)"
+    if ip="$(first_public_ip "$body")"; then
+      printf '%s\n' "$ip"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# 结果写到 DETECTED_IP、DETECTED_VIA。网卡上的内网地址不会拿来当主控地址。
+detect_public_ip() {
+  local ip
+  DETECTED_IP=""
+  DETECTED_VIA=""
+  if ip="$(detect_local_public_ip)"; then
+    DETECTED_IP="$ip"
+    DETECTED_VIA="本机网卡上的公网地址"
+    return 0
+  fi
+  echo "==> 网卡上只有内网地址，改为查询云平台公网 IP 和公网出口地址。"
+  if ip="$(detect_metadata_public_ip)"; then
+    DETECTED_IP="$ip"
+    DETECTED_VIA="云平台记录的公网地址（网卡上只有内网 IP）"
+    return 0
+  fi
+  if ip="$(detect_egress_public_ip)"; then
+    DETECTED_IP="$ip"
+    DETECTED_VIA="从公网看到的出口地址（网卡上只有内网 IP）"
+    return 0
+  fi
   return 1
 }
 
@@ -175,15 +261,21 @@ if [[ -f /root/301-passwords.txt ]]; then
   SAVED_REDIRECT="${DEFAULT_REDIRECT_URL:-}"
 fi
 
+DETECTED_IP=""
+DETECTED_VIA=""
 if [[ -n "$REQ_MASTER_IP" ]]; then
   MASTER_IP="$REQ_MASTER_IP"
+  DETECTED_VIA="命令里指定的地址"
 elif [[ -n "$SAVED_MASTER" ]] && valid_ip "$SAVED_MASTER" && ! is_private "$SAVED_MASTER"; then
   MASTER_IP="$SAVED_MASTER"
+  DETECTED_VIA="上次安装保存的地址"
 else
-  MASTER_IP="$(detect_public_ip || true)"
+  detect_public_ip || true
+  MASTER_IP="${DETECTED_IP:-}"
 fi
 valid_ip "${MASTER_IP:-}" || die "没能自动识别公网 IP。请执行：MASTER_IP=你的公网IP bash master.sh"
 is_private "$MASTER_IP" && die "识别到的是内网 IP ${MASTER_IP}。请执行：MASTER_IP=你的公网IP bash master.sh"
+echo "==> 主控公网 IP: ${MASTER_IP}（${DETECTED_VIA}）"
 
 DB_PASS="$SAVED_DB"
 MYSQL_ROOT_PASS="$SAVED_ROOT"

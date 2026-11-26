@@ -6,7 +6,7 @@
 curl -fsSL https://github.com/freejbgo/301/raw/main/master.sh -o master.sh && chmod +x master.sh && bash master.sh
 ```
 
-仓库需要是公开的，这台机器要能访问 GitHub。系统是 **CentOS 7.9**（7.x 也可以），SSH 用 **22** 端口。命令会自己识别公网 IP、下载安装包、装 Nginx / PHP / MariaDB。最后一行是 `主控安装完成`。
+仓库需要是公开的，这台机器要能访问 GitHub。系统是 **CentOS 7.9**（7.x 也可以），SSH 用 **22** 端口。命令会自己识别公网 IP、下载安装包、装 Nginx / PHP / MariaDB。网卡上如果只有内网 IP，脚本会去查云平台记录的公网地址，再不行就看公网访问这台机器时看到的出口地址，不用自己填。最后一行是 `主控安装完成`。
 
 装完后：
 
