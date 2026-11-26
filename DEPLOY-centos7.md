@@ -11,7 +11,7 @@
 | 主控 | `scripts/centos7/deploy-master.sh` | 程序在 `/opt/301/master`，网站根目录 `/opt/301/master/public` |
 | 每台节点 | `scripts/centos7/deploy-node.sh` | 程序在 `/opt/redi-multi/redi-multi` |
 
-**安装包：** 一条命令用仓库里的 [pkg/master.tar.gz](pkg/master.tar.gz) 和 [pkg/redi-multi.tar.gz](pkg/redi-multi.tar.gz)。自己跑 `deploy-*.sh` 时，把这两个文件拷到服务器，或在发版机 `bash scripts/dev-preflight.sh` 后 `bash scripts/build-release-tarballs.sh`，再 `scp` 到服务器，在 `vars.env` 设 `REDI_MASTER_TAR` / `REDI_NODE_TAR`（如 `/tmp/master.tar.gz`、`/tmp/redi-multi.tar.gz`）。步骤见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)。
+**安装包：** 一条命令用仓库里的 [pkg/master.tar.gz](pkg/master.tar.gz) 和 [pkg/redi-multi.tar.gz](pkg/redi-multi.tar.gz)。自己跑 `deploy-*.sh` 时，在克隆出来的仓库里把 `REDI_MASTER_TAR` / `REDI_NODE_TAR` 留空，脚本就用 `pkg/` 里的这两份。包不在仓库目录里时，再把文件拷到服务器并写成绝对路径（如 `/tmp/master.tar.gz`、`/tmp/redi-multi.tar.gz`）。改过程序后在发版机 `bash scripts/dev-preflight.sh`，再 `bash scripts/build-release-tarballs.sh`。步骤见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)。
 
 - 主控包含 `vendor`，无 `.env`。一条命令用 `pkg/master.tar.gz`。开发机临时文件 `master/master.tar.gz` 不提交。
 - 节点包是 CentOS 7 静态 `bin/redi-multi`。一条命令用 `pkg/redi-multi.tar.gz`。开发机临时文件 `node/redi-multi.tar.gz` 不提交。

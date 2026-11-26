@@ -33,7 +33,9 @@ curl -4 -sI -o /dev/null -w 'HTTP %{http_code}\n' https://vault.centos.org/ || e
 
 ---
 
-### 1. 主控：准备与一键安装
+### 1. 主控：准备与手工部署
+
+一条命令安装是 `master.sh`（见 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md)）。下面核对自己跑 `deploy-master.sh`。`REDI_MASTER_TAR` 留空时，脚本使用仓库里的 `pkg/master.tar.gz`。
 
 在 **主控** 上（仓库建议 `/root/301`，**不要**克隆到 `/opt/301`）：
 
@@ -56,9 +58,10 @@ NODE_IPS="5.6.7.8"
 MASTER_INSTALL_ROOT="/opt/301"
 MASTER_URL="http://1.2.3.4"
 ADMIN_HTTPS="false"
+REDI_MASTER_TAR=""
 ```
 
-一键安装：
+`REDI_MASTER_TAR` 留空即用 `pkg/master.tar.gz`。手工部署：
 
 ```bash
 sudo bash scripts/centos7/deploy-master.sh
@@ -158,7 +161,9 @@ sudo bash scripts/centos7/grant-nodes-from-vars.sh
 
 ---
 
-### 4. 节点：准备与一键安装
+### 4. 节点：准备与手工部署
+
+一条命令安装是 `node.sh`。下面核对自己跑 `deploy-node.sh`。`REDI_NODE_TAR` 留空时，脚本使用仓库里的 `pkg/redi-multi.tar.gz`。
 
 在 **节点 5.6.7.8** 上：
 
@@ -185,6 +190,7 @@ DEFAULT_REDIRECT_URL="https://www.example.com"
 REDI_MASTER_INSECURE="1"
 REDI_MASTER_URL="http://1.2.3.4"
 REDI_NODE_TOKEN="后台复制的Token"
+REDI_NODE_TAR=""
 ```
 
 （`deploy-node.sh` 默认要求 `https://`；主控仍用 HTTP/IP 访问后台时，须设 `REDI_MASTER_INSECURE=1` 与 `http://` 成对使用。上主控 HTTPS 后改为 `https://` 并去掉 `REDI_MASTER_INSECURE`。）

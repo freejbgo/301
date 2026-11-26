@@ -40,7 +40,13 @@ fi
 # shellcheck disable=SC1090
 source "$VARS_FILE"
 
-TAR="${REDI_MASTER_TAR:-${REPO_ROOT}/master/master.tar.gz}"
+if [[ -n "${REDI_MASTER_TAR:-}" ]]; then
+  TAR="$REDI_MASTER_TAR"
+elif [[ -s "${REPO_ROOT}/pkg/master.tar.gz" ]]; then
+  TAR="${REPO_ROOT}/pkg/master.tar.gz"
+else
+  TAR="${REPO_ROOT}/master/master.tar.gz"
+fi
 
 : "${MASTER_IP:?vars.env 需要 MASTER_IP}"
 : "${DB_PASS:?vars.env 需要 DB_PASS}"

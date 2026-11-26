@@ -3,12 +3,12 @@
 #
 # 一条命令安装：docs/DEPLOY-BEGINNER-CENTOS7.md。手工路径见 DEPLOY-centos7.md。
 # 主控 NODE_IPS 已含本机公网 IP，且后台已创建节点并拿到 Token 后再执行：
-#   1) scp redi-multi.tar.gz 到本机 /tmp/，vars.env 设 REDI_NODE_TAR=/tmp/redi-multi.tar.gz
+#   1) REDI_NODE_TAR 留空时使用仓库 pkg/redi-multi.tar.gz；也可 scp 到 /tmp 后写入该变量
 #   2) cp scripts/centos7/vars.example.env scripts/centos7/vars.env && chmod 600 scripts/centos7/vars.env
 #   3) 填 NODE_PUBLIC_IP、REDI_MASTER_URL、REDI_NODE_TOKEN
 #   4) sudo bash scripts/centos7/deploy-node.sh
 #
-# 发布包：vars.env 的 REDI_NODE_TAR（推荐，见 docs/RELEASE-PACKAGES.md），否则 node/redi-multi.tar.gz、/tmp/redi-multi.tar.gz。
+# 发布包：vars.env 的 REDI_NODE_TAR，否则 pkg/redi-multi.tar.gz、node/redi-multi.tar.gz、/tmp/redi-multi.tar.gz。
 # 重复执行会按 vars.env 重写 env.sh，并更新 config.json 的 server_ip（登记/验收）与 default_redirect_url。
 # 更新节点程序：开发机 build-release-tarballs.sh 或 build-node-tar.sh 后重跑本脚本（或替换 bin/redi-multi 并 systemctl restart redi-multi）。
 set -euo pipefail
@@ -80,6 +80,9 @@ fi
 [[ "$DEFAULT_REDIRECT_URL" == http://* || "$DEFAULT_REDIRECT_URL" == https://* ]] || die "DEFAULT_REDIRECT_URL 要以 http:// 或 https:// 开头"
 [[ "$DEFAULT_REDIRECT_URL" != *'|'* ]] || die "DEFAULT_REDIRECT_URL 不要包含 |"
 
+if [[ -z "$TAR" && -s "${REPO_ROOT}/pkg/redi-multi.tar.gz" ]]; then
+  TAR="${REPO_ROOT}/pkg/redi-multi.tar.gz"
+fi
 if [[ -z "$TAR" && -f "${REPO_ROOT}/node/redi-multi.tar.gz" ]]; then
   TAR="${REPO_ROOT}/node/redi-multi.tar.gz"
 fi
