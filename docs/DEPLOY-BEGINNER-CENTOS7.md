@@ -14,6 +14,7 @@
 | root | 用 root 登录。下面的命令都在 root 下执行 |
 | SSH 端口 | 用 **22** 登录。安装时会打开系统防火墙并放行 22、80、443 |
 | 两个公网 IP | 到买服务器的网站上看「公网 IP」，记在记事本里。形如 `203.0.113.10`，是一串数字 |
+| GitHub 令牌 | 代码仓库不是公开的。浏览器打开 GitHub → 右上角头像 → **Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)** → **Generate new token** → 勾选 **repo** → 生成后复制。令牌只显示一次 |
 | 内存 | 主控建议 2GB。只有 1GB 时，第 1 步会自动加一块 2GB 的磁盘当内存用 |
 
 密码不用自己编。第 2 步会生成数据库密码，写在主控的 `/root/301-passwords.txt`。
@@ -52,13 +53,19 @@
 
 ## 第 1 步：在主控上打包（只在主控做）
 
-登录 **主控**。这一步会换系统源、安装 PHP 和 Go、下载代码、打出两个安装包。一般 **10 到 30 分钟**。成功标志是最后一行：`打包完成`。
+登录 **主控**。先把脚本开头的 `GITHUB_TOKEN` 换成刚才复制的令牌，再整段粘贴。这一步会换系统源、安装 PHP 和 Go、下载代码、打出两个安装包。一般 **10 到 30 分钟**。成功标志是最后一行：`打包完成`。成功后带令牌的脚本文件会删掉。
 
 一次粘贴整段（从 `cat` 那一行到最后的 `bash /root/redi-step1-build.sh`）：
 
 ```bash
 cat > /root/redi-step1-build.sh <<'ENDSCRIPT'
 set -euo pipefail
+
+# ===== 只改这里 =====
+# 用户名一般不用改。GITHUB_TOKEN 换成上一节生成的令牌，整串粘贴，不要加空格或引号。
+GITHUB_USER="freejbgo"
+GITHUB_TOKEN="填GitHub令牌"
+# ===== 只改这里 =====
 
 if [[ "$(id -u)" -ne 0 ]]; then
   echo "错误: 请用 root 登录后再粘贴"
@@ -72,6 +79,14 @@ fi
 source /etc/os-release
 if [[ "${ID:-}" != "centos" || "${VERSION_ID:-}" != 7* ]]; then
   echo "错误: 这个脚本只用于 CentOS 7.x，当前是 ${ID:-unknown} ${VERSION_ID:-unknown}"
+  exit 1
+fi
+if [[ "${GITHUB_TOKEN}" == "填GitHub令牌" || -z "${GITHUB_TOKEN}" ]]; then
+  echo "错误: 请先把 GITHUB_TOKEN 换成 GitHub 个人访问令牌（勾选 repo）"
+  exit 1
+fi
+if [[ "${GITHUB_USER}" =~ [[:space:]\'\"\`\#\$\\:/@] || "${GITHUB_TOKEN}" =~ [[:space:]\'\"\`\#\$\\] ]]; then
+  echo "错误: 用户名或令牌里不要有空格、引号、# 或 $。请重新复制令牌"
   exit 1
 fi
 
@@ -167,7 +182,7 @@ if compgen -G "/etc/yum.repos.d/epel*.repo" > /dev/null; then
     /etc/yum.repos.d/epel*.repo
 fi
 yum-config-manager --enable remi-php80
-yum install -y git curl tar unzip openssl \
+yum install -y git curl tar unzip openssl file \
   php php-cli php-fpm php-mysqlnd php-mbstring php-xml php-pecl-zip \
   php-gd php-bcmath php-opcache php-process
 php -r 'if (PHP_VERSION_ID < 80000 || PHP_VERSION_ID >= 80100) { fwrite(STDERR, "需要 PHP 8.0，当前 ".PHP_VERSION."\n"); exit(1); }'
@@ -193,7 +208,25 @@ composer --version
 echo "==> 下载项目到 /root/301"
 if [[ ! -f /root/301/scripts/build-release-tarballs.sh ]]; then
   rm -rf /root/301
-  git clone --depth 1 https://github.com/freejbgo/301.git /root/301
+  askpass="$(mktemp)"
+  cat > "$askpass" <<EOF
+#!/bin/sh
+case "\$1" in
+  *Username*) printf '%s\n' "${GITHUB_USER}" ;;
+  *) printf '%s\n' "${GITHUB_TOKEN}" ;;
+esac
+EOF
+  chmod 700 "$askpass"
+  export GIT_ASKPASS="$askpass"
+  export GIT_TERMINAL_PROMPT=0
+  if ! git clone --depth 1 https://github.com/freejbgo/301.git /root/301; then
+    rm -f "$askpass"
+    rm -rf /root/301
+    echo "错误: 下载代码失败。请确认令牌勾了 repo，并且主控能访问 github.com"
+    exit 1
+  fi
+  rm -f "$askpass"
+  unset GIT_ASKPASS
 fi
 
 echo "==> 安装主控依赖并打两个包"
@@ -210,7 +243,7 @@ ls -lh /tmp/master.tar.gz /tmp/redi-multi.tar.gz
 echo "打包完成"
 ENDSCRIPT
 chmod 700 /root/redi-step1-build.sh
-bash /root/redi-step1-build.sh
+bash /root/redi-step1-build.sh && rm -f /root/redi-step1-build.sh
 ```
 
 下载如果停在 `go: downloading` 或 `composer` 超过 10 分钟没有新输出，按 `Ctrl+C`，再整段粘贴下面这一段，然后 **再粘贴一次第 1 步**：
@@ -328,11 +361,23 @@ DEFAULT_REDIRECT_URL=${DEFAULT_REDIRECT_URL}
 EOF
 chmod 600 /root/301-passwords.txt /root/301-for-node.txt
 
+NODE_IPS="${NODE_IP}"
+if [[ -f /root/301/scripts/centos7/vars.env ]]; then
+  old_ips="$(sed -n 's/^NODE_IPS="\([^"]*\)".*/\1/p' /root/301/scripts/centos7/vars.env | head -n 1)"
+  for ip in ${old_ips:-}; do
+    [[ -z "$ip" || "$ip" == "$NODE_IP" ]] && continue
+    case " ${NODE_IPS} " in
+      *" ${ip} "*) ;;
+      *) NODE_IPS="${NODE_IPS} ${ip}" ;;
+    esac
+  done
+fi
+
 cat > /root/301/scripts/centos7/vars.env <<EOF
 MASTER_IP="${MASTER_IP}"
 DB_PASS="${DB_PASS}"
 MYSQL_ROOT_PASS="${MYSQL_ROOT_PASS}"
-NODE_IPS="${NODE_IP}"
+NODE_IPS="${NODE_IPS}"
 REDI_MASTER_TAR="/tmp/master.tar.gz"
 REDI_NODE_TAR="/tmp/redi-multi.tar.gz"
 MASTER_INSTALL_ROOT="/opt/301"
@@ -367,7 +412,7 @@ chmod 700 /root/redi-step2-master.sh
 bash /root/redi-step2-master.sh
 ```
 
-第 2 步可以重复粘贴。数据库密码只在第一次生成，再跑不会换一套新密码。
+第 2 步可以重复粘贴。数据库密码只在第一次生成，再跑不会换一套新密码。已经加过的节点 IP 会保留在允许连数据库的名单里。
 
 ---
 
@@ -391,12 +436,13 @@ Token 是一长串字母和数字，中间没有空格。
 
 ## 第 4 步：安装节点（只在节点做）
 
-登录 **节点**（不是主控）。改下面两行，再整段粘贴。
+登录 **节点**（不是主控）。改下面三行，再整段粘贴。
 
 - `MASTER_IP`：主控公网 IP
+- `NODE_IP`：这台节点自己的公网 IP
 - `REDI_NODE_TOKEN`：第 3 步复制的 Token
 
-粘贴后如果出现 `password:` 或 `root@主控IP's password:`，输入 **主控的 root 密码**。输入时屏幕不显示字符，输完回车。这是节点在向主控拷贝安装包。
+粘贴后如果出现 `password:` 或 `root@主控IP's password:`，输入 **主控的 root 密码**。输入时屏幕不显示字符，输完回车。这是节点在向主控拷贝安装包和数据库密码。节点不用再访问 GitHub。
 
 成功标志：`节点安装完成`，并且 `redi-multi` 是 `active`。中途出现 `警告: REDI_MASTER_INSECURE=1` 是正常的，第一次用 IP 访问主控就会这样。
 
@@ -408,6 +454,7 @@ set -euo pipefail
 
 # ===== 只改这里 =====
 MASTER_IP="填主控公网IP"
+NODE_IP="填这台节点的公网IP"
 REDI_NODE_TOKEN="把后台复制的Token贴在这里"
 # ===== 只改这里 =====
 
@@ -434,11 +481,26 @@ valid_ip() {
     ((10#$o <= 255)) || return 1
   done
 }
-if [[ "$MASTER_IP" == "填主控公网IP" ]]; then
-  echo "错误: 请先把 MASTER_IP 改成主控公网 IP"
+is_private() {
+  case "$1" in
+    10.*|127.*|0.*|169.254.*|192.168.*|172.1[6-9].*|172.2[0-9].*|172.3[0-1].*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+if [[ "$MASTER_IP" == "填主控公网IP" || "$NODE_IP" == "填这台节点的公网IP" ]]; then
+  echo "错误: 请先把 MASTER_IP 和 NODE_IP 改成公网 IP"
   exit 1
 fi
 valid_ip "$MASTER_IP" || { echo "错误: MASTER_IP 不是 IPv4: $MASTER_IP"; exit 1; }
+valid_ip "$NODE_IP" || { echo "错误: NODE_IP 不是 IPv4: $NODE_IP"; exit 1; }
+if is_private "$MASTER_IP" || is_private "$NODE_IP"; then
+  echo "错误: 填到了内网 IP。请填云控制台里的公网 IP"
+  exit 1
+fi
+if [[ "$MASTER_IP" == "$NODE_IP" ]]; then
+  echo "错误: 主控和节点要两台机器，两个 IP 不能相同"
+  exit 1
+fi
 if [[ "$REDI_NODE_TOKEN" == "把后台复制的Token贴在这里" || -z "$REDI_NODE_TOKEN" ]]; then
   echo "错误: 请把 REDI_NODE_TOKEN 换成后台复制的 Token"
   exit 1
@@ -447,6 +509,9 @@ if [[ "$REDI_NODE_TOKEN" =~ [[:space:]\'\"\`\#\$\\] ]]; then
   echo "错误: Token 里不要有空格、引号或 #。请重新复制整串 Token"
   exit 1
 fi
+_TYPED_MASTER="$MASTER_IP"
+_TYPED_NODE="$NODE_IP"
+_TYPED_TOKEN="$REDI_NODE_TOKEN"
 
 echo "==> 换成可用的 CentOS 7 软件源"
 if [[ -f /etc/yum/pluginconf.d/fastestmirror.conf ]]; then
@@ -500,35 +565,38 @@ for f in /etc/yum.repos.d/CentOS-*.repo; do
 done
 shopt -u nullglob
 yum clean all
-yum install -y git curl openssh-clients
+yum install -y openssh-clients
 
-echo "==> 下载项目到 /root/301"
+echo "==> 从主控拷贝安装脚本、安装包和数据库密码。出现 password 时输入主控 root 密码（输入不显示）"
+mkdir -p /root/.ssh /tmp/from-master
+chmod 700 /root/.ssh
+rm -rf /tmp/from-master
+mkdir -p /tmp/from-master
+ssh-keyscan -4 -T 15 "$MASTER_IP" >> /root/.ssh/known_hosts 2>/dev/null || true
+scp -r \
+  "root@${MASTER_IP}:/root/301" \
+  "root@${MASTER_IP}:/tmp/redi-multi.tar.gz" \
+  "root@${MASTER_IP}:/root/301-for-node.txt" \
+  /tmp/from-master/
+rm -rf /root/301
+mv /tmp/from-master/301 /root/301
+mv /tmp/from-master/redi-multi.tar.gz /tmp/redi-multi.tar.gz
+mv /tmp/from-master/301-for-node.txt /root/301-for-node.txt
+rm -rf /tmp/from-master
+chmod 600 /root/301-for-node.txt /tmp/redi-multi.tar.gz
 if [[ ! -f /root/301/scripts/centos7/deploy-node.sh ]]; then
-  rm -rf /root/301
-  if ! git clone --depth 1 https://github.com/freejbgo/301.git /root/301; then
-    echo "==> GitHub 下载失败，改为从主控拷贝代码（会再问一次主控 root 密码）"
-    rm -rf /root/301
-    scp -r "root@${MASTER_IP}:/root/301" /root/
-  fi
-fi
-if [[ ! -f /root/301/scripts/centos7/deploy-node.sh ]]; then
-  echo "错误: 节点上还是没有安装脚本。请确认主控已经做完第 1 步"
+  echo "错误: 主控上还没有安装脚本。请确认主控已经做完第 1 步"
   exit 1
 fi
-
-echo "==> 从主控拷贝节点安装包。出现 password 时输入主控 root 密码（输入不显示）"
-mkdir -p /root/.ssh
-chmod 700 /root/.ssh
-ssh-keyscan -4 -T 15 "$MASTER_IP" >> /root/.ssh/known_hosts 2>/dev/null || true
-scp "root@${MASTER_IP}:/tmp/redi-multi.tar.gz" "root@${MASTER_IP}:/root/301-for-node.txt" /tmp/
-mv -f /tmp/301-for-node.txt /root/301-for-node.txt
-chmod 600 /root/301-for-node.txt /tmp/redi-multi.tar.gz
 # shellcheck disable=SC1091
 source /root/301-for-node.txt
-valid_ip "${NODE_IP:?主控上的 /root/301-for-node.txt 缺少 NODE_IP}" || {
-  echo "错误: 主控发来的节点 IP 不合法: ${NODE_IP:-}"
+MASTER_IP="$_TYPED_MASTER"
+NODE_IP="$_TYPED_NODE"
+REDI_NODE_TOKEN="$_TYPED_TOKEN"
+if [[ -z "${DB_PASS:-}" || -z "${DEFAULT_REDIRECT_URL:-}" ]]; then
+  echo "错误: 主控上的 /root/301-for-node.txt 不完整。请在主控再执行一次第 2 步"
   exit 1
-}
+fi
 
 cat > /root/301/scripts/centos7/vars.env <<EOF
 MASTER_IP="${MASTER_IP}"
@@ -616,6 +684,10 @@ set -euo pipefail
 # ===== 只改这里 =====
 NEW_NODE_IP="填新节点公网IP"
 # ===== 只改这里 =====
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "错误: 请用 root 登录后再粘贴"
+  exit 1
+fi
 valid_ip() {
   local ip="$1" o a b c d
   [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
@@ -628,7 +700,8 @@ valid_ip() {
 [[ "$NEW_NODE_IP" != "填新节点公网IP" ]] || { echo "错误: 请先填写新节点公网 IP"; exit 1; }
 valid_ip "$NEW_NODE_IP" || { echo "错误: 不是 IPv4: $NEW_NODE_IP"; exit 1; }
 cd /root/301
-if grep -Eq "(^| )${NEW_NODE_IP}( |\"|$)" scripts/centos7/vars.env; then
+ip_re="${NEW_NODE_IP//./\\.}"
+if grep -E '^NODE_IPS=' scripts/centos7/vars.env | grep -Eq "(^|[^0-9])${ip_re}([^0-9]|$)"; then
   echo "vars.env 里已经有 $NEW_NODE_IP"
 else
   sed -i "s/^NODE_IPS=\"/NODE_IPS=\"${NEW_NODE_IP} /" scripts/centos7/vars.env
@@ -641,7 +714,7 @@ bash /root/redi-step-add-node.sh
 ```
 
 3. 后台 **节点管理** 再新建一条，主公网 IP 填这台新机器，复制新的 Token。
-4. 在 **新节点** 上做第 4 步。`MASTER_IP` 仍是主控 IP，`REDI_NODE_TOKEN` 用这条新 Token。
+4. 在 **新节点** 上做第 4 步。`MASTER_IP` 仍是主控 IP，`NODE_IP` 填这台新机器的公网 IP，`REDI_NODE_TOKEN` 用这条新 Token。
 5. DNS 里 `pool` 的 A 记录加上这个新 IP。
 
 同一台机器上的第二个公网 IP，填在后台这一条节点的「其他公网 IP」里，不要再装一遍程序。
@@ -659,7 +732,8 @@ bash /root/redi-step-add-node.sh
 | `需要 PHP 8.0` | 第 1 步的 PHP 没装上。把该行上面的 yum 报错保留，重做第 1 步 |
 | `连不上` 且提到 `redi_node` 或 `3306` | 云安全组：主控的 3306 来源要包含这台节点的公网 IP。第 2 步的 `NODE_IP` 必须是节点公网 IP。改完后在主控再粘贴一次第 2 步，然后在节点再粘贴一次第 4 步 |
 | `redi-multi 没有保持运行` | 节点上 80 或 443 已被别的网站程序占用。停掉占用的程序后再粘贴第 4 步 |
-| `git clone` 失败 | 第 1 步必须能访问 GitHub。检查主控出网后整段再贴一次。第 4 步会在 GitHub 失败时改为从主控拷贝代码 |
+| `下载代码失败` 或 `GITHUB_TOKEN` | 令牌要勾选 repo。主控要能打开 github.com。改好令牌后整段再贴第 1 步 |
+| `主控上还没有安装脚本` | 先在主控做完第 1 步和第 2 步，再在节点贴第 4 步 |
 | `password:` 一直失败 | 输入的是主控 root 密码。主控若关闭了密码登录，要先允许 root 用密码从节点 SSH 过来，或把节点公钥写进主控 `/root/.ssh/authorized_keys` |
 | 后台打不开 | 云安全组和系统防火墙都要放行 80。地址是 `http://` 加主控公网 IP 加 `/admin` |
 | 节点列表没有心跳 | Token 要整串重新贴进第 4 步再执行一次。主控地址在第一次安装时是 `http://主控IP` |
