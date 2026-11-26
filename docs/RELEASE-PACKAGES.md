@@ -11,9 +11,9 @@
 
 `master.sh` 克隆仓库后把这两个文件复制到 `/tmp` 再执行 `deploy-master.sh`。开发机临时产物 `master/master.tar.gz`、`node/redi-multi.tar.gz` 仍 gitignore，不提交。
 
-**分步路径：** 在发版机本地打 tar → `scp` 到 **CentOS 7.9（或其它 7.x）裸机** → 在 `vars.env` 设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR` → 跑 `deploy-*.sh`。机房**不需要 Docker**；不依赖 GitHub Actions 配额或已有 Release。
+自己跑 `deploy-*.sh` 时：把 `pkg/` 里的两份拷到 **CentOS 7.9（或其它 7.x）裸机**，或在发版机重新打 tar 后 `scp`，再在 `vars.env` 设置 `REDI_MASTER_TAR` / `REDI_NODE_TAR`。机房**不需要 Docker**，也不从 GitHub Releases 下载。
 
-## 1. 开发机打包并上传（默认）
+## 1. 改过程序后重新打包
 
 ```bash
 git fetch origin main && git checkout main && git pull origin main
@@ -52,22 +52,16 @@ REDI_NODE_TAR=/tmp/redi-multi.tar.gz
 | `master.tar.gz` | 含 `vendor`；**不含** `.env` |
 | `redi-multi.tar.gz` | 含静态 `bin/redi-multi`；**不含** 本机 `config.json`（由 example 生成） |
 
-## 3. 可选：GitHub Releases
+## 3. 提交 `pkg/`
 
-维护者可在 `main` 稳定且 `dev-preflight` 通过后打语义化 **`v*`** tag，由 [`.github/workflows/release.yml`](../.github/workflows/release.yml) 在 Actions 可用时构建并挂附件（与本地 `build-release-tarballs.sh` 产物等价）。
+`build-release-tarballs.sh` 会把新包复制到 `pkg/`。提交 `pkg/master.tar.gz` 和 `pkg/redi-multi.tar.gz` 之后，一条命令安装才会用到新包。
 
-```bash
-git tag -a v1.0.0 -m "说明"
-git push origin v1.0.0
-```
-
-Workflow 会跑 Go / PHPUnit（8.4 与 8.0）、`composer audit`、与 CI 对齐的 `verify-*`、CentOS 7 容器冒烟，再上传双 tar。在 **Actions** 全部绿色后，从 [Releases](https://github.com/freejbgo/301/releases) 下载，同样在服务器设置 `REDI_*_TAR` 后部署。
+安装不从 GitHub Releases 下载。机房没有 composer 或 Go 时，用仓库里的 `pkg/`，不要在服务器上现打包。
 
 | 现象 | 处理 |
 |------|------|
-| `main` / CI 几秒失败 | 多为 runner/配额；**以本地 `dev-preflight` + 本地 tar 部署为准** |
-| push tag 后无 Release | 看 Actions；修复后删错误 tag 或打新 patch tag |
-| 节点 `ldd` 报 glibc | 必须用本仓库 `build-node-tar.sh` 或 Release 附件，勿混用其他 Go 构建 |
+| `main` / CI 几秒失败 | 多为 runner/配额；**以本地 `dev-preflight` + 本地 tar 为准** |
+| 节点 `ldd` 报 glibc | 必须用本仓库 `build-node-tar.sh` 打出的静态二进制，勿混用其他 Go 构建 |
 
 ## 4. 换包与回滚
 

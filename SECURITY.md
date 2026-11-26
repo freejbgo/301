@@ -72,8 +72,8 @@
 
 ## 依赖
 
-发布包 `master.tar.gz`（`pkg/master.tar.gz`、本地构建或 Release）含 `composer install --no-dev` 的 `vendor`，不含 `.env`。构建/CI 使用 PHP **8.4**；生产建议 PHP 8.0.2+ 并与 lock 一致。源码目录里的 `vendor` 不进 git。一条命令安装用的 `pkg/*.tar.gz` 随仓库提交，里面同样没有 `.env`。
+发布包 `pkg/master.tar.gz` 含 `composer install --no-dev` 的 `vendor`，不含 `.env`。构建/CI 使用 PHP **8.4**；生产建议 PHP 8.0.2+ 并与 lock 一致。源码目录里的 `vendor` 不进 git。一条命令安装用的 `pkg/*.tar.gz` 随仓库提交。
 
 CI 会执行 `composer audit`（忽略 abandoned 包）。当前 **Laravel 8** 锁文件在 advisory 库中仍关联若干 CVE/GHSA（见 `composer.json` → `config.audit.ignore`）；清除需 **大版本升级 Laravel/Dcat**，单期以 `APP_DEBUG=false`、后台 HTTPS、不暴露调试页等缓解。升级前勿移除 ignore 项。
 
-打 `v*` 标签发布 Release 时，`.github/workflows/release.yml` 会在上传包之前跑与 CI 相同的 Go/PHPUnit/audit、脚本校验与 CentOS 7 容器冒烟。本地可先执行 `./scripts/dev-preflight.sh`（与 CI 核心步骤一致；无 Docker 时 DB 路径校验会跳过）。
+发版前在本地执行 `./scripts/dev-preflight.sh`（与 CI 核心步骤一致；无 Docker 时 DB 路径校验会跳过）。安装从仓库 `pkg/` 取包，不从 GitHub Releases 下载。

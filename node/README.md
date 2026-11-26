@@ -8,7 +8,7 @@
 
 `bin/redi-multi` 是 `CGO_ENABLED=0` 的静态二进制（**linux/amd64**），不依赖 glibc 2.32/2.34。CentOS 7.x 内核小版本不同也不用重编，也不编译内核模块。lagran 使用系统里的 `nfnetlink_queue`。
 
-改完 `node/redi-multi` 源码后，在仓库根目录建议先 `bash scripts/dev-preflight.sh`，再 `./scripts/build-release-tarballs.sh`（或仅节点时 `./scripts/build-node-tar.sh`）。产物 `node/redi-multi.tar.gz` 已 gitignore；`scp` 到机房并设 `REDI_NODE_TAR`（见 [../docs/RELEASE-PACKAGES.md](../docs/RELEASE-PACKAGES.md)）。
+改完 `node/redi-multi` 源码后，在仓库根目录建议先 `bash scripts/dev-preflight.sh`，再 `./scripts/build-release-tarballs.sh`（或仅节点时 `./scripts/build-node-tar.sh`）。临时产物 `node/redi-multi.tar.gz` 不提交；要提交的是 `pkg/redi-multi.tar.gz`。已经在跑的节点可 `scp` 后设 `REDI_NODE_TAR`（见 [../docs/RELEASE-PACKAGES.md](../docs/RELEASE-PACKAGES.md)）。
 
 ## 配置
 

@@ -19,7 +19,7 @@
 
 ## 发布前门禁（仓库内）
 
-合并或打标签前在仓库根目录执行（与 CI / Release 工作流核心步骤一致；无 Docker 时会跳过部分 DB 容器校验）：
+合并前在仓库根目录执行（与 CI 核心步骤一致；无 Docker 时会跳过部分 DB 容器校验）：
 
 ```bash
 ./scripts/dev-preflight.sh

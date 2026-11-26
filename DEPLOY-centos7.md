@@ -11,11 +11,11 @@
 | 主控 | `scripts/centos7/deploy-master.sh` | 程序在 `/opt/301/master`，网站根目录 `/opt/301/master/public` |
 | 每台节点 | `scripts/centos7/deploy-node.sh` | 程序在 `/opt/redi-multi/redi-multi` |
 
-**发布包（推荐）：** 开发机 `bash scripts/dev-preflight.sh` 后 `bash scripts/build-release-tarballs.sh`，`scp` 双 tar 到服务器，在 `vars.env` 设 `REDI_MASTER_TAR` / `REDI_NODE_TAR`（如 `/tmp/master.tar.gz`、`/tmp/redi-multi.tar.gz`）。步骤见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)。可选：对 `main` 打 **`v*` tag** 从 [GitHub Releases](https://github.com/freejbgo/301/releases) 下载（Actions 配额不足时用本地 tar 即可）。
+**安装包：** 一条命令用仓库里的 [pkg/master.tar.gz](pkg/master.tar.gz) 和 [pkg/redi-multi.tar.gz](pkg/redi-multi.tar.gz)。自己跑 `deploy-*.sh` 时，把这两个文件拷到服务器，或在发版机 `bash scripts/dev-preflight.sh` 后 `bash scripts/build-release-tarballs.sh`，再 `scp` 到服务器，在 `vars.env` 设 `REDI_MASTER_TAR` / `REDI_NODE_TAR`（如 `/tmp/master.tar.gz`、`/tmp/redi-multi.tar.gz`）。步骤见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)。
 
-- 主控包：`master/master.tar.gz`（含 `vendor`，无 `.env`）。
-- 节点包：`node/redi-multi.tar.gz`（CentOS 7 静态 `bin/redi-multi`）。
-- 仓库 **不跟踪** tar。**生产机**应上传 tar、写 `REDI_*_TAR`（模板 [scripts/centos7/vars.production.example.env](scripts/centos7/vars.production.example.env)）。缺 tar 时 **默认拒绝** 机房内自动打包；仅实验室在 `vars.env` 设 `REDI_ALLOW_ON_SERVER_TAR_BUILD=1`。
+- 主控包含 `vendor`，无 `.env`。一条命令用 `pkg/master.tar.gz`。开发机临时文件 `master/master.tar.gz` 不提交。
+- 节点包是 CentOS 7 静态 `bin/redi-multi`。一条命令用 `pkg/redi-multi.tar.gz`。开发机临时文件 `node/redi-multi.tar.gz` 不提交。
+- **生产机**写 `REDI_*_TAR`（模板 [scripts/centos7/vars.production.example.env](scripts/centos7/vars.production.example.env)）。缺 tar 时 **默认拒绝** 机房内自动打包；仅实验室在 `vars.env` 设 `REDI_ALLOW_ON_SERVER_TAR_BUILD=1`。
 
 源码在仓库的 `master/master/`。那是给开发和重新打包用的。自动安装不要把仓库克隆到 `/opt/301`，否则会和发布包解压出来的 `/opt/301/master` 叠在一起。
 
@@ -55,7 +55,7 @@ sudo bash scripts/centos7/deploy-master.sh
 3. 安装 MariaDB 10.6。CentOS 7 自带的 5.5 导不进这份 `utf8mb4` 库。
 4. 设置 root 密码，关闭反向域名解析，数据库监听 IPv4。3306 不对全网开放，只放行 `NODE_IPS`。
 5. 库是空的才导入 `db/redi_admin.sql`（菜单 + 业务表 + 默认 `admin`（`locale` 列）+ 证书 **`last_error_code`** + 节点存储过程 **`redi_node_bump_skip`**，含节点 IPv6 列；`migrations` 表已与当前发布包对齐）。已经有 `admin_users` 时不会覆盖。
-6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（绿场导入 SQL 后一般为无待执行迁移，**不必手工 migrate**）、`storage:link`，并 **检查存储过程是否存在**（应由上一步 SQL 导入；不存在则脚本失败退出）。跟新发布包时的库变更见 [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md)。
+6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（导入 SQL 后一般为无待执行迁移，**不必手工 migrate**）、`storage:link`，并 **检查存储过程是否存在**（应由上一步 SQL 导入；不存在则脚本失败退出）。跟新发布包时的库变更见 [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md)。
 7. 配置 PHP-FPM（用户 `nginx`，sock `/var/run/php-fpm/www.sock`）和 Nginx。开启 SELinux 时会放行网站访问网络和数据库。
 8. 安装队列 `redi-queue`：`queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600`（worker 每小时由 systemd 重启，避免长期内存增长）。`/etc/cron.d/redi-renew` 每天 **03:10** 续期证书、**04:10** 清理 ACME、**08:30** `redi:health --notify`（webhook 发送成功或无 issues 时 **退出 0**；未配置 URL 且有 issues 或 artisan 异常时 `|| redi:ops-webhook`）；直接 `php artisan …`，**勿**配置 `php artisan schedule:run`（续期/清理/health 仅由本文件触发；`Kernel` 内已无 schedule 任务）。多台机器跑 `queue:work` 时主控 `.env` 须 `CACHE_DRIVER=redis`（ACME 全局锁）。
 9. 防火墙开放 22、80、443。
@@ -106,11 +106,11 @@ bash scripts/dev-preflight.sh
 bash scripts/build-release-tarballs.sh
 ```
 
-再 `scp` 到各台 **CentOS 7.9 生产机** 并设置 `REDI_*_TAR`（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)）。也可单独 `./scripts/build-master-tar.sh` / `./scripts/build-node-tar.sh`。
+脚本会把新包复制到 `pkg/`。提交 `pkg/master.tar.gz` 和 `pkg/redi-multi.tar.gz`，下一次一条命令安装才会用到新包。已经在跑的机器把同一份 tar `scp` 过去并设置 `REDI_*_TAR`（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)）。也可单独 `./scripts/build-master-tar.sh` / `./scripts/build-node-tar.sh`。
 
 节点包内含静态 `bin/redi-multi`（含 80/443 上 `/c.js`、`/api.js` 限速等逻辑）。只更新主控 PHP 时重跑 `deploy-master.sh`；改过 `node/redi-multi` 后必须重新打包并在各节点 `deploy-node.sh` 或至少替换二进制并重启 `redi-multi`。
 
-在需要部署时本地打包（或打 tag 发 Release），勿把 tar 提交进 git。节点打包会拒绝仍然动态链接 libc 的二进制。
+`master/master.tar.gz` 和 `node/redi-multi.tar.gz` 是临时文件，不提交。要提交的是 `pkg/` 里的两份。节点打包会拒绝仍然动态链接 libc 的二进制。
 
 ## 7. 开发机用 CentOS 7 容器做冒烟（可选，生产不用）
 

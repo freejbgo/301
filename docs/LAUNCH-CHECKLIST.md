@@ -17,14 +17,14 @@
 
 ## B. 部署与进程
 
-- [ ] **绿场首装**路径完成：**CentOS 7.x 裸机**（常用 7.9），未依赖 Docker；见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)（首装后换 tar 另见 [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)）
+- [ ] **首装**完成：**CentOS 7.x 裸机**（常用 7.9），一条命令见 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md)，未依赖 Docker（首装后换 tar 另见 [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md)）
 - [ ] 主控：`nginx`、`php-fpm`、`mariadb`、`redi-queue` 均为 active
 - [ ] `redi-queue` 含 `--max-time=3600`
 - [ ] `/etc/cron.d/redi-renew` 含 renew / prune / health，**无** `schedule:run`，**无** `master/master` 路径
 - [ ] Cron 行尾含 `|| redi:ops-webhook --task=…`（或已跑 `patch-master-cron-ops-webhook.sh`）
 - [ ] 节点：`redi-multi` active；`setcap cap_net_admin`；防火墙仅 22/80/443
 - [ ] 主控 `NODE_IPS` 与节点公网 IP 一致；已 `deploy-master` 或 `grant-nodes-from-vars`
-- [ ] 发版包为本地 `dev-preflight` + `build-release-tarballs.sh`（或等价 tar），并已 `scp` / 配置 `REDI_*_TAR`（可选：GitHub Releases 某 `v*`，见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md)）
+- [ ] 安装包是仓库里的 `pkg/master.tar.gz` 与 `pkg/redi-multi.tar.gz`（改过程序后 `dev-preflight` + `build-release-tarballs.sh`，并提交 `pkg/`，见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md)）
 
 ## C. 运营自检（命令）
 

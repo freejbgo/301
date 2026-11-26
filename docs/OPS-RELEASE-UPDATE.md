@@ -1,6 +1,6 @@
 # 首装后换发布包（不重装 deploy-master）
 
-首次安装见 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md)。本文仅适用于 **主控/节点已在跑**，需要跟上新 `master.tar.gz` / `redi-multi.tar.gz` 时。按顺序做，每步可单独回滚。
+首次安装见 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md)。本文仅适用于 **主控/节点已在跑**，需要跟上新 `pkg/master.tar.gz` / `pkg/redi-multi.tar.gz` 时。按顺序做，每步可单独回滚。改完程序后 `build-release-tarballs.sh` 会更新 `pkg/`，提交后新装的机器才会用到新包。
 
 ## 1. 发布包与代码
 

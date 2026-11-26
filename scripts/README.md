@@ -12,7 +12,7 @@
 | [verify-node-deploy-templates.sh](verify-node-deploy-templates.sh) | 静态校验 `deploy-node`、`vars.example.env`、`env.example` 与 lagran 脚本（HTTPS Agent、静态 ldd、`redi_node`、setcap、lagran_ports.py、`REDI_DB_PASSWORD`） |
 | [verify-grant-nodes-templates.sh](verify-grant-nodes-templates.sh) | 静态校验 `grant-nodes-from-vars` 与 `deploy-master` 共用 `redi_sync_node_ips_access`、`vars.example` 的 `NODE_IPS`/`MYSQL_ROOT_PASS`/`DB_PASS` |
 | [verify-acceptance-doc.sh](verify-acceptance-doc.sh) | 静态校验 [ACCEPTANCE.md](../docs/ACCEPTANCE.md) §A/§B 与 Cron、Edge 关键表述 |
-| [verify-deploy-centos7-doc.sh](verify-deploy-centos7-doc.sh) | 静态校验 [DEPLOY-centos7.md](../DEPLOY-centos7.md) / 绿场说明与 `deploy-*.sh`、`redi_admin.sql`、Cron 时刻一致 |
+| [verify-deploy-centos7-doc.sh](verify-deploy-centos7-doc.sh) | 静态校验 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 与 `deploy-*.sh`、`redi_admin.sql`、Cron 时刻一致 |
 | [verify-product-docs.sh](verify-product-docs.sh) | 产品文档集存在、已移除 AUDIT/开发进度主文档且无残留链接 |
 | [verify-greenfield-install-doc.sh](verify-greenfield-install-doc.sh) | 安装文档仍写明一次导入 `redi_admin.sql`、不要 `schedule:run`、换包见 OPS |
 | [verify-launch-checklist-doc.sh](verify-launch-checklist-doc.sh) | `LAUNCH-CHECKLIST` 与 PRODUCTION / node|master README 互链 |
@@ -47,7 +47,7 @@
 | [verify-release-workflow-invariants.sh](verify-release-workflow-invariants.sh) | `release.yml` 与 `build-*-tar` / 冒烟门禁约定 |
 | [verify-ensure-release-tarballs.sh](verify-ensure-release-tarballs.sh) | `REDI_ALLOW_ON_SERVER_TAR_BUILD` 时产物须复制到 `REDI_*_TAR` |
 | [verify-ci-preflight-parity.sh](verify-ci-preflight-parity.sh) | `dev-preflight` 中的 `verify-*.sh` 须在 `ci.yml` / `release.yml` 出现 |
-| [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | **仅**在跑主控且 Cron 落后于模板时（绿场 `deploy-master.sh` **首装勿用**）；改写 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`） |
+| [patch-master-cron-ops-webhook.sh](patch-master-cron-ops-webhook.sh) | **仅**在跑主控且 Cron 落后于模板时（`deploy-master.sh` **首装勿用**）；改写 `/etc/cron.d/redi-renew`（默认 APP `/opt/301/master`） |
 | [centos7/vars.example.env](centos7/vars.example.env) | 部署变量模板（`vars.env`）；Webhook URL 写在主控 `.env`，见文件内注释 |
 | [centos7/deploy-master.sh](centos7/deploy-master.sh) / [deploy-node.sh](centos7/deploy-node.sh) | CentOS 7 主控/节点一键部署 |
 | [centos7/grant-nodes-from-vars.sh](centos7/grant-nodes-from-vars.sh) | 按 `vars.env` 的 `NODE_IPS` 同步 MySQL + firewalld（**root**；`MYSQL_ROOT_PASS` 读 vars，不重装主控；`NODE_IPS` 为空时撤销已记录 IP，同 `deploy-master`） |

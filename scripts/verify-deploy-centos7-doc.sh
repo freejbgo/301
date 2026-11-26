@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 静态校验 DEPLOY-centos7.md / 绿场说明与 CentOS 部署脚本、SQL 种子表述一致（防文档漂移）。
+# 静态校验 DEPLOY-centos7.md 与 CentOS 部署脚本、SQL 种子表述一致（防文档漂移）。
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

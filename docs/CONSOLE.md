@@ -8,7 +8,7 @@
 
 - **切换**：登录页表单下方有语言选项；登录后侧栏右上角 **地球图标** 可随时切换。
 - **记忆**：选择会写入浏览器 session；**登录后**会写入管理员账号的 `locale` 字段，下次登录自动沿用（需已执行 `php artisan migrate`）。
-- **系统外观**：在 **站点配置 → 系统外观** 按 **简体中文 / 繁體中文 / English** 三个选项卡分别填写名称与标题；Logo、Favicon 共用。绿场导入后直接用 Tab 填写即可。若从外部拷贝的配置仍是**仅顶层**品牌 JSON，换包时见 [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md) 的 `redi:normalize-platform-branding`。未保存过时，表单与各语言界面会显示语言包默认品牌名。
+- **系统外观**：在 **站点配置 → 系统外观** 按 **简体中文 / 繁體中文 / English** 三个选项卡分别填写名称与标题；Logo、Favicon 共用。导入 SQL 后直接用 Tab 填写即可。若从外部拷贝的配置仍是**仅顶层**品牌 JSON，换包时见 [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md) 的 `redi:normalize-platform-branding`。未保存过时，表单与各语言界面会显示语言包默认品牌名。
 - **侧栏菜单**：业务项与 `Admin` 子菜单优先按库内 title 映射；若 title 无翻译键，则按菜单 URI（如 `group`、`auth/users`）回退到语言包。
 - **证书 `last_error` 列**：展示库内运维说明（**不随界面语言翻译**）；新记录一般为英文。CLI/Webhook 亦为英文。详见 [I18N.md](I18N.md)。
 

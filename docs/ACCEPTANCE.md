@@ -8,7 +8,7 @@
 
 ## A. CentOS 7.9 真机安装验收
 
-在跟完教程之后逐项打勾；不是第二套安装教程。业务 F 项见下文 **§B**。
+一条命令装完后按本节打勾；自己填 `vars.env` 时，下面的命令就是手工路径。这不是另一套安装说明。业务 F 项见下文 **§B**。
 
 | 角色 | 示例 IP | 说明 |
 |------|---------|------|
@@ -23,7 +23,7 @@
 - [ ] `cat /etc/centos-release` 为 **CentOS Linux release 7.9.2009**（或其他 `7.x`，脚本要求 `VERSION_ID` 以 `7` 开头）。
 - [ ] 云厂商安全组/外层防火墙已放行：**22、80、443**；主控还需允许 **来自节点公网 IP 的 3306**（脚本用 firewalld 按 `NODE_IPS` 放行，外层仍要允许）。
 - [ ] 主控与节点 **公网 IP** 与 `vars.env` 里填写的一致（节点访问库走主控公网 IP + `skip-name-resolve`）。
-- [ ] 已安装 `git`，或已将 Release 包与 `scripts/centos7/`、`db/` 拷到机器（见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 发布包路径）。
+- [ ] 机器能访问 GitHub 并执行 `master.sh` / `node.sh`，或已把 `pkg/*.tar.gz` 与 `scripts/centos7/`、`db/` 放到机器上（见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)）。
 
 ```bash
 cat /etc/centos-release
