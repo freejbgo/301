@@ -35,7 +35,7 @@ curl -4 -sI -o /dev/null -w 'HTTP %{http_code}\n' https://vault.centos.org/ || e
 
 ### 1. 主控：准备与手工部署
 
-一条命令安装是 `master.sh`（见 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md)）。下面核对自己跑 `deploy-master.sh`。`REDI_MASTER_TAR` 留空时，有刚打的 `master/master.tar.gz` 就用它，否则用 `pkg/master.tar.gz`。
+一条命令安装是 `master.sh`（见 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md)）。下面核对自己跑 `deploy-master.sh`。`REDI_MASTER_TAR` 留空时使用 `pkg/master.tar.gz`。
 
 在 **主控** 上（仓库建议 `/root/301`，**不要**克隆到 `/opt/301`）：
 
@@ -61,7 +61,7 @@ ADMIN_HTTPS="false"
 REDI_MASTER_TAR=""
 ```
 
-`REDI_MASTER_TAR` 留空即按上面的顺序选包。手工部署：
+`REDI_MASTER_TAR` 留空即用 `pkg/master.tar.gz`。手工部署：
 
 ```bash
 sudo bash scripts/centos7/deploy-master.sh
@@ -163,7 +163,7 @@ sudo bash scripts/centos7/grant-nodes-from-vars.sh
 
 ### 4. 节点：准备与手工部署
 
-一条命令安装是 `node.sh`。下面核对自己跑 `deploy-node.sh`。`REDI_NODE_TAR` 留空时，有刚打的 `node/redi-multi.tar.gz` 就用它，否则用 `pkg/redi-multi.tar.gz`。
+一条命令安装是 `node.sh`。下面核对自己跑 `deploy-node.sh`。`REDI_NODE_TAR` 留空时使用 `pkg/redi-multi.tar.gz`。
 
 在 **节点 5.6.7.8** 上：
 

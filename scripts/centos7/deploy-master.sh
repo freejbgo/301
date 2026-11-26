@@ -3,7 +3,7 @@
 #
 # 一条命令安装：docs/DEPLOY-BEGINNER-CENTOS7.md。本文对应的手工路径见 DEPLOY-centos7.md。
 # 在仓库根目录执行（勿把 git 克隆到 MASTER_INSTALL_ROOT，默认 /opt/301）：
-#   1) REDI_MASTER_TAR 留空：有 master/master.tar.gz 用它，否则用 pkg/master.tar.gz
+#   1) REDI_MASTER_TAR 留空时使用 pkg/master.tar.gz
 #   2) cp scripts/centos7/vars.example.env scripts/centos7/vars.env
 #   3) chmod 600 scripts/centos7/vars.env && vi vars.env
 #   4) sudo bash scripts/centos7/deploy-master.sh
@@ -42,12 +42,12 @@ source "$VARS_FILE"
 
 if [[ -n "${REDI_MASTER_TAR:-}" ]]; then
   TAR="$REDI_MASTER_TAR"
-elif [[ -s "${REPO_ROOT}/master/master.tar.gz" ]]; then
-  TAR="${REPO_ROOT}/master/master.tar.gz"
 elif [[ -s "${REPO_ROOT}/pkg/master.tar.gz" ]]; then
   TAR="${REPO_ROOT}/pkg/master.tar.gz"
-else
+elif [[ -s "${REPO_ROOT}/master/master.tar.gz" ]]; then
   TAR="${REPO_ROOT}/master/master.tar.gz"
+else
+  TAR="${REPO_ROOT}/pkg/master.tar.gz"
 fi
 
 : "${MASTER_IP:?vars.env 需要 MASTER_IP}"

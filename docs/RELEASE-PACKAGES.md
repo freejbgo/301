@@ -21,17 +21,17 @@ bash scripts/dev-preflight.sh          # 与 CI 核心门禁一致，发版前�
 bash scripts/build-release-tarballs.sh # 等价于 build-node-tar + composer --no-dev + build-master-tar
 ```
 
-产物（这两份勿提交 git；`build-release-tarballs.sh` 会另复制到 `pkg/`，`pkg/` 里的要提交）：
+要提交并用来安装的是 `pkg/master.tar.gz` 和 `pkg/redi-multi.tar.gz`。`master/master.tar.gz`、`node/redi-multi.tar.gz` 只是打包过程中的中间文件，不提交，部署也不优先用它们。
 
 | 路径 | 部署时解压目标 |
 |------|----------------|
-| `master/master.tar.gz` | `/opt/301/master` |
-| `node/redi-multi.tar.gz` | `/opt/redi-multi` |
+| `pkg/master.tar.gz` | `/opt/301/master` |
+| `pkg/redi-multi.tar.gz` | `/opt/redi-multi` |
 
 上传到服务器（示例）：
 
 ```bash
-scp master/master.tar.gz node/redi-multi.tar.gz root@<主机>:/tmp/
+scp pkg/master.tar.gz pkg/redi-multi.tar.gz root@<主机>:/tmp/
 ```
 
 在该机 `scripts/centos7/vars.env` 中指定（生产用 [scripts/centos7/vars.production.example.env](../scripts/centos7/vars.production.example.env)；缺 tar 时 **默认失败**，勿在机房自动打包）：
@@ -43,7 +43,7 @@ REDI_NODE_TAR=/tmp/redi-multi.tar.gz
 
 然后按 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 执行 `deploy-master.sh` / `deploy-node.sh`。
 
-仅更新某一侧时，可单独执行 `scripts/build-master-tar.sh` 或 `scripts/build-node-tar.sh`（见各脚本头注释）。缺 tar 时 `deploy-*.sh` **默认直接失败**；仅在 `vars.env` 设 `REDI_ALLOW_ON_SERVER_TAR_BUILD=1` 时才会在机房尝试 `ensure-release-tarballs.sh`（实验室/容器用）。构建产物默认在仓库内 `master/master.tar.gz`、`node/redi-multi.tar.gz`；若 `REDI_*_TAR` 指向其他绝对路径（如 `/tmp/master.tar.gz`），`ensure-release-tarballs.sh` 会在构建后 **复制** 到该路径。
+仅更新某一侧时，可单独执行 `scripts/build-master-tar.sh` 或 `scripts/build-node-tar.sh`。这两个脚本也会把结果复制到 `pkg/`。缺 tar 时 `deploy-*.sh` **默认直接失败**；仅在 `vars.env` 设 `REDI_ALLOW_ON_SERVER_TAR_BUILD=1` 时才会在机房尝试 `ensure-release-tarballs.sh`（实验室/容器用）。若 `REDI_*_TAR` 指向其他绝对路径（如 `/tmp/master.tar.gz`），`ensure-release-tarballs.sh` 会在构建后 **复制** 到该路径。
 
 ## 2. 包内容
 
