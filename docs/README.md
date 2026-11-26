@@ -7,7 +7,8 @@
 | 顺序 | 文档 |
 |------|------|
 | 0 | [GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md) — 怎么读文档 |
-| 1 | [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) — **唯一推荐的分步教程** |
+| 1 | [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md) — **小白复制粘贴**（整段粘贴，不用 vi） |
+| 1b | [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) — **分步教程**（同一套脚本，逐步说明） |
 | 2 | [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md) — 一次导入 `redi_admin.sql`、首登 |
 | 3 | [DEPLOY-centos7.md](../DEPLOY-centos7.md) — 脚本细节与可选章节 |
 | 4 | [vars.example.env](../scripts/centos7/vars.example.env)、[vars.production.example.env](../scripts/centos7/vars.production.example.env) — `vars.env` 模板 |
