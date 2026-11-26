@@ -2,6 +2,8 @@
 
 按 **步骤 1 → 7** 顺序做即可上线。生产机 **只需 CentOS 7.x（常用 7.9）**，**不要装 Docker**。细节与可选章节见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)；`vars.env` 见 [vars.production.example.env](../scripts/centos7/vars.production.example.env)。
 
+不会改配置文件时，用同一套脚本的复制粘贴版：[DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md)。
+
 | 角色 | 系统 | 需要什么 |
 |------|------|----------|
 | **发版机** | 任意 Linux（或另一台 7.9） | `git`、**composer**、**Go**；用来打 tar，不必是生产机 |

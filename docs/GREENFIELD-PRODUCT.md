@@ -6,6 +6,7 @@
 
 | 你是谁 | 只读这些就够 | 需要时再翻 |
 |--------|----------------|------------|
+| **只会复制粘贴** | [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md) | 装完签收仍看 [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) |
 | **第一次装机房** | 本页 → [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) → [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md) | [DEPLOY-centos7.md](../DEPLOY-centos7.md) 可选配置 |
 | **装完要签收上线** | [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)（一页打勾） | [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) 里的命令解释 |
 | **要逐项核对脚本结果 / F1–F8** | [ACCEPTANCE.md](ACCEPTANCE.md)（§A 安装、§B 业务） | [CONSOLE.md](CONSOLE.md)、[CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md) |

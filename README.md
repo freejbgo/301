@@ -14,6 +14,7 @@
 |------|------|
 | [docs/GREENFIELD-PRODUCT.md](docs/GREENFIELD-PRODUCT.md) | **绿场产品说明**（当全新系统读文档） |
 | [docs/README.md](docs/README.md) | **文档索引**（按上线 / 运营 / 开发场景） |
+| [docs/DEPLOY-BEGINNER-CENTOS7.md](docs/DEPLOY-BEGINNER-CENTOS7.md) | **小白复制粘贴安装（改两行 IP，整段粘贴）** |
 | [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md) | **CentOS 7 分步部署教程（从零开始）** |
 | [DEPLOY-centos7.md](DEPLOY-centos7.md) | CentOS 7 脚本说明与可选章节 |
 | [docs/LAUNCH-CHECKLIST.md](docs/LAUNCH-CHECKLIST.md) | 一页上线检查单（可打勾） |
