@@ -26,3 +26,6 @@ tar czf redi-multi.tar.gz \
   --exclude='redi-multi/config.json' \
   redi-multi
 ls -lh redi-multi.tar.gz
+mkdir -p "$ROOT/pkg"
+cp -f "$ROOT/node/redi-multi.tar.gz" "$ROOT/pkg/redi-multi.tar.gz"
+echo "已复制到 pkg/redi-multi.tar.gz"

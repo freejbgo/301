@@ -52,3 +52,6 @@ case $'\n'"${list}"$'\n' in
     ;;
 esac
 ls -lh master.tar.gz
+mkdir -p "$ROOT/pkg"
+cp -f "$ROOT/master/master.tar.gz" "$ROOT/pkg/master.tar.gz"
+echo "已复制到 pkg/master.tar.gz"
