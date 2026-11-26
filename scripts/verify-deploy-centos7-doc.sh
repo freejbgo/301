@@ -4,7 +4,6 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DOC="${REPO_ROOT}/DEPLOY-centos7.md"
-GREEN="${REPO_ROOT}/docs/GREENFIELD-INSTALL.md"
 SQL="${REPO_ROOT}/db/redi_admin.sql"
 VARS="${REPO_ROOT}/scripts/centos7/vars.example.env"
 VARS_PROD="${REPO_ROOT}/scripts/centos7/vars.production.example.env"
@@ -17,7 +16,6 @@ fail() {
 }
 
 [[ -f "$DOC" ]] || fail "missing DEPLOY-centos7.md"
-[[ -f "$GREEN" ]] || fail "missing GREENFIELD-INSTALL.md"
 [[ -f "$SQL" ]] || fail "missing db/redi_admin.sql"
 
 for needle in \
@@ -55,25 +53,20 @@ for needle in \
   grep -qF -- "$needle" "$DOC" || fail "DEPLOY-centos7.md missing: ${needle}"
 done
 
-grep -qF 'DEPLOY-centos7.md' "${REPO_ROOT}/DEPLOY.md" \
-  || fail "DEPLOY.md must link DEPLOY-centos7.md"
-grep -qF 'DEPLOY-TUTORIAL-CENTOS7.md' "${REPO_ROOT}/DEPLOY.md" \
-  || fail "DEPLOY.md must link DEPLOY-TUTORIAL-CENTOS7"
-
-grep -qF 'redi_node_bump_skip' "$GREEN" \
-  || fail "GREENFIELD-INSTALL.md must document redi_node_bump_skip"
-grep -qF 'docs/I18N.md' "$GREEN" \
-  || fail "GREENFIELD-INSTALL.md must link I18N.md"
 grep -qF 'docs/I18N.md' "$DEPLOY_MASTER" \
   || fail "deploy-master.sh must mention docs/I18N.md"
+grep -qF 'redi_admin.sql' "$DOC" \
+  || fail "DEPLOY-centos7.md must document redi_admin.sql"
+grep -qF '不要只跑' "$DOC" \
+  || fail "DEPLOY-centos7.md must warn against migrate-only on an empty database"
 
 grep -qF 'redi_node_bump_skip' "$SQL" \
   || fail "redi_admin.sql must define or reference redi_node_bump_skip"
 
 [[ -f "$VARS_PROD" ]] || fail "missing vars.production.example.env"
 grep -qF 'REDI_MASTER_TAR=' "$VARS_PROD" || fail "vars.production.example.env must set REDI_MASTER_TAR"
-grep -qF 'vars.production.example.env' "${REPO_ROOT}/docs/README.md" \
-  || fail "docs/README must link vars.production.example.env"
+grep -qF 'vars.production.example.env' "${REPO_ROOT}/README.md" \
+  || fail "README must link vars.production.example.env"
 grep -qF 'REDI_ALLOW_ON_SERVER_TAR_BUILD' "${REPO_ROOT}/scripts/ensure-release-tarballs.sh" \
   || fail "ensure-release-tarballs must gate on-server build"
 
@@ -85,12 +78,8 @@ done
 
 grep -q 'MASTER_IP:?' "$DEPLOY_NODE" || fail "deploy-node.sh must require MASTER_IP"
 grep -q 'DB_PASS:?' "$DEPLOY_NODE" || fail "deploy-node.sh must require DB_PASS"
-grep -qF 'MASTER_IP' "${REPO_ROOT}/docs/DEPLOY-TUTORIAL-CENTOS7.md" \
-  || fail "DEPLOY-TUTORIAL must document MASTER_IP for nodes"
-grep -qF 'DB_PASS' "${REPO_ROOT}/docs/DEPLOY-TUTORIAL-CENTOS7.md" \
-  || fail "DEPLOY-TUTORIAL must document DB_PASS for nodes"
-grep -qF 'vars.production.example.env' "${REPO_ROOT}/docs/DEPLOY-TUTORIAL-CENTOS7.md" \
-  || fail "DEPLOY-TUTORIAL must mention vars.production.example.env"
+grep -qF 'vars.production.example.env' "$DOC" \
+  || fail "DEPLOY-centos7.md must mention vars.production.example.env"
 
 # Cron 时刻与文档 human 表述一致（deploy-master heredoc）
 grep -q '10 3 \* \* \*' "$DEPLOY_MASTER" || fail "deploy-master: renew cron must be 03:10"

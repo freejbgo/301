@@ -17,7 +17,7 @@ curl -fsSL https://github.com/freejbgo/301/raw/main/master.sh -o master.sh && ch
 
 云控制台安全组：两台机器都放行 TCP **22 / 80 / 443**。主控的 **3306** 只允许节点公网 IP 来访问。
 
-程序目录和原来的脚本相同：主控 `/opt/301/master`，节点 `/opt/redi-multi/redi-multi`。细节仍见 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md)。
+程序目录和原来的脚本相同：主控 `/opt/301/master`，节点 `/opt/redi-multi/redi-multi`。脚本每一步做了什么见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)。
 
 下面从后台建节点开始。节点也是一条命令，主控装完后屏幕上会打出来。Token 只在后台显示一次，要贴进那条命令。
 
@@ -73,7 +73,7 @@ curl -fsSL https://github.com/freejbgo/301/raw/main/node.sh -o node.sh && chmod 
 
 客户不要把域名 A 到某一台节点的 IP。说明可直接转给客户：[CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md)。
 
-对外给客户用之前，主控要改成 **https 域名**（节点访问主控也改成 `https://`）。第一次安装为了能先打开后台，用的是 `http://IP`。改法见 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) 步骤 6 最后一段，以及 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 第 2 节末尾。上线前打勾用 [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)。
+对外给客户用之前，主控要改成 **https 域名**（节点访问主控也改成 `https://`）。第一次安装为了能先打开后台，用的是 `http://IP`。改法见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 第 2 节末尾。上线前打勾用 [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)。
 
 ---
 

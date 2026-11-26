@@ -1,8 +1,8 @@
 # 控制台操作手册
 
-后台地址是 `https://主控域名/admin`。部署步骤见 [../DEPLOY.md](../DEPLOY.md)。客户侧只需要做的 CNAME 说明见 [CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md)。
+后台地址是 `https://主控域名/admin`。安装见 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md)。客户侧只需要做的 CNAME 说明见 [CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md)。
 
-初始账号 `admin` / `Redi301@Install2026`。仍为默认密码时，登录后会 **强制进入改密页**（`Admin → 用户设置` / `auth/setting`），改完后才能使用其它菜单。内网演示可在主控 `.env` 设 `REDI_BLOCK_DEFAULT_ADMIN_PASSWORD=false`（见 [../DEPLOY.md](../DEPLOY.md)）。
+初始账号 `admin` / `Redi301@Install2026`。仍为默认密码时，登录后会 **强制进入改密页**（`Admin → 用户设置` / `auth/setting`），改完后才能使用其它菜单。内网演示可在主控 `.env` 设 `REDI_BLOCK_DEFAULT_ADMIN_PASSWORD=false`。
 
 ## 界面语言（简体中文 / 繁體中文 / English）
 
@@ -224,7 +224,7 @@ php artisan redi:prune-acme-challenges   # 标准输出含 pruned expired=…, i
 php artisan redi:health --notify  # 有 issues 时 POST webhook（Cron 08:30；发送成功退出 0）
 php artisan redi:renew-certificates --dry-run --days=25   # 续期预演；正式 Cron 跑无 --dry-run，入队后日志含 queued: N cert(s)（见 renew.log）
 php artisan redi:requeue-failed-deployments   # 可选 --node= / --cert=
-php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修正；无效 skip 会清空并告警（见 DEPLOY.md）
+php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修正；无效 skip 会清空并告警
 # php artisan redi:ops-webhook --task=redi:renew-certificates --message="测试"
 # DNS API 同步（超管后台）；dns_driver 拼写错误会在工厂层报错，勿与手动模式混淆
 ```

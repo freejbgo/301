@@ -1,6 +1,6 @@
 # 首装后换发布包（不重装 deploy-master）
 
-绿场首次部署见 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md)。本文仅适用于 **主控/节点已在跑**，需要跟上新 `master.tar.gz` / `redi-multi.tar.gz` 时。按顺序做，每步可单独回滚。
+首次安装见 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md)。本文仅适用于 **主控/节点已在跑**，需要跟上新 `master.tar.gz` / `redi-multi.tar.gz` 时。按顺序做，每步可单独回滚。
 
 ## 1. 发布包与代码
 

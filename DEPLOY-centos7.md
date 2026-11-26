@@ -1,6 +1,6 @@
 # CentOS 7 部署
 
-**第一次部署请按教程逐步做：** [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md)（步骤 1–7：打 tar → 主控 → 节点 → 后台 → 验收）。本文是同一流程的**完整说明与可选章节**。
+日常安装用一条命令，见 [docs/DEPLOY-BEGINNER-CENTOS7.md](docs/DEPLOY-BEGINNER-CENTOS7.md)。本文说明 `deploy-master.sh` / `deploy-node.sh` 实际做了什么；不用一条命令、自己填 `vars.env` 时按下面的章节做。
 
 **推荐系统：CentOS 7.9**（`7.9.2009` 等 7.x 小版本均可）。内核小版本可以不同，脚本不按内核编译，也不编译内核模块。部署脚本会校验 `VERSION_ID` 为 `7` 开头。
 
@@ -62,9 +62,9 @@ sudo bash scripts/centos7/deploy-master.sh
 
 重复执行不会重置已有 `.env`、`APP_KEY` 和业务数据。`/etc/nginx/conf.d/301-master.conf` 若**没有** `301-master-managed` 标记则不会覆盖（便于你在同一文件里手工加 HTTPS）；带该标记或由脚本生成的文件会在重复部署时刷新 `root` 路径。HTTPS 也可单独增加 `conf.d` 片段。
 
-打开 `http://主控IP/admin`。用户名 `admin`，密码 `Redi301@Install2026`。若仍为默认密码，系统会 **强制进入改密页**（`Admin → 用户设置`），改完后才能使用其它菜单。绿场数据库说明见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。后台 **简 / 繁 / 英** 见 [docs/I18N.md](docs/I18N.md)、[docs/CONSOLE.md](docs/CONSOLE.md) §界面语言。
+打开 `http://主控IP/admin`。用户名 `admin`，密码 `Redi301@Install2026`。若仍为默认密码，系统会 **强制进入改密页**（`Admin → 用户设置`），改完后才能使用其它菜单。空库必须导入 `db/redi_admin.sql`（含菜单、默认管理员和 `redi_node_bump_skip`），不要只跑 `php artisan migrate`。后台 **简 / 繁 / 英** 见 [docs/I18N.md](docs/I18N.md)、[docs/CONSOLE.md](docs/CONSOLE.md) §界面语言。
 
-有域名之后：把 `vars.env` 的 `MASTER_URL` 改成 `https://主控域名`、`ADMIN_HTTPS` 改成 `true`，再改服务器上的 `/opt/301/master/.env`（已有 `.env` 时脚本不会重写它），给 Nginx 配上证书，然后 `systemctl restart php-fpm redi-queue`。这张证书只保护后台。
+有域名之后：把 `vars.env` 的 `MASTER_URL` 改成 `https://主控域名`、`ADMIN_HTTPS` 改成 `true`，再改服务器上的 `/opt/301/master/.env`（已有 `.env` 时脚本不会重写它），给 Nginx 配上证书，然后 `systemctl restart php-fpm redi-queue`。这张证书只保护后台。节点把 `REDI_MASTER_URL` 改成同一个 `https://` 地址，去掉 `REDI_MASTER_INSECURE`，再执行一次 `deploy-node.sh`。
 
 ## 3. 部署节点
 

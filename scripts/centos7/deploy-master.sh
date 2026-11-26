@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # CentOS 7.x（推荐 7.9）主控全自动部署。内核小版本不同不用重编：主控是 PHP，节点包是静态二进制。
 #
-# 分步教程：docs/DEPLOY-TUTORIAL-CENTOS7.md（步骤 2–3）
+# 一条命令安装：docs/DEPLOY-BEGINNER-CENTOS7.md。本文对应的手工路径见 DEPLOY-centos7.md。
 # 在仓库根目录执行（勿把 git 克隆到 MASTER_INSTALL_ROOT，默认 /opt/301）：
 #   1) 发版机：bash scripts/build-release-tarballs.sh && scp master.tar.gz 等到本机 /tmp/
 #   2) cp scripts/centos7/vars.example.env scripts/centos7/vars.env
@@ -412,7 +412,7 @@ redi_warn_master_https_mismatch "${ADMIN_HTTPS}" "${MASTER_URL}"
 echo
 echo "主控已安装到 ${APP}"
 echo "后台: ${MASTER_URL}/admin"
-echo "初始后台账号见 DEPLOY.md（导入 SQL 后的默认 admin 密码），登录后请立即修改。"
+echo "初始后台账号见 docs/DEPLOY-BEGINNER-CENTOS7.md（导入 SQL 后的默认 admin 密码），登录后请立即修改。"
 echo "后台语言: 登录页或侧栏可切换 简/繁/英（见 docs/I18N.md、docs/CONSOLE.md §界面语言）。"
 echo "Cron: /etc/cron.d/redi-renew（03:10 续期 / 04:10 prune / 08:30 health --notify；勿另配 schedule:run）"
 echo "验收: grep -E 'renew|prune|health' /etc/cron.d/redi-renew && ! grep -q 'schedule:run' /etc/cron.d/redi-renew"

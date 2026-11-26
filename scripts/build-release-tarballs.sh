@@ -4,7 +4,7 @@
 # 同时复制到 pkg/，这是仓库里给 master.sh 直接下载安装的包，要提交。
 #
 # 建议先：bash scripts/dev-preflight.sh
-# 部署：见 docs/DEPLOY-TUTORIAL-CENTOS7.md 步骤 1–2（scp + vars.env 的 REDI_*_TAR）
+# 部署：一条命令见 docs/DEPLOY-BEGINNER-CENTOS7.md；手工 scp 与 REDI_*_TAR 见 DEPLOY-centos7.md。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -30,4 +30,4 @@ echo ""
 echo "完成。上传机房示例："
 echo "  scp master/master.tar.gz node/redi-multi.tar.gz root@<主机>:/tmp/"
 echo "  # vars.env: REDI_MASTER_TAR=/tmp/master.tar.gz  REDI_NODE_TAR=/tmp/redi-multi.tar.gz"
-echo "下一步：docs/DEPLOY-TUTORIAL-CENTOS7.md（步骤 2 起 scp 与 deploy）"
+echo "下一步：docs/DEPLOY-BEGINNER-CENTOS7.md（一条命令）或 DEPLOY-centos7.md（手工 scp 与 deploy）"

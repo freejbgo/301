@@ -11,7 +11,7 @@ fail() {
 }
 
 for f in \
-  docs/README.md \
+  docs/DEPLOY-BEGINNER-CENTOS7.md \
   docs/DEVELOPMENT.md \
   docs/I18N.md \
   docs/HEALTH-REFERENCE.md \
@@ -20,9 +20,8 @@ for f in \
   docs/PRODUCTION-READINESS.md \
   docs/LAUNCH-CHECKLIST.md \
   docs/RELEASE-PACKAGES.md \
-  docs/DEPLOY-TUTORIAL-CENTOS7.md \
   docs/OPS-RELEASE-UPDATE.md \
-  docs/GREENFIELD-PRODUCT.md \
+  docs/CONSOLE.md \
   docs/ACCEPTANCE.md; do
   [[ -f "$REPO_ROOT/$f" ]] || fail "missing $f"
 done
@@ -36,41 +35,43 @@ for gone in \
   docs/IPV6-DUALSTACK-DEV.md \
   docs/IPV6-DUALSTACK-IMPLEMENTATION.md \
   docs/I18N-DEVELOPMENT-REPORT.md \
-  docs/ROADMAP-PRODUCTION.md; do
+  docs/ROADMAP-PRODUCTION.md \
+  docs/GREENFIELD-PRODUCT.md \
+  docs/GREENFIELD-INSTALL.md \
+  docs/DEPLOY-TUTORIAL-CENTOS7.md \
+  docs/README.md \
+  DEPLOY.md; do
   [[ ! -f "$REPO_ROOT/$gone" ]] || fail "removed doc still present: $gone"
 done
 
-if grep -rE 'AUDIT-CENTOS7-PRODUCTION|DEVELOPMENT-EDGE-POOL-HTTPS|IPV6-DUALSTACK-(DEV|IMPLEMENTATION)|I18N-DEVELOPMENT-REPORT|ROADMAP-PRODUCTION' \
-  --include='*.md' --include='*.sh' --include='.env.example' "$REPO_ROOT" \
+if grep -rE 'AUDIT-CENTOS7-PRODUCTION|DEVELOPMENT-EDGE-POOL-HTTPS|IPV6-DUALSTACK-(DEV|IMPLEMENTATION)|I18N-DEVELOPMENT-REPORT|ROADMAP-PRODUCTION|GREENFIELD-PRODUCT|GREENFIELD-INSTALL|DEPLOY-TUTORIAL-CENTOS7|docs/README\.md|(^|[^[:alnum:]_-])DEPLOY\.md' \
+  --include='*.md' --include='*.sh' --include='*.php' --include='.env.example' "$REPO_ROOT" \
   --exclude='verify-product-docs.sh' \
   | grep -v '^Binary' | grep -q .; then
-  grep -rE 'AUDIT-CENTOS7-PRODUCTION|DEVELOPMENT-EDGE-POOL-HTTPS|IPV6-DUALSTACK-(DEV|IMPLEMENTATION)|I18N-DEVELOPMENT-REPORT|ROADMAP-PRODUCTION' \
-    --include='*.md' --include='*.sh' --include='.env.example' "$REPO_ROOT" \
+  grep -rE 'AUDIT-CENTOS7-PRODUCTION|DEVELOPMENT-EDGE-POOL-HTTPS|IPV6-DUALSTACK-(DEV|IMPLEMENTATION)|I18N-DEVELOPMENT-REPORT|ROADMAP-PRODUCTION|GREENFIELD-PRODUCT|GREENFIELD-INSTALL|DEPLOY-TUTORIAL-CENTOS7|docs/README\.md|(^|[^[:alnum:]_-])DEPLOY\.md' \
+    --include='*.md' --include='*.sh' --include='*.php' --include='.env.example' "$REPO_ROOT" \
     --exclude='verify-product-docs.sh' || true
   fail 'stale references to removed docs'
 fi
 
-grep -qF 'docs/README.md' "$REPO_ROOT/README.md" || fail 'README must link docs/README.md'
-grep -qF 'GREENFIELD-PRODUCT.md' "$REPO_ROOT/README.md" || fail 'README must link GREENFIELD-PRODUCT.md'
-grep -qF 'GREENFIELD-PRODUCT.md' "$REPO_ROOT/docs/README.md" || fail 'docs/README must link GREENFIELD-PRODUCT'
-grep -qF '按角色怎么读' "$REPO_ROOT/docs/GREENFIELD-PRODUCT.md" \
-  || fail 'GREENFIELD-PRODUCT must document role-based reading order'
+grep -qF 'DEPLOY-BEGINNER-CENTOS7.md' "$REPO_ROOT/README.md" || fail 'README must link the one-command install doc'
+grep -qF 'CONSOLE.md' "$REPO_ROOT/README.md" || fail 'README must link CONSOLE'
+grep -qF 'I18N.md' "$REPO_ROOT/README.md" || fail 'README must link I18N.md'
+grep -qF 'OPS-RELEASE-UPDATE.md' "$REPO_ROOT/README.md" \
+  || fail 'README must link OPS-RELEASE-UPDATE.md'
+grep -qF 'LAUNCH-CHECKLIST.md' "$REPO_ROOT/README.md" || fail 'README must link LAUNCH-CHECKLIST'
+grep -qF 'vars.production.example.env' "$REPO_ROOT/README.md" \
+  || fail 'README must link vars.production.example.env'
 grep -qF 'RELEASE-PACKAGES.md' "$REPO_ROOT/docs/DEVELOPMENT.md" \
   || fail 'DEVELOPMENT must link RELEASE-PACKAGES'
 grep -qF 'build-release-tarballs.sh' "$REPO_ROOT/docs/RELEASE-PACKAGES.md" \
   || fail 'RELEASE-PACKAGES must document local build-release-tarballs.sh'
-grep -qF 'DEPLOY-TUTORIAL-CENTOS7.md' "$REPO_ROOT/DEPLOY-centos7.md" \
-  || fail 'DEPLOY-centos7 must link DEPLOY-TUTORIAL-CENTOS7'
-grep -qF 'deploy-master.sh' "$REPO_ROOT/docs/DEPLOY-TUTORIAL-CENTOS7.md" \
-  || fail 'DEPLOY-TUTORIAL must document deploy-master.sh'
-grep -qF 'CONSOLE.md' "$REPO_ROOT/docs/README.md" || fail 'docs/README must link CONSOLE'
+grep -qF 'DEPLOY-BEGINNER-CENTOS7.md' "$REPO_ROOT/DEPLOY-centos7.md" \
+  || fail 'DEPLOY-centos7 must link the one-command install doc'
 grep -qF '## 8. 平台边界与运营约定' "$REPO_ROOT/docs/CONSOLE.md" \
   || fail 'CONSOLE must document platform boundaries (§8)'
 grep -qF '## 已知限制与计划增强' "$REPO_ROOT/docs/PRODUCTION-READINESS.md" \
   || fail 'PRODUCTION-READINESS must document known limits'
-grep -qF 'I18N.md' "$REPO_ROOT/docs/README.md" || fail 'docs/README must link I18N.md'
-grep -qF 'OPS-RELEASE-UPDATE.md' "$REPO_ROOT/docs/README.md" \
-  || fail 'docs/README must link OPS-RELEASE-UPDATE.md'
 grep -qF 'PLATFORM-ARCHITECTURE.md' "$REPO_ROOT/docs/ACCEPTANCE.md" \
   || fail 'ACCEPTANCE.md must link PLATFORM-ARCHITECTURE'
 [[ ! -f "$REPO_ROOT/docs/ACCEPTANCE-CENTOS7-DEPLOY.md" ]] \

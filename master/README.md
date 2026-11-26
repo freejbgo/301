@@ -2,7 +2,7 @@
 
 程序在子目录 `master/`。发布包是同级的 `master.tar.gz`，解压后得到这个 `master/` 目录。包里带有 `vendor`，没有 `.env`。
 
-**文档：** CentOS 部署 [../DEPLOY-centos7.md](../DEPLOY-centos7.md) · 后台 [../docs/CONSOLE.md](../docs/CONSOLE.md)（含平台边界 §8）· 架构 [../docs/PLATFORM-ARCHITECTURE.md](../docs/PLATFORM-ARCHITECTURE.md) · 上线清单 [../docs/LAUNCH-CHECKLIST.md](../docs/LAUNCH-CHECKLIST.md) · 安全 [../SECURITY.md](../SECURITY.md)
+**文档：** 安装 [../docs/DEPLOY-BEGINNER-CENTOS7.md](../docs/DEPLOY-BEGINNER-CENTOS7.md) · 脚本 [../DEPLOY-centos7.md](../DEPLOY-centos7.md) · 后台 [../docs/CONSOLE.md](../docs/CONSOLE.md)（含平台边界 §8）· 架构 [../docs/PLATFORM-ARCHITECTURE.md](../docs/PLATFORM-ARCHITECTURE.md) · 上线清单 [../docs/LAUNCH-CHECKLIST.md](../docs/LAUNCH-CHECKLIST.md) · 安全 [../SECURITY.md](../SECURITY.md)
 
 CentOS 7 自动部署把包解压到 `/opt/301/master`，网站根目录是 `/opt/301/master/public`。
 

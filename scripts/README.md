@@ -14,7 +14,7 @@
 | [verify-acceptance-doc.sh](verify-acceptance-doc.sh) | 静态校验 [ACCEPTANCE.md](../docs/ACCEPTANCE.md) §A/§B 与 Cron、Edge 关键表述 |
 | [verify-deploy-centos7-doc.sh](verify-deploy-centos7-doc.sh) | 静态校验 [DEPLOY-centos7.md](../DEPLOY-centos7.md) / 绿场说明与 `deploy-*.sh`、`redi_admin.sql`、Cron 时刻一致 |
 | [verify-product-docs.sh](verify-product-docs.sh) | 产品文档集存在、已移除 AUDIT/开发进度主文档且无残留链接 |
-| [verify-greenfield-install-doc.sh](verify-greenfield-install-doc.sh) | [GREENFIELD-INSTALL.md](../docs/GREENFIELD-INSTALL.md) 绿场路径与 OPS 链表述 |
+| [verify-greenfield-install-doc.sh](verify-greenfield-install-doc.sh) | 安装文档仍写明一次导入 `redi_admin.sql`、不要 `schedule:run`、换包见 OPS |
 | [verify-launch-checklist-doc.sh](verify-launch-checklist-doc.sh) | `LAUNCH-CHECKLIST` 与 PRODUCTION / node|master README 互链 |
 | [verify-redi-artisan-cron.sh](verify-redi-artisan-cron.sh) | `php artisan … --help` 确认 Cron/运维引用的 `redi:*` 命令已注册（含 `redi:health --notify`） |
 | [verify-node-skip-api-invariants.sh](verify-node-skip-api-invariants.sh) | 节点数据面 `skip_url` / `bump_skip` 与主机名键约定 |
@@ -59,4 +59,4 @@
 | [centos7/lagran_ports.py](centos7/lagran_ports.py) | 从 `config.json` 解析 lagran/监听端口（含 `REDI_HTTP_LISTEN` / `REDI_TLS_LISTEN`；cleanup/diagnose 在 `source env.sh` 后与进程一致） |
 | [systemd/](systemd/) | `redi-queue` unit 示例 |
 
-CentOS 生产路径：**分步教程** [docs/DEPLOY-TUTORIAL-CENTOS7.md](../docs/DEPLOY-TUTORIAL-CENTOS7.md)；脚本说明 [DEPLOY-centos7.md](../DEPLOY-centos7.md)。
+CentOS 生产路径：一条命令 [docs/DEPLOY-BEGINNER-CENTOS7.md](../docs/DEPLOY-BEGINNER-CENTOS7.md)；脚本说明 [DEPLOY-centos7.md](../DEPLOY-centos7.md)。

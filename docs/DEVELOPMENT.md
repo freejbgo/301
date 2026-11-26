@@ -1,6 +1,6 @@
 # 开发与发版自检
 
-**首次装生产机房** 请从 [GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md) 与 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) 开始；本文面向改代码、打 tar、与 CI 对齐。
+**首次装生产机房** 请从 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md) 开始；本文面向改代码、打 tar、与 CI 对齐。
 
 仓库布局：**主控** `master/master/`（Laravel + Dcat）、**节点** `node/redi-multi/`（Go）、**库表** `db/redi_admin.sql`、**CentOS 7 部署** `scripts/centos7/`。
 
@@ -60,7 +60,7 @@ PHPUnit 以 `phpunit` **退出码**为准；条数随 `main` 演进，勿手抄�
 
 ## 开发机手工部署（非 CentOS 生产）
 
-机房 **CentOS 7 生产** 请只用 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) + `deploy-*.sh`，不要按本节在服务器上克隆仓库。
+机房 **CentOS 7 生产** 请用 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md) 或 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 的 `deploy-*.sh`，不要按本节在服务器上克隆仓库。
 
 仅在开发机手搓环境调试时：
 

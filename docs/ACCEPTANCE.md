@@ -1,8 +1,8 @@
 # 验收清单（真机安装 + 边缘池）
 
-**主推签收**仍用 [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)。本文合并 **安装逐项核对（§A）** 与 **边缘池 F1–F8（§B）**；装完教程后查漏用 §A，业务闭环用 §B。
+**主推签收**仍用 [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)。本文合并 **安装逐项核对（§A）** 与 **边缘池 F1–F8（§B）**；装完后查漏用 §A，业务闭环用 §B。
 
-分步安装：[DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) · `vars.env` 模板：[vars.example.env](../scripts/centos7/vars.example.env)、[vars.production.example.env](../scripts/centos7/vars.production.example.env)
+安装：[DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md) · 脚本说明：[DEPLOY-centos7.md](../DEPLOY-centos7.md) · `vars.env` 模板：[vars.example.env](../scripts/centos7/vars.example.env)、[vars.production.example.env](../scripts/centos7/vars.production.example.env)
 
 ---
 
@@ -327,7 +327,7 @@ sudo bash scripts/centos7/run-on-centos7-host.sh
 
 ### 环境前提
 
-绿场库见 [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md)（**一次导入** `redi_admin.sql`，含 `redi_node_bump_skip`）。
+数据库 **一次导入** `redi_admin.sql`（含 `redi_node_bump_skip`），见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)。
 
 - 主控：**CentOS 发布包**（`deploy-master.sh` 解压的 `/opt/301/master`，**已含 `vendor`**，机房不需 `composer install`）；`QUEUE_CONNECTION=database`；`redi-queue` systemd 单元或等效 `queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600`。开发机从源码调试时才在 `master/master` 跑 `composer install` 与 `migrate --force`。
 - 续期/清理/健康：CentOS 用 `deploy-master` 写入的 `/etc/cron.d/redi-renew`（**03:10** 续期、**04:10** `redi:prune-acme-challenges`、**08:30** `redi:health --notify`）；各行失败应带 `|| php artisan redi:ops-webhook --task=…` 兜底。配置 `REDI_HEALTH_WEBHOOK_URL` 后 Cron 在有 issues 且 webhook 发送成功时退出 0。手工部署可写同等 cron，**勿**配置 `php artisan schedule:run`（仅认 `/etc/cron.d/redi-renew`）。多台 `queue:work` 时 `CACHE_DRIVER=redis`；`queue:work` 须含 `--max-time=3600`。
