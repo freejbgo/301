@@ -216,7 +216,7 @@ echo "==> CentOS 7 主控安装开始。安装包直接用仓库里打好的，�
 use_centos7_vault
 yum clean all
 yum makecache
-yum install -y git curl ca-certificates openssl iproute
+yum install -y git curl ca-certificates openssl iproute openssh-clients
 
 mem_kb="$(awk '/MemTotal/{print $2}' /proc/meminfo)"
 if [[ "${mem_kb:-0}" -lt 1800000 ]]; then
@@ -345,4 +345,36 @@ echo "用户名: admin"
 echo "初始密码: Redi301@Install2026"
 echo "登录后按页面要求改掉这个密码。"
 echo "数据库密码在 /root/301-passwords.txt"
-echo "节点不用现在填 IP。登录后台新建节点后，再在节点那台机器上安装。"
+
+setup_node_install_key() {
+  local key=/root/301-node-install.key
+  local accept=/root/301/scripts/centos7/accept-node-install.sh
+  local auth=/root/.ssh/authorized_keys
+  [[ -f "$accept" ]] || die "缺少节点安装通道脚本: $accept"
+  chmod 755 "$accept"
+  if [[ ! -s "$key" || ! -s "${key}.pub" ]]; then
+    rm -f "$key" "${key}.pub"
+    ssh-keygen -t ed25519 -N "" -f "$key" -C redi-node-install >/dev/null
+  fi
+  chmod 600 "$key"
+  mkdir -p /root/.ssh
+  chmod 700 /root/.ssh
+  touch "$auth"
+  chmod 600 "$auth"
+  grep -v 'redi-node-install' "$auth" > "${auth}.tmp" || true
+  printf 'command="%s",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty %s\n' \
+    "$accept" "$(cat "${key}.pub")" >> "${auth}.tmp"
+  mv "${auth}.tmp" "$auth"
+  chmod 600 "$auth"
+  if grep -qE '^[[:space:]]*PermitRootLogin[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null \
+    || grep -qE '^[[:space:]]*PubkeyAuthentication[[:space:]]+no' /etc/ssh/sshd_config 2>/dev/null; then
+    echo "警告: 主控需要允许 root 使用公钥登录，节点上的一条命令才能连回来放行数据库。"
+  fi
+  NODE_INSTALL_KEY_B64="$(base64 -w 0 "$key" 2>/dev/null || base64 "$key" | tr -d '\n')"
+}
+setup_node_install_key
+echo
+echo "在节点上执行下面这一整条。只把最后的 后台Token 换成后台复制的 Token："
+echo "curl -fsSL https://github.com/freejbgo/301/raw/main/node.sh -o node.sh && chmod +x node.sh && bash node.sh --master-ip ${MASTER_IP} --install-key ${NODE_INSTALL_KEY_B64} --token 后台Token"
+echo "节点自己的公网 IP 不用填。这条命令不要发到聊天软件里。"
+echo "主控云安全组的 3306 要允许节点的公网 IP。"

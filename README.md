@@ -14,13 +14,13 @@
 curl -fsSL https://github.com/freejbgo/301/raw/main/master.sh -o master.sh && chmod +x master.sh && bash master.sh
 ```
 
-说明见 [docs/DEPLOY-BEGINNER-CENTOS7.md](docs/DEPLOY-BEGINNER-CENTOS7.md)。分步教程见 [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md)；脚本见 [scripts/centos7/deploy-master.sh](scripts/centos7/deploy-master.sh)、[scripts/centos7/deploy-node.sh](scripts/centos7/deploy-node.sh)、[DEPLOY-centos7.md](DEPLOY-centos7.md)。
+节点同样一条命令。主控装完后屏幕会打出完整命令，把后台 Token 贴进去即可，不用填节点 IP。说明见 [docs/DEPLOY-BEGINNER-CENTOS7.md](docs/DEPLOY-BEGINNER-CENTOS7.md)。分步教程见 [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md)；脚本见 [scripts/centos7/deploy-master.sh](scripts/centos7/deploy-master.sh)、[scripts/centos7/deploy-node.sh](scripts/centos7/deploy-node.sh)、[DEPLOY-centos7.md](DEPLOY-centos7.md)。
 
 | 文档 | 内容 |
 |------|------|
 | [docs/GREENFIELD-PRODUCT.md](docs/GREENFIELD-PRODUCT.md) | **绿场产品说明**（当全新系统读文档） |
 | [docs/README.md](docs/README.md) | **文档索引**（按上线 / 运营 / 开发场景） |
-| [docs/DEPLOY-BEGINNER-CENTOS7.md](docs/DEPLOY-BEGINNER-CENTOS7.md) | **主控一条命令安装**（`master.sh`） |
+| [docs/DEPLOY-BEGINNER-CENTOS7.md](docs/DEPLOY-BEGINNER-CENTOS7.md) | **主控和节点各一条命令**（`master.sh` / `node.sh`） |
 | [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md) | **CentOS 7 分步部署教程（从零开始）** |
 | [DEPLOY-centos7.md](DEPLOY-centos7.md) | CentOS 7 脚本说明与可选章节 |
 | [docs/LAUNCH-CHECKLIST.md](docs/LAUNCH-CHECKLIST.md) | 一页上线检查单（可打勾） |
