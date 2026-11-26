@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 在跑主控且 Cron 落后于当前模板时：将 /etc/cron.d/redi-renew 改为带 ops-webhook 失败告警的写法。
-# 绿场 deploy-master.sh 已写入正确 cron，首装勿用本脚本。
+# deploy-master.sh 已写入正确 cron，首装勿用本脚本。
 # 用法: sudo bash scripts/patch-master-cron-ops-webhook.sh [/opt/301/master]
 # 发布包部署（deploy-master）程序目录为 /opt/301/master；勿与仓库克隆路径 master/master 混淆。
 set -euo pipefail

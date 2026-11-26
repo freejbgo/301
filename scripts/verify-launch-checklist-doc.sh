@@ -17,8 +17,8 @@ grep -qF 'CONSOLE.md' "$DOC" || fail "LAUNCH-CHECKLIST must link CONSOLE"
 for sec in '## A.' '## B.' '## C.' '## D.' '## E.'; do
   grep -qF "$sec" "$DOC" || fail "LAUNCH-CHECKLIST missing section: $sec"
 done
-grep -qF 'LAUNCH-CHECKLIST.md' "$REPO_ROOT/docs/README.md" \
-  || fail "docs/README must link LAUNCH-CHECKLIST"
+grep -qF 'LAUNCH-CHECKLIST.md' "$REPO_ROOT/README.md" \
+  || fail "README must link LAUNCH-CHECKLIST"
 grep -qF 'CONSOLE.md' "$REPO_ROOT/node/README.md" \
   || fail "node/README must link CONSOLE"
 grep -qF 'CONSOLE.md' "$REPO_ROOT/master/README.md" \

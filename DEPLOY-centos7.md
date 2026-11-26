@@ -1,6 +1,6 @@
 # CentOS 7 部署
 
-**第一次部署请按教程逐步做：** [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md)（步骤 1–7：打 tar → 主控 → 节点 → 后台 → 验收）。本文是同一流程的**完整说明与可选章节**。
+日常安装用一条命令，见 [docs/DEPLOY-BEGINNER-CENTOS7.md](docs/DEPLOY-BEGINNER-CENTOS7.md)。本文说明 `deploy-master.sh` / `deploy-node.sh` 实际做了什么；不用一条命令、自己填 `vars.env` 时按下面的章节做。
 
 **推荐系统：CentOS 7.9**（`7.9.2009` 等 7.x 小版本均可）。内核小版本可以不同，脚本不按内核编译，也不编译内核模块。部署脚本会校验 `VERSION_ID` 为 `7` 开头。
 
@@ -11,11 +11,11 @@
 | 主控 | `scripts/centos7/deploy-master.sh` | 程序在 `/opt/301/master`，网站根目录 `/opt/301/master/public` |
 | 每台节点 | `scripts/centos7/deploy-node.sh` | 程序在 `/opt/redi-multi/redi-multi` |
 
-**发布包（推荐）：** 开发机 `bash scripts/dev-preflight.sh` 后 `bash scripts/build-release-tarballs.sh`，`scp` 双 tar 到服务器，在 `vars.env` 设 `REDI_MASTER_TAR` / `REDI_NODE_TAR`（如 `/tmp/master.tar.gz`、`/tmp/redi-multi.tar.gz`）。步骤见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)。可选：对 `main` 打 **`v*` tag** 从 [GitHub Releases](https://github.com/freejbgo/301/releases) 下载（Actions 配额不足时用本地 tar 即可）。
+**安装包：** 一条命令用仓库里的 [pkg/master.tar.gz](pkg/master.tar.gz) 和 [pkg/redi-multi.tar.gz](pkg/redi-multi.tar.gz)。自己跑 `deploy-*.sh` 时，把这两个文件拷到服务器，或在发版机 `bash scripts/dev-preflight.sh` 后 `bash scripts/build-release-tarballs.sh`，再 `scp` 到服务器，在 `vars.env` 设 `REDI_MASTER_TAR` / `REDI_NODE_TAR`（如 `/tmp/master.tar.gz`、`/tmp/redi-multi.tar.gz`）。步骤见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)。
 
-- 主控包：`master/master.tar.gz`（含 `vendor`，无 `.env`）。
-- 节点包：`node/redi-multi.tar.gz`（CentOS 7 静态 `bin/redi-multi`）。
-- 仓库 **不跟踪** tar。**生产机**应上传 tar、写 `REDI_*_TAR`（模板 [scripts/centos7/vars.production.example.env](scripts/centos7/vars.production.example.env)）。缺 tar 时 **默认拒绝** 机房内自动打包；仅实验室在 `vars.env` 设 `REDI_ALLOW_ON_SERVER_TAR_BUILD=1`。
+- 主控包含 `vendor`，无 `.env`。一条命令用 `pkg/master.tar.gz`。开发机临时文件 `master/master.tar.gz` 不提交。
+- 节点包是 CentOS 7 静态 `bin/redi-multi`。一条命令用 `pkg/redi-multi.tar.gz`。开发机临时文件 `node/redi-multi.tar.gz` 不提交。
+- **生产机**写 `REDI_*_TAR`（模板 [scripts/centos7/vars.production.example.env](scripts/centos7/vars.production.example.env)）。缺 tar 时 **默认拒绝** 机房内自动打包；仅实验室在 `vars.env` 设 `REDI_ALLOW_ON_SERVER_TAR_BUILD=1`。
 
 源码在仓库的 `master/master/`。那是给开发和重新打包用的。自动安装不要把仓库克隆到 `/opt/301`，否则会和发布包解压出来的 `/opt/301/master` 叠在一起。
 
@@ -55,16 +55,16 @@ sudo bash scripts/centos7/deploy-master.sh
 3. 安装 MariaDB 10.6。CentOS 7 自带的 5.5 导不进这份 `utf8mb4` 库。
 4. 设置 root 密码，关闭反向域名解析，数据库监听 IPv4。3306 不对全网开放，只放行 `NODE_IPS`。
 5. 库是空的才导入 `db/redi_admin.sql`（菜单 + 业务表 + 默认 `admin`（`locale` 列）+ 证书 **`last_error_code`** + 节点存储过程 **`redi_node_bump_skip`**，含节点 IPv6 列；`migrations` 表已与当前发布包对齐）。已经有 `admin_users` 时不会覆盖。
-6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（绿场导入 SQL 后一般为无待执行迁移，**不必手工 migrate**）、`storage:link`，并 **检查存储过程是否存在**（应由上一步 SQL 导入；不存在则脚本失败退出）。跟新发布包时的库变更见 [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md)。
+6. 解压 `master/master.tar.gz` 到 `/opt/301/master`，写入 `.env`，执行 `key:generate`、**`migrate --force`**（导入 SQL 后一般为无待执行迁移，**不必手工 migrate**）、`storage:link`，并 **检查存储过程是否存在**（应由上一步 SQL 导入；不存在则脚本失败退出）。跟新发布包时的库变更见 [docs/OPS-RELEASE-UPDATE.md](docs/OPS-RELEASE-UPDATE.md)。
 7. 配置 PHP-FPM（用户 `nginx`，sock `/var/run/php-fpm/www.sock`）和 Nginx。开启 SELinux 时会放行网站访问网络和数据库。
 8. 安装队列 `redi-queue`：`queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600`（worker 每小时由 systemd 重启，避免长期内存增长）。`/etc/cron.d/redi-renew` 每天 **03:10** 续期证书、**04:10** 清理 ACME、**08:30** `redi:health --notify`（webhook 发送成功或无 issues 时 **退出 0**；未配置 URL 且有 issues 或 artisan 异常时 `|| redi:ops-webhook`）；直接 `php artisan …`，**勿**配置 `php artisan schedule:run`（续期/清理/health 仅由本文件触发；`Kernel` 内已无 schedule 任务）。多台机器跑 `queue:work` 时主控 `.env` 须 `CACHE_DRIVER=redis`（ACME 全局锁）。
 9. 防火墙开放 22、80、443。
 
 重复执行不会重置已有 `.env`、`APP_KEY` 和业务数据。`/etc/nginx/conf.d/301-master.conf` 若**没有** `301-master-managed` 标记则不会覆盖（便于你在同一文件里手工加 HTTPS）；带该标记或由脚本生成的文件会在重复部署时刷新 `root` 路径。HTTPS 也可单独增加 `conf.d` 片段。
 
-打开 `http://主控IP/admin`。用户名 `admin`，密码 `Redi301@Install2026`。若仍为默认密码，系统会 **强制进入改密页**（`Admin → 用户设置`），改完后才能使用其它菜单。绿场数据库说明见 [docs/GREENFIELD-INSTALL.md](docs/GREENFIELD-INSTALL.md)。后台 **简 / 繁 / 英** 见 [docs/I18N.md](docs/I18N.md)、[docs/CONSOLE.md](docs/CONSOLE.md) §界面语言。
+打开 `http://主控IP/admin`。用户名 `admin`，密码 `Redi301@Install2026`。若仍为默认密码，系统会 **强制进入改密页**（`Admin → 用户设置`），改完后才能使用其它菜单。空库必须导入 `db/redi_admin.sql`（含菜单、默认管理员和 `redi_node_bump_skip`），不要只跑 `php artisan migrate`。后台 **简 / 繁 / 英** 见 [docs/I18N.md](docs/I18N.md)、[docs/CONSOLE.md](docs/CONSOLE.md) §界面语言。
 
-有域名之后：把 `vars.env` 的 `MASTER_URL` 改成 `https://主控域名`、`ADMIN_HTTPS` 改成 `true`，再改服务器上的 `/opt/301/master/.env`（已有 `.env` 时脚本不会重写它），给 Nginx 配上证书，然后 `systemctl restart php-fpm redi-queue`。这张证书只保护后台。
+有域名之后：把 `vars.env` 的 `MASTER_URL` 改成 `https://主控域名`、`ADMIN_HTTPS` 改成 `true`，再改服务器上的 `/opt/301/master/.env`（已有 `.env` 时脚本不会重写它），给 Nginx 配上证书，然后 `systemctl restart php-fpm redi-queue`。这张证书只保护后台。节点把 `REDI_MASTER_URL` 改成同一个 `https://` 地址，去掉 `REDI_MASTER_INSECURE`，再执行一次 `deploy-node.sh`。
 
 ## 3. 部署节点
 
@@ -106,11 +106,11 @@ bash scripts/dev-preflight.sh
 bash scripts/build-release-tarballs.sh
 ```
 
-再 `scp` 到各台 **CentOS 7.9 生产机** 并设置 `REDI_*_TAR`（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)）。也可单独 `./scripts/build-master-tar.sh` / `./scripts/build-node-tar.sh`。
+脚本会把新包复制到 `pkg/`。提交 `pkg/master.tar.gz` 和 `pkg/redi-multi.tar.gz`，下一次一条命令安装才会用到新包。已经在跑的机器把同一份 tar `scp` 过去并设置 `REDI_*_TAR`（见 [docs/RELEASE-PACKAGES.md](docs/RELEASE-PACKAGES.md)）。也可单独 `./scripts/build-master-tar.sh` / `./scripts/build-node-tar.sh`。
 
 节点包内含静态 `bin/redi-multi`（含 80/443 上 `/c.js`、`/api.js` 限速等逻辑）。只更新主控 PHP 时重跑 `deploy-master.sh`；改过 `node/redi-multi` 后必须重新打包并在各节点 `deploy-node.sh` 或至少替换二进制并重启 `redi-multi`。
 
-在需要部署时本地打包（或打 tag 发 Release），勿把 tar 提交进 git。节点打包会拒绝仍然动态链接 libc 的二进制。
+`master/master.tar.gz` 和 `node/redi-multi.tar.gz` 是临时文件，不提交。要提交的是 `pkg/` 里的两份。节点打包会拒绝仍然动态链接 libc 的二进制。
 
 ## 7. 开发机用 CentOS 7 容器做冒烟（可选，生产不用）
 

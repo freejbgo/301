@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # CentOS 7.x（推荐 7.9）节点全自动部署。程序是静态二进制，内核不需要重编，也不编译内核模块。
 #
-# 分步教程：docs/DEPLOY-TUTORIAL-CENTOS7.md（步骤 4–5）
+# 一条命令安装：docs/DEPLOY-BEGINNER-CENTOS7.md。手工路径见 DEPLOY-centos7.md。
 # 主控 NODE_IPS 已含本机公网 IP，且后台已创建节点并拿到 Token 后再执行：
 #   1) scp redi-multi.tar.gz 到本机 /tmp/，vars.env 设 REDI_NODE_TAR=/tmp/redi-multi.tar.gz
 #   2) cp scripts/centos7/vars.example.env scripts/centos7/vars.env && chmod 600 scripts/centos7/vars.env

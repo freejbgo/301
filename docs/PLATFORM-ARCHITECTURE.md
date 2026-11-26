@@ -1,6 +1,6 @@
 # 平台架构与能力说明
 
-**首装不必先读本页**（按 [GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md) 的推荐顺序即可）。部署见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)；后台与**平台边界**见 [CONSOLE.md](CONSOLE.md)（含 §8）。业务验收见 [ACCEPTANCE.md](ACCEPTANCE.md) §B（F1–F8）。文档索引见 [README.md](README.md)。
+**首装不必先读本页**。安装见 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md)；脚本说明见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)；后台与**平台边界**见 [CONSOLE.md](CONSOLE.md)（含 §8）。业务验收见 [ACCEPTANCE.md](ACCEPTANCE.md) §B（F1–F8）。文档列表见 [README.md](../README.md)。
 
 ## 能力范围
 
@@ -15,7 +15,7 @@
 | 7 | 证书 | 主控 ACME、加密存证、下发全部启用节点 |
 | 8 | 验证方式 | **HTTP-01**；客户 **只做 CNAME**（不做 NS 委托、不做逐域 TXT 主流程） |
 | 9 | 跳转面 | **lagran 80 + 443**；节点仍直连 MySQL（`REDI_DB_*`） |
-| 10 | 数据库 | 绿场：**`db/redi_admin.sql` 全量导入**（见 [GREENFIELD-INSTALL.md](GREENFIELD-INSTALL.md)） |
+| 10 | 数据库 | **`db/redi_admin.sql` 全量导入**（见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)） |
 
 ## DNS（模型 2）
 

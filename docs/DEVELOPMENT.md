@@ -1,6 +1,6 @@
 # 开发与发版自检
 
-**首次装生产机房** 请从 [GREENFIELD-PRODUCT.md](GREENFIELD-PRODUCT.md) 与 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) 开始；本文面向改代码、打 tar、与 CI 对齐。
+**首次装生产机房** 请从 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md) 开始；本文面向改代码、打 tar、与 CI 对齐。
 
 仓库布局：**主控** `master/master/`（Laravel + Dcat）、**节点** `node/redi-multi/`（Go）、**库表** `db/redi_admin.sql`、**CentOS 7 部署** `scripts/centos7/`。
 
@@ -54,17 +54,17 @@ bash scripts/verify-ci-preflight-parity.sh
 
 `verify-redi-db-deploy-path.sh` 用临时 MariaDB 验证 `utf8mb4_unicode_ci` 建库 + `redi_admin.sql` 导入后 `CALL redi_node_bump_skip` 可用。
 
-**打发布包（推荐上线取包方式）：** 见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md) — `bash scripts/build-release-tarballs.sh`（或 `build-*-tar.sh`）；`deploy-*.sh` 在开发机上缺包时会经 `ensure-release-tarballs.sh` 尝试本地构建。GitHub Release（`v*` tag）为可选项。
+**打发布包：** 见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md)。`bash scripts/build-release-tarballs.sh`（或 `build-*-tar.sh`）会把包复制到 `pkg/`，一条命令安装用的就是这两份，要提交。`master/master.tar.gz` 和 `node/redi-multi.tar.gz` 不提交。`deploy-*.sh` 在开发机上缺包时会经 `ensure-release-tarballs.sh` 尝试本地构建。
 
 PHPUnit 以 `phpunit` **退出码**为准；条数随 `main` 演进，勿手抄固定数字。
 
 ## 开发机手工部署（非 CentOS 生产）
 
-机房 **CentOS 7 生产** 请只用 [DEPLOY-TUTORIAL-CENTOS7.md](DEPLOY-TUTORIAL-CENTOS7.md) + `deploy-*.sh`，不要按本节在服务器上克隆仓库。
+机房 **CentOS 7 生产** 请用 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md) 或 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 的 `deploy-*.sh`，不要按本节在服务器上克隆仓库。
 
 仅在开发机手搓环境调试时：
 
-1. **数据库**：`mysql < db/mysql_setup.example.sql`，再 `mysql redi_admin < db/redi_admin.sql`（绿场须含 `redi_node_bump_skip`）。
+1. **数据库**：`mysql < db/mysql_setup.example.sql`，再 `mysql redi_admin < db/redi_admin.sql`（须含 `redi_node_bump_skip`）。
 2. **主控**：`cd master/master`，复制 `.env.example` → `.env`，`composer install`，`php artisan key:generate`，`php artisan migrate --force`，`php artisan storage:link`。
 3. **队列**：`php artisan queue:work --sleep=3 --timeout=320 --tries=100 --max-time=3600`。
 4. **节点**：本地 `./scripts/build-node-tar.sh` 或 `go build` 后按 [node/README.md](../node/README.md) 配置 `env.sh` 与 `config.json`。

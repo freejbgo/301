@@ -2,11 +2,11 @@
 
 程序在子目录 `master/`。发布包是同级的 `master.tar.gz`，解压后得到这个 `master/` 目录。包里带有 `vendor`，没有 `.env`。
 
-**文档：** CentOS 部署 [../DEPLOY-centos7.md](../DEPLOY-centos7.md) · 后台 [../docs/CONSOLE.md](../docs/CONSOLE.md)（含平台边界 §8）· 架构 [../docs/PLATFORM-ARCHITECTURE.md](../docs/PLATFORM-ARCHITECTURE.md) · 上线清单 [../docs/LAUNCH-CHECKLIST.md](../docs/LAUNCH-CHECKLIST.md) · 安全 [../SECURITY.md](../SECURITY.md)
+**文档：** 安装 [../docs/DEPLOY-BEGINNER-CENTOS7.md](../docs/DEPLOY-BEGINNER-CENTOS7.md) · 脚本 [../DEPLOY-centos7.md](../DEPLOY-centos7.md) · 后台 [../docs/CONSOLE.md](../docs/CONSOLE.md)（含平台边界 §8）· 架构 [../docs/PLATFORM-ARCHITECTURE.md](../docs/PLATFORM-ARCHITECTURE.md) · 上线清单 [../docs/LAUNCH-CHECKLIST.md](../docs/LAUNCH-CHECKLIST.md) · 安全 [../SECURITY.md](../SECURITY.md)
 
 CentOS 7 自动部署把包解压到 `/opt/301/master`，网站根目录是 `/opt/301/master/public`。
 
-克隆整个仓库看源码时，网站根目录是 `master/master/public`，`php artisan` 的工作目录是 `master/master`。发版前在仓库根目录跑 `bash scripts/dev-preflight.sh`，再 `./scripts/build-release-tarballs.sh`（或仅主控时 `./scripts/build-master-tar.sh`）；上传与 `REDI_MASTER_TAR` 见 [../docs/RELEASE-PACKAGES.md](../docs/RELEASE-PACKAGES.md)。
+克隆整个仓库看源码时，网站根目录是 `master/master/public`，`php artisan` 的工作目录是 `master/master`。发版前在仓库根目录跑 `bash scripts/dev-preflight.sh`，再 `./scripts/build-release-tarballs.sh`（或仅主控时 `./scripts/build-master-tar.sh`）。一条命令安装用提交进仓库的 `pkg/master.tar.gz`；手工部署的 `REDI_MASTER_TAR` 见 [../docs/RELEASE-PACKAGES.md](../docs/RELEASE-PACKAGES.md)。
 
 ## 运行要求
 

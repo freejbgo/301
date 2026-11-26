@@ -2,13 +2,13 @@
 
 本仓库的跳转节点面向 **被干扰、被重置、访问不稳的域名**（需要改 TCP 窗口的 **lagran** 配合 80/443 跳转），不是给「完全正常、无干扰」的纯 301 场景设计的。部署时请保持 **lagran 开启**，并给二进制 `CAP_NET_ADMIN`。
 
-**文档：** 从零教程 [../docs/DEPLOY-TUTORIAL-CENTOS7.md](../docs/DEPLOY-TUTORIAL-CENTOS7.md) · 脚本 [../DEPLOY-centos7.md](../DEPLOY-centos7.md) · 架构 [../docs/PLATFORM-ARCHITECTURE.md](../docs/PLATFORM-ARCHITECTURE.md) · 平台边界 [../docs/CONSOLE.md](../docs/CONSOLE.md) §8 · 上线清单 [../docs/LAUNCH-CHECKLIST.md](../docs/LAUNCH-CHECKLIST.md)
+**文档：** 安装 [../docs/DEPLOY-BEGINNER-CENTOS7.md](../docs/DEPLOY-BEGINNER-CENTOS7.md) · 脚本 [../DEPLOY-centos7.md](../DEPLOY-centos7.md) · 架构 [../docs/PLATFORM-ARCHITECTURE.md](../docs/PLATFORM-ARCHITECTURE.md) · 平台边界 [../docs/CONSOLE.md](../docs/CONSOLE.md) §8 · 上线清单 [../docs/LAUNCH-CHECKLIST.md](../docs/LAUNCH-CHECKLIST.md)
 
 发布包是 **`redi-multi.tar.gz`**。解压后目录为 `redi-multi/`，里面有源码、`config.json.example`、`env.example` 和编译好的 `bin/redi-multi`。首次部署从 example 复制 `config.json`（`deploy-node.sh` 会自动复制）。**`redirector` 字段不参与运行**，跳转来自 MySQL 与 `default_redirect_url`。线上运行这个二进制，不要 `go run main.go`。
 
 `bin/redi-multi` 是 `CGO_ENABLED=0` 的静态二进制（**linux/amd64**），不依赖 glibc 2.32/2.34。CentOS 7.x 内核小版本不同也不用重编，也不编译内核模块。lagran 使用系统里的 `nfnetlink_queue`。
 
-改完 `node/redi-multi` 源码后，在仓库根目录建议先 `bash scripts/dev-preflight.sh`，再 `./scripts/build-release-tarballs.sh`（或仅节点时 `./scripts/build-node-tar.sh`）。产物 `node/redi-multi.tar.gz` 已 gitignore；`scp` 到机房并设 `REDI_NODE_TAR`（见 [../docs/RELEASE-PACKAGES.md](../docs/RELEASE-PACKAGES.md)）。
+改完 `node/redi-multi` 源码后，在仓库根目录建议先 `bash scripts/dev-preflight.sh`，再 `./scripts/build-release-tarballs.sh`（或仅节点时 `./scripts/build-node-tar.sh`）。临时产物 `node/redi-multi.tar.gz` 不提交；要提交的是 `pkg/redi-multi.tar.gz`。已经在跑的节点可 `scp` 后设 `REDI_NODE_TAR`（见 [../docs/RELEASE-PACKAGES.md](../docs/RELEASE-PACKAGES.md)）。
 
 ## 配置
 

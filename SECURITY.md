@@ -1,10 +1,10 @@
 # 301 系统安全说明
 
-**新手请先看 [docs/DEPLOY-TUTORIAL-CENTOS7.md](docs/DEPLOY-TUTORIAL-CENTOS7.md)**（从零部署）；索引见 [DEPLOY.md](DEPLOY.md)、[docs/README.md](docs/README.md)。
+**新手请先看 [docs/DEPLOY-BEGINNER-CENTOS7.md](docs/DEPLOY-BEGINNER-CENTOS7.md)**（一条命令安装）；文档列表见 [README.md](README.md)。
 
 ## 已在代码/库里做好的事
 
-- 数据库：绿场 **一次导入 `redi_admin.sql`**（含节点存储过程 `redi_node_bump_skip`）；默认 `admin` 密码见 DEPLOY.md，登录后强制改密；`original_url` **全平台唯一**。
+- 数据库：**一次导入 `redi_admin.sql`**（含节点存储过程 `redi_node_bump_skip`）；默认 `admin` 密码见 [README.md](README.md)，登录后强制改密；`original_url` **全平台唯一**。
 - 主控：多租户隔离、**原始域名全平台唯一**（与边缘节点按 Host 查库一致）、跳转 URL 仅允许 `http/https`、`.env.example` 默认 `APP_DEBUG=false` / `SESSION_SECURE_COOKIE=true`。
 - 节点：`REDI_DB_*` 环境变量；MySQL 账号 **`redi_node`** 仅可 **EXECUTE** 存储过程 `redi_node_bump_skip`（按 Host 返回 `skip_url` 并递增 `skip_num`，`SQL SECURITY DEFINER`；见 `grant-node-mysql.sh`），不能 `SELECT` 域名映射全表；`status=1` 才跳转计数；生产 **80/443** 与调试 **8080** 上 `/c.js`、`/api.js` 均 **按 IP 限速**（默认约 **120 次/分钟/IP**，两路径共用计数），`/api.js` 另有 **按 IP+域名参数** 限速（默认约 **60 次/分钟**，减轻刷 `skip_num`）；Echo 默认 **127.0.0.1:8080**；**不再清空整表 iptables OUTPUT**。
 - `composer.json` 声明 Laravel 8 + Dcat Admin。CentOS 7 用发布包里的 `vendor`，不用在服务器上执行 `composer install`。
@@ -72,8 +72,8 @@
 
 ## 依赖
 
-发布包 `master.tar.gz`（`pkg/master.tar.gz`、本地构建或 Release）含 `composer install --no-dev` 的 `vendor`，不含 `.env`。构建/CI 使用 PHP **8.4**；生产建议 PHP 8.0.2+ 并与 lock 一致。源码目录里的 `vendor` 不进 git。一条命令安装用的 `pkg/*.tar.gz` 随仓库提交，里面同样没有 `.env`。
+发布包 `pkg/master.tar.gz` 含 `composer install --no-dev` 的 `vendor`，不含 `.env`。构建/CI 使用 PHP **8.4**；生产建议 PHP 8.0.2+ 并与 lock 一致。源码目录里的 `vendor` 不进 git。一条命令安装用的 `pkg/*.tar.gz` 随仓库提交。
 
 CI 会执行 `composer audit`（忽略 abandoned 包）。当前 **Laravel 8** 锁文件在 advisory 库中仍关联若干 CVE/GHSA（见 `composer.json` → `config.audit.ignore`）；清除需 **大版本升级 Laravel/Dcat**，单期以 `APP_DEBUG=false`、后台 HTTPS、不暴露调试页等缓解。升级前勿移除 ignore 项。
 
-打 `v*` 标签发布 Release 时，`.github/workflows/release.yml` 会在上传包之前跑与 CI 相同的 Go/PHPUnit/audit、脚本校验与 CentOS 7 容器冒烟。本地可先执行 `./scripts/dev-preflight.sh`（与 CI 核心步骤一致；无 Docker 时 DB 路径校验会跳过）。
+发版前在本地执行 `./scripts/dev-preflight.sh`（与 CI 核心步骤一致；无 Docker 时 DB 路径校验会跳过）。安装从仓库 `pkg/` 取包，不从 GitHub Releases 下载。

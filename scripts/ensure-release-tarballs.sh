@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 部署脚本共用：若 vars 未指定 tar 且默认路径不存在，则在仓库内尝试构建发布包。
-# 生产机房应先在开发机执行 scripts/build-release-tarballs.sh 并 scp 上传，再设 REDI_*_TAR（见 docs/RELEASE-PACKAGES.md）。
+# 一条命令安装用仓库 pkg/。自己跑 deploy 时，先把 pkg/ 或 build-release-tarballs.sh 的产物准备好，再设 REDI_*_TAR（见 docs/RELEASE-PACKAGES.md）。
 # 开发机打 tar 前建议先跑 scripts/dev-preflight.sh（见 docs/DEVELOPMENT.md）。
 # shellcheck shell=bash
 

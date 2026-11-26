@@ -1,25 +1,23 @@
 #!/usr/bin/env bash
-# GREENFIELD-INSTALL 与绿场路径表述（防文档漂移）。
+# 安装文档仍写明一次导入 SQL、不要 schedule:run、换包另见 OPS。
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DOC="${REPO_ROOT}/docs/GREENFIELD-INSTALL.md"
-PRODUCT="${REPO_ROOT}/docs/GREENFIELD-PRODUCT.md"
+DOC="${REPO_ROOT}/DEPLOY-centos7.md"
+BEGINNER="${REPO_ROOT}/docs/DEPLOY-BEGINNER-CENTOS7.md"
 
 fail() {
   echo "verify-greenfield-install-doc: $*" >&2
   exit 1
 }
 
-[[ -f "$DOC" ]] || fail "missing GREENFIELD-INSTALL.md"
-[[ -f "$PRODUCT" ]] || fail "missing GREENFIELD-PRODUCT.md"
-grep -qF 'GREENFIELD-INSTALL.md' "$PRODUCT" || fail "GREENFIELD-PRODUCT must link GREENFIELD-INSTALL"
-grep -qF '按角色怎么读' "$PRODUCT" || fail "GREENFIELD-PRODUCT must document role-based reading order"
-
-grep -qF 'GREENFIELD-PRODUCT.md' "$DOC" || fail "GREENFIELD-INSTALL must link GREENFIELD-PRODUCT"
-grep -qF 'DEPLOY-TUTORIAL-CENTOS7.md' "$DOC" || fail "GREENFIELD must link step tutorial"
-grep -qF 'redi_admin.sql' "$DOC" || fail "GREENFIELD must document redi_admin.sql"
-grep -qF 'schedule:run' "$DOC" || fail "GREENFIELD must warn against schedule:run"
-grep -qF 'OPS-RELEASE-UPDATE.md' "$DOC" || fail "GREENFIELD must reference OPS-RELEASE-UPDATE for post-install tar"
+[[ -f "$DOC" ]] || fail "missing DEPLOY-centos7.md"
+[[ -f "$BEGINNER" ]] || fail "missing DEPLOY-BEGINNER-CENTOS7.md"
+grep -qF 'redi_admin.sql' "$DOC" || fail "DEPLOY-centos7 must document redi_admin.sql"
+grep -qF 'schedule:run' "$DOC" || fail "DEPLOY-centos7 must warn against schedule:run"
+grep -qF 'OPS-RELEASE-UPDATE.md' "$DOC" || fail "DEPLOY-centos7 must reference OPS-RELEASE-UPDATE for post-install tar"
+grep -qF 'master.sh' "$BEGINNER" || fail "beginner doc must document master.sh"
+grep -qF 'node.sh' "$BEGINNER" || fail "beginner doc must document node.sh"
+grep -qF 'Redi301@Install2026' "$BEGINNER" || fail "beginner doc must document the initial admin password"
 
 echo "verify-greenfield-install-doc: OK"

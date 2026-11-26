@@ -1,14 +1,14 @@
 # 控制台操作手册
 
-后台地址是 `https://主控域名/admin`。部署步骤见 [../DEPLOY.md](../DEPLOY.md)。客户侧只需要做的 CNAME 说明见 [CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md)。
+后台地址是 `https://主控域名/admin`。安装见 [DEPLOY-BEGINNER-CENTOS7.md](DEPLOY-BEGINNER-CENTOS7.md)。客户侧只需要做的 CNAME 说明见 [CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md)。
 
-初始账号 `admin` / `Redi301@Install2026`。仍为默认密码时，登录后会 **强制进入改密页**（`Admin → 用户设置` / `auth/setting`），改完后才能使用其它菜单。内网演示可在主控 `.env` 设 `REDI_BLOCK_DEFAULT_ADMIN_PASSWORD=false`（见 [../DEPLOY.md](../DEPLOY.md)）。
+初始账号 `admin` / `Redi301@Install2026`。仍为默认密码时，登录后会 **强制进入改密页**（`Admin → 用户设置` / `auth/setting`），改完后才能使用其它菜单。内网演示可在主控 `.env` 设 `REDI_BLOCK_DEFAULT_ADMIN_PASSWORD=false`。
 
 ## 界面语言（简体中文 / 繁體中文 / English）
 
 - **切换**：登录页表单下方有语言选项；登录后侧栏右上角 **地球图标** 可随时切换。
 - **记忆**：选择会写入浏览器 session；**登录后**会写入管理员账号的 `locale` 字段，下次登录自动沿用（需已执行 `php artisan migrate`）。
-- **系统外观**：在 **站点配置 → 系统外观** 按 **简体中文 / 繁體中文 / English** 三个选项卡分别填写名称与标题；Logo、Favicon 共用。绿场导入后直接用 Tab 填写即可。若从外部拷贝的配置仍是**仅顶层**品牌 JSON，换包时见 [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md) 的 `redi:normalize-platform-branding`。未保存过时，表单与各语言界面会显示语言包默认品牌名。
+- **系统外观**：在 **站点配置 → 系统外观** 按 **简体中文 / 繁體中文 / English** 三个选项卡分别填写名称与标题；Logo、Favicon 共用。导入 SQL 后直接用 Tab 填写即可。若从外部拷贝的配置仍是**仅顶层**品牌 JSON，换包时见 [OPS-RELEASE-UPDATE.md](OPS-RELEASE-UPDATE.md) 的 `redi:normalize-platform-branding`。未保存过时，表单与各语言界面会显示语言包默认品牌名。
 - **侧栏菜单**：业务项与 `Admin` 子菜单优先按库内 title 映射；若 title 无翻译键，则按菜单 URI（如 `group`、`auth/users`）回退到语言包。
 - **证书 `last_error` 列**：展示库内运维说明（**不随界面语言翻译**）；新记录一般为英文。CLI/Webhook 亦为英文。详见 [I18N.md](I18N.md)。
 
@@ -224,7 +224,7 @@ php artisan redi:prune-acme-challenges   # 标准输出含 pruned expired=…, i
 php artisan redi:health --notify  # 有 issues 时 POST webhook（Cron 08:30；发送成功退出 0）
 php artisan redi:renew-certificates --dry-run --days=25   # 续期预演；正式 Cron 跑无 --dry-run，入队后日志含 queued: N cert(s)（见 renew.log）
 php artisan redi:requeue-failed-deployments   # 可选 --node= / --cert=
-php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修正；无效 skip 会清空并告警（见 DEPLOY.md）
+php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修正；无效 skip 会清空并告警
 # php artisan redi:ops-webhook --task=redi:renew-certificates --message="测试"
 # DNS API 同步（超管后台）；dns_driver 拼写错误会在工厂层报错，勿与手动模式混淆
 ```

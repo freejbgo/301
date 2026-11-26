@@ -188,7 +188,7 @@ bash scripts/verify-grant-nodes-templates.sh
 echo "==> CentOS7 真机验收清单文档"
 bash scripts/verify-acceptance-doc.sh
 
-echo "==> CentOS7 部署教程与脚本"
+echo "==> CentOS7 部署文档与脚本"
 bash scripts/verify-deploy-centos7-doc.sh
 bash scripts/verify-product-docs.sh
 bash scripts/verify-greenfield-install-doc.sh
