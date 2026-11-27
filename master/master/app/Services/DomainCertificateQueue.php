@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Jobs\IssueDomainCertificateJob;
 use App\Models\RediAdminDomain;
+use App\Models\RediDomainCert;
 use App\Support\AdminTenantContext;
 use App\Support\BatchSelectionLimiter;
 
@@ -41,5 +42,30 @@ class DomainCertificateQueue
             'dispatched' => $i,
             'truncated' => $capped['truncated'],
         ];
+    }
+
+    /**
+     * 原始域名改了之后，只给已经申请过证书的启用域名重新入队。
+     * 没有证书行，或状态仍是「未申请」，不新建证书，也不做 CNAME 检查。
+     */
+    public static function dispatchIfCertificateRequested(int $domainId, int $delaySeconds = 15): bool
+    {
+        $domain = RediAdminDomain::query()->find($domainId);
+        if (! $domain || (int) $domain->status !== 1) {
+            return false;
+        }
+
+        $requested = RediDomainCert::query()
+            ->where('domain_id', $domainId)
+            ->whereNotIn('status', [RediDomainCert::STATUS_NONE, ''])
+            ->exists();
+        if (! $requested) {
+            return false;
+        }
+
+        IssueDomainCertificateJob::dispatch($domainId)
+            ->delay(now()->addSeconds(max(0, $delaySeconds)));
+
+        return true;
     }
 }

@@ -87,4 +87,57 @@ class DomainCertificateQueueTest extends TestCase
         $this->assertSame(1, $dispatch['dispatched']);
         Bus::assertDispatchedTimes(IssueDomainCertificateJob::class, 1);
     }
+
+    public function test_host_change_does_not_queue_a_certificate_that_was_never_requested(): void
+    {
+        Bus::fake();
+        $this->createCertTable();
+
+        $this->assertFalse(DomainCertificateQueue::dispatchIfCertificateRequested(1));
+        Bus::assertNotDispatched(IssueDomainCertificateJob::class);
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => 1,
+            'admin_id' => 10,
+            'domain_name' => 'a.com',
+            'status' => 'none',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertFalse(DomainCertificateQueue::dispatchIfCertificateRequested(1));
+        Bus::assertNotDispatched(IssueDomainCertificateJob::class);
+    }
+
+    public function test_host_change_requeues_only_when_a_certificate_was_requested(): void
+    {
+        Bus::fake();
+        $this->createCertTable();
+
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => 1,
+            'admin_id' => 10,
+            'domain_name' => 'a.com',
+            'status' => 'pending_dns',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertTrue(DomainCertificateQueue::dispatchIfCertificateRequested(1));
+        Bus::assertDispatched(IssueDomainCertificateJob::class, function (IssueDomainCertificateJob $job) {
+            return $job->domainId === 1;
+        });
+    }
+
+    private function createCertTable(): void
+    {
+        Schema::create('redi_domain_certs', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('domain_id');
+            $table->unsignedInteger('admin_id');
+            $table->string('domain_name')->nullable();
+            $table->string('status')->default('none');
+            $table->timestamps();
+        });
+    }
 }

@@ -29,7 +29,7 @@ use App\Admin\Actions\Grid\BatchEnableDomains;
 use App\Admin\Actions\Grid\BatchDeleteDomains;
 use App\Admin\Actions\Grid\BatchRedeployCertificate;
 use App\Admin\Actions\Grid\RedeployCertificate;
-use App\Jobs\IssueDomainCertificateJob;
+use App\Services\DomainCertificateQueue;
 use App\Services\DomainListCsvExporter;
 use Illuminate\Http\Request;
 use App\Services\AcmeChallengeCleanup;
@@ -420,10 +420,7 @@ JS
                 $newUrl = $domain->original_url;
                 if ($oldUrl !== '' && $oldUrl !== $newUrl) {
                     AcmeChallengeCleanup::purgeForHosts([$oldUrl, $newUrl]);
-                    if ((int) $domain->status === 1) {
-                        IssueDomainCertificateJob::dispatch((int) $domain->id)
-                            ->delay(now()->addSeconds(15));
-                    }
+                    DomainCertificateQueue::dispatchIfCertificateRequested((int) $domain->id);
                 }
             });
         });
