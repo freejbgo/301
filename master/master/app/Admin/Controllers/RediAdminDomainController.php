@@ -254,6 +254,9 @@ JS
                 if ($form->isEditing() && $form->model()->admin_id) {
                     $cnameAdminId = (int) $form->model()->admin_id;
                 }
+                if ($cnameAdminId > 0) {
+                    TenantEdgeService::ensureForAdmin($cnameAdminId);
+                }
                 $cname = TenantEdgeService::cnameTargetForAdmin($cnameAdminId);
                 $cnameHint = AdminTenantContext::isPlatformAdministrator()
                     ? admin_trans_label('cname_hint_admin')
@@ -267,8 +270,11 @@ JS
             }
             $form->text('original_url', admin_trans_field('original_url'))->help(admin_trans('redi-admin-domain.help.original_url'));
             $form->text('skip_url', admin_trans_field('skip_url_form'));
+            $statusHelp = AdminTenantContext::isPlatformAdministrator()
+                ? admin_trans('redi-admin-domain.help.status')
+                : admin_trans('redi-admin-domain.help.status_tenant');
             $form->radio('status', admin_trans_field('status'))->options(admin_trans('redi-admin-domain.options.status'))->default(2)
-                ->help(admin_trans('redi-admin-domain.help.status'));
+                ->help($statusHelp);
             $form->switch('force_https', admin_trans_field('force_https'))->help(admin_trans('redi-admin-domain.help.force_https'));
             if ($form->isCreating() && ! AdminTenantContext::isPlatformAdministrator()) {
                 $form->hidden('admin_id')->value(Admin::user()->id);

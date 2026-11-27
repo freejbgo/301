@@ -65,6 +65,7 @@ return [
     'help' => [
         'original_url' => '客户主域名，如 foo.com（全平台唯一，供边缘节点按 Host 查询）',
         'status'       => '启用前须将域名 CNAME 到接入目标（或 A 到节点公网 IP）；平台管理员可跳过校验',
+        'status_tenant'=> '先选停用并保存。把客户域名 CNAME 到上方接入说明里的目标，解析生效后再改为启用。',
         'force_https'  => '证书状态为「已生效」后再打开。开启后节点对 HTTP 请求 301 到 HTTPS',
     ],
     'actions' => [
