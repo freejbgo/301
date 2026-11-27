@@ -5,8 +5,11 @@ namespace App\Admin\Controllers;
 use App\Admin\Concerns\EnsuresAdministrator;
 use App\Http\Controllers\Controller;
 use App\Services\CertificateDeployService;
+use App\Services\FailedQueueJobs;
+use App\Support\OpsDisplaySanitizer;
 use App\Support\SafeRelativeRedirect;
 use Illuminate\Http\Request;
+use Throwable;
 
 class OpsController extends Controller
 {
@@ -31,6 +34,30 @@ class OpsController extends Controller
             admin_toastr(__('redi-home.ops.requeue_success', ['count' => $count]), 'success');
         }
 
+        return $this->redirectAfterOps($request);
+    }
+
+    public function retryFailedQueueJobs(Request $request)
+    {
+        try {
+            $count = FailedQueueJobs::retryAll();
+        } catch (Throwable $e) {
+            admin_toastr(OpsDisplaySanitizer::field($e->getMessage(), '—', 200), 'error');
+
+            return $this->redirectAfterOps($request);
+        }
+
+        if ($count === 0) {
+            admin_toastr(__('redi-home.ops.queue_retry_empty'), 'info');
+        } else {
+            admin_toastr(__('redi-home.ops.queue_retry_success', ['count' => $count]), 'success');
+        }
+
+        return $this->redirectAfterOps($request);
+    }
+
+    protected function redirectAfterOps(Request $request)
+    {
         $redirect = SafeRelativeRedirect::normalizeForRedirect(
             is_string($request->input('_redirect')) ? $request->input('_redirect') : null
         );

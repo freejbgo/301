@@ -33,7 +33,7 @@ Cron、Webhook 与验收见 [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md)�
 | `cert_expiring` | warning | 在 `--days` 窗口内即将到期 |
 | `cert_validating_stuck` | warning | validating 超过 `REDI_HEALTH_VALIDATING_STUCK_HOURS`；先查各节点 Agent 在线、公网 HTTP-01 可达，以及 `challenges-synced` 是否在约 **3 分钟**内上报（过期 sync 不计入，见 [CONSOLE.md](CONSOLE.md) §5） |
 | `cert_domain_name_drift` | warning | 证书 `domain_name` 与域名 `original_url` 不一致且 health 未能自动对齐 |
-| `queue_failed_jobs` | critical | `failed_jobs` 非空 |
+| `queue_failed_jobs` | critical | `failed_jobs` 非空。与「证书部署失败」分开统计。首页「重试失败队列任务」把这些任务放回队列并把该计数清零。签发失败原因在域名管理证书列，完整日志在主控 `storage/logs/laravel.log`。命令需在主控目录执行：`cd /opt/301/master && php artisan queue:failed` |
 | `queue_backlog` | warning | `jobs` 积压超过阈值 |
 | `queue_stale` | warning | `jobs` 中 `available_at` 超过 **N 小时**仍未执行（默认 **2**，`REDI_HEALTH_QUEUE_STALE_HOURS`）；仅 `QUEUE_CONNECTION=database` |
 

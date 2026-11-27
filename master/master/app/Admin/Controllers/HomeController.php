@@ -3,6 +3,7 @@
 namespace App\Admin\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Services\FailedQueueJobs;
 use App\Services\RediHealthReport;
 use App\Services\TenantOpsSummary;
 use App\Support\AdminTenantContext;
@@ -57,16 +58,35 @@ class HomeController extends Controller
             }
 
             $requeueConfirm = json_encode(__('redi-home.labels.requeue_confirm'), JSON_UNESCAPED_UNICODE);
-            $content->row(function (Row $row) use ($issueHtml, $hintsHtml, $requeueConfirm) {
+            $queueRetryConfirm = json_encode(__('redi-home.labels.queue_retry_confirm'), JSON_UNESCAPED_UNICODE);
+            $failedJobHtml = '';
+            foreach (FailedQueueJobs::recent(5) as $line) {
+                $failedJobHtml .= '<li>'.e(__('redi-home.labels.queue_failed_line', $line)).'</li>';
+            }
+            if ($failedJobHtml !== '') {
+                $failedJobHtml = '<p class="mb-1 mt-3"><strong>'.e(__('redi-home.labels.queue_failed_heading')).'</strong></p>'
+                    .'<ul class="mb-2">'.$failedJobHtml.'</ul>'
+                    .'<p class="text-muted mb-0">'.e(__('redi-home.labels.queue_failed_where')).'</p>';
+            }
+            $content->row(function (Row $row) use ($issueHtml, $hintsHtml, $requeueConfirm, $queueRetryConfirm, $failedJobHtml) {
                 $requeueUrl = admin_url('ops/requeue-failed-deployments');
+                $queueRetryUrl = admin_url('ops/retry-failed-queue-jobs');
                 $token = csrf_token();
+                $redirect = e(admin_base_path('/'));
                 $opsHtml = $issueHtml
-                    .'<form method="post" action="'.e($requeueUrl).'" class="mt-3" onsubmit="return confirm('.$requeueConfirm.');">'
+                    .'<form method="post" action="'.e($queueRetryUrl).'" class="mt-3" onsubmit="return confirm('.$queueRetryConfirm.');">'
                     .'<input type="hidden" name="_token" value="'.e($token).'">'
-                    .'<input type="hidden" name="_redirect" value="'.e(admin_base_path('/')).'">'
+                    .'<input type="hidden" name="_redirect" value="'.$redirect.'">'
+                    .'<button type="submit" class="btn btn-primary btn-sm">'.e(__('redi-home.labels.queue_retry_btn')).'</button>'
+                    .'<span class="text-muted ml-2">'.e(__('redi-home.labels.queue_retry_hint')).'</span>'
+                    .'</form>'
+                    .'<form method="post" action="'.e($requeueUrl).'" class="mt-2" onsubmit="return confirm('.$requeueConfirm.');">'
+                    .'<input type="hidden" name="_token" value="'.e($token).'">'
+                    .'<input type="hidden" name="_redirect" value="'.$redirect.'">'
                     .'<button type="submit" class="btn btn-warning btn-sm">'.e(__('redi-home.labels.requeue_btn')).'</button>'
                     .'<span class="text-muted ml-2">'.e(__('redi-home.labels.requeue_hint')).'</span>'
                     .'</form>'
+                    .$failedJobHtml
                     .$hintsHtml;
                 $row->column(12, Card::make(__('redi-home.labels.ops_card'), $opsHtml));
             });

@@ -7,7 +7,13 @@ return [
         'health_more'         => ':count more item(s); run php artisan redi:health',
         'requeue_confirm'     => 'Requeue all failed certificate deployments as pending?',
         'requeue_btn'         => 'Retry all failed deployments',
-        'requeue_hint'        => 'Same as php artisan redi:requeue-failed-deployments',
+        'requeue_hint'        => 'Affects the Failed deploys card only. It does not reset the Failed jobs count.',
+        'queue_retry_confirm'=> 'Push failed queue jobs back onto the queue? The failed-job count returns to 0 first.',
+        'queue_retry_btn'     => 'Retry failed queue jobs',
+        'queue_retry_hint'    => 'Same as php artisan queue:retry all in /opt/301/master. redi-queue must be running.',
+        'queue_failed_heading'=> 'Recent failed jobs',
+        'queue_failed_line'   => ':failed_at :job: :summary',
+        'queue_failed_where'  => 'The certificate error is the red text on that domain row. Full log: /opt/301/master/storage/logs/laravel.log',
         'ops_card'            => 'Ops self-check (certificate alerts, last 7 days)',
         'tenant_overview'     => 'My overview',
         'tenant_tip'          => 'Complete CNAME/A DNS first, then enable domains and request certificates under Domains.',
@@ -20,6 +26,8 @@ return [
     'ops' => [
         'requeue_empty'   => 'No failed deployments to requeue',
         'requeue_success' => 'Requeued :count failed deployment(s)',
+        'queue_retry_empty' => 'No failed queue jobs to retry',
+        'queue_retry_success' => 'Pushed :count failed job(s) back onto the queue. The failed-job count is now 0.',
     ],
     'cards' => [
         'enabled_nodes'    => 'Enabled nodes',

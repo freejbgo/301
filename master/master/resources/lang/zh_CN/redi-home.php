@@ -7,7 +7,13 @@ return [
         'health_more'         => '另有 :count 项，请执行 php artisan redi:health',
         'requeue_confirm'     => '将全部 failed 证书部署改回 pending？',
         'requeue_btn'         => '重试全部失败部署',
-        'requeue_hint'        => '等同 php artisan redi:requeue-failed-deployments（命令行）',
+        'requeue_hint'        => '只处理「证书部署失败」，不会把「失败任务」清成 0。',
+        'queue_retry_confirm'=> '把失败队列任务重新放回队列？失败任务数字会先变成 0。',
+        'queue_retry_btn'     => '重试失败队列任务',
+        'queue_retry_hint'    => '等同在主控目录执行 php artisan queue:retry all。需要 redi-queue 正在运行。',
+        'queue_failed_heading'=> '最近的失败任务',
+        'queue_failed_line'   => ':failed_at :job：:summary',
+        'queue_failed_where'  => '该域名的证书失败原因在「域名管理」对应行的证书列红字。完整日志：/opt/301/master/storage/logs/laravel.log',
         'ops_card'            => '运营自检（最近 7 天证书预警）',
         'tenant_overview'     => '我的业务概览',
         'tenant_tip'          => '请先完成 CNAME/A 解析，再在「域名管理」中启用域名并申请证书。',
@@ -20,6 +26,8 @@ return [
     'ops' => [
         'requeue_empty'   => '没有 failed 部署记录需要重试',
         'requeue_success' => '已重新排队 :count 条 failed 部署',
+        'queue_retry_empty' => '没有失败队列任务需要重试',
+        'queue_retry_success' => '已将 :count 条失败任务放回队列，失败任务计数已清零。',
     ],
     'cards' => [
         'enabled_nodes'    => '启用节点',

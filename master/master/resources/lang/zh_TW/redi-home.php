@@ -7,7 +7,13 @@ return [
         'health_more'         => '另有 :count 項，請執行 php artisan redi:health',
         'requeue_confirm'     => '將全部 failed 憑證部署改回 pending？',
         'requeue_btn'         => '重試全部失敗部署',
-        'requeue_hint'        => '等同 php artisan redi:requeue-failed-deployments',
+        'requeue_hint'        => '只處理「憑證部署失敗」，不會把「失敗任務」清成 0。',
+        'queue_retry_confirm'=> '把失敗隊列任務重新放回隊列？失敗任務數字會先變成 0。',
+        'queue_retry_btn'     => '重試失敗隊列任務',
+        'queue_retry_hint'    => '等同在主控目錄執行 php artisan queue:retry all。需要 redi-queue 正在運行。',
+        'queue_failed_heading'=> '最近的失敗任務',
+        'queue_failed_line'   => ':failed_at :job：:summary',
+        'queue_failed_where'  => '該域名的憑證失敗原因在「域名管理」對應列的憑證欄紅字。完整日誌：/opt/301/master/storage/logs/laravel.log',
         'ops_card'            => '運營自檢（最近 7 天憑證預警）',
         'tenant_overview'     => '我的業務概覽',
         'tenant_tip'          => '請先完成 CNAME/A 解析，再在「域名管理」中啟用域名並申請憑證。',
@@ -20,6 +26,8 @@ return [
     'ops' => [
         'requeue_empty'   => '沒有 failed 部署記錄需要重試',
         'requeue_success' => '已重新排隊 :count 條 failed 部署',
+        'queue_retry_empty' => '沒有失敗隊列任務需要重試',
+        'queue_retry_success' => '已將 :count 條失敗任務放回隊列，失敗任務計數已清零。',
     ],
     'cards' => [
         'enabled_nodes'    => '啟用節點',

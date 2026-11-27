@@ -28,6 +28,7 @@ Route::group([
     $router->get('/', 'HomeController@index');
 
     $router->post('ops/requeue-failed-deployments', 'OpsController@requeueFailedDeployments');
+    $router->post('ops/retry-failed-queue-jobs', 'OpsController@retryFailedQueueJobs');
 
     $router->resource('group', 'RediAdminGroupController');
     $router->get('domain/export', 'RediAdminDomainController@exportCsv');
