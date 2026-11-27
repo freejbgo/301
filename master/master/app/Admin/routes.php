@@ -4,6 +4,15 @@ use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Dcat\Admin\Admin;
 
+Route::group([
+    'prefix' => config('admin.route.prefix'),
+    'middleware' => config('admin.route.middleware'),
+], function () {
+    Route::any('auth/extensions/{any?}', function () {
+        abort(404);
+    })->where('any', '.*');
+});
+
 Admin::routes();
 
 //Route::get(uri: '/', function(){
