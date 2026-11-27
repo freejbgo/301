@@ -3,25 +3,34 @@
 return [
     'page' => [
         'title'       => '系統外觀',
-        'description' => '按介面語言分別設置名稱與標題',
+        'description' => '按介面語言分別設置名稱與標題；Logo / Favicon 全平台共用',
     ],
     'tabs' => [
         'zh_CN' => '簡體中文',
         'zh_TW' => '繁體中文',
         'en'    => 'English',
     ],
+    'sections' => [
+        'shared_assets' => '共用圖片（各語言介面相同）',
+    ],
     'cards' => [
-        'branding' => '全平台外觀',
+        'branding' => '全平台外觀（Logo / 標題）',
     ],
     'fields' => [
         'system_name' => '系統名稱',
         'page_title'  => '網頁標題',
         'login_title' => '登錄框標題',
+        'logo'        => 'Logo（展開側欄）',
+        'logo_mini'   => 'Logo（收起側欄）',
+        'favicon'     => 'Favicon',
     ],
     'help' => [
-        'system_name' => '當前語言介面下，側邊欄顯示的名稱',
+        'system_name' => '當前語言介面下，側邊欄 Logo 旁顯示的名稱',
         'page_title'  => '當前語言介面下的瀏覽器標籤頁標題，留空則與系統名稱相同',
         'login_title' => '當前語言介面下的登錄頁主標題，留空則與系統名稱相同',
+        'logo'        => 'PNG、JPG、GIF 或 WEBP。未上傳時側欄只顯示系統名稱',
+        'logo_mini'   => '留空則使用上方 Logo。未上傳任何 Logo 時，收起側欄不顯示圖片',
+        'favicon_shared' => '各語言介面共用同一圖標。PNG、JPG、GIF、WEBP 或 ICO。未上傳時瀏覽器不顯示站點圖標',
     ],
     'messages' => [
         'saved'     => '系統外觀已保存',
