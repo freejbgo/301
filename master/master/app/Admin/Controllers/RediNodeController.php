@@ -8,8 +8,10 @@ use App\Admin\Actions\Grid\BatchRequeueNodeFailedCerts;
 use App\Admin\Actions\Grid\BatchRotateNodeTokens;
 use App\Admin\Actions\Grid\RequeueNodeFailedCerts;
 use App\Admin\Actions\Grid\RotateNodeToken;
+use App\Admin\Actions\Grid\ViewNodeToken;
 use App\Admin\Concerns\EnsuresAdministrator;
 use App\Models\RediNode;
+use App\Support\NodeInstallCommand;
 use App\Services\RediHealthReport;
 use App\Support\OpsDisplaySanitizer;
 use Dcat\Admin\Form;
@@ -122,8 +124,17 @@ class RediNodeController extends AdminController
 
             $grid->disableViewButton();
             $grid->actions(function ($actions) {
+                $actions->append(new ViewNodeToken());
                 $actions->append(new RequeueNodeFailedCerts());
                 $actions->append(new RotateNodeToken());
+            });
+
+            $grid->footer(function ($filter, $grid) {
+                return view('admin.nodes.install-command', [
+                    'command' => NodeInstallCommand::command(__('redi-admin-node.install.token_placeholder')),
+                    'hasKey' => NodeInstallCommand::hasInstallKey(),
+                    'publish' => NodeInstallCommand::publishCommand(),
+                ]);
             });
         });
     }
@@ -231,20 +242,12 @@ class RediNodeController extends AdminController
                 if ($form->isCreating()) {
                     $node = RediNode::find($form->getKey());
                     if ($node) {
-                        $plainToken = $node->issueApiTokenPlain();
+                        $node->issueApiTokenPlain();
                         $node->save();
-                        $masked = strlen($plainToken) > 12
-                            ? substr($plainToken, 0, 6).'…'.substr($plainToken, -4)
-                            : $plainToken;
-                        admin_toastr(
-                            __('redi-admin-node.form.created_toastr', ['masked' => $masked]),
-                            'warning',
-                            ['timeOut' => 0]
-                        );
 
                         return $form->response()
                             ->success(__('redi-admin-node.form.created'))
-                            ->data(['token' => $plainToken]);
+                            ->redirect('nodes');
                     }
                 }
             });

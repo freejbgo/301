@@ -357,6 +357,12 @@ setup_node_install_key() {
     ssh-keygen -t ed25519 -N "" -f "$key" -C redi-node-install >/dev/null
   fi
   chmod 600 "$key"
+  if [[ -d /opt/301/master/storage/app ]]; then
+    cp -f "$key" /opt/301/master/storage/app/node-install.key
+    printf '%s\n' "$MASTER_IP" > /opt/301/master/storage/app/node-install-master-ip
+    chown nginx:nginx /opt/301/master/storage/app/node-install.key /opt/301/master/storage/app/node-install-master-ip 2>/dev/null || true
+    chmod 640 /opt/301/master/storage/app/node-install.key /opt/301/master/storage/app/node-install-master-ip
+  fi
   mkdir -p /root/.ssh
   chmod 700 /root/.ssh
   touch "$auth"

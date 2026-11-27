@@ -146,7 +146,7 @@ sudo -u nginx php /opt/301/master/artisan about 2>/dev/null | head -5
 在「节点管理」：
 
 - [ ] 新建节点，**主公网 IP** = `5.6.7.8`。
-- [ ] 复制 **只显示一次** 的 Token，保存到节点 `vars.env` 的 `REDI_NODE_TOKEN`。
+- [ ] 在节点列表这一行打开「查看 Token」，把弹窗里的安装命令拿到节点上执行，或把 Token 写入 `vars.env` 的 `REDI_NODE_TOKEN`。
 
 若主控部署时 `NODE_IPS` 为空，补写后同步授权（二选一）：
 

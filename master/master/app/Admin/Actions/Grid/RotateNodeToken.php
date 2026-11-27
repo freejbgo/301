@@ -3,6 +3,7 @@
 namespace App\Admin\Actions\Grid;
 
 use App\Models\RediNode;
+use App\Support\NodeInstallCommand;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Grid\RowAction;
 use Illuminate\Http\Request;
@@ -34,13 +35,9 @@ class RotateNodeToken extends RowAction
         $plain = $node->issueApiTokenPlain();
         $node->save();
 
-        $masked = strlen($plain) > 12
-            ? substr($plain, 0, 6).'…'.substr($plain, -4)
-            : $plain;
-
         return $this->response()
-            ->success(__('redi-admin-node.actions.rotate_token.success', ['masked' => $masked]))
-            ->data(['token' => $plain])
-            ->refresh();
+            ->success(__('redi-admin-node.actions.rotate_token.success'))
+            ->detail(NodeInstallCommand::dialogHtml($plain))
+            ->alert();
     }
 }

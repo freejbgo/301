@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\CertificateDeployService;
 use App\Support\OpsDisplaySanitizer;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -91,6 +92,11 @@ class RediNode extends Model
 
     protected $guarded = [
         'api_token_hash',
+        'api_token',
+    ];
+
+    protected $hidden = [
+        'api_token',
     ];
 
     protected $fillable = [
@@ -110,6 +116,7 @@ class RediNode extends Model
         'extra_ipv6' => 'array',
         'enabled' => 'boolean',
         'last_heartbeat_at' => 'datetime',
+        'api_token' => 'encrypted',
     ];
 
     /**
@@ -518,6 +525,24 @@ class RediNode extends Model
     public function setApiTokenPlain(string $plain): void
     {
         $this->api_token_hash = Hash::make($plain);
+        if (Schema::hasColumn($this->getTable(), 'api_token')) {
+            $this->api_token = $plain;
+        }
+    }
+
+    public function revealApiToken(): ?string
+    {
+        if (! Schema::hasColumn($this->getTable(), 'api_token')) {
+            return null;
+        }
+
+        try {
+            $plain = $this->api_token;
+        } catch (DecryptException $e) {
+            return null;
+        }
+
+        return is_string($plain) && $plain !== '' ? $plain : null;
     }
 
     public function verifyApiToken(string $plain): bool
