@@ -380,7 +380,7 @@ setup_node_install_key() {
 }
 setup_node_install_key
 echo
-echo "在节点上执行下面这一整条。只把最后的 后台Token 换成后台复制的 Token："
-echo "curl -fsSL https://github.com/freejbgo/301/raw/main/node.sh -o node.sh && chmod +x node.sh && bash node.sh --master-ip ${MASTER_IP} --install-key ${NODE_INSTALL_KEY_B64} --token 后台Token"
+echo "在节点上执行下面这一整条。只把最后的 Node Token 换成后台复制的 Token："
+echo "curl -fsSL https://github.com/freejbgo/301/raw/main/node.sh -o node.sh && chmod +x node.sh && bash node.sh --master-ip ${MASTER_IP} --install-key ${NODE_INSTALL_KEY_B64} --token 'Node Token'"
 echo "节点自己的公网 IP 不用填。这条命令不要发到聊天软件里。"
 echo "主控云安全组的 3306 要允许节点的公网 IP。"

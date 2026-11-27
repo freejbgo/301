@@ -103,6 +103,7 @@ CSS
 
     $switchUrl = json_encode(admin_url('locale'));
     $switchFailed = json_encode(__('redi-locale.switch_failed'));
+    $copiedLabel = json_encode(__('redi-admin-node.install.copied'));
     Admin::script(<<<JS
 Dcat.ready(function () {
   if (Dcat.confirm && !Dcat.confirm.__rediPreConfirm) {
@@ -138,6 +139,33 @@ Dcat.ready(function () {
     .on('focus.rediLocale', '#redi-login-locale', function () { $(this).data('prev', this.value); });
   $(document).off('change.rediLocale', '#redi-login-locale')
     .on('change.rediLocale', '#redi-login-locale', function () { rediSwitchLocale(this.value); });
+  $(document).off('click.rediCopyCmd', '#redi-node-install-copy')
+    .on('click.rediCopyCmd', '#redi-node-install-copy', function () {
+      var btn = this;
+      var el = document.getElementById('redi-node-install-cmd');
+      if (!el) { return; }
+      var text = el.value;
+      var wasReadOnly = el.readOnly;
+      el.readOnly = false;
+      el.focus();
+      el.select();
+      if (typeof el.setSelectionRange === 'function') {
+        el.setSelectionRange(0, text.length);
+      }
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      el.readOnly = wasReadOnly;
+      var finish = function () {
+        var label = btn.getAttribute('data-label') || btn.textContent;
+        btn.setAttribute('data-label', label);
+        btn.textContent = {$copiedLabel};
+        setTimeout(function () { btn.textContent = label; }, 1600);
+      };
+      if (ok) { finish(); return; }
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(finish).catch(function () {});
+      }
+    });
   $(document).off('click.rediLocale', '.redi-admin-locale')
     .on('click.rediLocale', '.redi-admin-locale', function (e) {
       e.preventDefault();

@@ -75,11 +75,11 @@ class NodeInstallCommandTest extends TestCase
         ]);
         $this->app['request']->headers->set('HOST', 'localhost');
 
-        $command = NodeInstallCommand::command('后台Token');
+        $command = NodeInstallCommand::command('Node Token');
 
         $this->assertStringContainsString("--master-ip '主控IP'", $command);
         $this->assertStringContainsString("--install-key '安装密钥'", $command);
-        $this->assertStringContainsString("--token '后台Token'", $command);
+        $this->assertStringContainsString("--token 'Node Token'", $command);
         $this->assertFalse(NodeInstallCommand::hasInstallKey());
     }
 }

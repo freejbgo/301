@@ -43,10 +43,10 @@ Token 是一长串字母和数字，中间没有空格。
 
 ## 安装节点（只在节点做）
 
-主控装完后，屏幕上会打出一整条节点命令，里面已经带上主控 IP 和安装密钥。在 **节点** 上用 root 执行那一整条，只把最后的 `后台Token` 换成后台复制的 Token。形式是：
+主控装完后，屏幕上会打出一整条节点命令，里面已经带上主控 IP 和安装密钥。在 **节点** 上用 root 执行那一整条，只把最后的 `Node Token` 换成后台复制的 Token。形式是：
 
 ```bash
-curl -fsSL https://github.com/freejbgo/301/raw/main/node.sh -o node.sh && chmod +x node.sh && bash node.sh --master-ip 主控IP --install-key 密钥 --token 后台Token
+curl -fsSL https://github.com/freejbgo/301/raw/main/node.sh -o node.sh && chmod +x node.sh && bash node.sh --master-ip 主控IP --install-key 密钥 --token 'Node Token'
 ```
 
 不用填节点自己的 IP。网卡上如果只有内网地址，脚本会去查云平台和公网出口，和主控一样。它会连回主控，把这个外部地址加入数据库放行名单，然后装上节点程序。
@@ -92,7 +92,7 @@ curl -fsSL https://github.com/freejbgo/301/raw/main/node.sh -o node.sh && chmod 
 
 | 屏幕上的字 | 处理 |
 |------------|------|
-| `后台Token` 或 `缺少 --token` | 把命令最后的 `后台Token` 换成后台复制的那一串，再执行一次 |
+| `Node Token` 或 `缺少 --token` | 把命令最后的 `Node Token` 换成后台复制的那一串，再执行一次 |
 | `这个脚本只用于 CentOS 7` | 系统不是 CentOS 7。重装成 CentOS 7.9 后再做 |
 | `下载代码失败` 或 `仓库里没有安装包` | 先把仓库设为公开，主控要能访问 github.com，然后重新执行上面的一条命令 |
 | `没能自动识别公网 IP` | 再执行一次：`MASTER_IP=主控公网IP bash master.sh` |

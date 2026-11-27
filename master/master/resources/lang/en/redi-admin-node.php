@@ -108,9 +108,10 @@ return [
     ],
     'install' => [
         'title' => 'Node install command',
-        'help' => 'Run this whole line as root on the node. Replace only the final 后台Token with the value from View token on that row. The value after --install-key is the master install key, not the node token. Keep the --token flag.',
+        'help' => 'Run this whole line as root on the node. Replace only the final Node Token with the value from View token on that row. The value after --install-key is the master install key, not the node token. Keep the --token flag.',
         'copy' => 'Copy command',
-        'token_placeholder' => '后台Token',
+        'copied' => 'Copied',
+        'token_placeholder' => 'Node Token',
         'key_missing' => 'The panel cannot read the install key yet, so the placeholder in the command above is not usable. Run this once on the master, then reload this page:',
         'dialog_token' => 'Node token',
         'dialog_command' => 'Install command with this node’s token filled in. Run the whole line on the node.',
