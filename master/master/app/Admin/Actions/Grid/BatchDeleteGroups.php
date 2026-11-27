@@ -29,12 +29,13 @@ class BatchDeleteGroups extends BatchAction
         $result = $mutator->deleteOwned((array) $this->getKey(), (int) Admin::user()->id);
 
         if ($result['updated'] === 0) {
-            $msg = __('redi-admin-group.actions.batch_delete.error_none');
             if ($result['errors'] !== []) {
-                $msg .= "\n".implode("\n", array_slice($result['errors'], 0, 6));
+                $msg = implode("\n", array_slice($result['errors'], 0, 6));
+            } else {
+                $msg = __('redi-admin-group.actions.batch_delete.error_none');
             }
 
-            return $this->response()->error($msg);
+            return $this->response()->error($msg)->alert();
         }
 
         $msg = __('redi-admin-group.actions.batch_delete.success', ['count' => $result['updated']]);
@@ -42,12 +43,18 @@ class BatchDeleteGroups extends BatchAction
             $msg .= "\n".__('redi-admin-group.actions.batch_common.partial_errors', [
                 'count' => count($result['errors']),
             ]);
+            $msg .= "\n".implode("\n", array_slice($result['errors'], 0, 6));
         }
 
         $msg = $this->withGroupTruncationNotice($msg, (int) ($result['truncated'] ?? 0));
 
         $this->auditFromMutator('group', 'batch_delete', $result, (array) $this->getKey());
 
-        return $this->response()->success($msg)->refresh();
+        $response = $this->response()->success($msg)->refresh();
+        if ($result['errors'] !== []) {
+            $response->alert();
+        }
+
+        return $response;
     }
 }

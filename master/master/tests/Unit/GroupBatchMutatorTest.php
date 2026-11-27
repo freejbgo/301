@@ -50,4 +50,35 @@ class GroupBatchMutatorTest extends TestCase
         $this->assertSame(200, $result['updated']);
         $this->assertSame(5, $result['truncated']);
     }
+
+    public function test_delete_of_group_with_domains_explains_why(): void
+    {
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('admin_id')->default(0);
+            $table->unsignedInteger('group_id')->default(0);
+            $table->string('domain')->nullable();
+        });
+        \DB::table('redi_admin_domain')->insert([
+            'id' => 1,
+            'admin_id' => 99,
+            'group_id' => 1,
+            'domain' => 'a.example',
+        ]);
+
+        $mutator = new GroupBatchMutator();
+        $blocked = $mutator->deleteOwned([1], 10, false);
+
+        $this->assertSame(0, $blocked['updated']);
+        $this->assertNotEmpty($blocked['errors']);
+        $this->assertStringContainsString('g1', $blocked['errors'][0]);
+        $this->assertStringContainsString('还有 1 个域名', $blocked['errors'][0]);
+        $this->assertStringContainsString('改到别的分组', $blocked['errors'][0]);
+        $this->assertStringNotContainsString('The given data was invalid', $blocked['errors'][0]);
+        $this->assertSame(1, \DB::table('redi_admin_group')->where('id', 1)->count());
+
+        $empty = $mutator->deleteOwned([2], 10, false);
+        $this->assertSame(1, $empty['updated']);
+        $this->assertSame([], $empty['errors']);
+    }
 }

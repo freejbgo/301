@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\GroupNotEmptyException;
 use App\Models\RediAdminGroup;
 use App\Support\AdminTenantContext;
 use App\Support\BatchSelectionLimiter;
@@ -93,10 +94,10 @@ class GroupBatchMutator
             try {
                 $group->delete();
                 $result['updated']++;
-            } catch (\Illuminate\Validation\ValidationException $e) {
+            } catch (GroupNotEmptyException $e) {
                 $result['errors'][] = __('redi-admin-group.batch_mutator.errors.row_delete', [
                     'label' => $label,
-                    'reason' => $e->validator->errors()->first() ?: __('redi-admin-group.batch_mutator.errors.save_failed'),
+                    'reason' => $e->getMessage(),
                 ]);
             } catch (\Throwable $e) {
                 $result['errors'][] = __('redi-admin-group.batch_mutator.errors.row_delete', [

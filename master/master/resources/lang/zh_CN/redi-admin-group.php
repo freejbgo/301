@@ -21,7 +21,7 @@ return [
     ],
     'validation' => [
         'name_required'      => '分组名称不能为空',
-        'delete_has_domains' => '该分组下还有 :count 条域名，请先迁移或删除域名后再删分组。',
+        'delete_has_domains' => '这个分组里还有 :count 个域名，所以不能删除。请先打开域名列表，把这些域名改到别的分组，或者先删除这些域名，然后再删除这个分组。',
         'owner_invalid'      => '请选择有效的租户账号',
         'owner_not_tenant'   => '不能将分组挂在超级管理员账号下',
     ],
@@ -39,8 +39,8 @@ return [
         ],
         'batch_delete' => [
             'title' => '批量删除',
-            'confirm' => '仅可删除无域名的空分组。继续？',
-            'error_none' => '没有可删除的分组（或分组下仍有域名）',
+            'confirm' => '分组里还有域名时不能删除。需要先把域名改到别的分组，或先删除这些域名。继续删除空分组？',
+            'error_none' => '没有可删除的分组',
             'success' => '已删除 :count 个分组',
         ],
         'batch_common' => [
