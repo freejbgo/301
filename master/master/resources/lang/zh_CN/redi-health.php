@@ -17,7 +17,7 @@ return [
         'node_pool_empty' => '没有启用的边缘节点，证书无法部署、pool DNS 无 A 记录可同步',
         'node_no_public_ip' => '有 :count 台启用节点但未配置公网 IP（public_ip / extra_ips），pool A 记录与 A 池 CNAME 预检将无法工作',
         'cert_validating_stuck' => ':total 张证书超过 :hours 小时仍为 validating（可能 ACME 任务卡住）：:names',
-        'queue_failed_jobs' => '队列有 :count 条失败任务，请执行 php artisan queue:failed 排查',
+        'queue_failed_jobs' => '队列有 :count 条失败任务。原因在首页下方列表，点「重试失败队列任务」后这个数字会清零。',
         'queue_backlog' => '队列积压 :pending 条（阈值 :threshold），请确认 redi-queue / queue:work 在运行',
         'queue_stale' => '有 :count 条队列任务超过 :hours 小时未执行，可能 worker 未运行',
         'cert_domain_name_drift' => '证书 #:id domain_name 与域名不一致且未能自动对齐：记录 :recorded，应为 :canonical',
