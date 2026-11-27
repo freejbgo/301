@@ -91,4 +91,41 @@ class NormalizePlatformBrandingCommandTest extends TestCase
         $row = \DB::table('admin_settings')->where('slug', PlatformBranding::SETTINGS_SLUG)->first();
         $this->assertSame($encoded, $row->value);
     }
+
+    public function test_save_ignores_logo_and_favicon_input(): void
+    {
+        \DB::table('admin_settings')->insert([
+            'slug' => PlatformBranding::SETTINGS_SLUG,
+            'value' => json_encode([
+                'logo' => 'branding/keep.png',
+                'logo_mini' => 'branding/mini.png',
+                'favicon' => 'branding/icon.ico',
+                'locales' => [],
+            ], JSON_UNESCAPED_UNICODE),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        PlatformBranding::save([
+            'logo' => 'branding/new.png',
+            'logo_mini' => 'branding/new-mini.png',
+            'favicon' => 'branding/new.ico',
+            'locales' => [
+                'zh_CN' => [
+                    'system_name' => '新名称',
+                    'page_title' => '',
+                    'login_title' => '',
+                ],
+            ],
+        ]);
+
+        $row = json_decode(
+            \DB::table('admin_settings')->where('slug', PlatformBranding::SETTINGS_SLUG)->value('value'),
+            true
+        );
+        $this->assertSame('branding/keep.png', $row['logo']);
+        $this->assertSame('branding/mini.png', $row['logo_mini']);
+        $this->assertSame('branding/icon.ico', $row['favicon']);
+        $this->assertSame('新名称', $row['locales']['zh_CN']['system_name']);
+    }
 }

@@ -46,29 +46,6 @@ class PlatformSettings extends Form implements LazyRenderable
                 $tab = $tab->tab($label, $builder);
             }
         }
-
-        $this->divider(__('redi-platform-settings.sections.shared_assets'));
-
-        $this->image('logo', __('redi-platform-settings.fields.logo'))
-            ->disk('public')
-            ->uniqueName()
-            ->move('branding')
-            ->autoUpload()
-            ->help(__('redi-platform-settings.help.logo'));
-
-        $this->image('logo_mini', __('redi-platform-settings.fields.logo_mini'))
-            ->disk('public')
-            ->uniqueName()
-            ->move('branding')
-            ->autoUpload()
-            ->help(__('redi-platform-settings.help.logo_mini'));
-
-        $this->image('favicon', __('redi-platform-settings.fields.favicon'))
-            ->disk('public')
-            ->uniqueName()
-            ->move('branding')
-            ->autoUpload()
-            ->help(__('redi-platform-settings.help.favicon_shared'));
     }
 
     public function default()

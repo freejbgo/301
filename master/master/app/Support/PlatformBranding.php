@@ -41,7 +41,7 @@ class PlatformBranding
     }
 
     /**
-     * Values for the system-appearance form (all locale tabs + shared images).
+     * Values for the system-appearance form (one tab per interface language).
      *
      * @return array<string, mixed>
      */
@@ -51,9 +51,6 @@ class PlatformBranding
         $locales = is_array($stored['locales'] ?? null) ? $stored['locales'] : [];
 
         $out = [
-            'logo' => (string) ($stored['logo'] ?? ''),
-            'logo_mini' => (string) ($stored['logo_mini'] ?? ''),
-            'favicon' => (string) ($stored['favicon'] ?? ''),
             'locales' => [],
         ];
 
@@ -184,13 +181,15 @@ class PlatformBranding
             }
         }
 
+        $stored = self::getStored();
         $data = [
             'system_name' => $primaryName,
             'page_title' => $locales['zh_CN']['page_title'],
             'login_title' => $locales['zh_CN']['login_title'],
-            'logo' => (string) ($input['logo'] ?? ''),
-            'logo_mini' => (string) ($input['logo_mini'] ?? ''),
-            'favicon' => (string) ($input['favicon'] ?? ''),
+            // The appearance form no longer accepts uploads. Keep any path already stored.
+            'logo' => (string) ($stored['logo'] ?? ''),
+            'logo_mini' => (string) ($stored['logo_mini'] ?? ''),
+            'favicon' => (string) ($stored['favicon'] ?? ''),
             'locales' => $locales,
         ];
 
