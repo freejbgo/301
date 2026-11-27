@@ -31,6 +31,7 @@ grep -q 'api/nodes/certificates' "$rsp" || fail "certificates pull must have str
 grep -q 'containsControlChars' "$rsp" || fail "rate limiter must reject control chars in bearer token"
 grep -q 'throttleIpKey' "$rsp" || fail "invalid IP must not poison rate limit keys"
 grep -q "throttle:10,1" "$auth" || fail "admin login must be throttled"
+grep -Eq '^[[:space:]]*parent::__construct\(' "$auth" && fail "AuthController must not call parent::__construct; Routing\\Controller has none and the login page returns 500"
 grep -q 'throttle:api' "$kernel" || fail "api middleware group must throttle"
 grep -q 'RequireAdminSessionForDcatApi' "$adminCfg" || fail "dcat-api must require admin session"
 grep -q 'dcat-api' "$dcatMw" || fail "dcat-api middleware must scope dcat-api paths"
