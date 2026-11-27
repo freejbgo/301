@@ -108,10 +108,14 @@ Dcat.ready(function () {
   if (Dcat.confirm && !Dcat.confirm.__rediPreConfirm) {
     var rediConfirm = Dcat.confirm;
     Dcat.confirm = function (title, message, success, fail, options) {
-      options = $.extend({ preConfirm: function () { return true; } }, options || {});
+      options = $.extend({}, options || {}, {
+        showLoaderOnConfirm: false,
+        preConfirm: function () { return true; }
+      });
       return rediConfirm(title, message, success, fail, options);
     };
     Dcat.confirm.__rediPreConfirm = true;
+    if (Dcat.swal) { Dcat.swal.confirm = Dcat.confirm; }
   }
   function rediSwitchLocale(locale) {
     if (!locale) { return; }
