@@ -33,7 +33,7 @@ class IssueDomainCertificateJobTest extends TestCase
         Schema::create('redi_domain_certs', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('domain_id');
-            $table->unsignedInteger('admin_id')->nullable();
+            $table->unsignedInteger('admin_id');
             $table->string('domain_name')->default('');
             $table->string('status')->default('none');
             $table->text('last_error')->nullable();
@@ -44,6 +44,7 @@ class IssueDomainCertificateJobTest extends TestCase
     public function test_invalid_original_url_does_not_persist_ipv4_as_domain_name(): void
     {
         $domainId = (int) \DB::table('redi_admin_domain')->insertGetId([
+            'admin_id' => 17,
             'original_url' => '1.2.3.4',
             'status' => 1,
             'created_at' => now(),
@@ -57,6 +58,7 @@ class IssueDomainCertificateJobTest extends TestCase
 
         $cert = RediDomainCert::query()->where('domain_id', $domainId)->first();
         $this->assertNotNull($cert);
+        $this->assertSame(17, (int) $cert->admin_id);
         $this->assertSame('', $cert->domain_name);
         $this->assertSame(RediDomainCert::STATUS_FAILED, $cert->status);
         $this->assertStringContainsString(RediErrorMessage::get('cert.invalid_hostname'), (string) $cert->last_error);

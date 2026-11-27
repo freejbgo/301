@@ -78,14 +78,20 @@ class IssueDomainCertificateJob implements ShouldQueue
 
         $publishableHost = DomainRecordNormalizer::originalUrlIfValid((string) $domain->original_url);
 
-        $cert = RediDomainCert::firstOrCreate(
-            ['domain_id' => $domain->id],
-            [
-                'domain_name' => $publishableHost,
-                'status' => RediDomainCert::STATUS_NONE,
-            ]
-        );
+        // admin_id 在模型里被 guarded，不能交给 firstOrCreate 批量赋值。
+        // 表上该列又没有默认值，插入时缺了它，MySQL 会直接拒绝（1364）。
+        $cert = RediDomainCert::query()->firstOrNew([
+            'domain_id' => (int) $domain->id,
+        ]);
+        $creating = ! $cert->exists;
         $cert->admin_id = (int) $domain->admin_id;
+        if ($creating) {
+            $cert->domain_name = $publishableHost;
+            $cert->status = RediDomainCert::STATUS_NONE;
+            $cert->save();
+        } elseif ($cert->isDirty('admin_id')) {
+            $cert->save();
+        }
 
         if ($publishableHost === '') {
             $cert->domain_name = '';
