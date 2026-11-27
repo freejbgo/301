@@ -3,6 +3,7 @@
 return [
     'titles' => [
         'index'         => 'Home',
+        '主页'           => 'Home',
         'site-config'   => 'Site settings',
         'admin'         => 'Admin',
         'users'         => 'Users',

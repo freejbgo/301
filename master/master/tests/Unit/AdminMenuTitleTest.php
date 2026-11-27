@@ -12,6 +12,8 @@ class AdminMenuTitleTest extends TestCase
         app()->setLocale('en');
 
         $this->assertSame('Home', AdminMenuTitle::resolve('Index', '/domain'));
+        $this->assertSame('Home', AdminMenuTitle::resolve('主页', '/'));
+        $this->assertSame('Home', __('admin.home'));
     }
 
     public function test_falls_back_to_uri_when_db_title_unknown(): void

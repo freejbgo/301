@@ -27,7 +27,7 @@ return [
         'pending_deploys'  => '证书待部署',
         'failed_deploys'   => '证书部署失败',
         'queue_pending'    => '队列积压',
-        'queue_failed'     => 'failed_jobs',
+        'queue_failed'     => '失败任务',
         'domains_enabled'  => '启用域名',
         'certs_active'     => '证书已生效',
         'certs_attention'  => '证书待处理',

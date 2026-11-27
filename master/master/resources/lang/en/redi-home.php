@@ -27,7 +27,7 @@ return [
         'pending_deploys'  => 'Pending deploys',
         'failed_deploys'   => 'Failed deploys',
         'queue_pending'    => 'Queue backlog',
-        'queue_failed'     => 'failed_jobs',
+        'queue_failed'     => 'Failed jobs',
         'domains_enabled'  => 'Enabled domains',
         'certs_active'     => 'Active certs',
         'certs_attention'  => 'Certs pending',

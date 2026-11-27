@@ -3,6 +3,7 @@
 return [
     'titles' => [
         'index'         => '主页',
+        '主页'           => '主页',
         'site-config'   => '站点配置',
         'admin'         => '系统',
         'users'         => '管理员',
