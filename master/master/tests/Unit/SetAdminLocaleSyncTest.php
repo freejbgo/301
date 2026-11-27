@@ -32,7 +32,7 @@ class SetAdminLocaleSyncTest extends TestCase
         });
     }
 
-    public function test_sync_applies_stored_user_locale_to_session(): void
+    public function test_sync_applies_stored_user_locale_when_nothing_was_chosen(): void
     {
         $user = Administrator::create([
             'username' => 'ops',
@@ -41,10 +41,28 @@ class SetAdminLocaleSyncTest extends TestCase
             'locale' => 'en',
         ]);
 
-        session([SetAdminLocale::SESSION_KEY => 'zh_CN']);
+        session()->forget(SetAdminLocale::SESSION_KEY);
 
         SetAdminLocale::syncForAuthenticatedUser($user);
 
+        $this->assertSame('en', session(SetAdminLocale::SESSION_KEY));
+        $this->assertSame('en', app()->getLocale());
+    }
+
+    public function test_login_page_choice_overrides_stored_locale(): void
+    {
+        $user = Administrator::create([
+            'username' => 'ops',
+            'password' => 'secret',
+            'name' => 'Ops',
+            'locale' => 'zh_CN',
+        ]);
+
+        session([SetAdminLocale::SESSION_KEY => 'en']);
+
+        SetAdminLocale::syncForAuthenticatedUser($user);
+
+        $this->assertSame('en', $user->fresh()->locale);
         $this->assertSame('en', session(SetAdminLocale::SESSION_KEY));
         $this->assertSame('en', app()->getLocale());
     }
@@ -64,5 +82,17 @@ class SetAdminLocaleSyncTest extends TestCase
 
         $this->assertSame('zh_TW', $user->fresh()->locale);
         $this->assertSame('zh_TW', app()->getLocale());
+    }
+
+    public function test_browser_language_maps_chinese_and_defaults_other_languages_to_english(): void
+    {
+        $this->assertSame('zh_CN', SetAdminLocale::fromRequestLanguages(['zh_CN', 'zh', 'en']));
+        $this->assertSame('zh_CN', SetAdminLocale::fromRequestLanguages(['zh-Hans', 'en']));
+        $this->assertSame('zh_TW', SetAdminLocale::fromRequestLanguages(['zh_TW', 'zh', 'en']));
+        $this->assertSame('zh_TW', SetAdminLocale::fromRequestLanguages(['zh-HK', 'zh', 'en-US']));
+        $this->assertSame('zh_TW', SetAdminLocale::fromRequestLanguages(['zh-Hant']));
+        $this->assertSame('en', SetAdminLocale::fromRequestLanguages(['en_US', 'en']));
+        $this->assertSame('en', SetAdminLocale::fromRequestLanguages(['ja', 'ko']));
+        $this->assertSame('en', SetAdminLocale::fromRequestLanguages([]));
     }
 }

@@ -27,7 +27,7 @@ return [
         'pending_deploys'  => '憑證待部署',
         'failed_deploys'   => '憑證部署失敗',
         'queue_pending'    => '隊列積壓',
-        'queue_failed'     => 'failed_jobs',
+        'queue_failed'     => '失敗任務',
         'domains_enabled'  => '啟用域名',
         'certs_active'     => '憑證已生效',
         'certs_attention'  => '憑證待處理',

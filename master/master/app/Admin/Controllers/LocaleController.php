@@ -21,7 +21,7 @@ class LocaleController extends Controller
             return redirect()->back();
         }
 
-        session([SetAdminLocale::SESSION_KEY => $locale]);
+        SetAdminLocale::rememberExplicitLocale($locale);
         app()->setLocale($locale);
 
         $user = Admin::user();
