@@ -149,4 +149,40 @@ class DomainBatchOperationsTest extends TestCase
         $this->assertFalse($out['ok']);
         $this->assertSame(2, (int) RediAdminDomain::query()->count());
     }
+
+    public function test_selected_rows_set_the_same_redirect_only_for_owned_domains(): void
+    {
+        $request = Request::create('/admin/domains', 'GET', [
+            'selected_ids' => '1,2',
+            'new_skip_url' => 'https://target.example/go',
+        ]);
+        $out = (new DomainBatchFilterRunner())->run('set_skip_url', $request, 10);
+
+        $this->assertTrue($out['ok']);
+        $this->assertSame('https://target.example/go', (string) RediAdminDomain::query()->find(1)->skip_url);
+        $this->assertSame('https://example.com', (string) RediAdminDomain::query()->find(2)->skip_url);
+    }
+
+    public function test_set_redirect_without_selection_or_filter_is_refused(): void
+    {
+        $request = Request::create('/admin/domains', 'GET', [
+            'new_skip_url' => 'https://target.example/go',
+        ]);
+        $out = (new DomainBatchFilterRunner())->run('set_skip_url', $request, 10);
+
+        $this->assertFalse($out['ok']);
+        $this->assertSame('https://example.com', (string) RediAdminDomain::query()->find(1)->skip_url);
+    }
+
+    public function test_set_redirect_rejects_an_empty_address(): void
+    {
+        $request = Request::create('/admin/domains', 'GET', [
+            'selected_ids' => '1',
+            'new_skip_url' => '   ',
+        ]);
+        $out = (new DomainBatchFilterRunner())->run('set_skip_url', $request, 10);
+
+        $this->assertFalse($out['ok']);
+        $this->assertSame('https://example.com', (string) RediAdminDomain::query()->find(1)->skip_url);
+    }
 }

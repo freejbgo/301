@@ -19,6 +19,7 @@ class DomainBatchFilterRunner
         'enable',
         'disable',
         'delete',
+        'set_skip_url',
     ];
 
     /**
@@ -40,7 +41,7 @@ class DomainBatchFilterRunner
             $ids = $capped['ids'];
             $filterTruncated = $capped['truncated'];
             $this->selectionMode = 'selected_rows';
-        } elseif (in_array($action, ['delete', 'disable', 'apply_cert', 'redeploy', 'enable'], true)
+        } elseif (in_array($action, ['delete', 'disable', 'apply_cert', 'redeploy', 'enable', 'set_skip_url'], true)
             && ! DomainListFilter::hasAnyFilter($filterRequest)) {
             return [
                 'ok' => false,
@@ -134,6 +135,19 @@ class DomainBatchFilterRunner
                 $result = $mutator->deleteOwned($ids, $sessionAdminId, $isPlatform);
 
                 return $this->mutatorSummary($result, 'delete', $sessionAdminId, $filterTruncated, $filterRequest);
+
+            case 'set_skip_url':
+                $rawSkipUrl = trim((string) $filterRequest->input('new_skip_url', ''));
+                if (DomainRecordNormalizer::normalizeSkipUrl($rawSkipUrl) === '') {
+                    return [
+                        'ok' => false,
+                        'message' => __('redi-admin-domain.validation.skip_url_invalid'),
+                        'count' => 0,
+                    ];
+                }
+                $result = $mutator->setSkipUrlOwned($ids, $rawSkipUrl, $sessionAdminId, $isPlatform);
+
+                return $this->mutatorSummary($result, 'set_skip_url', $sessionAdminId, $filterTruncated, $filterRequest);
         }
 
         return [

@@ -42,6 +42,7 @@ class BatchFilterDomains extends Form implements LazyRenderable
             'enable' => __('redi-admin-domain.batch_filter.actions.enable'),
             'disable' => __('redi-admin-domain.batch_filter.actions.disable'),
             'delete' => __('redi-admin-domain.batch_filter.actions.delete'),
+            'set_skip_url' => __('redi-admin-domain.batch_filter.actions.set_skip_url'),
         ];
 
         $this->select('action', __('redi-admin-domain.batch_filter.fields.action'))
@@ -50,6 +51,9 @@ class BatchFilterDomains extends Form implements LazyRenderable
             ->help(__('redi-admin-domain.batch_filter.help.action', [
                 'max' => \App\Services\DomainBatchMutator::MAX_IDS_PER_BATCH,
             ]));
+
+        $this->text('new_skip_url', __('redi-admin-domain.batch_filter.fields.new_skip_url'))
+            ->help(__('redi-admin-domain.batch_filter.help.new_skip_url'));
 
         foreach (DomainListFilter::FILTER_KEYS as $key) {
             $this->hidden($key)->addElementClass('batch-filter-domain-field', false);
@@ -78,6 +82,9 @@ class BatchFilterDomains extends Form implements LazyRenderable
         if ($selected !== '') {
             $request->merge(['selected_ids' => $selected]);
         }
+        $request->merge([
+            'new_skip_url' => trim((string) ($input['new_skip_url'] ?? '')),
+        ]);
 
         return $request;
     }

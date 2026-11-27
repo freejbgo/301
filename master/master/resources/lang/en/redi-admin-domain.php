@@ -160,9 +160,13 @@ return [
         ],
     ],
     'batch_filter' => [
-        'fields' => ['action' => 'Action'],
+        'fields' => [
+            'action' => 'Action',
+            'new_skip_url' => 'New redirect URL',
+        ],
         'help' => [
             'action' => 'Checked rows are processed (up to :max). When no row is checked, the filled list filters are used (same filters as CSV export).',
+            'new_skip_url' => 'Fill this when the action is Batch set redirect URL. Checked or filtered domains all change to this one http or https URL. Other actions ignore it.',
         ],
         'actions' => [
             'apply_cert' => 'Batch apply certificates',
@@ -170,6 +174,7 @@ return [
             'enable' => 'Batch enable',
             'disable' => 'Batch disable',
             'delete' => 'Batch delete',
+            'set_skip_url' => 'Batch set redirect URL',
         ],
         'success' => [
             'apply_cert' => 'Queued :count domain(s) for certificates (filter cap :cap)',
@@ -177,18 +182,21 @@ return [
             'enable' => 'Enabled :count domain(s) (filter cap :cap)',
             'disable' => 'Disabled :count domain(s) (filter cap :cap)',
             'delete' => 'Deleted :count domain(s) (filter cap :cap)',
+            'set_skip_url' => 'Set :count domain(s) to the same redirect URL (cap :cap)',
         ],
         'error_none' => [
             'redeploy' => 'No domains to redeploy in filter results',
             'enable' => 'No domains to enable in filter results',
             'disable' => 'No domains to disable in filter results',
             'delete' => 'No domains to delete in filter results',
+            'set_skip_url' => 'Those domains already use this redirect URL',
         ],
         'error_all' => [
             'redeploy' => 'All matching domains were skipped for redeploy',
             'enable' => 'No domains could be enabled from filter results',
             'disable' => 'No domains could be disabled from filter results',
             'delete' => 'No domains could be deleted from filter results',
+            'set_skip_url' => 'None of those domains could be changed to the new redirect URL',
         ],
         'errors' => [
             'action_invalid' => 'Invalid action',
@@ -196,7 +204,7 @@ return [
             'filter_required_sensitive' => 'Check the domains to change, or set at least one list filter (avoids touching the first 500 rows by mistake)',
         ],
         'confirm_title' => 'Confirm filter-based batch',
-        'confirm_content' => 'Checked domains are processed as selected. Otherwise the filled list filters are used. With neither, nothing runs, so the first 500 rows are not touched by mistake.',
+        'confirm_content' => 'Checked domains are processed as selected. Otherwise the filled list filters are used. Batch set redirect URL writes the new address onto those domains. With neither, nothing runs, so the first 500 rows are not touched by mistake.',
     ],
     'export' => [
         'headers' => [

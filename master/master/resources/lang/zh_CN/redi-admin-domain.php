@@ -162,9 +162,11 @@ return [
     'batch_filter' => [
         'fields' => [
             'action' => '操作',
+            'new_skip_url' => '新的跳转地址',
         ],
         'help' => [
             'action' => '勾选了表格中的域名时，只处理勾选的行（最多 :max 条）。没有勾选时，使用列表上方筛选栏里已填写的条件（与导出 CSV 相同）。',
+            'new_skip_url' => '选择「批量修改跳转地址」时填写。勾选或筛选到的域名都会改成这一个地址，须为完整的 http 或 https 网址。其它操作不用填。',
         ],
         'actions' => [
             'apply_cert' => '批量申请证书',
@@ -172,6 +174,7 @@ return [
             'enable' => '批量启用',
             'disable' => '批量停用',
             'delete' => '批量删除',
+            'set_skip_url' => '批量修改跳转地址',
         ],
         'success' => [
             'apply_cert' => '已将 :count 个域名加入证书队列（筛选上限 :cap 条）',
@@ -179,18 +182,21 @@ return [
             'enable' => '已启用 :count 个域名（筛选上限 :cap 条）',
             'disable' => '已停用 :count 个域名（筛选上限 :cap 条）',
             'delete' => '已删除 :count 个域名（筛选上限 :cap 条）',
+            'set_skip_url' => '已将 :count 个域名的跳转地址改为同一地址（上限 :cap 条）',
         ],
         'error_none' => [
             'redeploy' => '筛选结果中没有可重新下发的域名',
             'enable' => '筛选结果中没有可启用的域名',
             'disable' => '筛选结果中没有可停用的域名',
             'delete' => '筛选结果中没有可删除的域名',
+            'set_skip_url' => '这些域名的跳转地址已经是这个值',
         ],
         'error_all' => [
             'redeploy' => '筛选结果中的域名均无法重新下发（无证书、未签发或不可读）',
             'enable' => '筛选结果中的域名均未能启用',
             'disable' => '筛选结果中的域名均未能停用',
             'delete' => '筛选结果中的域名均未能删除',
+            'set_skip_url' => '这些域名的跳转地址都没能改成新地址',
         ],
         'errors' => [
             'action_invalid' => '无效操作',
@@ -198,7 +204,7 @@ return [
             'filter_required_sensitive' => '请先勾选要操作的域名，或在列表上方至少填写一项筛选（避免误操作整表前 500 条）',
         ],
         'confirm_title' => '确认按筛选批量操作',
-        'confirm_content' => '已勾选域名时只处理勾选的行。未勾选时使用列表筛选栏中已填写的条件。两者都没有时不会执行，避免误操作整表前 500 条。',
+        'confirm_content' => '已勾选域名时只处理勾选的行。未勾选时使用列表筛选栏中已填写的条件。批量修改跳转地址时，填写的新地址会写到这些域名上。两者都没有时不会执行，避免误操作整表前 500 条。',
     ],
     'export' => [
         'headers' => [

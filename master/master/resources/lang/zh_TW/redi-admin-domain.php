@@ -160,9 +160,13 @@ return [
         ],
     ],
     'batch_filter' => [
-        'fields' => ['action' => '操作'],
+        'fields' => [
+            'action' => '操作',
+            'new_skip_url' => '新的跳轉地址',
+        ],
         'help' => [
             'action' => '勾選了表格中的域名時，只處理勾選的列（最多 :max 條）。沒有勾選時，使用列表上方篩選欄裡已填寫的條件（與匯出 CSV 相同）。',
+            'new_skip_url' => '選擇「批量修改跳轉地址」時填寫。勾選或篩選到的域名都會改成這一個地址，須為完整的 http 或 https 網址。其它操作不用填。',
         ],
         'actions' => [
             'apply_cert' => '批量申請憑證',
@@ -170,6 +174,7 @@ return [
             'enable' => '批量啟用',
             'disable' => '批量停用',
             'delete' => '批量刪除',
+            'set_skip_url' => '批量修改跳轉地址',
         ],
         'success' => [
             'apply_cert' => '已將 :count 個域名加入憑證隊列（篩選上限 :cap 條）',
@@ -177,18 +182,21 @@ return [
             'enable' => '已啟用 :count 個域名（篩選上限 :cap 條）',
             'disable' => '已停用 :count 個域名（篩選上限 :cap 條）',
             'delete' => '已刪除 :count 個域名（篩選上限 :cap 條）',
+            'set_skip_url' => '已將 :count 個域名的跳轉地址改為同一地址（上限 :cap 條）',
         ],
         'error_none' => [
             'redeploy' => '篩選結果中沒有可重新下發的域名',
             'enable' => '篩選結果中沒有可啟用的域名',
             'disable' => '篩選結果中沒有可停用的域名',
             'delete' => '篩選結果中沒有可刪除的域名',
+            'set_skip_url' => '這些域名的跳轉地址已經是這個值',
         ],
         'error_all' => [
             'redeploy' => '篩選結果中的域名均無法重新下發（無憑證、未簽發或不可讀）',
             'enable' => '篩選結果中的域名均未能啟用',
             'disable' => '篩選結果中的域名均未能停用',
             'delete' => '篩選結果中的域名均未能刪除',
+            'set_skip_url' => '這些域名的跳轉地址都沒能改成新地址',
         ],
         'errors' => [
             'action_invalid' => '無效操作',
@@ -196,7 +204,7 @@ return [
             'filter_required_sensitive' => '請先勾選要操作的域名，或在列表上方至少填寫一項篩選（避免誤操作整表前 500 條）',
         ],
         'confirm_title' => '確認按篩選批量操作',
-        'confirm_content' => '已勾選域名時只處理勾選的列。未勾選時使用列表篩選欄中已填寫的條件。兩者都沒有時不會執行，避免誤操作整表前 500 條。',
+        'confirm_content' => '已勾選域名時只處理勾選的列。未勾選時使用列表篩選欄中已填寫的條件。批量修改跳轉地址時，填寫的新地址會寫到這些域名上。兩者都沒有時不會執行，避免誤操作整表前 500 條。',
     ],
     'export' => [
         'headers' => [
