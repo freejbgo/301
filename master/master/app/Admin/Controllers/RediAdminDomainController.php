@@ -126,6 +126,9 @@ JS
 
             $grid->column('id')->sortable();
             $grid->column('group_id', admin_trans_field('group_id'))->display(function () {
+                if ((int) $this->group_id <= 0) {
+                    return e(admin_trans_label('group_none'));
+                }
                 $name = $this->group?->name;
 
                 return e(OpsDisplaySanitizer::field($name, admin_trans_label('group_missing'), 120));
@@ -249,7 +252,10 @@ JS
             $groupList = AdminTenantContext::groupSelectOptions($groupOwnerId);
 
             $form->display('id');
-            $form->select('group_id', admin_trans_field('group_id_form'))->options($groupList);
+            $groupHelp = AdminTenantContext::isPlatformAdministrator() && $form->isCreating()
+                ? admin_trans('redi-admin-domain.help.group_admin_create')
+                : admin_trans('redi-admin-domain.help.group');
+            $form->select('group_id', admin_trans_field('group_id_form'))->options($groupList)->help($groupHelp);
             if (AdminTenantContext::isPlatformAdministrator() && $form->isCreating()) {
                 $form->html(
                     '<div class="alert alert-info">'.admin_trans_label('onboarding_admin_create').'</div>',
@@ -308,6 +314,7 @@ JS
                 $originalUrl = DomainRecordNormalizer::originalUrlIfValid($rawOriginal);
                 $skipUrl = DomainRecordNormalizer::normalizeSkipUrl($request['skip_url'] ?? '');
                 $groupId = (int) ($request['group_id'] ?? 0);
+                $groupRow = null;
 
                 if ($skipUrl === '') {
                     throw ValidationException::withMessages([
@@ -323,21 +330,30 @@ JS
                     ]);
                 }
 
-                $groupRow = DB::table('redi_admin_group')->where('id', $groupId)->first();
-                if (! $groupRow) {
-                    throw ValidationException::withMessages([
-                        'group_id' => admin_trans('redi-admin-domain.validation.group_invalid'),
-                    ]);
-                }
+                if ($groupId <= 0) {
+                    if (AdminTenantContext::isPlatformAdministrator() && ! $form->isEditing()) {
+                        throw ValidationException::withMessages([
+                            'group_id' => admin_trans('redi-admin-domain.validation.group_required_admin'),
+                        ]);
+                    }
+                    $form->input('group_id', 0);
+                } else {
+                    $groupRow = DB::table('redi_admin_group')->where('id', $groupId)->first();
+                    if (! $groupRow) {
+                        throw ValidationException::withMessages([
+                            'group_id' => admin_trans('redi-admin-domain.validation.group_invalid'),
+                        ]);
+                    }
 
-                if (AdminTenantContext::isPlatformAdministrator()) {
-                    $ownerAdminId = (int) $groupRow->admin_id;
-                    $form->input('admin_id', $groupRow->admin_id);
-                    $form->input('admin_name', $groupRow->admin_name);
-                } elseif ((int) $groupRow->admin_id !== $ownerAdminId) {
-                    throw ValidationException::withMessages([
-                        'group_id' => admin_trans('redi-admin-domain.validation.group_wrong_owner'),
-                    ]);
+                    if (AdminTenantContext::isPlatformAdministrator()) {
+                        $ownerAdminId = (int) $groupRow->admin_id;
+                        $form->input('admin_id', $groupRow->admin_id);
+                        $form->input('admin_name', $groupRow->admin_name);
+                    } elseif ((int) $groupRow->admin_id !== $ownerAdminId) {
+                        throw ValidationException::withMessages([
+                            'group_id' => admin_trans('redi-admin-domain.validation.group_wrong_owner'),
+                        ]);
+                    }
                 }
 
                 $domainId = $form->isEditing() ? (int) $form->getKey() : null;
@@ -352,10 +368,10 @@ JS
                     $form->input('admin_name', Admin::user()->username);
                 }
 
-                $ownerAdminName = (string) ($groupRow->admin_name ?? '');
+                $ownerAdminName = $groupRow ? (string) ($groupRow->admin_name ?? '') : '';
                 if (! AdminTenantContext::isPlatformAdministrator() && $form->isCreating()) {
                     $ownerAdminName = (string) Admin::user()->username;
-                } elseif ($form->isEditing() && isset($existing)) {
+                } elseif ($form->isEditing() && isset($existing) && (! AdminTenantContext::isPlatformAdministrator() || ! $groupRow)) {
                     $ownerAdminName = (string) $existing->admin_name;
                 }
 
