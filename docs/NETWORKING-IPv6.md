@@ -19,7 +19,7 @@
 | 后台节点 | `public_ip` / `extra_ips`（IPv4）；可选 `public_ipv6` / `extra_ipv6`（同一进程、同一 Token） |
 | Pool **A** | 与仅 IPv4 时代相同，由启用节点 IPv4 列表对账 |
 | Pool **AAAA** | 后台开关默认打开。打开且 DNS 驱动实现 `SupportsPoolAAAA` 时，对 `enabledPublicIpv6s()` 增删 AAAA；关掉时 **零次** AAAA API 调用 |
-| 域名预检 | **CNAME 优先**；可选 A 命中 pool（`dns_precheck_allow_a_to_pool`，默认 true）；可选 AAAA（`dns_precheck_allow_aaaa_to_pool`，默认 false，且依赖发布开关） |
+| 域名预检 | **CNAME 优先**；可选 A 命中 pool（`dns_precheck_allow_a_to_pool`，默认 true）。发布开关打开时，客户域仅 AAAA 指向 Pool 可以通过预检。开关关闭时才看 `REDI_DNS_PRECHECK_ALLOW_AAAA_TO_POOL`（默认 false） |
 | HTTP-01 | 主控先用域名做一次自测，真正签发由 Let's Encrypt 从公网检查每一个已发布的 A 和 AAAA。节点 IPv6 的 80 端口从公网不通时签发失败；主控只有 IPv4 不会单独导致失败 |
 | 限流 | 客户端 IP 经 `SanitizeClientIP`；IPv4 映射地址须规范为 IPv4 字面量再作限流键 |
 
@@ -27,7 +27,7 @@
 
 ---
 
-## 2. 运维：何时打开 `REDI_PUBLISH_POOL_AAAA`
+## 2. 运维：何时打开发布开关
 
 1. 节点已在后台登记 **公网 IPv6**（含「其他 IPv6」），且网卡上地址真实可达。  
 2. 确认节点 `config.json` 的 `addr` / `tls_addr` 仍是 **`0.0.0.0`**（或等效双栈通配），未改成单一 IPv4。  

@@ -253,7 +253,7 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 
 ### 7. IPv4/IPv6 双栈（可选）
 
-**前提：** 「DNS 与节点池」的 **发布 Pool IPv6** 默认打开。不需要 IPv6 时在该页关掉，不要改 `REDI_PUBLISH_POOL_AAAA`。节点 `0.0.0.0` 监听在 Linux 上已双栈；lagran 对 IPv6 出站与 IPv4 相同。需要节点有 **公网 IPv6**、主控有 **IPv6 出口**。步骤与陷阱摘要见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12、[NETWORKING-IPv6.md](NETWORKING-IPv6.md)。
+**前提：** 「DNS 与节点池」的 **发布 Pool IPv6** 默认打开。不需要 IPv6 时在该页关掉，不要改 `REDI_PUBLISH_POOL_AAAA`。节点 `0.0.0.0` 监听在 Linux 上已双栈；lagran 对 IPv6 出站与 IPv4 相同。需要节点有 **公网 IPv6**。主控自己不用配置 IPv6。步骤与陷阱摘要见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12、[NETWORKING-IPv6.md](NETWORKING-IPv6.md)。
 
 在后台「节点管理」填写主 IPv6 / 其他 IPv6（**不要**写入 `vars.env` 的 `NODE_IPS`）。
 
@@ -263,9 +263,9 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 - [ ] 节点已登记 IPv6 后做 DNS 同步（API 模式或手动对照参考表）：厂商 **Pool A 与开关开启前一致**；**不出现新的 AAAA**（参考表也不增加 AAAA 行）。
 - [ ] `NODE_IPS` 仍 **仅 IPv4**；`grant-nodes-from-vars` / 防火墙 3306 行为与 IPv4 节点一致。
 
-### 7.2 打开 Pool AAAA 前（主控侧连通）
+### 7.2 打开 Pool AAAA 前（公网连通）
 
-在 **主控**上对后台 **`enabledPublicIpv6s()` 里的每一个公网 IPv6**（含其他 IPv6）测 80（仅在节点本机 `curl` **不算**）。默认 `0.0.0.0` 监听在 Linux 上已能接 IPv6，**不要**为此改 `config.json`。
+从公网对后台列出的每一个节点公网 IPv6（含其他 IPv6）测 80。只在节点本机 `curl` 不算，证书机构是从公网访问的。主控没有 IPv6 时，用另一台有 IPv6 出口的机器测。默认 `0.0.0.0` 监听在 Linux 上已能接 IPv6，**不要**为此改 `config.json`。
 
 ```bash
 curl -6 -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "http://[2001:db8::1]/"
@@ -281,7 +281,7 @@ curl -6 -k -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "https://[20
 
 - [ ] 每个登记 IPv6 的 80 均得到非 `000` 的 HTTP 状态码。
 - [ ] HTTPS 开启时，每个登记 IPv6 的 443 均得到非 `000` 的状态码。
-- [ ] 主控无 IPv6 出口时 **不要** 进行 §7.3。
+- [ ] 任一登记 IPv6 的 80 从公网不通时 **不要** 进行 §7.3。主控只有 IPv4 不构成跳过条件。
 
 ### 7.3 发布开关打开
 
@@ -306,7 +306,7 @@ curl -6 -k -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "https://[20
 | 后台 502/空白 | `systemctl status php-fpm nginx`；`/opt/301/master/storage` 权限属 `nginx` |
 | 重复跑主控脚本后 HTTPS 没了 | 是否曾去掉 `301-master-managed`；HTTPS 建议单独 `conf.d` 文件 |
 | `yum` 很慢或 IPv6 失败 | 脚本已尝试 `ip_resolve=4`；检查机器 IPv4 出口 |
-| 已开 `REDI_PUBLISH_POOL_AAAA` 后 HTTP-01 / 签发超时 | 主控探测客户域可能走 IPv6；在主控对每个节点公网 IPv6 做 `curl -6` 通 80，见 §7 与 DEPLOY-centos7 §12 |
+| 已打开发布 Pool IPv6 后 HTTP-01 / 签发超时 | Let's Encrypt 会从公网检查每个已发布的节点 IPv6 的 80 端口。主控只有 IPv4 不会单独导致失败。从公网对每个节点 IPv6 做 `curl -6`，见 §7 与 DEPLOY-centos7 §12。不要改 `REDI_PUBLISH_POOL_AAAA` |
 
 ---
 
