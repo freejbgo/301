@@ -43,6 +43,7 @@ return [
         'acme_contact_email'        => 'ACME contact email',
         'acme_staging'              => 'ACME staging',
         'publish_pool_aaaa'         => 'Publish pool IPv6 (AAAA)',
+        'record_ttl'                => 'Record TTL (seconds)',
     ],
     'help' => [
         'edge_zone'                 => 'e.g. example.com (a domain you control in DNS)',
@@ -55,6 +56,7 @@ return [
         'acme_contact_email'        => 'Let\'s Encrypt registration email',
         'acme_staging'              => 'Use Let\'s Encrypt staging CA when enabled',
         'publish_pool_aaaa'         => 'On: the table lists node AAAA records and sync writes them to the DNS provider. Off: the table omits AAAA and sync does not write them. The table is built from enabled nodes’ public addresses; it is the set of records that should be in DNS, not a read-back from the provider. The master does not need its own IPv6 address. After sync, the certificate authority checks both IPv4 and IPv6. Issuance fails when a node IPv6 address is not reachable on port 80 from the internet.',
+        'record_ttl'                => 'TTL in seconds for new A, AAAA, and CNAME records. Range 1–86400, default 600. Alibaba Cloud international and the free plan require at least 600. Cloudflare accepts 1 (automatic) or 60 and above. Use the minimum your DNSPod or dns.com plan allows. Save, then sync. Existing A and AAAA records keep their current TTL.',
     ],
     'options' => [
         'dns_mode' => [
@@ -87,6 +89,7 @@ return [
         'control_chars'       => 'Domain settings cannot contain control characters',
         'invalid_edge_zone'   => 'Invalid platform apex domain',
         'invalid_pool_host'   => 'Invalid pool hostname (single label, no dots)',
+        'invalid_record_ttl'  => 'TTL must be a whole number of seconds from 1 to 86400',
         'api_credentials_decrypt' => 'DNS API credentials cannot be decrypted (check APP_KEY or re-save API keys in admin)',
     ],
 ];

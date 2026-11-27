@@ -74,7 +74,7 @@ class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                         'type' => 'A',
                         'name' => $name,
                         'content' => $ip,
-                        'ttl' => 120,
+                        'ttl' => $this->platform->recordTtl(),
                         'proxied' => false,
                     ],
                 ]));
@@ -103,7 +103,7 @@ class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                         'type' => 'AAAA',
                         'name' => $name,
                         'content' => $ip,
-                        'ttl' => 120,
+                        'ttl' => $this->platform->recordTtl(),
                         'proxied' => false,
                     ],
                 ]));
@@ -149,7 +149,7 @@ class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                         'type' => 'CNAME',
                         'name' => $recordName,
                         'content' => $target,
-                        'ttl' => 120,
+                        'ttl' => $this->platform->recordTtl(),
                         'proxied' => false,
                     ],
                 ]));
@@ -160,7 +160,7 @@ class CloudflareDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                         'type' => 'CNAME',
                         'name' => $recordName,
                         'content' => $target,
-                        'ttl' => 120,
+                        'ttl' => $this->platform->recordTtl(),
                         'proxied' => false,
                     ],
                 ]));

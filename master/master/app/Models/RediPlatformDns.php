@@ -25,6 +25,7 @@ class RediPlatformDns extends Model
         'acme_contact_email',
         'acme_staging',
         'publish_pool_aaaa',
+        'record_ttl',
     ];
 
     protected $guarded = [
@@ -34,6 +35,7 @@ class RediPlatformDns extends Model
     protected $casts = [
         'acme_staging' => 'boolean',
         'publish_pool_aaaa' => 'boolean',
+        'record_ttl' => 'integer',
     ];
 
     public static function instance(): self
@@ -46,6 +48,9 @@ class RediPlatformDns extends Model
         ];
         if (static::hasPublishPoolAaaaColumn()) {
             $attrs['publish_pool_aaaa'] = true;
+        }
+        if (static::hasRecordTtlColumn()) {
+            $attrs['record_ttl'] = 600;
         }
 
         return static::firstOrCreate(['id' => 1], $attrs);
@@ -72,6 +77,43 @@ class RediPlatformDns extends Model
     {
         return Schema::hasTable('redi_platform_dns')
             && Schema::hasColumn('redi_platform_dns', 'publish_pool_aaaa');
+    }
+
+    /**
+     * 同步写入 DNS 记录时使用的 TTL（秒）。未迁移或值无效时用 600。
+     */
+    public function recordTtl(): int
+    {
+        if (! array_key_exists('record_ttl', $this->attributes) && ! static::hasRecordTtlColumn()) {
+            return 600;
+        }
+
+        return static::normalizeRecordTtl($this->attributes['record_ttl'] ?? null);
+    }
+
+    public static function hasRecordTtlColumn(): bool
+    {
+        return Schema::hasTable('redi_platform_dns')
+            && Schema::hasColumn('redi_platform_dns', 'record_ttl');
+    }
+
+    /**
+     * @param  mixed  $value
+     */
+    public static function normalizeRecordTtl($value): int
+    {
+        if (is_string($value)) {
+            $value = trim($value);
+        }
+        if (! is_int($value) && ! (is_string($value) && preg_match('/^[1-9][0-9]*$/', $value) === 1)) {
+            return 600;
+        }
+        $ttl = (int) $value;
+        if ($ttl < 1 || $ttl > 86400) {
+            return 600;
+        }
+
+        return $ttl;
     }
 
     public function isDnsApiMode(): bool

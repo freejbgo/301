@@ -70,7 +70,7 @@ class DnspodDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                     'record_type' => 'A',
                     'record_line' => $this->recordLine,
                     'value' => $ip,
-                    'ttl' => 120,
+                    'ttl' => $this->platform->recordTtl(),
                 ]);
             },
             function (string $id) use ($parts) {
@@ -99,7 +99,7 @@ class DnspodDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                     'record_type' => 'AAAA',
                     'record_line' => $this->recordLine,
                     'value' => $ip,
-                    'ttl' => 120,
+                    'ttl' => $this->platform->recordTtl(),
                 ]);
             },
             function (string $id) use ($parts) {
@@ -136,7 +136,7 @@ class DnspodDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                     'record_type' => 'CNAME',
                     'record_line' => $this->recordLine,
                     'value' => $target,
-                    'ttl' => 120,
+                    'ttl' => $this->platform->recordTtl(),
                 ]);
             },
             function (string $id, string $target) use ($zone, $sub) {
@@ -147,7 +147,7 @@ class DnspodDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                     'record_type' => 'CNAME',
                     'record_line' => $this->recordLine,
                     'value' => $target,
-                    'ttl' => 120,
+                    'ttl' => $this->platform->recordTtl(),
                 ]);
             },
             function (string $id) use ($zone) {

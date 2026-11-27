@@ -43,6 +43,7 @@ return [
         'acme_contact_email'        => 'ACME 联系邮箱',
         'acme_staging'              => 'ACME 测试环境',
         'publish_pool_aaaa'         => '发布 Pool IPv6（AAAA）',
+        'record_ttl'                => '记录 TTL（秒）',
     ],
     'help' => [
         'edge_zone'                 => '例：123.com（你拥有 DNS 解析权的域名）',
@@ -55,6 +56,7 @@ return [
         'acme_contact_email'        => 'Let\'s Encrypt 注册邮箱',
         'acme_staging'              => '勾选则使用 Let\'s Encrypt Staging',
         'publish_pool_aaaa'         => '打开后，下方参考表列出节点的 AAAA，点同步时写入 DNS 厂商。关掉后表里不列 AAAA，同步也不写。这张表按已启用节点的公网地址生成，是应该写到 DNS 的记录，不是从厂商查回来的结果。主控不用配置 IPv6。打开并同步后，申请证书时证书机构会同时访问节点的 IPv4 和 IPv6；节点 IPv6 的 80 端口从公网不通时，证书会失败。',
+        'record_ttl'                => '同步新建 A、AAAA、CNAME 时使用的 TTL，范围 1–86400，默认 600。阿里云国际站和免费版最低 600；Cloudflare 可填 1（自动）或 60 以上；DNSPod、dns.com 按套餐允许的最小值填写。保存后再点同步。已经存在的 A、AAAA 不会改 TTL。',
     ],
     'options' => [
         'dns_mode' => [
@@ -87,6 +89,7 @@ return [
         'control_chars'            => '域名配置不能包含控制字符',
         'invalid_edge_zone'        => '平台主域名格式无效',
         'invalid_pool_host'           => 'Pool 主机名格式无效（单段主机名，不含点）',
+        'invalid_record_ttl'          => 'TTL 须为 1 到 86400 的整数秒',
         'api_credentials_decrypt'     => '平台 DNS API 凭证无法解密（请确认 APP_KEY 未变更，或在后台重新保存 API 密钥）',
     ],
 ];

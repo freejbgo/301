@@ -74,11 +74,27 @@ class AliyunDnsProviderUpsertTest extends TestCase
         $this->assertSame(600, $params['TTL']);
     }
 
-    private function provider(AliyunDnsClient $client): AliyunCnDnsProvider
+    public function test_upsert_aaaa_uses_platform_record_ttl(): void
+    {
+        $client = $this->recordingClient([
+            ['DomainRecords' => ['Record' => []]],
+            [],
+        ]);
+
+        $provider = $this->provider($client, 900);
+        $provider->upsertAAAARecords('pool.example.com', ['2001:db8::2']);
+
+        $this->assertSame(900, $client->log[1][1]['TTL']);
+    }
+
+    private function provider(AliyunDnsClient $client, ?int $ttl = null): AliyunCnDnsProvider
     {
         $platform = new RediPlatformDns();
         $platform->edge_zone = 'example.com';
         $platform->setApiCredentialsArray(['api_key' => 'key', 'api_secret' => 'secret']);
+        if ($ttl !== null) {
+            $platform->record_ttl = $ttl;
+        }
 
         $provider = new AliyunCnDnsProvider($platform);
         $ref = new \ReflectionClass($provider);

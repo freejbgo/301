@@ -62,7 +62,7 @@ class DnsComDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                     'record' => $parts['rr'],
                     'type' => 'A',
                     'value' => $ip,
-                    'ttl' => 120,
+                    'ttl' => $this->platform->recordTtl(),
                 ]);
             },
             function (string $id) use ($parts) {
@@ -91,7 +91,7 @@ class DnsComDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                     'record' => $parts['rr'],
                     'type' => 'AAAA',
                     'value' => $ip,
-                    'ttl' => 120,
+                    'ttl' => $this->platform->recordTtl(),
                 ]);
             },
             function (string $id) use ($parts) {
@@ -127,7 +127,7 @@ class DnsComDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                     'record' => $record,
                     'type' => 'CNAME',
                     'value' => $target,
-                    'ttl' => 120,
+                    'ttl' => $this->platform->recordTtl(),
                 ]);
             },
             function (string $id, string $target) use ($zone, $record) {
@@ -137,7 +137,7 @@ class DnsComDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                     'record' => $record,
                     'type' => 'CNAME',
                     'value' => $target,
-                    'ttl' => 120,
+                    'ttl' => $this->platform->recordTtl(),
                 ]);
             },
             function (string $id) use ($zone) {

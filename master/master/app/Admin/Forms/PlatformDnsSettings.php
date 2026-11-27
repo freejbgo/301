@@ -65,6 +65,17 @@ class PlatformDnsSettings extends Form implements LazyRenderable
         if (RediPlatformDns::hasPublishPoolAaaaColumn()) {
             $platform->publish_pool_aaaa = filter_var($input['publish_pool_aaaa'] ?? false, FILTER_VALIDATE_BOOLEAN);
         }
+        if (RediPlatformDns::hasRecordTtlColumn()) {
+            $ttlRaw = is_string($input['record_ttl'] ?? null) ? trim($input['record_ttl']) : ($input['record_ttl'] ?? null);
+            if (! is_int($ttlRaw) && ! (is_string($ttlRaw) && preg_match('/^[1-9][0-9]*$/', $ttlRaw) === 1)) {
+                return $this->response()->error(__('redi-platform-dns.messages.invalid_record_ttl'));
+            }
+            $ttl = (int) $ttlRaw;
+            if ($ttl < 1 || $ttl > 86400) {
+                return $this->response()->error(__('redi-platform-dns.messages.invalid_record_ttl'));
+            }
+            $platform->record_ttl = $ttl;
+        }
 
         if (! empty($input['clear_dns_api_credentials'])) {
             $platform->setApiCredentialsArray(null);
@@ -117,6 +128,13 @@ class PlatformDnsSettings extends Form implements LazyRenderable
                 ->default(1)
                 ->help(__('redi-platform-dns.help.publish_pool_aaaa'));
         }
+        if (RediPlatformDns::hasRecordTtlColumn()) {
+            $this->number('record_ttl', __('redi-platform-dns.fields.record_ttl'))
+                ->default(600)
+                ->min(1)
+                ->max(86400)
+                ->help(__('redi-platform-dns.help.record_ttl'));
+        }
     }
 
     public function default()
@@ -132,6 +150,7 @@ class PlatformDnsSettings extends Form implements LazyRenderable
             'acme_contact_email' => $p->acme_contact_email,
             'acme_staging' => $p->acme_staging,
             'publish_pool_aaaa' => $p->publish_pool_aaaa,
+            'record_ttl' => $p->recordTtl(),
         ];
     }
 }

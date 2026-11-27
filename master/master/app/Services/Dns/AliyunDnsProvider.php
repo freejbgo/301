@@ -18,9 +18,6 @@ class AliyunDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
     use ParsesZoneNames;
     use ReconcilesDnsRecords;
 
-    /** 免费版与国际站允许的最小 TTL。小于 600 时 AddDomainRecord 返回 QuotaExceeded.TTL。 */
-    private const RECORD_TTL = 600;
-
     protected RediPlatformDns $platform;
 
     protected AliyunDnsClient $client;
@@ -63,7 +60,7 @@ class AliyunDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                     'RR' => $parts['rr'],
                     'Type' => 'A',
                     'Value' => $ip,
-                    'TTL' => self::RECORD_TTL,
+                    'TTL' => $this->platform->recordTtl(),
                 ]);
             },
             function (string $id) {
@@ -87,7 +84,7 @@ class AliyunDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                     'RR' => $parts['rr'],
                     'Type' => 'AAAA',
                     'Value' => $ip,
-                    'TTL' => self::RECORD_TTL,
+                    'TTL' => $this->platform->recordTtl(),
                 ]);
             },
             function (string $id) {
@@ -120,7 +117,7 @@ class AliyunDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                     'RR' => $rr,
                     'Type' => 'CNAME',
                     'Value' => $target,
-                    'TTL' => self::RECORD_TTL,
+                    'TTL' => $this->platform->recordTtl(),
                 ]);
             },
             function (string $id, string $target) use ($rr) {
@@ -129,6 +126,7 @@ class AliyunDnsProvider implements DnsProviderInterface, SupportsPoolAAAA
                     'RR' => $rr,
                     'Type' => 'CNAME',
                     'Value' => $target,
+                    'TTL' => $this->platform->recordTtl(),
                 ]);
             },
             function (string $id) {
