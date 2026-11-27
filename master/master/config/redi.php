@@ -44,11 +44,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | 启用域名前须解析指向平台（CNAME 到租户 edge 或 A 到启用节点公网 IP）
+    | 旧开关。新建和启用不再因解析未生效而拒绝保存。列表「解析预检」仍显示是否已指向。
+    | 证书申请仍会检查解析。环境变量保留，避免旧 .env 报未知项。
     |--------------------------------------------------------------------------
     */
 
-    'require_dns_pointing_to_enable' => env('REDI_REQUIRE_DNS_POINTING_TO_ENABLE', true),
+    'require_dns_pointing_to_enable' => env('REDI_REQUIRE_DNS_POINTING_TO_ENABLE', false),
 
     'dns_precheck_allow_a_to_pool' => env('REDI_DNS_PRECHECK_ALLOW_A_TO_POOL', true),
 

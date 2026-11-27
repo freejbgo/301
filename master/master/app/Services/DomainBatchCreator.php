@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Support\AdminTenantContext;
 use App\Support\OpsDisplaySanitizer;
 use App\Models\RediAdminDomain;
 use App\Models\RediAdminGroup;
@@ -112,21 +111,6 @@ class DomainBatchCreator
 
             if (DomainOriginalUrlGuard::isTakenGlobally($originalUrl)) {
                 $result['skipped']++;
-                continue;
-            }
-
-            if ($status === 1
-                && DomainDnsPointingGuard::mustPointToEdgeBeforeEnable()
-                && ! AdminTenantContext::isPlatformAdministrator()
-                && ! DomainDnsPointingGuard::pointsToTenantEdge($adminId, $originalUrl)) {
-                $edge = TenantEdgeService::cnameTargetForAdmin($adminId);
-                $label = OpsDisplaySanitizer::field($originalUrl, '—', 253);
-                $edgeLabel = OpsDisplaySanitizer::field($edge, '—', 253);
-                $result['errors'][] = __('redi-batch-domains.errors.row_dns_required', [
-                    'row' => $rowIndex,
-                    'label' => $label,
-                    'edge' => $edgeLabel,
-                ]);
                 continue;
             }
 

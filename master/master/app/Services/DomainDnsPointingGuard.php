@@ -7,7 +7,7 @@ class DomainDnsPointingGuard
 {
     public static function mustPointToEdgeBeforeEnable(): bool
     {
-        return filter_var(config('redi.require_dns_pointing_to_enable', true), FILTER_VALIDATE_BOOLEAN);
+        return filter_var(config('redi.require_dns_pointing_to_enable', false), FILTER_VALIDATE_BOOLEAN);
     }
 
     public static function pointsToTenantEdge(int $adminId, string $originalUrl): bool

@@ -47,7 +47,7 @@ sudo -u nginx php artisan redi:normalize-platform-branding
 
 ```env
 REDI_MIN_AGENT_VERSION=0.1.3
-REDI_REQUIRE_DNS_POINTING_TO_ENABLE=true
+REDI_REQUIRE_DNS_POINTING_TO_ENABLE=false
 REDI_DNS_PRECHECK_ALLOW_A_TO_POOL=true
 # REDI_HEALTH_WEBHOOK_URL=https://...
 # REDI_OPS_WEBHOOK_URL=https://...

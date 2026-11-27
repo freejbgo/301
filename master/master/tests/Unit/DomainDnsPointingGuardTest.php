@@ -16,13 +16,6 @@ class DomainDnsPointingGuardTest extends TestCase
         $this->assertFalse(DomainDnsPointingGuard::mustPointToEdgeBeforeEnable());
     }
 
-    public function test_must_point_defaults_true(): void
-    {
-        config(['redi.require_dns_pointing_to_enable' => true]);
-
-        $this->assertTrue(DomainDnsPointingGuard::mustPointToEdgeBeforeEnable());
-    }
-
     public function test_points_to_tenant_edge_false_for_invalid_original_url(): void
     {
         config(['redi.require_dns_pointing_to_enable' => true]);

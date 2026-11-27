@@ -9,7 +9,7 @@
 
 | 领域 | 要求 |
 |------|------|
-| 域名占坑 | 默认 **新建为停用**；启用前 DNS（CNAME 或 A 到池）；`REDI_REQUIRE_DNS_POINTING_TO_ENABLE` |
+| 域名占坑 | 新建可直接保存（启用或停用均可）；列表显示 CNAME 目标，解析是否生效看「解析预检」。`REDI_REQUIRE_DNS_POINTING_TO_ENABLE` 不再拦住保存 |
 | 后台安全 | 默认密码拦截；`dcat-api` 须登录；登录限速；列表 XSS 转义 |
 | 证书与 Agent | 部署行补齐；主控连续空列表默认 **3** 次拉取后才清空节点内存（证书 / ACME 挑战 / redirect-rules，见 `REDI_AGENT_EMPTY_*_CLEAR_AFTER`）；Agent ≥ `0.1.3` |
 | 生产配置 | `redi:health` 检查 debug、ACME、edge_zone、DNS 驱动与凭证等（见 [HEALTH-REFERENCE.md](HEALTH-REFERENCE.md)） |
@@ -108,7 +108,7 @@ bash scripts/verify-redi-db-deploy-path.sh
 | 租户隔离 | 持续收紧 API/后台全表策略 |
 | 运行环境 | CentOS 7 已 EOL，长期使用 vault 源；换 OS 属单独项目 |
 | 跳转与 HTTPS | 正常跳转 **200 + JS**；仅 **force HTTPS** 为 TLS **301** |
-| 域名占坑 | 平台内 `original_url` 唯一；新建默认停用，启用前 DNS 预检 |
+| 域名占坑 | 平台内 `original_url` 唯一；新建可直接保存，列表显示 CNAME 与解析预检 |
 
 产品边界与后台操作见 [CONSOLE.md](CONSOLE.md) §8。
 

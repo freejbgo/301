@@ -244,7 +244,7 @@ php artisan redi:normalize-domain-hosts --dry-run   # 历史 IDN / skip_url 修�
 ### 产品行为（非缺陷）
 
 - 跳转页为 **HTTP 200 + JS**，不是业务层 301；**强制 HTTPS** 在节点 **已有该域名 TLS 证书** 时对 HTTP **301** 到 HTTPS。  
-- 「抢注」指平台内 `original_url` 唯一；缓解手段为 **默认停用 + 启用前 DNS 预检**，与注册商抢注无关。  
+- 「抢注」指平台内 `original_url` 唯一。新建可以直接保存，列表里复制 CNAME 再去解析；解析是否生效看「解析预检」，与注册商抢注无关。  
 
 ### 运营注意
 

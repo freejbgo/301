@@ -18,6 +18,6 @@ CentOS 7 自动部署把包解压到 `/opt/301/master`，网站根目录是 `/op
 ## 产品边界（摘要）
 
 - 边缘池 **模型 2**（token→pool→多 A）；不提供 NS 委托、多 pool、逐域 TXT 主流程。
-- 域名默认停用，启用前 DNS 预检；跳转页为 **200+JS**，强制 HTTPS 为 TLS **301**。
+- 新建域名可直接保存，列表显示 CNAME；解析是否生效看「解析预检」。跳转页为 **200+JS**，强制 HTTPS 为 TLS **301**。
 
 完整说明见 [CONSOLE.md](../docs/CONSOLE.md) §8。

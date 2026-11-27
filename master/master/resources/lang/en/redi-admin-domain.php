@@ -64,8 +64,7 @@ return [
     ],
     'help' => [
         'original_url' => 'Customer apex host, e.g. foo.com (globally unique for edge lookup)',
-        'status'       => 'Before enabling, point DNS to the edge target (or A record to a node public IP). Platform admins may skip the check.',
-        'status_tenant'=> 'Save as disabled first. CNAME the customer domain to the target in the onboarding box, then enable after DNS is live.',
+        'status'       => 'Save first. Copy the CNAME target from the list, then point the customer domain at it. The DNS check column shows whether it has propagated. Saving is not blocked.',
         'force_https'  => 'Enable only after certificate status is Active. HTTP requests will 301 to HTTPS.',
     ],
     'actions' => [

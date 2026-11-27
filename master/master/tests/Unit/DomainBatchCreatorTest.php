@@ -174,7 +174,7 @@ class DomainBatchCreatorTest extends TestCase
         $this->assertStringContainsString('状态只能是启用或停用', $result['errors'][0] ?? '');
     }
 
-    public function test_batch_enable_requires_dns_pointing(): void
+    public function test_batch_create_succeeds_before_dns_points(): void
     {
         config(['redi.require_dns_pointing_to_enable' => true]);
 
@@ -188,7 +188,7 @@ class DomainBatchCreatorTest extends TestCase
             null
         );
 
-        $this->assertSame(0, $result['imported']);
-        $this->assertStringContainsString('启用前须 CNAME', $result['errors'][0] ?? '');
+        $this->assertSame(1, $result['imported']);
+        $this->assertSame([], $result['errors']);
     }
 }

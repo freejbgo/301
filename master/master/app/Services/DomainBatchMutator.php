@@ -52,22 +52,6 @@ class DomainBatchMutator
                 continue;
             }
 
-            if ($status === 1) {
-                try {
-                    DomainDnsPointingGuard::assertCanEnable((int) $domain->admin_id, (string) $domain->original_url);
-                } catch (\Illuminate\Validation\ValidationException $e) {
-                    $label = OpsDisplaySanitizer::field($domain->original_url, '—', 253);
-                    $msg = $e->validator->errors()->first('status')
-                        ?: $e->validator->errors()->first('original_url')
-                        ?: __('redi-admin-domain.validation.dns_enable_url');
-                    $result['errors'][] = __('redi-admin-domain.batch_mutator.errors.row_enable', [
-                        'label' => $label,
-                        'reason' => $msg,
-                    ]);
-                    continue;
-                }
-            }
-
             $domain->status = $status;
             $domain->save();
             $result['updated']++;

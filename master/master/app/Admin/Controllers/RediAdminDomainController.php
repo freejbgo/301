@@ -14,7 +14,6 @@ use Dcat\Admin\Layout\Content;
 use App\Admin\Actions\Modal\BatchDomainModal;
 use App\Admin\Actions\Modal\BatchFilterDomainModal;
 use App\Models\RediDomainCert;
-use App\Services\DomainDnsPointingGuard;
 use App\Services\DomainOriginalUrlGuard;
 use App\Services\DomainCertificateAdminSync;
 use App\Services\DomainRecordNormalizer;
@@ -114,9 +113,10 @@ class RediAdminDomainController extends AdminController
                 if ($target === '' || TenantEdgeService::isPlaceholderCnameTarget($target)) {
                     return $target;
                 }
-                $safe = OpsDisplaySanitizer::field($target, '', 253);
+                $safe = OpsDisplaySanitizer::field(strtolower($target), '', 253);
 
-                return e($safe).' <a href="javascript:;" class="redi-copy-cname" data-copy="'.e($safe).'">'
+                return '<span class="redi-cname-target">'.e($safe).'</span> '
+                    .'<a href="javascript:;" class="redi-copy-cname" data-copy="'.e($safe).'">'
                     .e(admin_trans_label('copy')).'</a>';
             });
             $grid->column('cname_ok', admin_trans_field('cname_ok'))->display(function () {
@@ -163,6 +163,7 @@ class RediAdminDomainController extends AdminController
             $grid->column('created_at');
             $grid->column('updated_at')->sortable();
 
+            Admin::style('.redi-cname-target{text-transform:none !important;}');
             $copyCnameMsg = json_encode(admin_trans_label('copy_cname_success'), JSON_UNESCAPED_UNICODE);
             Admin::script(<<<JS
 Dcat.ready(function () {
@@ -257,12 +258,13 @@ JS
                 if ($cnameAdminId > 0) {
                     TenantEdgeService::ensureForAdmin($cnameAdminId);
                 }
-                $cname = TenantEdgeService::cnameTargetForAdmin($cnameAdminId);
+                $cname = strtolower(TenantEdgeService::cnameTargetForAdmin($cnameAdminId));
                 $cnameHint = AdminTenantContext::isPlatformAdministrator()
                     ? admin_trans_label('cname_hint_admin')
                     : admin_trans_label('cname_hint_tenant');
+                Admin::style('.redi-cname-target{text-transform:none !important;}');
                 $form->html(
-                    '<div class="alert alert-info">'.e(admin_trans_label('cname_instruction')).'<code id="redi-cname-form">'.e($cname).'</code> '
+                    '<div class="alert alert-info">'.e(admin_trans_label('cname_instruction')).'<code id="redi-cname-form" class="redi-cname-target">'.e($cname).'</code> '
                     .'<a href="javascript:;" class="redi-copy-cname" data-copy="'.e($cname).'">'.e(admin_trans_label('copy')).'</a>'
                     .'（'.e($cnameHint).'）</div>',
                     admin_trans_label('onboarding')
@@ -270,11 +272,8 @@ JS
             }
             $form->text('original_url', admin_trans_field('original_url'))->help(admin_trans('redi-admin-domain.help.original_url'));
             $form->text('skip_url', admin_trans_field('skip_url_form'));
-            $statusHelp = AdminTenantContext::isPlatformAdministrator()
-                ? admin_trans('redi-admin-domain.help.status')
-                : admin_trans('redi-admin-domain.help.status_tenant');
             $form->radio('status', admin_trans_field('status'))->options(admin_trans('redi-admin-domain.options.status'))->default(2)
-                ->help($statusHelp);
+                ->help(admin_trans('redi-admin-domain.help.status'));
             $form->switch('force_https', admin_trans_field('force_https'))->help(admin_trans('redi-admin-domain.help.force_https'));
             if ($form->isCreating() && ! AdminTenantContext::isPlatformAdministrator()) {
                 $form->hidden('admin_id')->value(Admin::user()->id);
@@ -377,11 +376,6 @@ JS
                             'force_https' => admin_trans('redi-admin-domain.validation.force_https'),
                         ]);
                     }
-                }
-
-                $newStatus = (int) ($request['status'] ?? 2);
-                if ($newStatus === 1) {
-                    DomainDnsPointingGuard::assertCanEnable($ownerAdminId, $originalUrl);
                 }
 
                 TenantEdgeService::ensureForAdmin($ownerAdminId);
