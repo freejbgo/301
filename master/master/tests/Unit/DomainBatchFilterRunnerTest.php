@@ -57,4 +57,14 @@ class DomainBatchFilterRunnerTest extends TestCase
 
         $this->assertFalse($out['ok']);
     }
+
+    public function test_redeploy_requires_platform_administrator(): void
+    {
+        $runner = new DomainBatchFilterRunner();
+        $request = Request::create('/admin/domain', 'POST', ['selected_ids' => '1']);
+        $out = $runner->run('redeploy', $request, 1);
+
+        $this->assertFalse($out['ok']);
+        $this->assertSame(__('redi-auth.admin_only'), $out['message']);
+    }
 }

@@ -140,12 +140,17 @@ JS
                 $batch->add(new BatchDisableDomains());
                 $batch->add(new BatchEditDomains());
                 $batch->add(new BatchApplyCertificate());
-                $batch->add(new BatchRedeployCertificate());
+                if (AdminTenantContext::isPlatformAdministrator()) {
+                    $batch->add(new BatchRedeployCertificate());
+                }
                 $batch->add(new BatchDeleteDomains());
             });
 
             $grid->actions(function (Grid\Displayers\Actions $actions) {
                 $actions->append(new ApplyCertificate());
+                if (! AdminTenantContext::isPlatformAdministrator()) {
+                    return;
+                }
                 $cert = $this->certificate;
                 if ($cert && in_array($cert->status, [
                     \App\Models\RediDomainCert::STATUS_ISSUED,
