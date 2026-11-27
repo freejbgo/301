@@ -45,6 +45,31 @@ class RediAdminDomainController extends AdminController
         return admin_trans_label('title');
     }
 
+    protected function registerCnameCopyScript(): void
+    {
+        $copyCnameMsg = json_encode(admin_trans_label('copy_cname_success'), JSON_UNESCAPED_UNICODE);
+        Admin::script(<<<JS
+Dcat.ready(function () {
+  var copyMsg = {$copyCnameMsg};
+  $(document).off('click', '.redi-copy-cname').on('click', '.redi-copy-cname', function () {
+    var text = $(this).data('copy') || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { Dcat.success(copyMsg); });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      Dcat.success(copyMsg);
+    }
+  });
+});
+JS
+        );
+    }
+
     public function exportCsv(Request $request)
     {
         return DomainListCsvExporter::streamedResponse($request);
@@ -164,27 +189,7 @@ class RediAdminDomainController extends AdminController
             $grid->column('updated_at')->sortable();
 
             Admin::style('.redi-cname-target{text-transform:none !important;}');
-            $copyCnameMsg = json_encode(admin_trans_label('copy_cname_success'), JSON_UNESCAPED_UNICODE);
-            Admin::script(<<<JS
-Dcat.ready(function () {
-  var copyMsg = {$copyCnameMsg};
-  $(document).off('click', '.redi-copy-cname').on('click', '.redi-copy-cname', function () {
-    var text = $(this).data('copy') || '';
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () { Dcat.success(copyMsg); });
-    } else {
-      var ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      Dcat.success(copyMsg);
-    }
-  });
-});
-JS
-            );
+            $this->registerCnameCopyScript();
 
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->panel();
@@ -263,6 +268,7 @@ JS
                     ? admin_trans_label('cname_hint_admin')
                     : admin_trans_label('cname_hint_tenant');
                 Admin::style('.redi-cname-target{text-transform:none !important;}');
+                $this->registerCnameCopyScript();
                 $form->html(
                     '<div class="alert alert-info">'.e(admin_trans_label('cname_instruction')).'<code id="redi-cname-form" class="redi-cname-target">'.e($cname).'</code> '
                     .'<a href="javascript:;" class="redi-copy-cname" data-copy="'.e($cname).'">'.e(admin_trans_label('copy')).'</a>'
