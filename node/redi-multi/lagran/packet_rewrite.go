@@ -10,6 +10,9 @@ import (
 // tryRewriteOutboundTCP 改出站 TCP 窗口。不依赖 NFQUEUE。
 // 返回改好的完整 IP 包（从 IP 头开始）。失败时返回 false，调用方应原样接受。
 func tryRewriteOutboundTCP(raw []byte) ([]byte, bool) {
+	if http01PauseActive() {
+		return nil, false
+	}
 	if len(raw) < 1 {
 		return nil, false
 	}

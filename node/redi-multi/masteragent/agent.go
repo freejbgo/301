@@ -11,6 +11,7 @@ import (
 	"os"
 	"redi-multi/acme"
 	"redi-multi/certs"
+	"redi-multi/lagran"
 	"redi-multi/rules"
 	"redi-multi/util/host"
 	"strings"
@@ -53,9 +54,9 @@ func Run() {
 
 type revisionState struct {
 	combinedRevision string
-	challenges   string
-	rules        string
-	certificates string
+	challenges       string
+	rules            string
+	certificates     string
 }
 
 func loop(cfg config) {
@@ -89,6 +90,7 @@ func loop(cfg config) {
 }
 
 func tick(client *http.Client, cfg config, registered *bool, revs *revisionState) error {
+	lagran.ReleaseExpiredHTTP01Pause()
 	if !*registered {
 		if err := postJSON(client, cfg, "/api/nodes/register", map[string]string{"version": agentVersion}, nil, registered); err != nil {
 			return err
@@ -111,9 +113,7 @@ func tick(client *http.Client, cfg config, registered *bool, revs *revisionState
 	if split {
 		if rev.ChallengesRevision != "" && rev.ChallengesRevision != revs.challenges {
 			if err := pullChallenges(client, cfg, registered); err != nil {
-				if errors.Is(err, errEmptyListDebounce) {
-					revs.challenges = rev.ChallengesRevision
-				}
+				// 空列表要连续拉到阈值才清空。记上本次 revision 的话，下一次轮询不会再拉，暂停的窗口改写就恢复不了。
 				warnThrottled("pull-challenges", "[masteragent] pull challenges: %v", err)
 			} else {
 				revs.challenges = rev.ChallengesRevision
@@ -179,6 +179,7 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 			return err
 		}
 		acme.ReplaceAll(nil)
+		lagran.ResumeHTTP01Window()
 		return nil
 	}
 	items := make([]acme.Item, 0, len(out.Challenges))
@@ -208,6 +209,8 @@ func pullChallenges(client *http.Client, cfg config, registered *bool) error {
 	}
 	resetEmptyChallengeStreak()
 	acme.ReplaceAll(items)
+	// 先暂停改写窗口，再告诉主控已同步。主控收到同步后才会来探测挑战地址。
+	lagran.PauseHTTP01Window()
 	if len(domains) > 0 {
 		if err := postJSON(client, cfg, "/api/nodes/challenges-synced", map[string]interface{}{
 			"domains": domains,
