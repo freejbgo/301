@@ -19,7 +19,7 @@ curl -fsSL https://github.com/freejbgo/301/raw/main/master.sh -o master.sh && ch
 
 程序目录和原来的脚本相同：主控 `/opt/301/master`，节点 `/opt/redi-multi/redi-multi`。脚本每一步做了什么见 [DEPLOY-centos7.md](../DEPLOY-centos7.md)。
 
-下面从后台建节点开始。节点也是一条命令，主控装完后屏幕上会打出来。Token 只在后台显示一次，要贴进那条命令。
+下面从后台建节点开始。节点也是一条命令，主控装完后屏幕上会打出来，节点列表下方也有同一条。只把最后的 `节点Token` 换成这一行「查看 Token」里的那一串。
 
 ---
 
@@ -34,8 +34,8 @@ curl -fsSL https://github.com/freejbgo/301/raw/main/master.sh -o master.sh && ch
 1. 用户名填 `admin`，密码填 `Redi301@Install2026`，登录。
 2. 页面要求改密码时，设一个新密码，记下来。新密码不要再用 `Redi301@Install2026`。
 3. 左侧打开 **站点配置 → 节点管理**。
-4. 点新建。名称随便写，例如 `node-1`。**主公网 IP** 填云控制台里这台节点的公网 IP。启用打开。保存。装节点时脚本还会打印它识别到的地址，和这里对一下。
-5. 弹出的 **Token** 只显示这一次。立刻复制到记事本。关掉窗口就看不到了。丢了就在这一行上做「轮换」，用新 Token，旧的同时失效。
+4. 点新建。名称随便写，例如 `node-1`。**主公网 IP** 填云控制台里这台节点的公网 IP。启用打开。保存后回到节点列表。
+5. 列表下方是安装命令。只把最后的 `节点Token` 换成这一行操作菜单里「查看 Token」的那一串。`--install-key` 后面那一长串不要换。弹窗里也有已经填好 Token 的整条命令，可以直接复制。找不到 Token 时，用同一菜单里的「重置 Token」。
 
 Token 是一长串字母和数字，中间没有空格。
 
@@ -93,6 +93,7 @@ curl -fsSL https://github.com/freejbgo/301/raw/main/node.sh -o node.sh && chmod 
 | 屏幕上的字 | 处理 |
 |------------|------|
 | `节点Token` 或 `缺少 --token` | 把命令最后的占位文字换成后台复制的那一串，再执行一次。简体是 `节点Token`，繁体是 `節點Token`，英文是 `Node Token` |
+| `redi_mysql_tls_args[@]: unbound variable` | 节点上留下的是旧安装脚本。重新执行主控屏幕上的那一整条命令，它会重新下载安装包 |
 | `这个脚本只用于 CentOS 7` | 系统不是 CentOS 7。重装成 CentOS 7.9 后再做 |
 | `下载代码失败` 或 `仓库里没有安装包` | 先把仓库设为公开，主控要能访问 github.com，然后重新执行上面的一条命令 |
 | `没能自动识别公网 IP` | 再执行一次：`MASTER_IP=主控公网IP bash master.sh` |

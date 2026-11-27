@@ -285,12 +285,10 @@ DEFAULT_REDIRECT_URL="$(printf '%s\n' "$remote" | sed -n "s/^DEFAULT_REDIRECT_UR
 
 echo "==> 下载安装包"
 export GIT_TERMINAL_PROMPT=0
-if [[ ! -s "${SRC}/pkg/redi-multi.tar.gz" ]]; then
+rm -rf "$SRC"
+if ! git clone --depth 1 "$REPO_URL" "$SRC"; then
   rm -rf "$SRC"
-  if ! git clone --depth 1 "$REPO_URL" "$SRC"; then
-    rm -rf "$SRC"
-    die "下载代码失败。请先把仓库设为公开，并确认这台机器能访问 GitHub"
-  fi
+  die "下载代码失败。请先把仓库设为公开，并确认这台机器能访问 GitHub"
 fi
 [[ -s "${SRC}/pkg/redi-multi.tar.gz" ]] || die "仓库里没有安装包 pkg/redi-multi.tar.gz"
 cp -f "${SRC}/pkg/redi-multi.tar.gz" /tmp/redi-multi.tar.gz

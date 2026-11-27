@@ -214,6 +214,7 @@ PY
 }
 
 # 节点 deploy 冒烟：与 env.sh 中 REDI_DB_TLS 对齐的 mysql 客户端参数（数组名 redi_mysql_tls_args）。
+# 数组可能为空。调用处不要写 "${redi_mysql_tls_args[@]}"，CentOS 7 bash 4.2 加 set -u 会把它当成未绑定变量。
 redi_mysql_tls_args_from_env() {
   redi_mysql_tls_args=()
   local tls="${REDI_DB_TLS:-}"

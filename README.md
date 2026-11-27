@@ -10,7 +10,7 @@
 curl -fsSL https://github.com/freejbgo/301/raw/main/master.sh -o master.sh && chmod +x master.sh && bash master.sh
 ```
 
-节点同样一条命令。主控装完后屏幕会打出完整命令，把后台 Token 贴进去即可。说明见 [docs/DEPLOY-BEGINNER-CENTOS7.md](docs/DEPLOY-BEGINNER-CENTOS7.md)。
+节点同样一条命令。主控装完后屏幕会打出完整命令，只把最后的 `节点Token` 换成后台「查看 Token」里的那一串。说明见 [docs/DEPLOY-BEGINNER-CENTOS7.md](docs/DEPLOY-BEGINNER-CENTOS7.md)。
 
 安装包在 [pkg/master.tar.gz](pkg/master.tar.gz) 和 [pkg/redi-multi.tar.gz](pkg/redi-multi.tar.gz)。数据库由安装脚本一次导入 `db/redi_admin.sql`。初始后台 `admin` / `Redi301@Install2026`，登录后必须改密码。
 
