@@ -31,6 +31,11 @@ Admin::booting(function () {
     font-weight: 400;
     white-space: nowrap;
 }
+.redi-login-locale select,
+.redi-login-locale select option {
+    color: #2a2e30;
+    background-color: #fff;
+}
 .redi-login-locale select {
     flex: 1;
     min-width: 0;
@@ -43,7 +48,6 @@ Admin::booting(function () {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b7280' d='M1.4.6 6 5.2 10.6.6 12 2 6 8 0 2z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 10px center;
-    color: #3b4256;
     font-size: 13px;
     line-height: 34px;
     appearance: none;
@@ -51,6 +55,10 @@ Admin::booting(function () {
     cursor: pointer;
 }
 .header-navbar .navbar-right > ul.navbar-nav { align-items: center; margin-bottom: 0; }
+.header-navbar .navbar-right .dropdown-language > a.nav-link,
+.header-navbar .navbar-right .dropdown-language > a.nav-link .selected-language {
+    color: #2a2e30;
+}
 .header-navbar .navbar-right .dropdown-language > a.nav-link {
     display: inline-flex;
     align-items: center;
@@ -59,11 +67,16 @@ Admin::booting(function () {
     padding: 0 12px;
     line-height: 1;
 }
-.header-navbar .navbar-right .dropdown-language > a.nav-link .feather { font-size: 16px; }
+.header-navbar .navbar-right .dropdown-language > a.nav-link .feather { font-size: 16px; color: #2a2e30; }
 .header-navbar .navbar-right .dropdown-language .dropdown-menu {
     min-width: 148px;
     padding: 6px 0;
     margin-top: 8px;
+    background: #fff;
+}
+.header-navbar .navbar-right .dropdown-language .dropdown-item,
+.header-navbar .navbar-right .dropdown-language .dropdown-item span {
+    color: #2a2e30;
 }
 .header-navbar .navbar-right .dropdown-language .dropdown-item {
     display: flex;
@@ -71,9 +84,16 @@ Admin::booting(function () {
     justify-content: space-between;
     gap: 12px;
     padding: 8px 14px;
+    background: #fff;
 }
-.header-navbar .navbar-right .dropdown-language .dropdown-item.active {
-    background: transparent;
+.header-navbar .navbar-right .dropdown-language .dropdown-item:hover,
+.header-navbar .navbar-right .dropdown-language .dropdown-item:hover span {
+    color: #2a2e30;
+    background: #f4f7fa;
+}
+.header-navbar .navbar-right .dropdown-language .dropdown-item.active,
+.header-navbar .navbar-right .dropdown-language .dropdown-item.active span {
+    background: #fff;
     color: #586cb1;
     font-weight: 600;
 }
