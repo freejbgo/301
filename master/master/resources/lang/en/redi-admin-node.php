@@ -90,7 +90,7 @@ return [
         ],
         'help' => [
             'public_ip'   => 'Main routable IP for this machine (one node per machine).',
-            'public_ipv6' => 'Optional. After saving, the address appears in the pool table on DNS & node pool. In API mode, sync once to write the AAAA record. Turn off Publish pool IPv6 on that page when you do not want it.',
+            'public_ipv6' => 'Optional. After saving, the address appears in the pool table on DNS & node pool. The master does not need its own IPv6 address. API sync writes it only while Publish pool IPv6 is on.',
             'extra_ipv6'  => 'Extra public IPv6 addresses for the pool, one per line. Primary IPv6 required first.',
             'extra_ips'   => 'Extra public IPv4 for the pool, one per line. Still one agent process and one token—do not create extra nodes for these IPs.',
         ],

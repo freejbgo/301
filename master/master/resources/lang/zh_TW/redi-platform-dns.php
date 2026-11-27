@@ -54,7 +54,7 @@ return [
         'clear_dns_api_credentials' => '勾選並保存將刪除庫內加密憑證',
         'acme_contact_email'        => 'Let\'s Encrypt 註冊郵箱',
         'acme_staging'              => '勾選則使用 Let\'s Encrypt Staging',
-        'publish_pool_aaaa'         => '默認開啟。節點填了公網 IPv6 後，下方參考表會列出 AAAA；API 模式點同步時一併寫入廠商。主控要能用 IPv6 訪問這些地址的 80 端口，否則申請證書可能失敗。不需要 IPv6 時關掉。',
+        'publish_pool_aaaa'         => '只決定同步時要不要把 AAAA 寫到 DNS 廠商。下方參考表只要節點填了公網 IPv6 就會列出，主控自己不用配置 IPv6。關掉後仍然顯示，只是點同步時不寫入廠商。',
     ],
     'options' => [
         'dns_mode' => [

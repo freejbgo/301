@@ -214,9 +214,9 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health --json
    curl -6 -k -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "https://[2001:db8::1]/"
    ```
 
-3. 确认主控自身有 **IPv6 出口**（能执行上述 `curl -6`）。主控没有 IPv6 出网时，到「DNS 与节点池」关掉 **发布 Pool IPv6**。
+3. 参考表只读取节点上填写的 IPv6，**主控不用配置 IPv6 地址**。同步写入厂商后，申请证书时访问节点可能会走到 IPv6。主控没有 IPv6 出口时，关掉 **发布 Pool IPv6**，参考表仍会显示这些地址，只是不再写入厂商。
 
-4. 开关默认已打开。保存节点 IPv6 后刷新该页即可看到 AAAA；API 模式再点一次同步。开关打开时，客户域名仅用 AAAA 指向 Pool 也可以通过预检。
+4. 保存节点 IPv6 后刷新「DNS 与节点池」即可看到 AAAA。开关默认打开，API 模式再点一次同步才会写到厂商。开关打开时，客户域名仅用 AAAA 指向 Pool 也可以通过预检。
 
 关掉开关 **不会**自动删除厂商里已有 AAAA。要删掉这些记录，先保持开关打开，清空节点 IPv6，再同步一次。A 记录行为与 IPv4 一致。
 

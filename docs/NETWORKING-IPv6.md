@@ -1,6 +1,6 @@
 # 网络：IPv4 / IPv6 双栈
 
-发布 Pool AAAA 的开关在后台「DNS 与节点池」，名字是 **发布 Pool IPv6（AAAA）**，默认打开，保存在 `redi_platform_dns.publish_pool_aaaa`。数据库还没有这一列时，才回退读取 `REDI_PUBLISH_POOL_AAAA`。
+「DNS 与节点池」的参考表只要节点填了公网 IPv6 就列出 AAAA，主控自己不用配置 IPv6。同步到厂商由同一页的 **发布 Pool IPv6（AAAA）** 决定，默认打开，保存在 `redi_platform_dns.publish_pool_aaaa`。数据库还没有这一列时，才回退读取 `REDI_PUBLISH_POOL_AAAA`。
 
 节点监听默认 `0.0.0.0:80` / `0.0.0.0:443`：在 Linux 上 `Listen("tcp")` 已双栈接听，**不要**再绑一条 `[::]`，也不要同时写 `0.0.0.0` 与 `[::]`。只有把 `addr` 改成**具体 IPv4**（非 `0.0.0.0`）时才会只听 IPv4。
 

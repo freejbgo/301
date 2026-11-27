@@ -54,7 +54,7 @@ return [
         'clear_dns_api_credentials' => 'When checked and saved, encrypted credentials are removed',
         'acme_contact_email'        => 'Let\'s Encrypt registration email',
         'acme_staging'              => 'Use Let\'s Encrypt staging CA when enabled',
-        'publish_pool_aaaa'         => 'On by default. IPv6 addresses on nodes appear as AAAA rows below, and API sync writes them to the provider. The master must reach those addresses on port 80 over IPv6, or certificate issuance can fail. Turn this off when you do not want IPv6.',
+        'publish_pool_aaaa'         => 'Controls only whether sync writes AAAA records to the DNS provider. The table below lists node IPv6 addresses either way. The master does not need its own IPv6 address.',
     ],
     'options' => [
         'dns_mode' => [
