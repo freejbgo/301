@@ -77,7 +77,7 @@ class EdgeDnsManualReference
      */
     protected static function poolAaaaRows(string $poolFqdn): array
     {
-        if (! filter_var(config('redi.publish_pool_aaaa', false), FILTER_VALIDATE_BOOLEAN)) {
+        if (! RediPlatformDns::publishesPoolAaaa()) {
             return [];
         }
         if (! Schema::hasColumn('redi_nodes', 'public_ipv6')

@@ -3,18 +3,18 @@
 return [
     'page' => [
         'title'       => 'DNS & node pool',
-        'description' => 'Model 2: customer CNAME → tenant token; token CNAME → pool; pool A records → nodes',
+        'description' => 'Model 2: customer CNAME → tenant token; token CNAME → pool; pool A / AAAA records → nodes',
     ],
     'cards' => [
         'settings' => 'DNS & node pool',
-        'pool'     => 'Pool: node A record reference',
+        'pool'     => 'Pool: node A / AAAA record reference',
         'tenant'   => 'Tenant edge: token → pool (CNAME) reference',
     ],
     'alerts' => [
         'manual_title' => 'Note',
         'manual_body'  => '<strong>Manual DNS</strong>: copy the records below into your DNS provider (Cloudflare, Alibaba Cloud, etc.). This system does not call a DNS API.',
         'api_title'    => 'Note',
-        'api_body'     => '<strong>API automation</strong>: after saving driver and credentials, use Sync to push pool A records and tenant CNAMEs to the provider.',
+        'api_body'     => '<strong>API automation</strong>: after saving driver and credentials, use Sync to push pool A, AAAA, and tenant CNAMEs. AAAA is skipped when Publish pool IPv6 is off.',
     ],
     'empty' => [
         'pool'   => 'Set the platform apex domain and add nodes first.',
@@ -42,17 +42,19 @@ return [
         'clear_dns_api_credentials' => 'Clear saved API credentials',
         'acme_contact_email'        => 'ACME contact email',
         'acme_staging'              => 'ACME staging',
+        'publish_pool_aaaa'         => 'Publish pool IPv6 (AAAA)',
     ],
     'help' => [
         'edge_zone'                 => 'e.g. example.com (a domain you control in DNS)',
         'pool_host'                 => 'Resulting FQDN: pool.<apex>; changing this requires re-sync (tenant CNAME targets change)',
-        'dns_mode'                  => 'Manual: add records from the reference tables in your DNS console. API: save credentials then one-click sync for pool A and tenant token→pool CNAMEs.',
+        'dns_mode'                  => 'Manual: add records from the reference tables in your DNS console. API: save credentials then one-click sync for pool A, AAAA, and tenant token→pool CNAMEs.',
         'dns_zone_id'               => 'Required for Cloudflare; optional for others',
         'api_key'                   => 'Cloudflare=API token; Alibaba=AccessKey ID; DNSPod=API ID; dns.com=API key. Leave blank to keep existing',
         'api_secret'                => 'Alibaba=AccessKey secret; DNSPod=token; dns.com=API secret',
         'clear_dns_api_credentials' => 'When checked and saved, encrypted credentials are removed',
         'acme_contact_email'        => 'Let\'s Encrypt registration email',
         'acme_staging'              => 'Use Let\'s Encrypt staging CA when enabled',
+        'publish_pool_aaaa'         => 'On by default. IPv6 addresses on nodes appear as AAAA rows below, and API sync writes them to the provider. The master must reach those addresses on port 80 over IPv6, or certificate issuance can fail. Turn this off when you do not want IPv6.',
     ],
     'options' => [
         'dns_mode' => [

@@ -5,6 +5,7 @@ namespace App\Services\Acme;
 use App\Support\RediErrorMessage;
 use App\Models\RediAcmeChallengeNodeSync;
 use App\Models\RediNode;
+use App\Models\RediPlatformDns;
 use App\Services\AcmeChallengeQuery;
 use App\Support\AcmeHttp01Token;
 use App\Services\DomainRecordNormalizer;
@@ -66,7 +67,7 @@ class Http01PropagationWaiter
     {
         $msg = RediErrorMessage::get('acme.http01_timeout', ['seconds' => $maxSeconds])
             .OpsDisplaySanitizer::field($domain, $domain, 253).$path;
-        if (filter_var(config('redi.publish_pool_aaaa', false), FILTER_VALIDATE_BOOLEAN)) {
+        if (RediPlatformDns::publishesPoolAaaa()) {
             $msg .= RediErrorMessage::get('acme.http01_timeout_ipv6');
         }
 

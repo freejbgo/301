@@ -90,7 +90,7 @@ return [
         ],
         'help' => [
             'public_ip'   => 'Main routable IP for this machine (one node per machine).',
-            'public_ipv6' => 'Optional. Pool AAAA records are off by default until REDI_PUBLISH_POOL_AAAA is enabled and DNS is synced.',
+            'public_ipv6' => 'Optional. After saving, the address appears in the pool table on DNS & node pool. In API mode, sync once to write the AAAA record. Turn off Publish pool IPv6 on that page when you do not want it.',
             'extra_ipv6'  => 'Extra public IPv6 addresses for the pool, one per line. Primary IPv6 required first.',
             'extra_ips'   => 'Extra public IPv4 for the pool, one per line. Still one agent process and one token—do not create extra nodes for these IPs.',
         ],

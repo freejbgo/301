@@ -195,7 +195,7 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health --json
 
 ## 12. 节点 IPv6 与 Pool AAAA（可选）
 
-节点公网 IPv6 在后台「节点管理」填写（主 IPv6 / 其他 IPv6）。**不要**把 IPv6 写进 `vars.env` 的 `NODE_IPS`（该列表仍只用于 IPv4 的 MySQL 授权与 firewalld 3306）。默认不会在 DNS 厂商发布 Pool 的 AAAA；主控 `.env` 里 `REDI_PUBLISH_POOL_AAAA` 仍为 **false**（见 `master/master/.env.example`）。
+节点公网 IPv6 在后台「节点管理」填写（主 IPv6 / 其他 IPv6）。**不要**把 IPv6 写进 `vars.env` 的 `NODE_IPS`（该列表仍只用于 IPv4 的 MySQL 授权与 firewalld 3306）。「DNS 与节点池」里的 **发布 Pool IPv6（AAAA）** 默认打开：节点保存 IPv6 后，Pool 参考表会列出 AAAA；API 模式再点同步就写入厂商。不需要 IPv6 时在这一页关掉。不要再改 `.env` 的 `REDI_PUBLISH_POOL_AAAA`。
 
 ### 何时打开发布开关
 
@@ -214,11 +214,11 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health --json
    curl -6 -k -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "https://[2001:db8::1]/"
    ```
 
-3. 确认主控自身有 **IPv6 出口**（能执行上述 `curl -6`）。主控没有 IPv6 出网时 **不要** 设置 `REDI_PUBLISH_POOL_AAAA=true`。
+3. 确认主控自身有 **IPv6 出口**（能执行上述 `curl -6`）。主控没有 IPv6 出网时，到「DNS 与节点池」关掉 **发布 Pool IPv6**。
 
-4. 在 `/opt/301/master/.env` 设置 `REDI_PUBLISH_POOL_AAAA=true`，执行 `sudo -u nginx php artisan config:cache`，再在后台做 DNS 同步（或 API 模式点同步）。需要预检允许客户域名 AAAA 指向 Pool 时，另见 `REDI_DNS_PRECHECK_ALLOW_AAAA_TO_POOL`（默认 false，见 `.env.example`）。
+4. 开关默认已打开。保存节点 IPv6 后刷新该页即可看到 AAAA；API 模式再点一次同步。开关打开时，客户域名仅用 AAAA 指向 Pool 也可以通过预检。
 
-关闭发布：把开关改回 `false` 并 `config:cache` **不会**自动删除厂商里已有 AAAA；要保持 `true` 且清空节点 IPv6 后再同步，才会按对账删掉 AAAA。A 记录行为与 IPv4 一致。
+关掉开关 **不会**自动删除厂商里已有 AAAA。要删掉这些记录，先保持开关打开，清空节点 IPv6，再同步一次。A 记录行为与 IPv4 一致。
 
 ### 监听与配置（一般不用改）
 

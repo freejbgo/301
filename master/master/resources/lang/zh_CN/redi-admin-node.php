@@ -90,7 +90,7 @@ return [
         ],
         'help' => [
             'public_ip'   => '这台机器对外的主 IP，也是节点程序所在机器。一台机器只建一条节点。',
-            'public_ipv6' => '可选。默认不会在 Pool 发布 AAAA 记录；需开启 REDI_PUBLISH_POOL_AAAA 并同步后才会写入厂商 DNS。',
+            'public_ipv6' => '可选。保存后会出现在「DNS 与节点池」的 Pool 参考表里。API 模式再点一次同步，就会写入厂商的 AAAA。不需要时关掉该页的「发布 Pool IPv6」。',
             'extra_ipv6'  => '同一台机器上还要写入 pool 的公网 IPv6，一行一个。须先填写主公网 IPv6。',
             'extra_ips'   => '同一台机器上还要写入 pool 的公网 IPv4，一行一个。Pool 只写 A 记录。仍然只跑一个节点进程、只用一个 Token。不要为这些 IP 再新建节点。',
         ],

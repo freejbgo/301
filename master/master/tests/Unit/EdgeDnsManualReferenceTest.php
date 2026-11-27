@@ -133,4 +133,27 @@ class EdgeDnsManualReferenceTest extends TestCase
         $this->assertCount(2, $pool);
         $this->assertSame(['AAAA', 'pool.example.com', '2001:db8::1'], $pool[1]);
     }
+
+    public function test_database_switch_overrides_env_flag(): void
+    {
+        Schema::table('redi_platform_dns', function (Blueprint $table) {
+            $table->boolean('publish_pool_aaaa')->default(true);
+        });
+        config(['redi.publish_pool_aaaa' => false]);
+        \DB::table('redi_nodes')->insert([
+            'public_ip' => '1.2.3.4',
+            'public_ipv6' => '2001:db8::9',
+            'enabled' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $pool = EdgeDnsManualReference::tables()['pool'];
+        $this->assertContains(['AAAA', 'pool.example.com', '2001:db8::9'], $pool);
+
+        \DB::table('redi_platform_dns')->update(['publish_pool_aaaa' => 0]);
+        config(['redi.publish_pool_aaaa' => true]);
+        $pool = EdgeDnsManualReference::tables()['pool'];
+        $this->assertFalse(collect($pool)->contains(fn ($row) => $row[0] === 'AAAA'));
+    }
 }

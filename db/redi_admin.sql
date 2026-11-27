@@ -457,12 +457,13 @@ CREATE TABLE `redi_platform_dns` (
   `dns_zone_id` varchar(128) DEFAULT NULL,
   `acme_contact_email` varchar(255) DEFAULT NULL,
   `acme_staging` tinyint(1) NOT NULL DEFAULT '0',
+  `publish_pool_aaaa` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `redi_platform_dns` VALUES (1,'','pool','manual','manual',NULL,NULL,NULL,0,NOW(),NOW());
+INSERT INTO `redi_platform_dns` VALUES (1,'','pool','manual','manual',NULL,NULL,NULL,0,1,NOW(),NOW());
 
 DROP TABLE IF EXISTS `redi_acme_challenges`;
 CREATE TABLE `redi_acme_challenges` (

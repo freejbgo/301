@@ -3,18 +3,18 @@
 return [
     'page' => [
         'title'       => 'DNS 与节点池',
-        'description' => '模型 2：客户域 CNAME → 租户 token；token CNAME → pool；pool 多条 A → 节点',
+        'description' => '模型 2：客户域 CNAME → 租户 token；token CNAME → pool；pool 的 A / AAAA → 节点',
     ],
     'cards' => [
         'settings' => 'DNS 与节点池',
-        'pool'     => 'Pool：节点 A 记录参考',
+        'pool'     => 'Pool：节点 A / AAAA 记录参考',
         'tenant'   => '租户 edge：token → pool（CNAME）参考',
     ],
     'alerts' => [
         'manual_title' => '说明',
         'manual_body'  => '当前为<strong>手动解析</strong>：请复制下方记录，到你方 DNS 服务商（Cloudflare、阿里云等）控制台自行添加或更新；本系统不会调用 DNS API。',
         'api_title'    => '说明',
-        'api_body'     => '当前为 <strong>API 自动</strong>：保存驱动与凭证后，可点击同步将 pool 的多条 A 与各租户 CNAME 写入厂商。',
+        'api_body'     => '当前为 <strong>API 自动</strong>：保存驱动与凭证后，可点击同步将 pool 的 A、AAAA 与各租户 CNAME 写入厂商。发布 Pool IPv6 关掉时不同步 AAAA。',
     ],
     'empty' => [
         'pool'   => '请先填写平台主域名并添加节点。',
@@ -42,17 +42,19 @@ return [
         'clear_dns_api_credentials' => '清空已保存的 API 密钥',
         'acme_contact_email'        => 'ACME 联系邮箱',
         'acme_staging'              => 'ACME 测试环境',
+        'publish_pool_aaaa'         => '发布 Pool IPv6（AAAA）',
     ],
     'help' => [
         'edge_zone'                 => '例：123.com（你拥有 DNS 解析权的域名）',
         'pool_host'                 => '最终 FQDN：pool.平台主域名；修改后须重新 API 同步（租户 CNAME 指向会变）',
-        'dns_mode'                  => '手动：在下方「解析参考」表按记录在 DNS 服务商面板自行添加，无需点同步。API 自动：保存凭证后可一键同步 pool A 与各租户 token→pool CNAME。',
+        'dns_mode'                  => '手动：在下方「解析参考」表按记录在 DNS 服务商面板自行添加，无需点同步。API 自动：保存凭证后可一键同步 pool 的 A、AAAA 与各租户 token→pool CNAME。',
         'dns_zone_id'               => 'Cloudflare 必填；其他厂商可留空',
         'api_key'                   => 'Cloudflare=API Token；阿里云=AccessKey ID；DNSPod=API ID；dns.com=API Key。留空不修改',
         'api_secret'                => '阿里云=AccessKey Secret；DNSPod=Token；dns.com=API Secret',
         'clear_dns_api_credentials' => '勾选并保存将删除库内加密凭证',
         'acme_contact_email'        => 'Let\'s Encrypt 注册邮箱',
         'acme_staging'              => '勾选则使用 Let\'s Encrypt Staging',
+        'publish_pool_aaaa'         => '默认开启。节点填了公网 IPv6 后，下方参考表会列出 AAAA；API 模式点同步时一并写入厂商。主控要能用 IPv6 访问这些地址的 80 端口，否则申请证书可能失败。不需要 IPv6 时关掉。',
     ],
     'options' => [
         'dns_mode' => [

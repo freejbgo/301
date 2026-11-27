@@ -253,13 +253,13 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 
 ### 7. IPv4/IPv6 双栈（可选）
 
-**前提：** 默认 **不** 发布 Pool AAAA；节点 `0.0.0.0` 监听在 Linux 上已双栈；lagran 对 IPv6 出站与 IPv4 相同。需要节点有 **公网 IPv6**、主控有 **IPv6 出口**。步骤与陷阱摘要见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12、[NETWORKING-IPv6.md](NETWORKING-IPv6.md)。
+**前提：** 「DNS 与节点池」的 **发布 Pool IPv6** 默认打开。不需要 IPv6 时在该页关掉，不要改 `REDI_PUBLISH_POOL_AAAA`。节点 `0.0.0.0` 监听在 Linux 上已双栈；lagran 对 IPv6 出站与 IPv4 相同。需要节点有 **公网 IPv6**、主控有 **IPv6 出口**。步骤与陷阱摘要见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) §12、[NETWORKING-IPv6.md](NETWORKING-IPv6.md)。
 
 在后台「节点管理」填写主 IPv6 / 其他 IPv6（**不要**写入 `vars.env` 的 `NODE_IPS`）。
 
-### 7.1 发布开关关闭（默认）
+### 7.1 发布开关关闭
 
-- [ ] 主控 `.env` 未设置或 `REDI_PUBLISH_POOL_AAAA=false`，已执行 `sudo -u nginx php artisan config:cache`。
+- [ ] 在「DNS 与节点池」关掉 **发布 Pool IPv6** 并保存（不要依赖 `.env` 的 `REDI_PUBLISH_POOL_AAAA`）。
 - [ ] 节点已登记 IPv6 后做 DNS 同步（API 模式或手动对照参考表）：厂商 **Pool A 与开关开启前一致**；**不出现新的 AAAA**（参考表也不增加 AAAA 行）。
 - [ ] `NODE_IPS` 仍 **仅 IPv4**；`grant-nodes-from-vars` / 防火墙 3306 行为与 IPv4 节点一致。
 
@@ -285,9 +285,9 @@ curl -6 -k -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "https://[20
 
 ### 7.3 发布开关打开
 
-- [ ] `/opt/301/master/.env` 设置 `REDI_PUBLISH_POOL_AAAA=true`，`config:cache` 后 DNS 同步：厂商 Pool 出现与启用节点一致的 **AAAA**（A 记录仍正常）。
-- [ ] 将节点 IPv6 清空并保持 `REDI_PUBLISH_POOL_AAAA=true`，再同步：**AAAA 被删或对齐为空**，**A 仍在**。
-- [ ] （可选）`REDI_DNS_PRECHECK_ALLOW_AAAA_TO_POOL=true` 时，客户域仅 AAAA 指向 Pool 的预检行为符合预期；默认 false 时仅 AAAA 不应单独通过预检。
+- [ ] 「DNS 与节点池」打开 **发布 Pool IPv6**（新装默认已打开）后 DNS 同步：厂商 Pool 出现与启用节点一致的 **AAAA**（A 记录仍正常）。
+- [ ] 将节点 IPv6 清空并保持开关打开，再同步：**AAAA 被删或对齐为空**，**A 仍在**。
+- [ ] 开关打开时，客户域仅 AAAA 指向 Pool 可以通过预检。开关关闭时，仅 AAAA 不应单独通过预检（除非另设 `REDI_DNS_PRECHECK_ALLOW_AAAA_TO_POOL=true`）。
 
 ### 7.4 访客跳转与 lagran（打开发布开关后）
 

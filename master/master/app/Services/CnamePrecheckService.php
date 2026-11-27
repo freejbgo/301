@@ -19,7 +19,7 @@ class CnamePrecheckService
         $customerDomain = HostNameValidator::toCanonicalAscii($customerDomain);
         $edgeFqdn = HostNameValidator::toCanonicalAscii($edgeFqdn);
         $allowA = (int) filter_var(config('redi.dns_precheck_allow_a_to_pool', true), FILTER_VALIDATE_BOOLEAN);
-        $allowAaaa = (int) filter_var(config('redi.dns_precheck_allow_aaaa_to_pool', false), FILTER_VALIDATE_BOOLEAN);
+        $allowAaaa = (int) self::allowAaaaPrecheck();
         $key = 'cname-precheck:'.md5($customerDomain.'|'.$edgeFqdn.'|'.$allowA.'|'.$allowAaaa);
 
         return (bool) Cache::remember($key, $seconds, function () use ($customerDomain, $edgeFqdn) {
@@ -73,7 +73,7 @@ class CnamePrecheckService
             }
         }
 
-        if (filter_var(config('redi.dns_precheck_allow_aaaa_to_pool', false), FILTER_VALIDATE_BOOLEAN)) {
+        if (self::allowAaaaPrecheck()) {
             if (static::aaaaRecordPointsToPool($customerDomain)) {
                 return true;
             }
@@ -101,6 +101,15 @@ class CnamePrecheckService
         }
 
         return false;
+    }
+
+    public static function allowAaaaPrecheck(): bool
+    {
+        if (RediPlatformDns::publishesPoolAaaa()) {
+            return true;
+        }
+
+        return filter_var(config('redi.dns_precheck_allow_aaaa_to_pool', false), FILTER_VALIDATE_BOOLEAN);
     }
 
     public static function aaaaRecordPointsToPool(string $customerDomain): bool

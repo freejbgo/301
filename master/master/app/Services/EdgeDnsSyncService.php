@@ -217,7 +217,7 @@ class EdgeDnsSyncService
 
     protected function publishPoolAaaaEnabled(): bool
     {
-        return filter_var(config('redi.publish_pool_aaaa', false), FILTER_VALIDATE_BOOLEAN);
+        return RediPlatformDns::publishesPoolAaaa();
     }
 
     protected function assertIpv6ReadyForPoolAaaaPublish(): void

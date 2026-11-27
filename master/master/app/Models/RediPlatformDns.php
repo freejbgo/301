@@ -6,6 +6,7 @@ use App\Support\HostNameValidator;
 use App\Support\OpsDisplaySanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Schema;
 
 class RediPlatformDns extends Model
 {
@@ -23,6 +24,7 @@ class RediPlatformDns extends Model
         'dns_zone_id',
         'acme_contact_email',
         'acme_staging',
+        'publish_pool_aaaa',
     ];
 
     protected $guarded = [
@@ -31,19 +33,45 @@ class RediPlatformDns extends Model
 
     protected $casts = [
         'acme_staging' => 'boolean',
+        'publish_pool_aaaa' => 'boolean',
     ];
 
     public static function instance(): self
     {
-        return static::firstOrCreate(
-            ['id' => 1],
-            [
-                'edge_zone' => '',
-                'pool_host' => 'pool',
-                'dns_mode' => 'manual',
-                'dns_driver' => 'manual',
-            ]
-        );
+        $attrs = [
+            'edge_zone' => '',
+            'pool_host' => 'pool',
+            'dns_mode' => 'manual',
+            'dns_driver' => 'manual',
+        ];
+        if (static::hasPublishPoolAaaaColumn()) {
+            $attrs['publish_pool_aaaa'] = true;
+        }
+
+        return static::firstOrCreate(['id' => 1], $attrs);
+    }
+
+    /**
+     * 后台「DNS 与节点池」开关。列还没迁移时才看 REDI_PUBLISH_POOL_AAAA。
+     */
+    public static function publishesPoolAaaa(): bool
+    {
+        if (! static::hasPublishPoolAaaaColumn()) {
+            return filter_var(config('redi.publish_pool_aaaa', false), FILTER_VALIDATE_BOOLEAN);
+        }
+
+        $row = static::query()->where('id', 1)->first();
+        if (! $row) {
+            return true;
+        }
+
+        return (bool) $row->publish_pool_aaaa;
+    }
+
+    public static function hasPublishPoolAaaaColumn(): bool
+    {
+        return Schema::hasTable('redi_platform_dns')
+            && Schema::hasColumn('redi_platform_dns', 'publish_pool_aaaa');
     }
 
     public function isDnsApiMode(): bool

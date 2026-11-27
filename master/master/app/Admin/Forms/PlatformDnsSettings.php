@@ -62,6 +62,9 @@ class PlatformDnsSettings extends Form implements LazyRenderable
         $platform->dns_zone_id = $input['dns_zone_id'] ?? null;
         $platform->acme_contact_email = trim($input['acme_contact_email'] ?? '') ?: null;
         $platform->acme_staging = ! empty($input['acme_staging']);
+        if (RediPlatformDns::hasPublishPoolAaaaColumn()) {
+            $platform->publish_pool_aaaa = filter_var($input['publish_pool_aaaa'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        }
 
         if (! empty($input['clear_dns_api_credentials'])) {
             $platform->setApiCredentialsArray(null);
@@ -109,6 +112,11 @@ class PlatformDnsSettings extends Form implements LazyRenderable
             ->help(__('redi-platform-dns.help.acme_contact_email'));
         $this->switch('acme_staging', __('redi-platform-dns.fields.acme_staging'))
             ->help(__('redi-platform-dns.help.acme_staging'));
+        if (RediPlatformDns::hasPublishPoolAaaaColumn()) {
+            $this->switch('publish_pool_aaaa', __('redi-platform-dns.fields.publish_pool_aaaa'))
+                ->default(1)
+                ->help(__('redi-platform-dns.help.publish_pool_aaaa'));
+        }
     }
 
     public function default()
@@ -123,6 +131,7 @@ class PlatformDnsSettings extends Form implements LazyRenderable
             'dns_zone_id' => $p->dns_zone_id,
             'acme_contact_email' => $p->acme_contact_email,
             'acme_staging' => $p->acme_staging,
+            'publish_pool_aaaa' => $p->publish_pool_aaaa,
         ];
     }
 }
