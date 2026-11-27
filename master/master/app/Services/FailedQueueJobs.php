@@ -6,6 +6,7 @@ use App\Support\FailedQueueFailureSummary;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use RuntimeException;
 
 class FailedQueueJobs
 {
@@ -38,13 +39,19 @@ class FailedQueueJobs
             return 0;
         }
 
-        $count = (int) DB::table('failed_jobs')->count();
-        if ($count === 0) {
+        $before = (int) DB::table('failed_jobs')->count();
+        if ($before === 0) {
             return 0;
         }
 
+        // 在已经启动的主控进程里调用，不经过 shell，也不查找 php / artisan 路径。
         Artisan::call('queue:retry', ['id' => ['all']]);
 
-        return $count;
+        $moved = $before - (int) DB::table('failed_jobs')->count();
+        if ($moved <= 0) {
+            throw new RuntimeException('failed_jobs 仍有 '.$before.' 条，重试没有写回队列');
+        }
+
+        return $moved;
     }
 }

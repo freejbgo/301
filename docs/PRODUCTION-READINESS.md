@@ -78,7 +78,7 @@ bash scripts/verify-redi-db-deploy-path.sh
 - **批量操作** →「批量重新下发证书」：对已选中且可解密的证书重新部署。
 - **导出 CSV**：域名列表工具栏（沿用当前筛选条件）；租户仅导出自己名下域名（`BelongsToAdminTenant` 作用域）；导出时对 `=+/@-` 开头字段加 `'` 防公式注入。
 - **重试全部失败部署**：超管首页 / 节点管理 / `php artisan redi:requeue-failed-deployments`（可选 `--node=`、`--cert=`）。只处理证书在节点上的 failed 部署，不会把首页「失败任务」清零。
-- **重试失败队列任务**：超管首页，或在主控目录执行 `php artisan queue:retry all`。这会把 `failed_jobs` 放回队列并把「失败任务」清零。证书签发失败的原因在域名管理该行证书列，完整日志在 `storage/logs/laravel.log`。`php artisan queue:failed` 也要在 `/opt/301/master` 下执行。
+- **重试失败队列任务**：超管首页按钮在主控网页进程里直接把 `failed_jobs` 放回队列，不调用 shell。手工命令是 `/usr/bin/php /opt/301/master/artisan queue:retry all` 和 `/usr/bin/php /opt/301/master/artisan queue:failed`。证书签发失败的原因在域名管理该行证书列，完整日志在 `storage/logs/laravel.log`。
 
 ## 全功能场景
 

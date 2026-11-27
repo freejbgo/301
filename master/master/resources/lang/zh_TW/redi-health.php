@@ -17,7 +17,7 @@ return [
         'node_pool_empty' => '沒有啟用的邊緣節點，憑證無法部署、pool DNS 無 A 記錄可同步',
         'node_no_public_ip' => '有 :count 台啟用節點但未配置公網 IP（public_ip / extra_ips），pool A 記錄與 A 池 CNAME 預檢將無法工作',
         'cert_validating_stuck' => ':total 張憑證超過 :hours 小時仍為 validating（可能 ACME 任務卡住）：:names',
-        'queue_failed_jobs' => '隊列有 :count 條失敗任務（與憑證部署失敗分開統計）。請在主控目錄執行 cd /opt/301/master && php artisan queue:failed，或在首頁點「重試失敗隊列任務」。',
+        'queue_failed_jobs' => '隊列有 :count 條失敗任務（與憑證部署失敗分開統計）。請執行 /usr/bin/php /opt/301/master/artisan queue:failed，或在首頁點「重試失敗隊列任務」。',
         'queue_backlog' => '隊列積壓 :pending 條（閾值 :threshold），請確認 redi-queue / queue:work 在運行',
         'queue_stale' => '有 :count 條隊列任務超過 :hours 小時未執行，可能 worker 未運行',
         'cert_domain_name_drift' => '憑證 #:id domain_name 與域名不一致且未能自動對齊：記錄 :recorded，應為 :canonical',
