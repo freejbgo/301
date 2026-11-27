@@ -1,7 +1,7 @@
 #!/bin/bash
 # CentOS 7 节点一条命令。节点公网 IP 自动识别。主控 IP、安装密钥和 Token 来自主控屏幕上的那条命令。
 #
-#   curl -fsSL https://github.com/freejbgo/301/raw/main/node.sh -o node.sh && chmod +x node.sh && bash node.sh --master-ip 主控IP --install-key 密钥 --token 后台Token
+#   curl -fsSL https://github.com/freejbgo/301/raw/main/node.sh -o node.sh && chmod +x node.sh && bash node.sh --master-ip 主控IP --install-key 密钥 --token '节点Token'
 #
 # 识别不到本机公网 IP 时，加上 --node-ip 你的公网IP
 set -euo pipefail
@@ -220,7 +220,9 @@ source /etc/os-release
 
 [[ -n "$MASTER_IP_ARG" ]] || die "缺少 --master-ip。请用主控安装完成时打印的整条命令"
 [[ -n "$INSTALL_KEY_B64" ]] || die "缺少 --install-key。请用主控安装完成时打印的整条命令"
-[[ -n "$TOKEN_ARG" && "$TOKEN_ARG" != "后台Token" ]] || die "请把命令里的 后台Token 换成后台「节点管理」里复制的 Token"
+if [[ -z "$TOKEN_ARG" || "$TOKEN_ARG" == "后台Token" || "$TOKEN_ARG" == "Node Token" || "$TOKEN_ARG" == "节点Token" || "$TOKEN_ARG" == "節點Token" ]]; then
+  die "请把命令最后的占位文字换成后台「节点管理」里复制的 Token"
+fi
 valid_ip "$MASTER_IP_ARG" || die "主控 IP 不是 IPv4: $MASTER_IP_ARG"
 is_private "$MASTER_IP_ARG" && die "主控 IP 是内网地址，请用云控制台里的公网 IP"
 [[ ! "$TOKEN_ARG" =~ [[:space:]\'\"\`\#\$\\] ]] || die "Token 不要包含空格、引号、#、$ 或反斜杠"

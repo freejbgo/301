@@ -75,11 +75,31 @@ class NodeInstallCommandTest extends TestCase
         ]);
         $this->app['request']->headers->set('HOST', 'localhost');
 
-        $command = NodeInstallCommand::command('后台Token');
+        $command = NodeInstallCommand::command('Node Token');
 
         $this->assertStringContainsString("--master-ip '主控IP'", $command);
         $this->assertStringContainsString("--install-key '安装密钥'", $command);
-        $this->assertStringContainsString("--token '后台Token'", $command);
+        $this->assertStringContainsString("--token 'Node Token'", $command);
         $this->assertFalse(NodeInstallCommand::hasInstallKey());
+    }
+
+    public function test_install_placeholder_and_help_follow_each_locale(): void
+    {
+        $root = dirname(__DIR__, 2).'/resources/lang';
+        $zh = require $root.'/zh_CN/redi-admin-node.php';
+        $tw = require $root.'/zh_TW/redi-admin-node.php';
+        $en = require $root.'/en/redi-admin-node.php';
+
+        $this->assertSame('节点Token', $zh['install']['token_placeholder']);
+        $this->assertStringContainsString('节点Token', $zh['install']['help']);
+        $this->assertStringContainsString('节点「查看 Token」', $zh['install']['help']);
+
+        $this->assertSame('節點Token', $tw['install']['token_placeholder']);
+        $this->assertStringContainsString('節點Token', $tw['install']['help']);
+        $this->assertStringContainsString('節點「查看 Token」', $tw['install']['help']);
+
+        $this->assertSame('Node Token', $en['install']['token_placeholder']);
+        $this->assertStringContainsString('Node Token', $en['install']['help']);
+        $this->assertStringContainsString('View token', $en['install']['help']);
     }
 }

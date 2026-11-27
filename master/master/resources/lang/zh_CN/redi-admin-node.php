@@ -108,9 +108,10 @@ return [
     ],
     'install' => [
         'title' => '安装节点的命令',
-        'help' => '在节点机器上用 root 执行下面这一整条。只把最后的 后台Token 换成这一行「查看 Token」里的那一串。--install-key 后面是主控安装密钥，不是节点 Token，不要替换。--token 这个参数要保留。',
+        'help' => '在节点机器上用 root 执行下面这一整条。只把最后的 节点Token 换成节点「查看 Token」里的那一串。--install-key 后面是主控安装密钥，不是节点 Token，不要替换。--token 这个参数要保留。',
         'copy' => '复制命令',
-        'token_placeholder' => '后台Token',
+        'copied' => '已复制',
+        'token_placeholder' => '节点Token',
         'key_missing' => '后台还读不到安装密钥，所以上面命令里的「安装密钥」还不能用。在主控上执行一次下面这一条，然后刷新本页：',
         'dialog_token' => '节点 Token',
         'dialog_command' => '安装命令（已填入这个节点的 Token，在节点上整条执行）',

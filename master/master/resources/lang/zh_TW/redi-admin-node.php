@@ -108,9 +108,10 @@ return [
     ],
     'install' => [
         'title' => '安裝節點的命令',
-        'help' => '在節點機器上用 root 執行下面這一整條。只把最後的 后台Token 換成這一列「查看 Token」裡的那一串。--install-key 後面是主控安裝密鑰，不是節點 Token，不要替換。--token 這個參數要保留。',
+        'help' => '在節點機器上用 root 執行下面這一整條。只把最後的 節點Token 換成節點「查看 Token」裡的那一串。--install-key 後面是主控安裝密鑰，不是節點 Token，不要替換。--token 這個參數要保留。',
         'copy' => '複製命令',
-        'token_placeholder' => '后台Token',
+        'copied' => '已複製',
+        'token_placeholder' => '節點Token',
         'key_missing' => '後台還讀不到安裝密鑰，所以上面命令裡的「安裝密鑰」還不能用。在主控上執行一次下面這一條，然後刷新本頁：',
         'dialog_token' => '節點 Token',
         'dialog_command' => '安裝命令（已填入這個節點的 Token，在節點上整條執行）',
