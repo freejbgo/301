@@ -47,24 +47,59 @@ class RediAdminDomainController extends AdminController
 
     protected function registerCnameCopyScript(): void
     {
-        $copyCnameMsg = json_encode(admin_trans_label('copy_cname_success'), JSON_UNESCAPED_UNICODE);
+        $copyCnameMsg = json_encode(admin_trans_label('copy_cname_success'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+        $copyFailMsg = json_encode(admin_trans_label('copy_cname_failed'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
         Admin::script(<<<JS
 Dcat.ready(function () {
+  if (window.__rediCopyCnameBound) {
+    return;
+  }
+  window.__rediCopyCnameBound = true;
   var copyMsg = {$copyCnameMsg};
-  $(document).off('click', '.redi-copy-cname').on('click', '.redi-copy-cname', function () {
-    var text = $(this).data('copy') || '';
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () { Dcat.success(copyMsg); });
-    } else {
-      var ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      Dcat.success(copyMsg);
+  var copyFailMsg = {$copyFailMsg};
+  document.addEventListener('click', function (event) {
+    var link = event.target && event.target.closest ? event.target.closest('.redi-copy-cname') : null;
+    if (!link) {
+      return;
     }
-  });
+    event.preventDefault();
+    event.stopPropagation();
+    var text = link.getAttribute('data-copy') || '';
+    if (!text) {
+      Dcat.error(copyFailMsg);
+      return;
+    }
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', 'readonly');
+    ta.style.position = 'fixed';
+    ta.style.top = '0';
+    ta.style.left = '0';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.readOnly = false;
+    ta.focus();
+    ta.select();
+    if (typeof ta.setSelectionRange === 'function') {
+      ta.setSelectionRange(0, text.length);
+    }
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    if (ok) {
+      Dcat.success(copyMsg);
+      return;
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () {
+        Dcat.success(copyMsg);
+      }).catch(function () {
+        Dcat.error(copyFailMsg);
+      });
+      return;
+    }
+    Dcat.error(copyFailMsg);
+  }, true);
 });
 JS
         );

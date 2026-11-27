@@ -18,6 +18,7 @@ return [
         'batch_add_domains'  => '批量新增域名',
         'batch_filter'       => '按篩選批量操作',
         'copy_cname_success' => '已複製 CNAME 目標',
+        'copy_cname_failed'  => '複製失敗，請手動選中地址複製',
         'onboarding_admin_create' => '請先選擇<strong>所屬租戶的分組</strong>並儲存。儲存後在列表「CNAME 目標」欄查看該租戶的邊緣域名。',
         'cname_hint_admin'   => '域名所屬租戶帳號下所有域名共用此 CNAME 目標（改分組遷戶後以儲存結果為準）',
         'cname_hint_tenant'  => '本帳號下所有域名共用',

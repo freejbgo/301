@@ -18,6 +18,7 @@ return [
         'batch_add_domains'  => 'Batch add domains',
         'batch_filter'       => 'Batch by current filters',
         'copy_cname_success' => 'CNAME target copied',
+        'copy_cname_failed'  => 'Copy failed. Select the address and copy it manually.',
         'onboarding_admin_create' => 'Select the <strong>tenant group</strong> and save first. After save, check the tenant edge hostname in the “CNAME target” column.',
         'cname_hint_admin'   => 'All domains under this tenant share one CNAME target (updates after group/tenant changes).',
         'cname_hint_tenant'  => 'Shared by all domains under this account',
