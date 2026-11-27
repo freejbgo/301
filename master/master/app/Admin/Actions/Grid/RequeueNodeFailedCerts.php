@@ -20,8 +20,10 @@ class RequeueNodeFailedCerts extends RowAction
         return [__('redi-admin-node.actions.requeue_failed.confirm')];
     }
 
-    public function handle(Request $request, CertificateDeployService $deployService)
+    public function handle(Request $request)
     {
+        // Dcat 只传入 Request，不会做方法注入。
+        $deployService = app(CertificateDeployService::class);
         $user = Admin::user();
         if (! $user || ! method_exists($user, 'isAdministrator') || ! $user->isAdministrator()) {
             return $this->response()->error(__('redi-admin-node.actions.requeue_failed.error_admin'));

@@ -26,8 +26,10 @@ class BatchRequeueNodeFailedCerts extends BatchAction
         return [__('redi-admin-node.actions.batch_requeue_failed.confirm')];
     }
 
-    public function handle(Request $request, CertificateDeployService $deployService)
+    public function handle(Request $request)
     {
+        // Dcat 只传入 Request，不会做方法注入。
+        $deployService = app(CertificateDeployService::class);
         if ($deny = $this->ensureAdministratorResponse()) {
             return $deny;
         }

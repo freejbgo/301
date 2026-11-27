@@ -22,8 +22,10 @@ class RedeployCertificate extends RowAction
         return [__('redi-admin-domain.actions.redeploy.confirm')];
     }
 
-    public function handle(Request $request, CertificateDeployService $deployService)
+    public function handle(Request $request)
     {
+        // Dcat 只传入 Request，不会做方法注入。
+        $deployService = app(CertificateDeployService::class);
         $domain = RediAdminDomain::query()->find($this->getKey());
         if (! $domain) {
             return $this->response()->error(__('redi-admin-domain.actions.redeploy.error_not_found'));
