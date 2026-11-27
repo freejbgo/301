@@ -71,6 +71,7 @@ class AliyunDnsProviderUpsertTest extends TestCase
         $this->assertSame('@', $params['RR']);
         $this->assertSame('2001:db8::1', $params['Value']);
         $this->assertSame('example.com', $params['DomainName']);
+        $this->assertSame(600, $params['TTL']);
     }
 
     private function provider(AliyunDnsClient $client): AliyunCnDnsProvider
