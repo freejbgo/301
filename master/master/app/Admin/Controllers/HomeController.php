@@ -57,8 +57,11 @@ class HomeController extends Controller
                     }, $hints)).'</ul>';
             }
 
-            $requeueConfirm = json_encode(__('redi-home.labels.requeue_confirm'), JSON_UNESCAPED_UNICODE);
-            $queueRetryConfirm = json_encode(__('redi-home.labels.queue_retry_confirm'), JSON_UNESCAPED_UNICODE);
+            $jsConfirm = function (string $message): string {
+                return e(json_encode($message, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT));
+            };
+            $requeueConfirm = $jsConfirm(__('redi-home.labels.requeue_confirm'));
+            $queueRetryConfirm = $jsConfirm(__('redi-home.labels.queue_retry_confirm'));
             $failedItems = '';
             foreach (FailedQueueJobs::recent(8) as $line) {
                 $failedItems .= '<li>'.e(__('redi-home.labels.queue_failed_line', $line)).'</li>';
