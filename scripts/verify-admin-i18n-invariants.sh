@@ -51,6 +51,19 @@ for switcher in "$LOCALE_SWITCHER_DIR"/locale-switcher*.blade.php; do
   fail "locale switcher must use redi-locale.names: $switcher"
 done
 
+login_switcher="${LOCALE_SWITCHER_DIR}/locale-switcher-inline.blade.php"
+nav_switcher="${LOCALE_SWITCHER_DIR}/locale-switcher.blade.php"
+[[ -f "$login_switcher" && -f "$nav_switcher" ]] || fail "locale switcher partials missing"
+grep -q 'id="redi-login-locale"' "$login_switcher" || fail "login language control must be a labeled select"
+grep -q '<select' "$login_switcher" || fail "login language control must be a select"
+if grep -q 'badge badge-' "$login_switcher"; then
+  fail "login language control must not be inline badges"
+fi
+grep -q 'class="dropdown-menu dropdown-menu-right"' "$nav_switcher" || fail "navbar language menu must use dropdown-menu"
+if grep -q '<ul class="dropdown-menu' "$nav_switcher"; then
+  fail "navbar language menu must not be a nested ul"
+fi
+
 if rg -n "('|\")([^'\"\\]|\\.)*[\x{4e00}-\x{9fff}]" "$ADMIN_APP" -g '*.php' 2>/dev/null; then
   fail 'app/Admin must not contain Han characters inside PHP string literals (use language files)'
 fi
