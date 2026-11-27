@@ -52,8 +52,9 @@ class BatchFilterDomains extends Form implements LazyRenderable
             ]));
 
         foreach (DomainListFilter::FILTER_KEYS as $key) {
-            $this->hidden($key)->attribute('class', 'batch-filter-domain-field');
+            $this->hidden($key)->addElementClass('batch-filter-domain-field', false);
         }
+        $this->hidden('selected_ids')->addElementClass('batch-filter-domain-ids', false);
     }
 
     /**
@@ -68,6 +69,16 @@ class BatchFilterDomains extends Form implements LazyRenderable
             }
         }
 
-        return DomainListFilter::mergeFilterIntoRequest(request(), $bag);
+        $request = DomainListFilter::mergeFilterIntoRequest(request(), $bag);
+        $selected = $input['selected_ids'] ?? '';
+        if (is_array($selected)) {
+            $selected = implode(',', $selected);
+        }
+        $selected = trim((string) $selected);
+        if ($selected !== '') {
+            $request->merge(['selected_ids' => $selected]);
+        }
+
+        return $request;
     }
 }

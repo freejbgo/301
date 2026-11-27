@@ -162,7 +162,7 @@ return [
     'batch_filter' => [
         'fields' => ['action' => 'Action'],
         'help' => [
-            'action' => 'Apply to up to :max domains matching list filters (same as CSV export; click Search first, then open this dialog)',
+            'action' => 'Checked rows are processed (up to :max). When no row is checked, the filled list filters are used (same filters as CSV export).',
         ],
         'actions' => [
             'apply_cert' => 'Batch apply certificates',
@@ -193,10 +193,10 @@ return [
         'errors' => [
             'action_invalid' => 'Invalid action',
             'no_match' => 'No domains match the current filters',
-            'filter_required_sensitive' => 'This batch action requires at least one list filter (avoids touching the first 500 rows by mistake)',
+            'filter_required_sensitive' => 'Check the domains to change, or set at least one list filter (avoids touching the first 500 rows by mistake)',
         ],
         'confirm_title' => 'Confirm filter-based batch',
-        'confirm_content' => 'Applies to up to 500 domains matching current list filters. Click Search first so the URL carries filter parameters. Certificate, redeploy, enable, disable, and delete all require at least one filter.',
+        'confirm_content' => 'Checked domains are processed as selected. Otherwise the filled list filters are used. With neither, nothing runs, so the first 500 rows are not touched by mistake.',
     ],
     'export' => [
         'headers' => [

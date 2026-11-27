@@ -32,14 +32,49 @@ HTML;
         Admin::script(<<<JS
 Dcat.ready(function () {
   var filterKeys = {$keys};
-  function syncBatchFilterFields() {
-    var params = new URLSearchParams(window.location.search);
-    filterKeys.forEach(function (key) {
-      var val = params.get(key) || '';
-      $('.batch-filter-domain-field[name="' + key + '"]').val(val);
-    });
+  var modal = document.getElementById('{$id}');
+  function readFilter(key) {
+    var field = document.querySelector('.grid-filter-form [name="' + key + '"]');
+    var fromForm = field ? String(field.value || '').trim() : '';
+    if (fromForm !== '') {
+      return fromForm;
+    }
+    return new URLSearchParams(window.location.search).get(key) || '';
   }
-  $('#{$id}').on('show.bs.modal', syncBatchFilterFields);
+  function syncBatchFilterFields() {
+    if (!modal) {
+      return;
+    }
+    filterKeys.forEach(function (key) {
+      var input = modal.querySelector('input[name="' + key + '"]');
+      if (input) {
+        input.value = readFilter(key);
+      }
+    });
+    var seen = {};
+    var ids = [];
+    document.querySelectorAll('input[class*="grid-row-checkbox"]:checked').forEach(function (box) {
+      var id = box.getAttribute('data-id') || '';
+      if (!/^[1-9][0-9]*$/.test(id) || seen[id]) {
+        return;
+      }
+      seen[id] = true;
+      ids.push(id);
+    });
+    var idInput = modal.querySelector('input[name="selected_ids"]');
+    if (idInput) {
+      idInput.value = ids.join(',');
+    }
+  }
+  if (modal) {
+    $('#{$id}').on('show.bs.modal', syncBatchFilterFields);
+    modal.addEventListener('click', function (event) {
+      var target = event.target;
+      if (target && target.closest && target.closest('button[type="submit"]')) {
+        syncBatchFilterFields();
+      }
+    }, true);
+  }
 });
 JS
         );

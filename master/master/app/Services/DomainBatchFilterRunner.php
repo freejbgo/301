@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 
 class DomainBatchFilterRunner
 {
+    /** @var string */
+    protected $selectionMode = 'list_filter';
+
     /** @var list<string> */
     public const ACTIONS = [
         'apply_cert',
@@ -31,18 +34,25 @@ class DomainBatchFilterRunner
             ];
         }
 
-        if (in_array($action, ['delete', 'disable', 'apply_cert', 'redeploy', 'enable'], true)
+        $explicitIds = $this->explicitSelectedIds($filterRequest);
+        if ($explicitIds !== []) {
+            $capped = BatchSelectionLimiter::intIdsCapped($explicitIds, DomainBatchMutator::MAX_IDS_PER_BATCH);
+            $ids = $capped['ids'];
+            $filterTruncated = $capped['truncated'];
+            $this->selectionMode = 'selected_rows';
+        } elseif (in_array($action, ['delete', 'disable', 'apply_cert', 'redeploy', 'enable'], true)
             && ! DomainListFilter::hasAnyFilter($filterRequest)) {
             return [
                 'ok' => false,
                 'message' => __('redi-admin-domain.batch_filter.errors.filter_required_sensitive'),
                 'count' => 0,
             ];
+        } else {
+            $selection = DomainListFilter::limitedSelection($filterRequest);
+            $ids = $selection['ids'];
+            $filterTruncated = $selection['truncated'];
+            $this->selectionMode = 'list_filter';
         }
-
-        $selection = DomainListFilter::limitedSelection($filterRequest);
-        $ids = $selection['ids'];
-        $filterTruncated = $selection['truncated'];
         if ($ids === []) {
             return [
                 'ok' => false,
@@ -207,11 +217,39 @@ class DomainBatchFilterRunner
             $adminId,
             array_merge(['updated' => $primaryCount], $metrics),
             [
-                'mode' => 'list_filter',
+                'mode' => $this->selectionMode,
                 'filtered' => DomainListFilter::hasAnyFilter($filterRequest),
                 'filter_keys' => $this->activeFilterKeys($filterRequest),
             ]
         );
+    }
+
+    /**
+     * @return list<int>
+     */
+    protected function explicitSelectedIds(Request $request): array
+    {
+        $raw = $request->input('selected_ids');
+        if ($raw === null || $raw === '' || $raw === []) {
+            return [];
+        }
+
+        $parts = is_array($raw)
+            ? $raw
+            : preg_split('/\s*,\s*/', (string) $raw, -1, PREG_SPLIT_NO_EMPTY);
+        if ($parts === false) {
+            return [];
+        }
+
+        $ids = [];
+        foreach ($parts as $part) {
+            $id = (int) $part;
+            if ($id > 0) {
+                $ids[$id] = $id;
+            }
+        }
+
+        return array_values($ids);
     }
 
     /**

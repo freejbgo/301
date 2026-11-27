@@ -125,4 +125,28 @@ class DomainBatchOperationsTest extends TestCase
         $this->assertSame(2, (int) RediAdminDomain::query()->find(1)->status);
         $this->assertSame(1, (int) RediAdminDomain::query()->find(2)->status);
     }
+
+    public function test_selected_rows_without_filter_disable_only_owned_ids(): void
+    {
+        $request = Request::create('/admin/domains', 'GET', [
+            'selected_ids' => '1,2',
+        ]);
+        $runner = new DomainBatchFilterRunner();
+        $out = $runner->run('disable', $request, 10);
+
+        $this->assertTrue($out['ok']);
+        $this->assertSame(2, (int) RediAdminDomain::query()->find(1)->status);
+        $this->assertSame(1, (int) RediAdminDomain::query()->find(2)->status);
+    }
+
+    public function test_blank_selected_ids_still_requires_filter(): void
+    {
+        $runner = new DomainBatchFilterRunner();
+        $out = $runner->run('delete', Request::create('/admin/domains', 'GET', [
+            'selected_ids' => '0,,',
+        ]), 10);
+
+        $this->assertFalse($out['ok']);
+        $this->assertSame(2, (int) RediAdminDomain::query()->count());
+    }
 }
