@@ -108,7 +108,7 @@ return [
     ],
     'install' => [
         'title' => '安裝節點的命令',
-        'help' => '在節點機器上用 root 執行下面這一整條。只把最後的 Node Token 換成這一列「查看 Token」裡的那一串。--install-key 後面是主控安裝密鑰，不是節點 Token，不要替換。--token 這個參數要保留。',
+        'help' => '在節點機器上用 root 執行下面這一整條。只把最後的 節點Token 換成節點「查看 Token」裡的那一串。--install-key 後面是主控安裝密鑰，不是節點 Token，不要替換。--token 這個參數要保留。',
         'copy' => '複製命令',
         'copied' => '已複製',
         'token_placeholder' => 'Node Token',

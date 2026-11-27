@@ -108,7 +108,7 @@ return [
     ],
     'install' => [
         'title' => '安装节点的命令',
-        'help' => '在节点机器上用 root 执行下面这一整条。只把最后的 Node Token 换成这一行「查看 Token」里的那一串。--install-key 后面是主控安装密钥，不是节点 Token，不要替换。--token 这个参数要保留。',
+        'help' => '在节点机器上用 root 执行下面这一整条。只把最后的 节点Token 换成节点「查看 Token」里的那一串。--install-key 后面是主控安装密钥，不是节点 Token，不要替换。--token 这个参数要保留。',
         'copy' => '复制命令',
         'copied' => '已复制',
         'token_placeholder' => 'Node Token',

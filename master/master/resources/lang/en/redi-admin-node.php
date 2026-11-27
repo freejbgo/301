@@ -108,7 +108,7 @@ return [
     ],
     'install' => [
         'title' => 'Node install command',
-        'help' => 'Run this whole line as root on the node. Replace only the final Node Token with the value from View token on that row. The value after --install-key is the master install key, not the node token. Keep the --token flag.',
+        'help' => 'Run this whole line as root on the node. Replace only the final Node Token with the value from that node\'s View token. The value after --install-key is the master install key, not the node token. Keep the --token flag.',
         'copy' => 'Copy command',
         'copied' => 'Copied',
         'token_placeholder' => 'Node Token',
