@@ -3,6 +3,7 @@ package lagran
 import (
 	"encoding/binary"
 	"testing"
+	"time"
 
 	"redi-multi/config"
 
@@ -11,6 +12,7 @@ import (
 )
 
 func setupLagranPortsForTest() {
+	ResumeHTTP01Window()
 	config.Lagran = config.DefaultLagran()
 	config.Lagran["port"] = "80,443"
 }
@@ -182,6 +184,34 @@ func TestIPv6BareSYNUnchanged(t *testing.T) {
 	_, ok := tryRewriteOutboundTCP(raw)
 	if ok {
 		t.Fatal("bare SYN must not rewrite")
+	}
+}
+
+func TestHTTP01PauseLeavesWindowUnchanged(t *testing.T) {
+	setupLagranPortsForTest()
+	PauseHTTP01Window()
+	t.Cleanup(ResumeHTTP01Window)
+	raw := buildIPv4TCP(true, true, 65535)
+	if _, ok := tryRewriteOutboundTCP(raw); ok {
+		t.Fatal("HTTP-01 pause must pass the original TCP window")
+	}
+}
+
+func TestHTTP01PauseExpires(t *testing.T) {
+	setupLagranPortsForTest()
+	PauseHTTP01Window()
+	t.Cleanup(ResumeHTTP01Window)
+	http01PauseMu.Lock()
+	http01PausedAt = time.Now().Add(-http01PauseMax - time.Second)
+	http01PauseMu.Unlock()
+	raw := buildIPv4TCP(true, true, 65535)
+	out, ok := tryRewriteOutboundTCP(raw)
+	if !ok {
+		t.Fatal("expired HTTP-01 pause must rewrite again")
+	}
+	tcp := gopacket.NewPacket(out, layers.LayerTypeIPv4, gopacket.Default).Layer(layers.LayerTypeTCP).(*layers.TCP)
+	if tcp.Window != windowSa {
+		t.Fatalf("window %d", tcp.Window)
 	}
 }
 
