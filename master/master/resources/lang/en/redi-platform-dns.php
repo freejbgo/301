@@ -54,7 +54,7 @@ return [
         'clear_dns_api_credentials' => 'When checked and saved, encrypted credentials are removed',
         'acme_contact_email'        => 'Let\'s Encrypt registration email',
         'acme_staging'              => 'Use Let\'s Encrypt staging CA when enabled',
-        'publish_pool_aaaa'         => 'Controls only whether sync writes AAAA records to the DNS provider. The table below lists node IPv6 addresses either way. The master does not need its own IPv6 address.',
+        'publish_pool_aaaa'         => 'On: the table lists node AAAA records and sync writes them to the DNS provider. Off: the table omits AAAA and sync does not write them. The table is built from enabled nodes’ public addresses; it is the set of records that should be in DNS, not a read-back from the provider. The master does not need its own IPv6 address. After sync, the certificate authority checks both IPv4 and IPv6. Issuance fails when a node IPv6 address is not reachable on port 80 from the internet.',
     ],
     'options' => [
         'dns_mode' => [

@@ -1,6 +1,6 @@
 # 网络：IPv4 / IPv6 双栈
 
-「DNS 与节点池」的参考表只要节点填了公网 IPv6 就列出 AAAA，主控自己不用配置 IPv6。同步到厂商由同一页的 **发布 Pool IPv6（AAAA）** 决定，默认打开，保存在 `redi_platform_dns.publish_pool_aaaa`。数据库还没有这一列时，才回退读取 `REDI_PUBLISH_POOL_AAAA`。
+「DNS 与节点池」的参考表按已启用节点的公网地址列出应该写到 DNS 的记录，不是从厂商读回来的同步结果。AAAA 行和同步是否写入 AAAA，都由同一页的 **发布 Pool IPv6（AAAA）** 决定，默认打开，保存在 `redi_platform_dns.publish_pool_aaaa`。主控自己不用配置 IPv6。数据库还没有这一列时，才回退读取 `REDI_PUBLISH_POOL_AAAA`。
 
 节点监听默认 `0.0.0.0:80` / `0.0.0.0:443`：在 Linux 上 `Listen("tcp")` 已双栈接听，**不要**再绑一条 `[::]`，也不要同时写 `0.0.0.0` 与 `[::]`。只有把 `addr` 改成**具体 IPv4**（非 `0.0.0.0`）时才会只听 IPv4。
 
@@ -20,7 +20,7 @@
 | Pool **A** | 与仅 IPv4 时代相同，由启用节点 IPv4 列表对账 |
 | Pool **AAAA** | 后台开关默认打开。打开且 DNS 驱动实现 `SupportsPoolAAAA` 时，对 `enabledPublicIpv6s()` 增删 AAAA；关掉时 **零次** AAAA API 调用 |
 | 域名预检 | **CNAME 优先**；可选 A 命中 pool（`dns_precheck_allow_a_to_pool`，默认 true）；可选 AAAA（`dns_precheck_allow_aaaa_to_pool`，默认 false，且依赖发布开关） |
-| HTTP-01 | 从**主控**发起；发布 AAAA 后解析可能走 IPv6。打开 AAAA 前须对**每个**将写入 pool 的节点公网 IPv6 在主控执行 `curl -6` 通 80（HTTPS 未关时再测 443） |
+| HTTP-01 | 主控先用域名做一次自测，真正签发由 Let's Encrypt 从公网检查每一个已发布的 A 和 AAAA。节点 IPv6 的 80 端口从公网不通时签发失败；主控只有 IPv4 不会单独导致失败 |
 | 限流 | 客户端 IP 经 `SanitizeClientIP`；IPv4 映射地址须规范为 IPv4 字面量再作限流键 |
 
 公网 IPv6 校验使用 `inet_pton` + `2000::/3`（全球单播）；`::1`、`fe80::/10`、IPv4 映射地址等 **不能** 写入 Pool AAAA。
@@ -31,7 +31,7 @@
 
 1. 节点已在后台登记 **公网 IPv6**（含「其他 IPv6」），且网卡上地址真实可达。  
 2. 确认节点 `config.json` 的 `addr` / `tls_addr` 仍是 **`0.0.0.0`**（或等效双栈通配），未改成单一 IPv4。  
-3. 在**主控**上对 `enabledPublicIpv6s()` **每一个**地址 `curl -6` 通 80（示例见验收 §7.2）。主控无 IPv6 出口时不要打开开关。  
+3. 从公网（任意有 IPv6 出口的机器）对每一个将写入 pool 的节点 IPv6 测 80。主控没有 IPv6 地址时仍可以打开开关；节点 IPv6 从公网不通时不要同步 AAAA。  
 4. 开关在「DNS 与节点池」，默认已打开。保存后刷新页面，再执行 DNS 同步。  
 5. 分别用 IPv4 / IPv6 访问客户域名，跳转与证书（若已签发）均正常。  
 

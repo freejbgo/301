@@ -40,7 +40,7 @@ return [
         'http01_host_invalid' => 'Invalid HTTP-01 hostname',
         'http01_token_invalid' => 'Invalid HTTP-01 token',
         'http01_timeout' => 'HTTP-01 not ready within :seconds seconds: ensure an online node synced the challenge, CNAME is correct, and port 80 is reachable on ',
-        'http01_timeout_ipv6' => ' With Pool AAAA published, master probes may prefer IPv6; ensure the master has IPv6 egress and node public IPv6:80 is reachable (see DEPLOY-centos7 §12)',
+        'http01_timeout_ipv6' => ' With Pool AAAA published, the certificate authority also checks each node IPv6 on port 80. Issuance fails when that address is not reachable from the internet, even if the master has only IPv4.',
     ],
     'dns' => [
         'label_invalid' => ':label is invalid',

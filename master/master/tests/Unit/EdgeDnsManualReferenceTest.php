@@ -67,8 +67,7 @@ class EdgeDnsManualReferenceTest extends TestCase
 
         $pool = EdgeDnsManualReference::tables()['pool'];
 
-        $this->assertSame(['A', 'pool.example.com', '1.2.3.4'], $pool[0]);
-        $this->assertTrue(collect($pool)->contains(fn ($row) => $row[0] === 'AAAA' && str_contains($row[2], '无法解析')));
+        $this->assertSame([['A', 'pool.example.com', '1.2.3.4']], $pool);
     }
 
     public function test_publish_true_lists_valid_aaaa_and_note_for_unreadable_enabled(): void
@@ -153,8 +152,8 @@ class EdgeDnsManualReferenceTest extends TestCase
         $this->assertContains(['AAAA', 'pool.example.com', '2001:db8::9'], $pool);
 
         \DB::table('redi_platform_dns')->update(['publish_pool_aaaa' => 0]);
-        config(['redi.publish_pool_aaaa' => false]);
+        config(['redi.publish_pool_aaaa' => true]);
         $pool = EdgeDnsManualReference::tables()['pool'];
-        $this->assertContains(['AAAA', 'pool.example.com', '2001:db8::9'], $pool);
+        $this->assertFalse(collect($pool)->contains(fn ($row) => $row[0] === 'AAAA'));
     }
 }

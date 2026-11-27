@@ -54,7 +54,7 @@ return [
         'clear_dns_api_credentials' => '勾選並保存將刪除庫內加密憑證',
         'acme_contact_email'        => 'Let\'s Encrypt 註冊郵箱',
         'acme_staging'              => '勾選則使用 Let\'s Encrypt Staging',
-        'publish_pool_aaaa'         => '只決定同步時要不要把 AAAA 寫到 DNS 廠商。下方參考表只要節點填了公網 IPv6 就會列出，主控自己不用配置 IPv6。關掉後仍然顯示，只是點同步時不寫入廠商。',
+        'publish_pool_aaaa'         => '打開後，下方參考表列出節點的 AAAA，點同步時寫入 DNS 廠商。關掉後表裡不列 AAAA，同步也不寫。這張表按已啟用節點的公網地址生成，是應該寫到 DNS 的記錄，不是從廠商查回來的結果。主控不用配置 IPv6。打開並同步後，申請證書時證書機構會同時訪問節點的 IPv4 和 IPv6；節點 IPv6 的 80 端口從公網不通時，證書會失敗。',
     ],
     'options' => [
         'dns_mode' => [

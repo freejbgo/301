@@ -199,8 +199,8 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health --json
 
 ### 何时打开发布开关
 
-1. 节点网卡上已有 **公网 IPv6**，且 firewalld 已放行 http/https（`deploy-node.sh` 默认会）。发布包默认仍是 `0.0.0.0:80` / `0.0.0.0:443`；在 Linux 上 `redi-multi` 已经双栈接听，**不要**为了接 IPv6 去改 `config.json` 监听字符串。若只发布了 AAAA 而登记地址在主控上 `curl -6` 不通，Let's Encrypt 的 **HTTP-01 会优先走 AAAA**，签发与续期会超时。
-2. 在 **主控机器**上，对后台 **`enabledPublicIpv6s()` 列出的每一个 IPv6**（含「其他 IPv6」，不是只测主地址）测 80（HTTP-01 从主控发出，只在节点本机 `curl` **不算**）：
+1. 节点网卡上已有 **公网 IPv6**，且 firewalld 已放行 http/https（`deploy-node.sh` 默认会）。发布包默认仍是 `0.0.0.0:80` / `0.0.0.0:443`；在 Linux 上 `redi-multi` 已经双栈接听，**不要**为了接 IPv6 去改 `config.json` 监听字符串。申请证书时，Let's Encrypt 从公网同时检查已发布的 IPv4 和 IPv6。节点 IPv6 的 80 端口从公网不通时，签发与续期会失败。主控自己有没有 IPv6 不影响这一步。
+2. 用一台有 IPv6 出口的机器，对后台列出的每一个节点 IPv6（含「其他 IPv6」）测 80。只在节点本机 `curl` 不算，因为证书机构是从公网访问的：
 
    ```bash
    curl -6 -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "http://[2001:db8::1]/"
@@ -214,9 +214,9 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health --json
    curl -6 -k -sS -o /dev/null -w '%{http_code}\n' --connect-timeout 5 "https://[2001:db8::1]/"
    ```
 
-3. 参考表只读取节点上填写的 IPv6，**主控不用配置 IPv6 地址**。同步写入厂商后，申请证书时访问节点可能会走到 IPv6。主控没有 IPv6 出口时，关掉 **发布 Pool IPv6**，参考表仍会显示这些地址，只是不再写入厂商。
+3. 参考表不是同步之后从厂商读回来的结果。它按已启用节点的公网地址，列出应该写到 DNS 的记录。开关打开时才列出 AAAA，并且和点同步时写入的内容一致。**主控不用配置 IPv6 地址。**
 
-4. 保存节点 IPv6 后刷新「DNS 与节点池」即可看到 AAAA。开关默认打开，API 模式再点一次同步才会写到厂商。开关打开时，客户域名仅用 AAAA 指向 Pool 也可以通过预检。
+4. 开关打开并同步之后，Let's Encrypt 会从公网同时检查 IPv4 和 IPv6。主控只有 IPv4 不会单独导致失败。节点 IPv6 的 80 端口从公网不通时，证书会失败。只想用 IPv4 申请证书时，关掉开关，并确认厂商上没有残留的 AAAA。
 
 关掉开关 **不会**自动删除厂商里已有 AAAA。要删掉这些记录，先保持开关打开，清空节点 IPv6，再同步一次。A 记录行为与 IPv4 一致。
 
