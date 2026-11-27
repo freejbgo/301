@@ -23,7 +23,7 @@
 | `REDI_DB_NAME` | 库名，默认 `redi_admin` |
 | `REDI_DB_TLS` | 可选：`1`/`true` 启用 TLS 并校验证书；`skip-verify` 仅加密不校验（内网自签） |
 | `REDI_MASTER_URL` | 主控地址，须 `https://`（lab 可 `REDI_MASTER_INSECURE=1` 允许 `http://`） |
-| `REDI_NODE_TOKEN` | 后台「节点管理」创建节点时只显示一次的 Token |
+| `REDI_NODE_TOKEN` | 后台「节点管理」这一行「查看 Token」里的 Token |
 | `REDI_AGENT_EMPTY_CERT_CLEAR_AFTER` | 可选，默认 `3`；主控连续空证书列表 N 次后才清空本机 TLS 内存（`1` = 立即清空） |
 | `REDI_AGENT_EMPTY_CHALLENGE_CLEAR_AFTER` | 可选，默认 `3`；主控连续空 ACME 挑战列表 N 次后才清空本地挑战 |
 | `REDI_AGENT_EMPTY_RULES_CLEAR_AFTER` | 可选，默认 `3`；主控连续空 redirect-rules N 次后才清空 force_https 映射 |

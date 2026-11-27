@@ -31,12 +31,19 @@ return [
             'warning_empty' => '該節點沒有失敗的憑證部署記錄',
             'success' => '已重新排隊 :count 條失敗部署',
         ],
+        'view_token' => [
+            'title' => '查看 Token',
+            'error_admin' => '僅超級管理員可操作',
+            'error_not_found' => '節點不存在',
+            'missing' => '這個節點的 Token 沒有保存下來。點同一選單裡的「重置 Token」，彈窗會給出新的完整 Token 和安裝命令。舊 Token 會立刻失效。',
+            'success' => ':name 的 Token',
+        ],
         'rotate_token' => [
             'title' => '重置 Token',
             'confirm' => '重置後舊 Token 立即失效，節點需改用新 Token。繼續？',
             'error_admin' => '僅超級管理員可操作',
             'error_not_found' => '節點不存在',
-            'success' => '新 Token 已生成（完整串僅本次響應可見，請立即寫入節點 REDI_NODE_TOKEN）：:masked',
+            'success' => '新 Token 已生成，舊 Token 已失效',
         ],
         'batch_enable' => [
             'title' => '批量啟用',
@@ -96,7 +103,16 @@ return [
             'ipv6_in_use'             => 'IPv6 已被其他節點使用：:value',
             'ipv4_in_use'             => 'IP 已被其他節點使用：:value',
         ],
-        'created'        => '節點已創建',
+        'created'        => '節點已創建。回到列表後，在這一列的操作選單裡點「查看 Token」。',
         'created_toastr' => '節點已創建。完整 Token 僅本次響應可見（請立即寫入 REDI_NODE_TOKEN）：:masked',
+    ],
+    'install' => [
+        'title' => '安裝節點的命令',
+        'help' => '在節點機器上用 root 執行下面這一整條。只把最後的 后台Token 換成這一列「查看 Token」裡的那一串。--install-key 後面是主控安裝密鑰，不是節點 Token，不要替換。--token 這個參數要保留。',
+        'copy' => '複製命令',
+        'token_placeholder' => '后台Token',
+        'key_missing' => '後台還讀不到安裝密鑰，所以上面命令裡的「安裝密鑰」還不能用。在主控上執行一次下面這一條，然後刷新本頁：',
+        'dialog_token' => '節點 Token',
+        'dialog_command' => '安裝命令（已填入這個節點的 Token，在節點上整條執行）',
     ],
 ];

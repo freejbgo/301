@@ -105,6 +105,14 @@ CSS
     $switchFailed = json_encode(__('redi-locale.switch_failed'));
     Admin::script(<<<JS
 Dcat.ready(function () {
+  if (Dcat.confirm && !Dcat.confirm.__rediPreConfirm) {
+    var rediConfirm = Dcat.confirm;
+    Dcat.confirm = function (title, message, success, fail, options) {
+      options = $.extend({ preConfirm: function () { return true; } }, options || {});
+      return rediConfirm(title, message, success, fail, options);
+    };
+    Dcat.confirm.__rediPreConfirm = true;
+  }
   function rediSwitchLocale(locale) {
     if (!locale) { return; }
     Dcat.loading();

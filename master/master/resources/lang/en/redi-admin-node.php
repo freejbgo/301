@@ -31,12 +31,19 @@ return [
             'warning_empty' => 'No failed certificate deployments on this node',
             'success' => 'Requeued :count failed deployment(s)',
         ],
+        'view_token' => [
+            'title' => 'View token',
+            'error_admin' => 'Platform administrators only',
+            'error_not_found' => 'Node not found',
+            'missing' => 'This node has no saved token. Use Rotate token in the same menu. The dialog shows the new token and the install command. The old token stops working immediately.',
+            'success' => 'Token for :name',
+        ],
         'rotate_token' => [
             'title' => 'Rotate token',
             'confirm' => 'The old token stops working immediately. Continue?',
             'error_admin' => 'Platform administrators only',
             'error_not_found' => 'Node not found',
-            'success' => 'New token generated (full value shown once; set REDI_NODE_TOKEN on the node): :masked',
+            'success' => 'New token generated. The old token no longer works',
         ],
         'batch_enable' => [
             'title' => 'Batch enable',
@@ -96,7 +103,16 @@ return [
             'ipv6_in_use'             => 'IPv6 already used by another node: :value',
             'ipv4_in_use'             => 'IP already used by another node: :value',
         ],
-        'created'        => 'Node created',
+        'created'        => 'Node created. Back on the list, open this row’s menu and choose View token.',
         'created_toastr' => 'Node created. Full token shown once—set REDI_NODE_TOKEN on the node now: :masked',
+    ],
+    'install' => [
+        'title' => 'Node install command',
+        'help' => 'Run this whole line as root on the node. Replace only the final 后台Token with the value from View token on that row. The value after --install-key is the master install key, not the node token. Keep the --token flag.',
+        'copy' => 'Copy command',
+        'token_placeholder' => '后台Token',
+        'key_missing' => 'The panel cannot read the install key yet, so the placeholder in the command above is not usable. Run this once on the master, then reload this page:',
+        'dialog_token' => 'Node token',
+        'dialog_command' => 'Install command with this node’s token filled in. Run the whole line on the node.',
     ],
 ];
