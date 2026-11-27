@@ -14,6 +14,8 @@ class PlatformBrandingStorageTest extends TestCase
         $method->setAccessible(true);
 
         $this->assertSame('', $method->invoke(null, '../secrets/logo.png'));
+        $this->assertSame('', $method->invoke(null, 'branding/shell.php'));
         $this->assertSame('branding/logo.png', $method->invoke(null, 'branding/logo.png'));
+        $this->assertSame('branding/icon.ico', $method->invoke(null, 'branding/icon.ico'));
     }
 }

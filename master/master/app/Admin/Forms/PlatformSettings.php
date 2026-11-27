@@ -27,6 +27,9 @@ class PlatformSettings extends Form implements LazyRenderable
 
     public function form()
     {
+        // Dcat drops every field that sits outside a tab. This view prints those fields under the tabs.
+        $this->view = 'admin::widgets.platform-settings-form';
+
         $locales = SetAdminLocale::supported();
         $tab = null;
         foreach ($locales as $index => $locale) {
@@ -54,6 +57,8 @@ class PlatformSettings extends Form implements LazyRenderable
             ->uniqueName()
             ->move('branding')
             ->autoUpload()
+            ->removable()
+            ->accept('png,jpg,jpeg,gif,webp', 'image/png,image/jpeg,image/gif,image/webp')
             ->help(__('redi-platform-settings.help.logo'));
 
         $this->image('logo_mini', __('redi-platform-settings.fields.logo_mini'))
@@ -61,13 +66,17 @@ class PlatformSettings extends Form implements LazyRenderable
             ->uniqueName()
             ->move('branding')
             ->autoUpload()
+            ->removable()
+            ->accept('png,jpg,jpeg,gif,webp', 'image/png,image/jpeg,image/gif,image/webp')
             ->help(__('redi-platform-settings.help.logo_mini'));
 
-        $this->image('favicon', __('redi-platform-settings.fields.favicon'))
+        $this->file('favicon', __('redi-platform-settings.fields.favicon'))
             ->disk('public')
             ->uniqueName()
             ->move('branding')
             ->autoUpload()
+            ->removable()
+            ->accept('png,jpg,jpeg,gif,webp,ico', 'image/png,image/jpeg,image/gif,image/webp,image/x-icon,image/vnd.microsoft.icon')
             ->help(__('redi-platform-settings.help.favicon_shared'));
     }
 

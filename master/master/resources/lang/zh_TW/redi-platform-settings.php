@@ -28,9 +28,9 @@ return [
         'system_name' => '當前語言介面下，側邊欄 Logo 旁顯示的名稱',
         'page_title'  => '當前語言介面下的瀏覽器標籤頁標題，留空則與系統名稱相同',
         'login_title' => '當前語言介面下的登錄頁主標題，留空則與系統名稱相同',
-        'logo'        => '建議 PNG，高度約 35px',
-        'logo_mini'   => '留空則使用上方 Logo',
-        'favicon_shared' => '各語言介面共用同一圖標',
+        'logo'        => 'PNG、JPG、GIF 或 WEBP。未上傳時側欄只顯示系統名稱',
+        'logo_mini'   => '留空則使用上方 Logo。未上傳任何 Logo 時，收起側欄不顯示圖片',
+        'favicon_shared' => '各語言介面共用同一圖標。PNG、JPG、GIF、WEBP 或 ICO。未上傳時瀏覽器不顯示站點圖標',
     ],
     'messages' => [
         'saved'     => '系統外觀已保存',

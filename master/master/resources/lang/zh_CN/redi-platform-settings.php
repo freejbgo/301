@@ -28,9 +28,9 @@ return [
         'system_name' => '当前语言界面下，侧边栏 Logo 旁显示的名称',
         'page_title'  => '当前语言界面下的浏览器标签页标题，留空则与系统名称相同',
         'login_title' => '当前语言界面下的登录页主标题，留空则与系统名称相同',
-        'logo'        => '建议 PNG，高度约 35px',
-        'logo_mini'   => '留空则使用上方 Logo',
-        'favicon_shared' => '各语言界面共用同一图标',
+        'logo'        => 'PNG、JPG、GIF 或 WEBP。未上传时侧栏只显示系统名称',
+        'logo_mini'   => '留空则使用上方 Logo。未上传任何 Logo 时，收起侧栏不显示图片',
+        'favicon_shared' => '各语言界面共用同一图标。PNG、JPG、GIF、WEBP 或 ICO。未上传时浏览器不显示站点图标',
     ],
     'messages' => [
         'saved'     => '系统外观已保存',

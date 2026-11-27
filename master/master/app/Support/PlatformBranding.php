@@ -4,7 +4,6 @@ namespace App\Support;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class PlatformBranding
 {
@@ -41,7 +40,7 @@ class PlatformBranding
     }
 
     /**
-     * Values for the system-appearance form (all locale tabs + shared images).
+     * Values for the system-appearance form (language tabs plus shared images).
      *
      * @return array<string, mixed>
      */
@@ -51,9 +50,9 @@ class PlatformBranding
         $locales = is_array($stored['locales'] ?? null) ? $stored['locales'] : [];
 
         $out = [
-            'logo' => (string) ($stored['logo'] ?? ''),
-            'logo_mini' => (string) ($stored['logo_mini'] ?? ''),
-            'favicon' => (string) ($stored['favicon'] ?? ''),
+            'logo' => self::normalizeStoragePath((string) ($stored['logo'] ?? '')),
+            'logo_mini' => self::normalizeStoragePath((string) ($stored['logo_mini'] ?? '')),
+            'favicon' => self::normalizeStoragePath((string) ($stored['favicon'] ?? '')),
             'locales' => [],
         ];
 
@@ -184,13 +183,14 @@ class PlatformBranding
             }
         }
 
+        $stored = self::getStored();
         $data = [
             'system_name' => $primaryName,
             'page_title' => $locales['zh_CN']['page_title'],
             'login_title' => $locales['zh_CN']['login_title'],
-            'logo' => (string) ($input['logo'] ?? ''),
-            'logo_mini' => (string) ($input['logo_mini'] ?? ''),
-            'favicon' => (string) ($input['favicon'] ?? ''),
+            'logo' => self::incomingImage($input, 'logo', $stored),
+            'logo_mini' => self::incomingImage($input, 'logo_mini', $stored),
+            'favicon' => self::incomingImage($input, 'favicon', $stored),
             'locales' => $locales,
         ];
 
@@ -199,10 +199,6 @@ class PlatformBranding
         }
         if ($data['login_title'] === '' && $data['system_name'] !== '') {
             $data['login_title'] = $data['system_name'];
-        }
-
-        foreach (['logo', 'logo_mini', 'favicon'] as $key) {
-            $data[$key] = self::normalizeStoragePath($data[$key]);
         }
 
         $now = now();
@@ -348,7 +344,11 @@ class PlatformBranding
 
     protected static function buildLogoHtml(string $path, string $systemName, bool $mini): string
     {
-        $url = self::publicUrl($path) ?: '/vendor/dcat-admin/images/logo.png';
+        $url = self::publicUrl($path);
+        if ($url === null) {
+            return $mini ? '' : e($systemName);
+        }
+
         $width = $mini ? 30 : 35;
 
         return sprintf(
@@ -361,16 +361,30 @@ class PlatformBranding
 
     protected static function publicUrl(?string $path): ?string
     {
-        $path = trim((string) $path);
+        $path = self::normalizeStoragePath((string) $path);
         if ($path === '') {
             return null;
         }
 
-        if (strpos($path, 'http://') === 0 || strpos($path, 'https://') === 0) {
-            return $path;
+        return '/storage/'.$path;
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @param  array<string, mixed>  $stored
+     */
+    protected static function incomingImage(array $input, string $key, array $stored): string
+    {
+        if (! array_key_exists($key, $input)) {
+            return self::normalizeStoragePath((string) ($stored[$key] ?? ''));
         }
 
-        return Storage::disk('public')->url($path);
+        $value = $input[$key];
+        if (is_array($value)) {
+            $value = reset($value);
+        }
+
+        return self::normalizeStoragePath((string) $value);
     }
 
     /**
@@ -392,6 +406,12 @@ class PlatformBranding
             return '';
         }
 
-        return ltrim($path, '/');
+        $path = ltrim($path, '/');
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        if (! in_array($extension, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'ico'], true)) {
+            return '';
+        }
+
+        return $path;
     }
 }

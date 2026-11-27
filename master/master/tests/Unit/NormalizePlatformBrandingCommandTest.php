@@ -91,4 +91,59 @@ class NormalizePlatformBrandingCommandTest extends TestCase
         $row = \DB::table('admin_settings')->where('slug', PlatformBranding::SETTINGS_SLUG)->first();
         $this->assertSame($encoded, $row->value);
     }
+
+    public function test_save_stores_uploads_and_empty_logo_has_no_default_image(): void
+    {
+        \DB::table('admin_settings')->insert([
+            'slug' => PlatformBranding::SETTINGS_SLUG,
+            'value' => json_encode([
+                'logo' => 'branding/keep.png',
+                'logo_mini' => 'branding/mini.png',
+                'favicon' => 'branding/icon.ico',
+                'locales' => [],
+            ], JSON_UNESCAPED_UNICODE),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        PlatformBranding::save([
+            'logo' => 'branding/new.png',
+            'favicon' => 'branding/shell.php',
+            'locales' => [
+                'zh_CN' => [
+                    'system_name' => '新名称',
+                    'page_title' => '',
+                    'login_title' => '',
+                ],
+            ],
+        ]);
+
+        $row = json_decode(
+            \DB::table('admin_settings')->where('slug', PlatformBranding::SETTINGS_SLUG)->value('value'),
+            true
+        );
+        $this->assertSame('branding/new.png', $row['logo']);
+        $this->assertSame('branding/mini.png', $row['logo_mini']);
+        $this->assertSame('', $row['favicon']);
+        $this->assertSame('新名称', $row['locales']['zh_CN']['system_name']);
+
+        PlatformBranding::save([
+            'logo' => '',
+            'logo_mini' => '',
+            'favicon' => '',
+            'locales' => [
+                'zh_CN' => [
+                    'system_name' => '新名称',
+                    'page_title' => '页',
+                    'login_title' => '登',
+                ],
+            ],
+        ]);
+        PlatformBranding::applyAdminConfig();
+        $this->assertStringNotContainsString('logo.png', (string) config('admin.logo'));
+        $this->assertStringNotContainsString('<img', (string) config('admin.logo'));
+        $this->assertStringContainsString('新名称', (string) config('admin.logo'));
+        $this->assertSame('', (string) config('admin.logo-mini'));
+        $this->assertNull(config('admin.favicon'));
+    }
 }
