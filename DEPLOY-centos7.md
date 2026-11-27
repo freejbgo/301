@@ -68,7 +68,7 @@ sudo bash scripts/centos7/deploy-master.sh
 
 ## 3. 部署节点
 
-先在主控后台「节点管理」新建一条节点，主公网 IP 填这台机器的 IPv4，复制只显示一次的 Token。主控的 `NODE_IPS` 里也要有这个 IP；如果部署主控时还没写，补上后在主控再执行一次 `deploy-master.sh`，它会补授权和防火墙。
+先在主控后台「节点管理」新建一条节点，主公网 IP 填这台机器的 IPv4。保存后回到列表，用这一行「查看 Token」里的 Token，或直接用弹窗里已经填好 Token 的安装命令。手工部署时，主控的 `NODE_IPS` 里也要有这个 IP；如果部署主控时还没写，补上后在主控再执行一次 `deploy-master.sh`，它会补授权和防火墙。一条命令安装会自己向主控申请放行。
 
 把同一份仓库放到节点上（或只把 `redi-multi.tar.gz`、`deploy-node.sh`、`vars.env` 拷过去）。`vars.env` 里填好 `NODE_INSTALL_ROOT`（默认 `/opt/redi-multi`）、`REDI_NODE_TOKEN` 等节点项。
 

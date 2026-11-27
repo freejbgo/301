@@ -237,12 +237,10 @@ fi
 
 echo "==> 下载项目到 ${SRC}"
 export GIT_TERMINAL_PROMPT=0
-if [[ ! -s "${SRC}/pkg/master.tar.gz" || ! -s "${SRC}/pkg/redi-multi.tar.gz" ]]; then
+rm -rf "$SRC"
+if ! git clone --depth 1 "$REPO_URL" "$SRC"; then
   rm -rf "$SRC"
-  if ! git clone --depth 1 "$REPO_URL" "$SRC"; then
-    rm -rf "$SRC"
-    die "下载代码失败。请先把 ${REPO_URL} 设为公开，并确认这台机器能访问 GitHub"
-  fi
+  die "下载代码失败。请先把 ${REPO_URL} 设为公开，并确认这台机器能访问 GitHub"
 fi
 [[ -s "${SRC}/pkg/master.tar.gz" && -s "${SRC}/pkg/redi-multi.tar.gz" ]] || die "仓库里没有安装包 pkg/master.tar.gz 或 pkg/redi-multi.tar.gz"
 cp -f "${SRC}/pkg/master.tar.gz" /tmp/master.tar.gz
