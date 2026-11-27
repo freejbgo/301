@@ -65,6 +65,11 @@ for empty_key in REDI_AGENT_EMPTY_CERT_CLEAR_AFTER REDI_AGENT_EMPTY_CHALLENGE_CL
 done
 grep -q 'redi_mysql_tls_args_from_env' "${REPO_ROOT}/scripts/centos7/deploy-node.sh" \
   || fail "deploy-node.sh must honor REDI_DB_TLS in DB smoke test"
+grep -q 'redi_mysql_tls_args\[@\]+' "${REPO_ROOT}/scripts/centos7/deploy-node.sh" \
+  || fail "deploy-node.sh must expand empty TLS args safely on CentOS 7 bash 4.2"
+if grep 'redi_mysql_tls_args\[@\]' "${REPO_ROOT}/scripts/centos7/deploy-node.sh" | grep -v 'redi_mysql_tls_args\[@\]+' | grep -v '^[[:space:]]*#'; then
+  fail "deploy-node.sh still expands an empty TLS array under set -u"
+fi
 grep -q 'redi_mysql_tls_args_from_env' "${REPO_ROOT}/scripts/centos7/lib.sh" \
   || fail "lib.sh must define redi_mysql_tls_args_from_env"
 grep -q 'OPS-RELEASE-UPDATE' "$DEPLOY" || fail "deploy-node: must mention OPS-RELEASE-UPDATE for optional Agent env"

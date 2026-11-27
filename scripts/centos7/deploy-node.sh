@@ -171,7 +171,10 @@ password=${DB_PASS}
 database=redi_admin
 EOF
 redi_mysql_tls_args_from_env
-if mysql --defaults-extra-file="$db_cnf" "${redi_mysql_tls_args[@]}" -e "CALL redi_node_bump_skip('__redi_deploy_smoke__')" >/dev/null; then
+# CentOS 7 的 bash 4.2 在 set -u 下，空数组 "${arr[@]}" 会报 unbound variable。
+# REDI_DB_TLS 为空时（node.sh 默认明文）这个数组就是空的，必须用下面这种展开。
+# shellcheck disable=SC2294
+if mysql --defaults-extra-file="$db_cnf" ${redi_mysql_tls_args[@]+"${redi_mysql_tls_args[@]}"} -e "CALL redi_node_bump_skip('__redi_deploy_smoke__')" >/dev/null; then
   echo "数据库连接正常（redi_node EXECUTE redi_node_bump_skip）"
 else
   rm -f "$db_cnf"
