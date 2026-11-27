@@ -21,7 +21,7 @@ return [
     ],
     'validation' => [
         'name_required'      => '分組名稱不能為空',
-        'delete_has_domains' => '該分組下還有 :count 條域名，請先遷移或刪除域名後再刪分組。',
+        'delete_has_domains' => '這個分組裡還有 :count 個域名，所以不能刪除。請先打開域名列表，把這些域名改到別的分組，或者先刪除這些域名，然後再刪除這個分組。',
         'owner_invalid'      => '請選擇有效的租戶帳號',
         'owner_not_tenant'   => '不能將分組掛在超級管理員帳號下',
     ],
@@ -39,8 +39,8 @@ return [
         ],
         'batch_delete' => [
             'title' => '批量刪除',
-            'confirm' => '僅可刪除無域名的空分組。繼續？',
-            'error_none' => '沒有可刪除的分組（或分組下仍有域名）',
+            'confirm' => '分組裡還有域名時不能刪除。需要先把域名改到別的分組，或先刪除這些域名。繼續刪除空分組？',
+            'error_none' => '沒有可刪除的分組',
             'success' => '已刪除 :count 個分組',
         ],
         'batch_common' => [

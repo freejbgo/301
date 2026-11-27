@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Exceptions\GroupNotEmptyException;
 use App\Models\Concerns\BelongsToAdminTenant;
 use App\Support\OpsDisplaySanitizer;
 use Dcat\Admin\Traits\HasDateTimeFormatter;
@@ -45,17 +46,27 @@ class RediAdminGroup extends Model
         });
 
         static::deleting(function (RediAdminGroup $group) {
-            $count = RediAdminDomain::query()
-                ->where('group_id', $group->id)
-                ->where('admin_id', $group->admin_id)
-                ->count();
-
-            if ($count > 0) {
-                throw ValidationException::withMessages([
-                    'name' => __('redi-admin-group.validation.delete_has_domains', ['count' => $count]),
-                ]);
+            $reason = $group->deleteBlockedReason();
+            if ($reason !== null) {
+                throw new GroupNotEmptyException($reason);
             }
         });
+    }
+
+    /**
+     * Plain-language reason when this group still has domains, or null when it can be deleted.
+     */
+    public function deleteBlockedReason(): ?string
+    {
+        $count = (int) RediAdminDomain::query()
+            ->where('group_id', $this->id)
+            ->count();
+
+        if ($count < 1) {
+            return null;
+        }
+
+        return __('redi-admin-group.validation.delete_has_domains', ['count' => $count]);
     }
 
     public function domains()

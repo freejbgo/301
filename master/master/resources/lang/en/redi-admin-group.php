@@ -21,7 +21,7 @@ return [
     ],
     'validation' => [
         'name_required'      => 'Group name cannot be empty',
-        'delete_has_domains' => 'This group still has :count domain(s). Move or delete them first.',
+        'delete_has_domains' => 'This group still has :count domain(s), so it cannot be deleted. Open the domain list and move those domains to another group, or delete the domains first, then delete this group.',
         'owner_invalid'      => 'Select a valid tenant account',
         'owner_not_tenant'   => 'Groups cannot be owned by the platform administrator account',
     ],
@@ -39,8 +39,8 @@ return [
         ],
         'batch_delete' => [
             'title' => 'Batch delete',
-            'confirm' => 'Only empty groups (no domains) can be deleted. Continue?',
-            'error_none' => 'No groups deleted (groups may still contain domains)',
+            'confirm' => 'A group that still has domains cannot be deleted. Move those domains to another group, or delete the domains first. Continue deleting empty groups?',
+            'error_none' => 'No groups to delete',
             'success' => 'Deleted :count group(s)',
         ],
         'batch_common' => [

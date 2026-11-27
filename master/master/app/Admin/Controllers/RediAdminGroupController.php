@@ -121,18 +121,23 @@ class RediAdminGroupController extends AdminController
             }
 
             $form->deleting(function (Form $form) {
-                $group = \App\Models\RediAdminGroup::query()->find($form->getKey());
-                if (! $group) {
+                $ids = array_values(array_filter(array_map('intval', explode(',', (string) $form->getKey()))));
+                if ($ids === []) {
                     return;
                 }
-                $count = \App\Models\RediAdminDomain::query()
-                    ->where('group_id', $group->id)
-                    ->where('admin_id', $group->admin_id)
-                    ->count();
-                if ($count > 0) {
-                    throw ValidationException::withMessages([
-                        'name' => admin_trans('redi-admin-group.validation.delete_has_domains', ['count' => $count]),
-                    ]);
+
+                $lines = [];
+                foreach (\App\Models\RediAdminGroup::query()->whereIn('id', $ids)->get() as $group) {
+                    $reason = $group->deleteBlockedReason();
+                    if ($reason === null) {
+                        continue;
+                    }
+                    $label = OpsDisplaySanitizer::field($group->name, '—', 120);
+                    $lines[] = $label.'：'.$reason;
+                }
+
+                if ($lines !== []) {
+                    return $form->response()->error(implode("\n", $lines))->alert();
                 }
             });
 
