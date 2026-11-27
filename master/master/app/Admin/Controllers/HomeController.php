@@ -59,14 +59,16 @@ class HomeController extends Controller
 
             $requeueConfirm = json_encode(__('redi-home.labels.requeue_confirm'), JSON_UNESCAPED_UNICODE);
             $queueRetryConfirm = json_encode(__('redi-home.labels.queue_retry_confirm'), JSON_UNESCAPED_UNICODE);
-            $failedJobHtml = '';
-            foreach (FailedQueueJobs::recent(5) as $line) {
-                $failedJobHtml .= '<li>'.e(__('redi-home.labels.queue_failed_line', $line)).'</li>';
+            $failedItems = '';
+            foreach (FailedQueueJobs::recent(8) as $line) {
+                $failedItems .= '<li>'.e(__('redi-home.labels.queue_failed_line', $line)).'</li>';
             }
-            if ($failedJobHtml !== '') {
-                $failedJobHtml = '<p class="mb-1 mt-3"><strong>'.e(__('redi-home.labels.queue_failed_heading')).'</strong></p>'
-                    .'<ul class="mb-2">'.$failedJobHtml.'</ul>'
+            if ($failedItems !== '') {
+                $failedJobHtml = '<p class="mb-1"><strong>'.e(__('redi-home.labels.queue_failed_heading')).'</strong></p>'
+                    .'<ul class="mb-2">'.$failedItems.'</ul>'
                     .'<p class="text-muted mb-0">'.e(__('redi-home.labels.queue_failed_where')).'</p>';
+            } else {
+                $failedJobHtml = '<p class="text-muted mb-0">'.e(__('redi-home.labels.queue_failed_none')).'</p>';
             }
             $content->row(function (Row $row) use ($issueHtml, $hintsHtml, $requeueConfirm, $queueRetryConfirm, $failedJobHtml) {
                 $requeueUrl = admin_url('ops/requeue-failed-deployments');
@@ -74,6 +76,7 @@ class HomeController extends Controller
                 $token = csrf_token();
                 $redirect = e(admin_base_path('/'));
                 $opsHtml = $issueHtml
+                    .$failedJobHtml
                     .'<form method="post" action="'.e($queueRetryUrl).'" class="mt-3" onsubmit="return confirm('.$queueRetryConfirm.');">'
                     .'<input type="hidden" name="_token" value="'.e($token).'">'
                     .'<input type="hidden" name="_redirect" value="'.$redirect.'">'
@@ -86,7 +89,6 @@ class HomeController extends Controller
                     .'<button type="submit" class="btn btn-warning btn-sm">'.e(__('redi-home.labels.requeue_btn')).'</button>'
                     .'<span class="text-muted ml-2">'.e(__('redi-home.labels.requeue_hint')).'</span>'
                     .'</form>'
-                    .$failedJobHtml
                     .$hintsHtml;
                 $row->column(12, Card::make(__('redi-home.labels.ops_card'), $opsHtml));
             });

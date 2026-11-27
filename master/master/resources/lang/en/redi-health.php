@@ -17,7 +17,7 @@ return [
         'node_pool_empty' => 'No enabled edge nodes — certs cannot deploy and pool DNS has no A records',
         'node_no_public_ip' => ':count enabled node(s) without public IP (public_ip / extra_ips) — pool A and precheck will not work',
         'cert_validating_stuck' => ':total certificate(s) stuck in validating for :hours+ hour(s) (ACME may be stuck): :names',
-        'queue_failed_jobs' => ':count failed queue job(s), counted apart from failed certificate deployments. Run /usr/bin/php /opt/301/master/artisan queue:failed, or use Retry failed queue jobs on the home page.',
+        'queue_failed_jobs' => ':count failed queue job(s). The reason is in the list below. Retry failed queue jobs clears this count.',
         'queue_backlog' => 'Queue backlog :pending (threshold :threshold) — ensure redi-queue / queue:work is running',
         'queue_stale' => ':count job(s) waiting over :hours hour(s) — worker may be down',
         'cert_domain_name_drift' => 'Cert #:id domain_name mismatch (could not auto-align): recorded :recorded, expected :canonical',
