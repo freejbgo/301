@@ -2,16 +2,18 @@
 
 namespace App\Admin\Actions\Grid;
 
+use App\Admin\Concerns\AdminOnlyGridAction;
 use App\Models\RediAdminDomain;
 use App\Models\RediDomainCert;
 use App\Services\CertificateDeployService;
 use App\Support\AdminTenantContext;
-use Dcat\Admin\Admin;
 use Dcat\Admin\Grid\RowAction;
 use Illuminate\Http\Request;
 
 class RedeployCertificate extends RowAction
 {
+    use AdminOnlyGridAction;
+
     public function title()
     {
         return __('redi-admin-domain.actions.redeploy.title');
@@ -22,8 +24,14 @@ class RedeployCertificate extends RowAction
         return [__('redi-admin-domain.actions.redeploy.confirm')];
     }
 
-    public function handle(Request $request, CertificateDeployService $deployService)
+    public function handle(Request $request)
     {
+        if ($deny = $this->ensureAdministratorResponse()) {
+            return $deny;
+        }
+
+        // Dcat 只传入 Request，不会做方法注入。
+        $deployService = app(CertificateDeployService::class);
         $domain = RediAdminDomain::query()->find($this->getKey());
         if (! $domain) {
             return $this->response()->error(__('redi-admin-domain.actions.redeploy.error_not_found'));

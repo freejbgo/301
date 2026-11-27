@@ -2,6 +2,7 @@
 
 namespace App\Admin\Actions\Grid;
 
+use App\Admin\Concerns\AdminOnlyGridAction;
 use App\Admin\Concerns\AppendsBatchTruncationNotice;
 use App\Admin\Concerns\RecordsAdminBatchAudit;
 use App\Services\DomainCertificateRedeployQueue;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 
 class BatchRedeployCertificate extends BatchAction
 {
+    use AdminOnlyGridAction;
     use AppendsBatchTruncationNotice;
     use RecordsAdminBatchAudit;
     public function title()
@@ -25,6 +27,10 @@ class BatchRedeployCertificate extends BatchAction
 
     public function handle(Request $request)
     {
+        if ($deny = $this->ensureAdministratorResponse()) {
+            return $deny;
+        }
+
         $result = DomainCertificateRedeployQueue::redeployOwned(
             (array) $this->getKey(),
             (int) Admin::user()->id

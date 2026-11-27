@@ -4,6 +4,7 @@ namespace App\Admin\Forms;
 
 use App\Services\DomainBatchFilterRunner;
 use App\Services\DomainListFilter;
+use App\Support\AdminTenantContext;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Contracts\LazyRenderable;
 use Dcat\Admin\Traits\LazyWidget;
@@ -38,12 +39,17 @@ class BatchFilterDomains extends Form implements LazyRenderable
 
         $options = [
             'apply_cert' => __('redi-admin-domain.batch_filter.actions.apply_cert'),
-            'redeploy' => __('redi-admin-domain.batch_filter.actions.redeploy'),
             'enable' => __('redi-admin-domain.batch_filter.actions.enable'),
             'disable' => __('redi-admin-domain.batch_filter.actions.disable'),
             'delete' => __('redi-admin-domain.batch_filter.actions.delete'),
             'set_skip_url' => __('redi-admin-domain.batch_filter.actions.set_skip_url'),
         ];
+        if (AdminTenantContext::isPlatformAdministrator()) {
+            $options = [
+                'apply_cert' => $options['apply_cert'],
+                'redeploy' => __('redi-admin-domain.batch_filter.actions.redeploy'),
+            ] + $options;
+        }
 
         $this->select('action', __('redi-admin-domain.batch_filter.fields.action'))
             ->options($options)
