@@ -23,6 +23,98 @@ func normalizeLagranMap() {
 	if err := applyLagranWindows(); err != nil {
 		log.Fatalf("config.json: %v", err)
 	}
+	if err := applyLagranGeneva(); err != nil {
+		log.Fatalf("config.json: %v", err)
+	}
+}
+
+// applyLagranGeneva 解析 window_scale、confusion_times、split_number。
+// 缺省对应 geneva.py -s 7 -c 0 -n 7。
+// psh_ack / fin_ack 仍接受旧配置，但不再安装规则，也不再改这两类包。
+func applyLagranGeneva() error {
+	if Lagran == nil {
+		return nil
+	}
+	fields := []struct {
+		key           string
+		def, min, max int
+	}{
+		{"window_scale", DefaultWindowScale, 0, 14},
+		{"confusion_times", DefaultConfusionTimes, 0, 64},
+		{"split_number", DefaultSplitNumber, 0, 1000000},
+	}
+	for _, field := range fields {
+		v, ok := Lagran[field.key]
+		if !ok || v == nil {
+			Lagran[field.key] = field.def
+			continue
+		}
+		n, err := scalarToBoundedInt(v, field.min, field.max)
+		if err != nil {
+			return fmt.Errorf("lagran.%s: %w", field.key, err)
+		}
+		Lagran[field.key] = n
+	}
+	return nil
+}
+
+func scalarToBoundedInt(v interface{}, min, max int) (int, error) {
+	hint := fmt.Sprintf("must be an integer from %d to %d", min, max)
+	var n int
+	switch t := v.(type) {
+	case int:
+		n = t
+	case int64:
+		if t < int64(min) || t > int64(max) {
+			return 0, fmt.Errorf("%s", hint)
+		}
+		return int(t), nil
+	case float64:
+		if t != float64(int(t)) {
+			return 0, fmt.Errorf("%s", hint)
+		}
+		n = int(t)
+	case json.Number:
+		parsed, err := t.Int64()
+		if err != nil {
+			return 0, fmt.Errorf("%s", hint)
+		}
+		return scalarToBoundedInt(parsed, min, max)
+	case string:
+		parsed, err := strconv.Atoi(strings.TrimSpace(t))
+		if err != nil {
+			return 0, fmt.Errorf("%s", hint)
+		}
+		n = parsed
+	default:
+		return 0, fmt.Errorf("%s", hint)
+	}
+	if n < min || n > max {
+		return 0, fmt.Errorf("%s", hint)
+	}
+	return n, nil
+}
+
+// LagranInt 读取已经规范化的整数。缺省或类型不符时返回 defaultVal。
+func LagranInt(key string, defaultVal int) int {
+	if Lagran == nil {
+		return defaultVal
+	}
+	v, ok := Lagran[key]
+	if !ok || v == nil {
+		return defaultVal
+	}
+	switch t := v.(type) {
+	case int:
+		return t
+	case float64:
+		if t != float64(int(t)) {
+			return defaultVal
+		}
+		return int(t)
+	default:
+		return defaultVal
+	}
 }
 
 // defaultLagranWindow 是某个源端口没有写在 lagran.window 里时使用的出站窗口。
@@ -61,7 +153,7 @@ func applyLagranWindows() error {
 	return nil
 }
 
-// LagranWindow 返回该源端口出站 TCP 窗口。syn_ack、ack、psh_ack、fin_ack 共用这一个值。
+// LagranWindow 返回该源端口的 window_size。SYN+ACK、混淆 ACK 和尚未超过 split_number 的纯 ACK 用它。
 func LagranWindow(port string) uint16 {
 	if Lagran == nil {
 		return defaultLagranWindow

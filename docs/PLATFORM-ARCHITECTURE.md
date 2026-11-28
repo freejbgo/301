@@ -54,7 +54,7 @@ DNS 模式：**手动**（参考表，无同步按钮）或 **API 自动**（一
 ## 节点（redi-multi）
 
 - **HTTP/HTTPS**：`addr` / `tls_addr`（默认 `0.0.0.0`；Linux 上已双栈接听）。
-- **lagran**：`lagran.port` 建议 `80,443`；需 CAP_NET_ADMIN。
+- **lagran**：`lagran.port` 建议 `80,443`；需 CAP_NET_ADMIN 与 CAP_NET_RAW。
 - **8080**：管理口输出 `api.js` / `c.js`；跳转页用相对路径 `/c.js`、`/api.js`（HTTPS 不混用 `IP:8080`）。
 
 ### Master Agent（`REDI_MASTER_URL` + `REDI_NODE_TOKEN`）

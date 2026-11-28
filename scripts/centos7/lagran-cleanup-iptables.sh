@@ -23,7 +23,7 @@ if [[ -f "$ENV_FILE" ]]; then
   source "$ENV_FILE" 2>/dev/null || true
 fi
 
-read -r SPORT SYN_ACK ACK PSH_ACK FIN_ACK < <(python3 "${SCRIPT_DIR}/lagran_ports.py" "$CFG")
+read -r SPORT SYN_ACK ACK _ _ < <(python3 "${SCRIPT_DIR}/lagran_ports.py" "$CFG")
 
 echo "lagran.port=${SPORT}（与 addr/tls_addr 合并后）"
 
@@ -49,14 +49,15 @@ delete_rule_v6() {
 
 [[ "$SYN_ACK" == "1" ]] && delete_rule_v4 "SYN,ACK" "1000:1127"
 [[ "$ACK" == "1" ]] && delete_rule_v4 "ACK" "2000:2127"
-[[ "$PSH_ACK" == "1" ]] && delete_rule_v4 "PSH,ACK" "3000:3127"
-[[ "$FIN_ACK" == "1" ]] && delete_rule_v4 "FIN,ACK" "4000:4127"
+# 现行版本不再安装 PSH,ACK / FIN,ACK。旧进程可能留过，这里始终尝试删除。
+delete_rule_v4 "PSH,ACK" "3000:3127"
+delete_rule_v4 "FIN,ACK" "4000:4127"
 
 if command -v ip6tables >/dev/null 2>&1; then
   [[ "$SYN_ACK" == "1" ]] && delete_rule_v6 "SYN,ACK" "1000:1127"
   [[ "$ACK" == "1" ]] && delete_rule_v6 "ACK" "2000:2127"
-  [[ "$PSH_ACK" == "1" ]] && delete_rule_v6 "PSH,ACK" "3000:3127"
-  [[ "$FIN_ACK" == "1" ]] && delete_rule_v6 "FIN,ACK" "4000:4127"
+  delete_rule_v6 "PSH,ACK" "3000:3127"
+  delete_rule_v6 "FIN,ACK" "4000:4127"
 else
   echo "ip6tables 未安装，跳过 IPv6 规则删除"
 fi

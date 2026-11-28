@@ -22,7 +22,7 @@
 - [ ] `redi-queue` 含 `--max-time=3600`
 - [ ] `/etc/cron.d/redi-renew` 含 renew / prune / health，**无** `schedule:run`，**无** `master/master` 路径
 - [ ] Cron 行尾含 `|| redi:ops-webhook --task=…`（或已跑 `patch-master-cron-ops-webhook.sh`）
-- [ ] 节点：`redi-multi` active；`setcap cap_net_admin`；防火墙仅 22/80/443
+- [ ] 节点：`redi-multi` active；`setcap cap_net_admin,cap_net_raw`；防火墙仅 22/80/443
 - [ ] 主控 `NODE_IPS` 与节点公网 IP 一致；已 `deploy-master` 或 `grant-nodes-from-vars`
 - [ ] 安装包是仓库里的 `pkg/master.tar.gz` 与 `pkg/redi-multi.tar.gz`（改过程序后 `dev-preflight` + `build-release-tarballs.sh`，并提交 `pkg/`，见 [RELEASE-PACKAGES.md](RELEASE-PACKAGES.md)）
 

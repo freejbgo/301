@@ -49,10 +49,13 @@ else
 fi
 
 if [[ -x "$BIN" ]]; then
-  if getcap "$BIN" 2>/dev/null | grep -q cap_net_admin; then
-    echo "[cap] cap_net_admin 已设置"
+  caps=$(getcap "$BIN" 2>/dev/null || true)
+  if echo "$caps" | grep -q cap_net_admin && echo "$caps" | grep -q cap_net_raw; then
+    echo "[cap] cap_net_admin 与 cap_net_raw 已设置"
+  elif echo "$caps" | grep -q cap_net_admin; then
+    echo "[cap] 只有 cap_net_admin，缺少 cap_net_raw（混淆 ACK 需要 root 或 setcap）"
   else
-    echo "[cap] 缺少 cap_net_admin（lagran 需要 root 或 setcap）"
+    echo "[cap] 缺少 cap_net_admin / cap_net_raw（lagran 需要 root 或 setcap）"
   fi
 else
   echo "[cap] 未找到二进制 ${BIN}"

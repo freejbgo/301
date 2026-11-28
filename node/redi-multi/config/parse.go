@@ -112,8 +112,16 @@ func validateNoControlChars(label, value string) {
 }
 
 func logStartupSummary() {
-	log.Printf("[config] http=%s tls=%s lagran.ports=%s lagran.windows=%s debug=%v",
-		Addr, tlsListenLabel(), LagranSport(), LagranWindowSummary(), Debug)
+	log.Printf("[config] http=%s tls=%s lagran.ports=%s lagran.windows=%s lagran.scale=%d lagran.confusion=%d lagran.split=%d debug=%v",
+		Addr, tlsListenLabel(), LagranSport(), LagranWindowSummary(),
+		LagranInt("window_scale", DefaultWindowScale),
+		LagranInt("confusion_times", DefaultConfusionTimes),
+		LagranInt("split_number", DefaultSplitNumber),
+		Debug)
+	log.Printf("[config] lagran 相当于 geneva.py -w <lagran.window> -s %d -c %d -n %d；NFQUEUE 由本进程安装（SYN+ACK 1000:1127，ACK 2000:2127），不是 -q 100",
+		LagranInt("window_scale", DefaultWindowScale),
+		LagranInt("confusion_times", DefaultConfusionTimes),
+		LagranInt("split_number", DefaultSplitNumber))
 }
 
 func tlsListenLabel() string {

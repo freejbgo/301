@@ -10,8 +10,9 @@
     "port": "80,443",
     "syn_ack": true,
     "ack": true,
-    "psh_ack": true,
-    "fin_ack": true,
+    "window_scale": 7,
+    "confusion_times": 0,
+    "split_number": 7,
     "window": {
       "80": 1,
       "443": 1

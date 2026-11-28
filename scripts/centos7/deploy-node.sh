@@ -158,7 +158,7 @@ grep -q "\"server_ip\": \"${NODE_PUBLIC_IP}\"" "${APP}/config.json" || die "未�
 # 被干扰域名场景：确保 lagran 开启（与 config.json.example 一致）
 redi_ensure_lagran_enabled "${APP}/config.json" || die "无法将 config.json 的 lagran.enabled 设为 true"
 
-setcap cap_net_admin+ep "${APP}/bin/redi-multi"
+setcap cap_net_admin,cap_net_raw+ep "${APP}/bin/redi-multi"
 
 step "测试到主控数据库的连接"
 db_cnf=$(mktemp)
@@ -226,8 +226,9 @@ redi_lagran_expected_enabled() {
 }
 
 if redi_lagran_expected_enabled; then
-  if ! getcap "${APP}/bin/redi-multi" 2>/dev/null | grep -q cap_net_admin; then
-    die "lagran 应为开启（默认或 config.json），但二进制缺少 cap_net_admin。请检查 setcap 或重新运行本脚本。"
+  if ! getcap "${APP}/bin/redi-multi" 2>/dev/null | grep -q cap_net_admin \
+    || ! getcap "${APP}/bin/redi-multi" 2>/dev/null | grep -q cap_net_raw; then
+    die "lagran 应为开启（默认或 config.json），但二进制缺少 cap_net_admin 或 cap_net_raw。请检查 setcap 或重新运行本脚本。"
   fi
   if journalctl -u redi-multi -n 40 --no-pager 2>/dev/null | grep -q '\[lagran\] disabled'; then
     echo "警告: 日志含 [lagran] disabled，请检查 REDI_LAGRAN_DISABLED 与 lagran.enabled"

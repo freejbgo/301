@@ -1,6 +1,9 @@
 package config
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+)
 
 func TestResolveTlsAddrFromJSON(t *testing.T) {
 	a := resolveTlsAddrFromJSON(map[string]interface{}{})
@@ -84,6 +87,35 @@ func TestLagranWindowRejectsZero(t *testing.T) {
 	}
 	if err := applyLagranWindows(); err == nil {
 		t.Fatal("expected fractional window to fail")
+	}
+}
+
+func TestLagranGenevaDefaultsAndBounds(t *testing.T) {
+	Lagran = map[string]interface{}{}
+	if err := applyLagranGeneva(); err != nil {
+		t.Fatal(err)
+	}
+	if LagranInt("window_scale", 0) != DefaultWindowScale || LagranInt("confusion_times", 0) != DefaultConfusionTimes || LagranInt("split_number", 0) != DefaultSplitNumber {
+		t.Fatalf("defaults %#v", Lagran)
+	}
+	Lagran = map[string]interface{}{
+		"window_scale":    "7",
+		"confusion_times": float64(0),
+		"split_number":    json.Number("3"),
+	}
+	if err := applyLagranGeneva(); err != nil {
+		t.Fatal(err)
+	}
+	if LagranInt("window_scale", 0) != 7 || LagranInt("confusion_times", 1) != 0 || LagranInt("split_number", 0) != 3 {
+		t.Fatalf("parsed %#v", Lagran)
+	}
+	Lagran = map[string]interface{}{"window_scale": float64(15)}
+	if err := applyLagranGeneva(); err == nil {
+		t.Fatal("expected window_scale 15 to fail")
+	}
+	Lagran = map[string]interface{}{"confusion_times": float64(65)}
+	if err := applyLagranGeneva(); err == nil {
+		t.Fatal("expected confusion_times 65 to fail")
 	}
 }
 

@@ -2,8 +2,8 @@ package lagran
 
 import (
 	"context"
-	"regexp"
 	"redi-multi/config"
+	"regexp"
 	"time"
 
 	"github.com/coreos/go-iptables/iptables"
@@ -13,13 +13,6 @@ import (
 )
 
 var portDigitRe = regexp.MustCompile(`\d+`)
-
-const (
-	windowSa uint16 = 1
-	windowA  uint16 = 1
-	windowPa uint16 = 1
-	windowFa uint16 = 1
-)
 
 type queuePoolSpec struct {
 	label   string
@@ -41,8 +34,6 @@ func Run() {
 	specs := []queuePoolSpec{
 		{label: "p1", from: 1000, to: 1128, boolKey: "syn_ack"},
 		{label: "p2", from: 2000, to: 2128, boolKey: "ack"},
-		{label: "p3", from: 3000, to: 3128, boolKey: "psh_ack"},
-		{label: "p4", from: 4000, to: 4128, boolKey: "fin_ack"},
 	}
 	active := make([]queuePoolSpec, 0, len(specs))
 	for _, spec := range specs {
@@ -50,6 +41,11 @@ func Run() {
 			active = append(active, spec)
 		}
 	}
+	if len(active) == 0 {
+		logrus.Warn("[lagran] syn_ack and ack are both disabled; no NFQUEUE readers started")
+		return
+	}
+	startFlowJanitor()
 	pools := make([]*ants.PoolWithFunc, 0, len(active))
 	for _, spec := range active {
 		p, err := ants.NewPoolWithFunc(128, func(i interface{}) {

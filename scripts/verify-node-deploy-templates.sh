@@ -21,7 +21,7 @@ LIB="${REPO_ROOT}/scripts/centos7/lib.sh"
 # deploy-node：生产陷阱（Agent HTTPS、静态二进制、DB 冒烟、lagran cap）
 grep -q 'redi-multi\.service' "$DEPLOY" || fail "deploy-node: missing redi-multi systemd unit"
 grep -q 'EnvironmentFile=\${APP}/env.sh' "$DEPLOY" || fail "deploy-node: systemd must load env.sh"
-grep -q 'setcap cap_net_admin' "$DEPLOY" || fail "deploy-node: missing setcap for lagran"
+grep -q 'setcap cap_net_admin,cap_net_raw+ep' "$DEPLOY" || fail "deploy-node: missing setcap cap_net_admin,cap_net_raw for lagran"
 grep -q 'redi_ensure_lagran_enabled' "$DEPLOY" || fail "deploy-node: must enable lagran in config.json"
 grep -q 'redi_node_bump_skip' "$DEPLOY" || fail "deploy-node: missing DB smoke CALL"
 grep -q 'REDI_DB_USER=redi_node' "$DEPLOY" || fail "deploy-node: env.sh must use redi_node (not redi_admin)"

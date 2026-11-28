@@ -227,7 +227,7 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 | firewalld | 仅 `ssh` `http` `https` |
 | `config.json` `server_ip` | 等于 `5.6.7.8`（与后台节点 IP 一致，供对照；二进制不读） |
 | `lagran.enabled` | **true**（被干扰域名场景默认） |
-| `getcap` | 含 `cap_net_admin` |
+| `getcap` | 含 `cap_net_admin` 和 `cap_net_raw` |
 | lagran 日志 | 无长期 `[lagran] disabled`（`deploy-node.sh` 也会校验） |
 | MySQL 从节点连主控 | 成功 |
 | 本机 HTTP | 有响应（可能 301/404，视配置而定） |
