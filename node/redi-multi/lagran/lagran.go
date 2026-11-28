@@ -8,7 +8,6 @@ import (
 
 	"github.com/coreos/go-iptables/iptables"
 	"github.com/florianl/go-nfqueue"
-	"github.com/panjf2000/ants/v2"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,51 +21,8 @@ type queuePoolSpec struct {
 }
 
 func Run() {
-	if !Enabled() {
-		logrus.Warn("[lagran] disabled (REDI_LAGRAN_DISABLED or lagran.enabled=false)")
-		return
-	}
-	sport := config.LagranSport()
-	if !setIptable(sport) {
-		logrus.Error("[lagran] iptables OUTPUT rules were not installed; aborting lagran (check cap_net_admin / root)")
-		return
-	}
-	specs := []queuePoolSpec{
-		{label: "p1", from: 1000, to: 1128, boolKey: "syn_ack"},
-		{label: "p2", from: 2000, to: 2128, boolKey: "ack"},
-	}
-	active := make([]queuePoolSpec, 0, len(specs))
-	for _, spec := range specs {
-		if config.LagranBool(spec.boolKey, true) {
-			active = append(active, spec)
-		}
-	}
-	if len(active) == 0 {
-		logrus.Warn("[lagran] syn_ack and ack are both disabled; no NFQUEUE readers started")
-		return
-	}
-	startFlowJanitor()
-	pools := make([]*ants.PoolWithFunc, 0, len(active))
-	for _, spec := range active {
-		p, err := ants.NewPoolWithFunc(128, func(i interface{}) {
-			packetHandle(i.(int))
-		})
-		if err != nil {
-			logrus.Errorf("[lagran] %s pool: %v (aborting lagran startup)", spec.label, err)
-			for _, prev := range pools {
-				prev.Release()
-			}
-			UnsetIptable(sport)
-			return
-		}
-		pools = append(pools, p)
-	}
-	for i, spec := range active {
-		p := pools[i]
-		logrus.Debugf("[lagran] Starting Task %s", spec.label)
-		for q := spec.from; q < spec.to; q++ {
-			_ = p.Invoke(q)
-		}
+	if err := reloadEntry(); err != nil {
+		logrus.Errorf("[lagran] %v (check cap_net_admin / root)", err)
 	}
 }
 
@@ -89,19 +45,7 @@ func setIptable(sport string) bool {
 }
 
 func UnsetIptable(sport string) {
-	ipt, err := iptables.New()
-	if err != nil {
-		logrus.Errorf("[lagran] failed to new iptables, err: %v\n", err)
-	} else {
-		deleteLagranRules(ipt, sport, "iptables")
-	}
-
-	ip6, err := iptables.New(iptables.IPFamily(iptables.ProtocolIPv6))
-	if err != nil {
-		logrus.Warnf("[lagran] ip6tables new error during cleanup: %v", err)
-	} else {
-		deleteLagranRules(ip6, sport, "ip6tables")
-	}
+	removeFamily(sport, config.LagranBool("syn_ack", true), config.LagranBool("ack", true))
 }
 
 func packetHandle(queueNum int) {

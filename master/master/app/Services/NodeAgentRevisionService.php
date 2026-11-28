@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\RediDomainCert;
+use App\Models\RediLagranSetting;
 use App\Models\RediNode;
 use App\Support\HostNameValidator;
 use Illuminate\Support\Collection;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Schema;
 class NodeAgentRevisionService
 {
     /**
-     * @return array{revision: string, challenges_revision: string, rules_revision: string, certificates_revision: string}
+     * @return array{revision: string, challenges_revision: string, rules_revision: string, certificates_revision: string, lagran_revision: string}
      */
     public function build(?RediNode $node = null): array
     {
@@ -115,11 +116,13 @@ class NodeAgentRevisionService
         $challengesRevision = $this->hashPayload($challenges);
         $rulesRevision = $this->hashPayload($rules);
         $certificatesRevision = $this->hashPayload($certs);
+        $lagranRevision = sha1(json_encode(RediLagranSetting::current()->toAgentPayload()));
 
         $combined = sha1(json_encode([
             'challenges' => $challengesRevision,
             'rules' => $rulesRevision,
             'certificates' => $certificatesRevision,
+            'lagran' => $lagranRevision,
         ]));
 
         return [
@@ -127,6 +130,7 @@ class NodeAgentRevisionService
             'challenges_revision' => $challengesRevision,
             'rules_revision' => $rulesRevision,
             'certificates_revision' => $certificatesRevision,
+            'lagran_revision' => $lagranRevision,
         ];
     }
 

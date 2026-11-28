@@ -112,16 +112,20 @@ func validateNoControlChars(label, value string) {
 }
 
 func logStartupSummary() {
-	log.Printf("[config] http=%s tls=%s lagran.ports=%s lagran.windows=%s lagran.scale=%d lagran.confusion=%d lagran.split=%d debug=%v",
+	log.Printf("[config] http=%s tls=%s lagran.ports=%s lagran.windows=%s lagran.scale=%d lagran.confusion=%d lagran.split=%d lagran.after=%d lagran.confusion_last=%d debug=%v",
 		Addr, tlsListenLabel(), LagranSport(), LagranWindowSummary(),
 		LagranInt("window_scale", DefaultWindowScale),
 		LagranInt("confusion_times", DefaultConfusionTimes),
 		LagranInt("split_number", DefaultSplitNumber),
+		LagranInt("window_after_split", DefaultWindowAfterSplit),
+		LagranInt("window_confusion_last", DefaultWindowConfusionLast),
 		Debug)
-	log.Printf("[config] lagran 相当于 geneva.py -w <lagran.window> -s %d -c %d -n %d；NFQUEUE 由本进程安装（SYN+ACK 1000:1127，ACK 2000:2127），不是 -q 100",
+	log.Printf("[config] lagran 相当于 geneva.py -w <lagran.window> -s %d -c %d -n %d；纯 ACK 计满后窗口 %d，最后一条混淆 ACK 窗口 %d。NFQUEUE 由本进程安装（SYN+ACK 1000:1127，ACK 2000:2127），不是 -q 100",
 		LagranInt("window_scale", DefaultWindowScale),
 		LagranInt("confusion_times", DefaultConfusionTimes),
-		LagranInt("split_number", DefaultSplitNumber))
+		LagranInt("split_number", DefaultSplitNumber),
+		LagranInt("window_after_split", DefaultWindowAfterSplit),
+		LagranInt("window_confusion_last", DefaultWindowConfusionLast))
 }
 
 func tlsListenLabel() string {

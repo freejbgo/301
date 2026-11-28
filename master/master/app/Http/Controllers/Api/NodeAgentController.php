@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\RediAcmeChallengeNodeSync;
 use App\Models\RediCertDeployment;
 use App\Models\RediDomainCert;
+use App\Models\RediLagranSetting;
 use App\Models\RediNode;
 use App\Services\AcmeChallengeQuery;
 use App\Services\CertificateDeployService;
@@ -117,6 +118,13 @@ class NodeAgentController extends Controller
         $deployService->pruneStaleDeploymentsForNode($node);
 
         return response()->json($revisions->build($node));
+    }
+
+    public function lagran()
+    {
+        return response()->json([
+            'lagran' => RediLagranSetting::current()->toAgentPayload(),
+        ]);
     }
 
     public function heartbeat(Request $request, CertificateDeployService $deployService)

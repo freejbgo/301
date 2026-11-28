@@ -48,9 +48,10 @@ func appendLagranRules(ipt *iptables.IPTables, sport string, familyLabel string)
 	return ok
 }
 
-func deleteLagranRules(ipt *iptables.IPTables, sport string, familyLabel string) {
+func deleteLagranRules(ipt *iptables.IPTables, sport string, familyLabel string, syn, ack bool) {
+	flags := map[string]bool{"syn_ack": syn, "ack": ack}
 	for _, rule := range lagranNFQueueRules {
-		if !config.LagranBool(rule.boolKey, true) {
+		if !flags[rule.boolKey] {
 			continue
 		}
 		err := ipt.Delete("filter", "OUTPUT", ruleSpec(sport, rule.tcpMatch, rule.queue)...)

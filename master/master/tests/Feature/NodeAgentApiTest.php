@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\RediAcmeChallenge;
 use App\Models\RediDomainCert;
+use App\Models\RediLagranSetting;
 use App\Models\RediNode;
 use App\Services\CertificateDeployService;
 use Illuminate\Database\Schema\Blueprint;
@@ -528,11 +529,73 @@ class NodeAgentApiTest extends TestCase
             'challenges' => $payload['challenges_revision'],
             'rules' => $payload['rules_revision'],
             'certificates' => $payload['certificates_revision'],
+            'lagran' => $payload['lagran_revision'],
         ]));
         $this->assertSame($expected, $payload['revision']);
         $this->assertNotSame('', $payload['challenges_revision']);
         $this->assertNotSame('', $payload['rules_revision']);
         $this->assertNotSame('', $payload['certificates_revision']);
+        $this->assertNotSame('', $payload['lagran_revision']);
+    }
+
+    public function test_lagran_endpoint_and_revision_follow_saved_settings(): void
+    {
+        [, $token] = $this->createNodeWithToken();
+        Schema::create('redi_admin_domain', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('original_url');
+            $table->unsignedTinyInteger('status')->default(1);
+            $table->boolean('force_https')->default(false);
+            $table->timestamps();
+        });
+        Schema::create('redi_lagran_settings', function (Blueprint $table) {
+            $table->increments('id');
+            $table->boolean('enabled')->default(true);
+            $table->boolean('syn_ack')->default(true);
+            $table->boolean('ack')->default(true);
+            $table->unsignedTinyInteger('window_scale')->default(7);
+            $table->unsignedTinyInteger('confusion_times')->default(0);
+            $table->unsignedInteger('split_number')->default(7);
+            $table->unsignedSmallInteger('window_after_split')->default(28960);
+            $table->unsignedSmallInteger('window_confusion_last')->default(65535);
+            $table->unsignedSmallInteger('window_80')->default(1);
+            $table->unsignedSmallInteger('window_443')->default(1);
+            $table->timestamps();
+        });
+
+        $before = $this->withToken($token)->getJson('/api/nodes/lagran')->assertOk()->json('lagran');
+        $this->assertTrue($before['enabled']);
+        $this->assertSame(28960, $before['window_after_split']);
+        $this->assertSame(1, $before['window']['80']);
+        $this->assertSame(1, $before['window']['443']);
+        $beforeRev = $this->withToken($token)->getJson('/api/nodes/revision')->json();
+        $this->assertSame(sha1(json_encode($before)), $beforeRev['lagran_revision']);
+
+        RediLagranSetting::store([
+            'enabled' => '0',
+            'syn_ack' => 'on',
+            'ack' => '0',
+            'window_scale' => '6',
+            'confusion_times' => '0',
+            'split_number' => '3',
+            'window_after_split' => '1000',
+            'window_confusion_last' => '2000',
+            'window_80' => '4',
+            'window_443' => '5',
+        ]);
+
+        $after = $this->withToken($token)->getJson('/api/nodes/lagran')->assertOk()->json('lagran');
+        $this->assertFalse($after['enabled']);
+        $this->assertFalse($after['ack']);
+        $this->assertTrue($after['syn_ack']);
+        $this->assertSame(1000, $after['window_after_split']);
+        $this->assertSame(4, $after['window']['80']);
+        $this->assertSame(5, $after['window']['443']);
+        $afterRev = $this->withToken($token)->getJson('/api/nodes/revision')->json();
+        $this->assertSame(sha1(json_encode($after)), $afterRev['lagran_revision']);
+        $this->assertNotSame($beforeRev['lagran_revision'], $afterRev['lagran_revision']);
+        $this->assertNotSame($beforeRev['revision'], $afterRev['revision']);
+        $this->assertSame($beforeRev['challenges_revision'], $afterRev['challenges_revision']);
     }
 
     public function test_revision_bumps_challenges_and_combined_when_ready_challenge_added(): void

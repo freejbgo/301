@@ -327,7 +327,7 @@ func TestACKWindowStepsAndHandshakeReset(t *testing.T) {
 	if got := rewrittenWindow(t, raw); got != 17 {
 		t.Fatalf("first ack window %d", got)
 	}
-	if got := rewrittenWindow(t, raw); got != windowAfterSplit {
+	if got := rewrittenWindow(t, raw); got != windowAfterSplit() {
 		t.Fatalf("second ack window %d", got)
 	}
 	syn := buildIPv4TCP(true, true, 65535)
@@ -336,6 +336,39 @@ func TestACKWindowStepsAndHandshakeReset(t *testing.T) {
 	}
 	if got := rewrittenWindow(t, raw); got != 17 {
 		t.Fatalf("ack after new handshake window %d", got)
+	}
+}
+
+func TestACKUsesConfiguredWindowAfterSplit(t *testing.T) {
+	setupLagranPortsForTest()
+	config.Lagran["split_number"] = 1
+	config.Lagran["window_after_split"] = 1000
+	config.Lagran["window"] = map[string]uint16{"80": 17}
+	raw := buildIPv4TCP(false, true, 65535)
+	if got := rewrittenWindow(t, raw); got != 1000 {
+		t.Fatalf("after-split window %d", got)
+	}
+}
+
+func TestConfusionUsesConfiguredLastWindow(t *testing.T) {
+	setupLagranPortsForTest()
+	config.Lagran["confusion_times"] = 1
+	config.Lagran["window_confusion_last"] = 2000
+	config.Lagran["window"] = map[string]uint16{"80": 17}
+	var got [][]byte
+	dispatchConfusion = func(pkts [][]byte, dst net.IP) {
+		got = pkts
+	}
+	raw := buildIPv4TCP(true, true, 65535)
+	if _, ok := tryRewriteOutboundTCP(raw); !ok {
+		t.Fatal("expected rewrite")
+	}
+	if len(got) != 1 {
+		t.Fatalf("packets %d", len(got))
+	}
+	tcp := gopacket.NewPacket(got[0], layers.LayerTypeIPv4, gopacket.Default).Layer(layers.LayerTypeTCP).(*layers.TCP)
+	if tcp.Window != 2000 {
+		t.Fatalf("last confusion window %d", tcp.Window)
 	}
 }
 
@@ -351,7 +384,7 @@ func TestFlowExpiresWithoutRefreshingOnACK(t *testing.T) {
 		t.Fatalf("first window %d", got)
 	}
 	nowFn = func() time.Time { return start.Add(9 * time.Second) }
-	if got := rewrittenWindow(t, raw); got != windowAfterSplit {
+	if got := rewrittenWindow(t, raw); got != windowAfterSplit() {
 		t.Fatalf("window before expiry %d", got)
 	}
 	nowFn = func() time.Time { return start.Add(flowTTL) }
@@ -382,7 +415,7 @@ func TestConfusionPacketsFollowGeneva(t *testing.T) {
 		t.Fatalf("packets %d", len(got))
 	}
 	assertConfusion(t, got[0], netIPv4(203, 0, 113, 2), netIPv4(203, 0, 113, 1), 2, 128, 7)
-	assertConfusion(t, got[1], netIPv4(203, 0, 113, 2), netIPv4(203, 0, 113, 1), 3, windowConfusionLast, 7)
+	assertConfusion(t, got[1], netIPv4(203, 0, 113, 2), netIPv4(203, 0, 113, 1), 3, windowConfusionLast(), 7)
 }
 
 func TestIPv6ConfusionUsesLastWindowWhenSingle(t *testing.T) {
@@ -405,7 +438,7 @@ func TestIPv6ConfusionUsesLastWindowWhenSingle(t *testing.T) {
 	if !ip.SrcIP.Equal(net.ParseIP("2001:db8::2")) || !ip.DstIP.Equal(net.ParseIP("2001:db8::1")) {
 		t.Fatalf("src %v dst %v", ip.SrcIP, ip.DstIP)
 	}
-	if tcp.Ack != 0x11223345 || tcp.Window != windowConfusionLast || tcp.Seq != 0 || !tcp.ACK || tcp.SYN {
+	if tcp.Ack != 0x11223345 || tcp.Window != windowConfusionLast() || tcp.Seq != 0 || !tcp.ACK || tcp.SYN {
 		t.Fatalf("tcp ack=%x win=%d seq=%d syn=%v ackflag=%v", tcp.Ack, tcp.Window, tcp.Seq, tcp.SYN, tcp.ACK)
 	}
 }

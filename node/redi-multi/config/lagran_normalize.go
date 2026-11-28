@@ -28,8 +28,8 @@ func normalizeLagranMap() {
 	}
 }
 
-// applyLagranGeneva 解析 window_scale、confusion_times、split_number。
-// 缺省对应 geneva.py -s 7 -c 0 -n 7。
+// applyLagranGeneva 解析窗口相关整数。
+// 缺省对应 geneva.py -s 7 -c 0 -n 7，纯 ACK 计满后 28960，最后一条混淆 ACK 65535。
 // psh_ack / fin_ack 仍接受旧配置，但不再安装规则，也不再改这两类包。
 func applyLagranGeneva() error {
 	if Lagran == nil {
@@ -42,6 +42,8 @@ func applyLagranGeneva() error {
 		{"window_scale", DefaultWindowScale, 0, 14},
 		{"confusion_times", DefaultConfusionTimes, 0, 64},
 		{"split_number", DefaultSplitNumber, 0, 1000000},
+		{"window_after_split", DefaultWindowAfterSplit, 1, 65535},
+		{"window_confusion_last", DefaultWindowConfusionLast, 1, 65535},
 	}
 	for _, field := range fields {
 		v, ok := Lagran[field.key]
@@ -97,6 +99,12 @@ func scalarToBoundedInt(v interface{}, min, max int) (int, error) {
 
 // LagranInt 读取已经规范化的整数。缺省或类型不符时返回 defaultVal。
 func LagranInt(key string, defaultVal int) int {
+	lagranMu.RLock()
+	defer lagranMu.RUnlock()
+	return lagranIntLocked(key, defaultVal)
+}
+
+func lagranIntLocked(key string, defaultVal int) int {
 	if Lagran == nil {
 		return defaultVal
 	}
@@ -155,6 +163,12 @@ func applyLagranWindows() error {
 
 // LagranWindow 返回该源端口的 window_size。SYN+ACK、混淆 ACK 和尚未超过 split_number 的纯 ACK 用它。
 func LagranWindow(port string) uint16 {
+	lagranMu.RLock()
+	defer lagranMu.RUnlock()
+	return lagranWindowLocked(port)
+}
+
+func lagranWindowLocked(port string) uint16 {
 	if Lagran == nil {
 		return defaultLagranWindow
 	}
@@ -174,14 +188,16 @@ func LagranWindow(port string) uint16 {
 
 // LagranWindowSummary 按当前生效端口列出窗口，供启动日志使用。
 func LagranWindowSummary() string {
-	ports := strings.Split(LagranSport(), ",")
+	lagranMu.RLock()
+	defer lagranMu.RUnlock()
+	ports := strings.Split(lagranSportLocked(), ",")
 	parts := make([]string, 0, len(ports))
 	for _, port := range ports {
 		port = strings.TrimSpace(port)
 		if port == "" {
 			continue
 		}
-		parts = append(parts, fmt.Sprintf("%s=%d", port, LagranWindow(port)))
+		parts = append(parts, fmt.Sprintf("%s=%d", port, lagranWindowLocked(port)))
 	}
 	return strings.Join(parts, ",")
 }

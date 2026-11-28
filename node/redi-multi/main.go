@@ -3,15 +3,15 @@ package main
 import (
 	"os"
 	"os/signal"
-	"syscall"
 	"redi-multi/api"
 	"redi-multi/config"
 	"redi-multi/http"
 	"redi-multi/https"
 	"redi-multi/lagran"
-	"redi-multi/masteragent"
 	"redi-multi/log"
+	"redi-multi/masteragent"
 	"redi-multi/mysqlconnect"
+	"syscall"
 	"time"
 
 	"github.com/gookit/color"
@@ -27,10 +27,7 @@ func main() {
 	if err := mysqlconnect.Init(); err != nil {
 		logrus.Warnf("[mysql] init failed (redirect /api.js may not work until DB is reachable): %v", err)
 	}
-	lagranWasEnabled := lagran.Enabled()
-	if lagranWasEnabled {
-		lagran.Run()
-	}
+	lagran.Run()
 	masteragent.Run()
 	go api.Start()
 	go http.Start()
@@ -41,9 +38,7 @@ func main() {
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-sigs
-		if lagranWasEnabled {
-			lagran.UnsetIptable(config.LagranSport())
-		}
+		lagran.Shutdown()
 		logrus.Debug("Unset iptables...")
 		done <- true
 		os.Exit(0)

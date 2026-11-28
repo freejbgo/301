@@ -22,6 +22,7 @@ return [
         '系统外观'       => 'Branding',
         'dns与节点池'    => 'DNS & node pool',
         '节点管理'       => 'Nodes',
+        'lagran'        => 'Lagran',
     ],
     'uris' => [
         'domain'            => 'Domains',
@@ -29,6 +30,7 @@ return [
         'platform-settings' => 'Branding',
         'platform-dns'      => 'DNS & node pool',
         'nodes'             => 'Nodes',
+        'lagran'            => 'Lagran',
         'auth.users'        => 'Users',
         'auth.roles'        => 'Roles',
         'auth.permissions'  => 'Permissions',

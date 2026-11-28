@@ -21,6 +21,7 @@ return [
         '系统外观'       => '系統外觀',
         'dns与节点池'    => 'DNS 與節點池',
         '节点管理'       => '節點管理',
+        'lagran'        => 'Lagran 設定',
     ],
     'uris' => [
         'domain'            => '域名管理',
@@ -28,6 +29,7 @@ return [
         'platform-settings' => '系統外觀',
         'platform-dns'      => 'DNS 與節點池',
         'nodes'             => '節點管理',
+        'lagran'            => 'Lagran 設定',
         'auth.users'        => '管理員',
         'auth.roles'        => '角色',
         'auth.permissions'  => '權限',

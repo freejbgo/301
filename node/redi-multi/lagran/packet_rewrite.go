@@ -12,12 +12,22 @@ import (
 	"github.com/google/gopacket/layers"
 )
 
-// geneva.py 在纯 ACK 计次达到 split_number 之后使用的窗口，以及最后一条混淆 ACK 的窗口。
-const (
-	windowAfterSplit    uint16 = 28960
-	windowConfusionLast uint16 = 65535
-	flowTTL                    = 10 * time.Second
-)
+const flowTTL = 10 * time.Second
+
+func windowAfterSplit() uint16 {
+	return clampWindow(config.LagranInt("window_after_split", config.DefaultWindowAfterSplit), config.DefaultWindowAfterSplit)
+}
+
+func windowConfusionLast() uint16 {
+	return clampWindow(config.LagranInt("window_confusion_last", config.DefaultWindowConfusionLast), config.DefaultWindowConfusionLast)
+}
+
+func clampWindow(n, def int) uint16 {
+	if n < 1 || n > 65535 {
+		return uint16(def)
+	}
+	return uint16(n)
+}
 
 type flowStat struct {
 	created time.Time
@@ -33,7 +43,7 @@ var (
 
 // tryRewriteOutboundTCP 按 geneva.py 改出站 TCP。
 // SYN+ACK：去掉 Window Scale，窗口写成该源端口的 lagran.window，并安排混淆 ACK。
-// 纯 ACK：同一条流上计次小于 split_number 时用该窗口，否则写成 28960。
+// 纯 ACK：同一条流上计次小于 split_number 时用该窗口，否则写成 window_after_split（默认 28960）。
 // PSH+ACK、FIN+ACK 不改。HTTP-01 暂停期间原样放过。
 func tryRewriteOutboundTCP(raw []byte) ([]byte, bool) {
 	if http01PauseActive() {
@@ -180,7 +190,7 @@ func takeACKWindow(key string, now time.Time, small uint16) uint16 {
 	}
 	window := small
 	if st.count >= split {
-		window = windowAfterSplit
+		window = windowAfterSplit()
 	}
 	st.count++
 	return window

@@ -8,6 +8,12 @@ import (
 
 // LagranSport 供 lagran / iptables 使用（Init 时已合并，此处仅规范化读取）。
 func LagranSport() string {
+	lagranMu.RLock()
+	defer lagranMu.RUnlock()
+	return lagranSportLocked()
+}
+
+func lagranSportLocked() string {
 	if Lagran == nil {
 		return "80"
 	}

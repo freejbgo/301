@@ -38,7 +38,7 @@ func buildConfusionPackets(server, client net.IP, v6 bool, tcp *layers.TCP, spor
 	for i := 1; i <= times; i++ {
 		window := small
 		if i == times {
-			window = windowConfusionLast
+			window = windowConfusionLast()
 		}
 		pkt, err := buildConfusionPacket(client, server, v6, tcp.DstPort, tcp.SrcPort, tcp.Seq+uint32(i), window, scale)
 		if err != nil {
