@@ -2,18 +2,18 @@
 
 return [
     'page' => [
-        'title' => 'Lagran',
+        'title' => '301 settings',
         'description' => 'One policy for every node. Online nodes reload it after you save',
     ],
     'cards' => [
-        'settings' => 'Lagran',
+        'settings' => '301 settings',
     ],
     'sections' => [
         'windows' => 'Windows',
         'confusion' => 'Extra ACKs',
     ],
     'fields' => [
-        'enabled' => 'Enable lagran',
+        'enabled' => 'Enable',
         'syn_ack' => 'Rewrite SYN+ACK',
         'ack' => 'Rewrite pure ACK',
         'window_80' => 'Window for port 80',
@@ -25,7 +25,7 @@ return [
         'window_confusion_last' => 'Window of the last extra ACK',
     ],
     'help' => [
-        'intro' => 'After you save, online nodes pick this up within about 5 seconds and reload lagran in process. You do not log in to each machine, and the node process is not restarted. Ports 80 and 443 have separate windows. REDI_LAGRAN_DISABLED=1 on a machine still forces lagran off. Queue numbers are not set here. Older node binaries keep using their local config.json.',
+        'intro' => 'After you save, online nodes pick this up within about 5 seconds and reload it in process. You do not log in to each machine, and the node process is not restarted. Ports 80 and 443 have separate windows. A machine forced off in its own environment stays off. Queue numbers are not set here. Older node binaries keep using their local config.json.',
         'enabled' => 'When this is off, the node removes the OUTPUT rules it installed.',
         'syn_ack' => 'Outbound handshake packets. When this is off, their window is left unchanged.',
         'ack' => 'Pure ACKs with no payload. When this is off, the count no longer changes their window.',
@@ -38,11 +38,11 @@ return [
         'window_confusion_last' => 'Window of the last extra ACK. Default 65535. Unused while the extra ACK count is 0.',
     ],
     'messages' => [
-        'saved' => 'Saved. Online nodes reload lagran on their next sync.',
-        'forbidden' => 'Only a super administrator can change Lagran settings',
+        'saved' => 'Saved. Online nodes reload on their next sync.',
+        'forbidden' => 'Only a super administrator can change 301 settings',
         'invalid' => 'Invalid settings',
         'invalid_bool' => 'Invalid switch value',
-        'missing_table' => 'The lagran settings table is missing. Run php artisan migrate',
+        'missing_table' => 'The settings table is missing. Run php artisan migrate',
     ],
     'invalid' => [
         'window_scale' => 'Window Scale must be an integer from 0 to 14',

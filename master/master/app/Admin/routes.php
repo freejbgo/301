@@ -34,7 +34,10 @@ Route::group([
     $router->get('domain/export', 'RediAdminDomainController@exportCsv');
     $router->resource('domain', 'RediAdminDomainController');
     $router->get('platform-settings', 'PlatformSettingsController@index');
-    $router->get('lagran', 'LagranSettingsController@index');
+    $router->get('301-settings', 'LagranSettingsController@index');
+    $router->get('lagran', function () {
+        return redirect(admin_url('301-settings'));
+    });
     $router->get('platform-dns', 'PlatformDnsController@index');
     $router->post('platform-dns/sync', 'PlatformDnsController@sync');
     $router->resource('nodes', 'RediNodeController');
