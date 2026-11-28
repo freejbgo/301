@@ -110,10 +110,11 @@ class CertificateIssuer
         }
 
         $certificate = $client->getCertificate($order);
+        // assertDomainIssuable() 会 refresh()。必须先做完这一步，再写入还没落库的证书和私钥，否则刷新会把它们清掉，库里只剩下「已签发」。
+        $this->assertDomainIssuable($cert);
         $cert->setCertificatePem($certificate->getCertificate());
         $cert->setPrivateKeyPem($certificate->getPrivateKey());
         $cert->expires_at = $this->parseCertExpiry($certificate->getCertificate());
-        $this->assertDomainIssuable($cert);
         $cert->status = RediDomainCert::STATUS_ISSUED;
         $cert->save();
 
