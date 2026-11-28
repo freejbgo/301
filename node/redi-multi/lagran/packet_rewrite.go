@@ -47,7 +47,7 @@ func rewriteIPPacket(raw []byte, decode gopacket.LayerType) ([]byte, bool) {
 	if sport == "" || !sportSet[sport] {
 		return nil, false
 	}
-	windowSize, match := lagranWindowForTCP(tcp)
+	windowSize, match := lagranWindowForTCP(sport, tcp)
 	if !match {
 		return nil, false
 	}
@@ -70,7 +70,7 @@ func rewriteIPPacket(raw []byte, decode gopacket.LayerType) ([]byte, bool) {
 	return out, true
 }
 
-func lagranWindowForTCP(tcp *layers.TCP) (uint16, bool) {
+func lagranWindowForTCP(sport string, tcp *layers.TCP) (uint16, bool) {
 	ok1 := config.LagranBool("syn_ack", true) && tcp.SYN && tcp.ACK
 	ok2 := config.LagranBool("ack", true) && tcp.ACK && !tcp.PSH && !tcp.FIN && !tcp.SYN && !tcp.RST
 	ok3 := config.LagranBool("psh_ack", true) && tcp.PSH && tcp.ACK
@@ -78,18 +78,5 @@ func lagranWindowForTCP(tcp *layers.TCP) (uint16, bool) {
 	if !(ok1 || ok2 || ok3 || ok4) {
 		return 0, false
 	}
-	var windowSize uint16
-	if ok1 {
-		windowSize = windowSa
-	}
-	if ok2 {
-		windowSize = windowA
-	}
-	if ok3 {
-		windowSize = windowPa
-	}
-	if ok4 {
-		windowSize = windowFa
-	}
-	return windowSize, true
+	return config.LagranWindow(sport), true
 }

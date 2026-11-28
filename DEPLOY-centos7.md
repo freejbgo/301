@@ -230,7 +230,7 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health --json
 
 ### lagran 与防火墙
 
-lagran 在 **OUTPUT** 上按 TCP **源端口**（与 `addr` / `tls_addr` 合并后的 `lagran.port`）匹配，**不是**按节点公网地址。`iptables` 与 `ip6tables` 使用**同一组** NFQUEUE 队列号（如 `1000:1127` …）；IPv6 访客的出站 TCP 与 IPv4 走同样的窗口处理。自检：`bash scripts/centos7/lagran-diagnose.sh`；kill -9 遗留规则：`sudo bash scripts/centos7/lagran-cleanup-iptables.sh`。
+lagran 在 **OUTPUT** 上按 TCP **源端口**（与 `addr` / `tls_addr` 合并后的 `lagran.port`）匹配，**不是**按节点公网地址。`iptables` 与 `ip6tables` 使用**同一组** NFQUEUE 队列号（如 `1000:1127` …）；IPv6 访客的出站 TCP 与 IPv4 走同样的窗口处理。窗口在 `config.json` 的 `lagran.window` 里按端口分开写，例如 `"80": 1`、`"443": 1`；没写的端口用 1。改完后重启 `redi-multi`，启动日志里的 `lagran.windows=` 会列出每个端口的窗口。自检：`bash scripts/centos7/lagran-diagnose.sh`；kill -9 遗留规则：`sudo bash scripts/centos7/lagran-cleanup-iptables.sh`。
 
 开放 80/443 时继续用部署脚本已有的服务放行即可；**不要**为「只匹配 IPv4」单独加 firewalld rich rule 而把 IPv6 挡在池外（否则 `curl -6` 与 HTTP-01 会失败）。
 

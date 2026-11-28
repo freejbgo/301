@@ -112,8 +112,8 @@ func validateNoControlChars(label, value string) {
 }
 
 func logStartupSummary() {
-	log.Printf("[config] http=%s tls=%s lagran.ports=%s debug=%v",
-		Addr, tlsListenLabel(), LagranSport(), Debug)
+	log.Printf("[config] http=%s tls=%s lagran.ports=%s lagran.windows=%s debug=%v",
+		Addr, tlsListenLabel(), LagranSport(), LagranWindowSummary(), Debug)
 }
 
 func tlsListenLabel() string {
