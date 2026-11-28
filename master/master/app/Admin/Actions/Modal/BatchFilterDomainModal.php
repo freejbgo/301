@@ -31,8 +31,40 @@ HTML;
 
         Admin::script(<<<JS
 Dcat.ready(function () {
+  if (window.__rediBatchFilterDomainSync) {
+    return;
+  }
+  window.__rediBatchFilterDomainSync = true;
   var filterKeys = {$keys};
-  var modal = document.getElementById('{$id}');
+  var modalId = '{$id}';
+  function addId(ids, seen, id) {
+    id = String(id == null ? '' : id).trim();
+    if (!/^[1-9][0-9]*$/.test(id) || seen[id]) {
+      return;
+    }
+    seen[id] = true;
+    ids.push(id);
+  }
+  function collectSelectedIds() {
+    var ids = [];
+    var seen = {};
+    var grid = window.Dcat && Dcat.grid;
+    if (grid && grid.selectors) {
+      Object.keys(grid.selectors).forEach(function (name) {
+        var selector = grid.selectors[name];
+        if (!selector || typeof selector.getSelectedKeys !== 'function') {
+          return;
+        }
+        selector.getSelectedKeys().forEach(function (id) {
+          addId(ids, seen, id);
+        });
+      });
+    }
+    document.querySelectorAll('.checkbox-grid-column input[type="checkbox"]:checked, input[class*="grid-row-checkbox"]:checked').forEach(function (box) {
+      addId(ids, seen, box.getAttribute('data-id') || box.value);
+    });
+    return ids;
+  }
   function readFilter(key) {
     var field = document.querySelector('.grid-filter-form [name="' + key + '"]');
     var fromForm = field ? String(field.value || '').trim() : '';
@@ -42,6 +74,7 @@ Dcat.ready(function () {
     return new URLSearchParams(window.location.search).get(key) || '';
   }
   function syncBatchFilterFields() {
+    var modal = document.getElementById(modalId);
     if (!modal) {
       return;
     }
@@ -51,30 +84,54 @@ Dcat.ready(function () {
         input.value = readFilter(key);
       }
     });
-    var seen = {};
-    var ids = [];
-    document.querySelectorAll('input[class*="grid-row-checkbox"]:checked').forEach(function (box) {
-      var id = box.getAttribute('data-id') || '';
-      if (!/^[1-9][0-9]*$/.test(id) || seen[id]) {
+    var selected = collectSelectedIds().join(',');
+    var inputs = modal.querySelectorAll('input[name="selected_ids"]');
+    if (!inputs.length) {
+      var form = modal.querySelector('form');
+      if (!form) {
         return;
       }
-      seen[id] = true;
-      ids.push(id);
-    });
-    var idInput = modal.querySelector('input[name="selected_ids"]');
-    if (idInput) {
-      idInput.value = ids.join(',');
+      var created = document.createElement('input');
+      created.type = 'hidden';
+      created.name = 'selected_ids';
+      created.value = selected;
+      form.appendChild(created);
+      return;
     }
+    inputs.forEach(function (input) {
+      input.value = selected;
+    });
   }
-  if (modal) {
-    $('#{$id}').on('show.bs.modal', syncBatchFilterFields);
-    modal.addEventListener('click', function (event) {
-      var target = event.target;
-      if (target && target.closest && target.closest('button[type="submit"]')) {
+  if (window.jQuery && jQuery.fn && typeof jQuery.fn.ajaxSubmit === 'function' && !jQuery.fn.ajaxSubmit.__rediBatchFilter) {
+    var originalAjaxSubmit = jQuery.fn.ajaxSubmit;
+    var wrappedAjaxSubmit = function (options) {
+      var form = this && this[0];
+      if (form && form.closest && form.closest('#' + modalId)) {
         syncBatchFilterFields();
       }
-    }, true);
+      return originalAjaxSubmit.apply(this, arguments);
+    };
+    wrappedAjaxSubmit.__rediBatchFilter = true;
+    jQuery.fn.ajaxSubmit = wrappedAjaxSubmit;
   }
+  document.addEventListener('click', function (event) {
+    var target = event.target;
+    if (!target || !target.closest) {
+      return;
+    }
+    if (target.closest('[data-target="#' + modalId + '"]')) {
+      syncBatchFilterFields();
+      return;
+    }
+    var modal = document.getElementById(modalId);
+    if (!modal || !modal.contains(target)) {
+      return;
+    }
+    if (target.closest('button[type="submit"], .submit')) {
+      syncBatchFilterFields();
+    }
+  }, true);
+  $(document).on('show.bs.modal', '#' + modalId, syncBatchFilterFields);
 });
 JS
         );
