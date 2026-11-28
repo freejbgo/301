@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"time"
 	"redi-multi/acme"
 	"redi-multi/api"
 	"redi-multi/certs"
 	"redi-multi/rules"
 	hostutil "redi-multi/util/host"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -18,14 +18,28 @@ import (
 func htmlContent(_ string) string {
 	return `<html>
 <head>
-	<script src="/c.js"></script>
-	<script type="text/javascript">var str = '<sc'+'ript src="/api.js?d='+window.location.hostname.encode()+'" type="text/javascript"></s'+'cript>';document.write(str);</script>
+<script src="/c.js"></script>
+<script type="text/javascript">
+document.write('<script src="/api.js?d=' + location.hostname.codes() + '"><\/script>');
+</script>
 </head>
 <body>
-	<a href="" id="hao123"></a>
-	<script type="text/javascript">
-		if(null!=redirector[window.location.hostname.encode()]){var strU=redirector[window.location.hostname.encode()].to.decode()+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e)}else{var e;strU=redirector.default_redirect_url.to.decode()+window.location.pathname+window.location.search;if(hao123.href=strU,document.all)document.getElementById("hao123").click();else(e=document.createEvent("MouseEvents")).initEvent("click",!0,!0),document.getElementById("hao123").dispatchEvent(e);		console.log("redirector err")}
-	</script>
+<a id="go" href=""></a>
+<script type="text/javascript">
+(function () {
+  var row = jumps[location.hostname.codes()];
+  var base = row != null ? row.to.text() : jumps.default_redirect_url.to.text();
+  var link = document.getElementById("go");
+  link.href = base + location.pathname + location.search;
+  if (document.all) {
+    link.click();
+  } else {
+    var ev = document.createEvent("MouseEvents");
+    ev.initEvent("click", true, true);
+    link.dispatchEvent(ev);
+  }
+})();
+</script>
 </body>
 </html>`
 }

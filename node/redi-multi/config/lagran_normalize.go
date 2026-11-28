@@ -29,7 +29,7 @@ func normalizeLagranMap() {
 }
 
 // applyLagranGeneva 解析窗口相关整数。
-// 缺省对应 geneva.py -s 7 -c 0 -n 7，纯 ACK 计满后 28960，最后一条混淆 ACK 65535。
+// 缺省是 Window Scale 7、额外 ACK 0 条、纯 ACK 计次 7，计满后窗口 28960，最后一条额外 ACK 窗口 65535。
 // psh_ack / fin_ack 仍接受旧配置，但不再安装规则，也不再改这两类包。
 func applyLagranGeneva() error {
 	if Lagran == nil {

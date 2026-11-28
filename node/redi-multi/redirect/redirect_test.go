@@ -7,6 +7,20 @@ import (
 	"time"
 )
 
+func TestJumpPageUsesNeutralMarkers(t *testing.T) {
+	page := htmlContent("example.com")
+	for _, banned := range []string{"hao123", "redirector", ".encode()", ".decode()", "ActiveXObject"} {
+		if strings.Contains(page, banned) {
+			t.Fatalf("page still contains %q", banned)
+		}
+	}
+	for _, need := range []string{`id="go"`, "jumps[", ".codes()", ".text()", `src="/c.js"`, `src="/api.js?d=`} {
+		if !strings.Contains(page, need) {
+			t.Fatalf("page missing %q", need)
+		}
+	}
+}
+
 func TestWritePlainStripsControlCharsFromBody(t *testing.T) {
 	server, client := net.Pipe()
 	defer server.Close()

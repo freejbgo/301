@@ -13,7 +13,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// dispatchConfusion 发送 geneva.py send_payloads 造出的 ACK。测试会换成同步记录。
+// dispatchConfusion 发送额外 ACK。测试会换成同步记录。
 var dispatchConfusion = defaultDispatchConfusion
 
 type confusionJob struct {

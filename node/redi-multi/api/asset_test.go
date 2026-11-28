@@ -57,5 +57,5 @@ func writeAssetCjsOnce(ip string) bool {
 	if strings.Contains(body, "429") {
 		return false
 	}
-	return strings.Contains(body, "200 OK") && strings.Contains(body, "var cinfo")
+	return strings.Contains(body, "200 OK") && strings.Contains(body, "var visit") && strings.Contains(body, "String.prototype.codes")
 }

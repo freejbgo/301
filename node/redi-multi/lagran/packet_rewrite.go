@@ -41,7 +41,7 @@ var (
 	janitorOnce sync.Once
 )
 
-// tryRewriteOutboundTCP 按 geneva.py 改出站 TCP。
+// tryRewriteOutboundTCP 按当前 lagran 设定改出站 TCP。
 // SYN+ACK：去掉 Window Scale，窗口写成该源端口的 lagran.window，并安排混淆 ACK。
 // 纯 ACK：同一条流上计次小于 split_number 时用该窗口，否则写成 window_after_split（默认 28960）。
 // PSH+ACK、FIN+ACK 不改。HTTP-01 暂停期间原样放过。
@@ -121,7 +121,7 @@ func rewriteIPPacket(raw []byte, decode gopacket.LayerType) ([]byte, bool) {
 	if synAck {
 		pkts := buildConfusionPackets(server, client, v6, tcp, sport)
 		if len(pkts) > 0 {
-			// 混淆包的目的地址是本机（原包的源），与 geneva.py send_payloads 一致。
+			// 额外 ACK 的目的地址是本机（原包的源）。
 			dispatchConfusion(pkts, append(net.IP(nil), server...))
 		}
 	}

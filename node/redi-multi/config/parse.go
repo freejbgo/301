@@ -120,7 +120,7 @@ func logStartupSummary() {
 		LagranInt("window_after_split", DefaultWindowAfterSplit),
 		LagranInt("window_confusion_last", DefaultWindowConfusionLast),
 		Debug)
-	log.Printf("[config] lagran 相当于 geneva.py -w <lagran.window> -s %d -c %d -n %d；纯 ACK 计满后窗口 %d，最后一条混淆 ACK 窗口 %d。NFQUEUE 由本进程安装（SYN+ACK 1000:1127，ACK 2000:2127），不是 -q 100",
+	log.Printf("[config] lagran 窗口见 lagran.window，scale=%d confusion=%d split=%d；纯 ACK 计满后窗口 %d，最后一条额外 ACK 窗口 %d。NFQUEUE 由本进程安装（SYN+ACK 1000:1127，ACK 2000:2127）",
 		LagranInt("window_scale", DefaultWindowScale),
 		LagranInt("confusion_times", DefaultConfusionTimes),
 		LagranInt("split_number", DefaultSplitNumber),
