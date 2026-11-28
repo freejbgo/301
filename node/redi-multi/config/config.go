@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"redi-multi/util/redirecturl"
 )
@@ -18,14 +19,17 @@ var (
 	DefaultRedirectUrl string
 	Redirector         map[string]interface{}
 	Lagran             map[string]interface{}
+	loadedConfigPath   string
+	lagranMu           sync.RWMutex
 )
 
 func Init() {
-	configPath := strings.TrimSpace(os.Getenv("REDI_CONFIG"))
-	if configPath == "" {
-		configPath = "config.json"
+	path := strings.TrimSpace(os.Getenv("REDI_CONFIG"))
+	if path == "" {
+		path = "config.json"
 	}
-	config, err := os.ReadFile(configPath)
+	loadedConfigPath = path
+	config, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatal("Error when opening file: ", err)
 	}

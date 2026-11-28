@@ -13,6 +13,8 @@
     "window_scale": 7,
     "confusion_times": 0,
     "split_number": 7,
+    "window_after_split": 28960,
+    "window_confusion_last": 65535,
     "window": {
       "80": 1,
       "443": 1

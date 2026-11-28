@@ -11,6 +11,7 @@ import (
 	"os"
 	"redi-multi/acme"
 	"redi-multi/certs"
+	redicfg "redi-multi/config"
 	"redi-multi/lagran"
 	"redi-multi/rules"
 	"redi-multi/util/host"
@@ -57,6 +58,7 @@ type revisionState struct {
 	challenges       string
 	rules            string
 	certificates     string
+	lagran           string
 }
 
 func loop(cfg config) {
@@ -102,6 +104,7 @@ func tick(client *http.Client, cfg config, registered *bool, revs *revisionState
 		ChallengesRevision   string `json:"challenges_revision"`
 		RulesRevision        string `json:"rules_revision"`
 		CertificatesRevision string `json:"certificates_revision"`
+		LagranRevision       string `json:"lagran_revision"`
 	}
 	if err := postJSON(client, cfg, "/api/nodes/heartbeat", map[string]string{"version": agentVersion}, nil, registered); err != nil {
 		return err
@@ -139,6 +142,7 @@ func tick(client *http.Client, cfg config, registered *bool, revs *revisionState
 				revs.certificates = rev.CertificatesRevision
 			}
 		}
+		_ = maybePullLagran(client, cfg, registered, revs, rev.LagranRevision)
 		if rev.Revision != "" {
 			revs.combinedRevision = rev.Revision
 		}
@@ -156,11 +160,36 @@ func tick(client *http.Client, cfg config, registered *bool, revs *revisionState
 			pullErr = err
 			warnThrottled("pull-certificates", "[masteragent] pull certificates: %v", err)
 		}
+		if err := maybePullLagran(client, cfg, registered, revs, rev.LagranRevision); err != nil {
+			pullErr = err
+		}
 		if pullErr == nil {
 			revs.combinedRevision = rev.Revision
 		}
 	}
 	return nil
+}
+
+func maybePullLagran(client *http.Client, cfg config, registered *bool, revs *revisionState, revision string) error {
+	if revision == "" || revision == revs.lagran {
+		return nil
+	}
+	if err := pullLagran(client, cfg, registered); err != nil {
+		warnThrottled("pull-lagran", "[masteragent] pull lagran: %v", err)
+		return err
+	}
+	revs.lagran = revision
+	return nil
+}
+
+func pullLagran(client *http.Client, cfg config, registered *bool) error {
+	var out struct {
+		Lagran redicfg.LagranPolicy `json:"lagran"`
+	}
+	if err := getJSON(client, cfg, "/api/nodes/lagran", &out, registered); err != nil {
+		return err
+	}
+	return lagran.ApplyFromMaster(out.Lagran)
 }
 
 func pullChallenges(client *http.Client, cfg config, registered *bool) error {

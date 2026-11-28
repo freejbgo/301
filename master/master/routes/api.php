@@ -12,4 +12,5 @@ Route::prefix('nodes')->middleware(['redi.node', 'redi.node.version', 'throttle:
     Route::get('certificates', [NodeAgentController::class, 'certificates']);
     Route::post('ack', [NodeAgentController::class, 'ack']);
     Route::get('redirect-rules', [NodeAgentController::class, 'redirectRules']);
+    Route::get('lagran', [NodeAgentController::class, 'lagran']);
 });
