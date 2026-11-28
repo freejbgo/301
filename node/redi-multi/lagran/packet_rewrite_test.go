@@ -58,6 +58,10 @@ func buildIPv6TCP(syn, ack, psh bool, window uint16, withMSS bool, payload []byt
 }
 
 func buildIPv4TCP(syn, ack bool, window uint16) []byte {
+	return buildIPv4TCPFrom(80, syn, ack, window)
+}
+
+func buildIPv4TCPFrom(src int, syn, ack bool, window uint16) []byte {
 	ip := &layers.IPv4{
 		Version:  4,
 		IHL:      5,
@@ -67,7 +71,7 @@ func buildIPv4TCP(syn, ack bool, window uint16) []byte {
 		DstIP:    netIPv4(203, 0, 113, 2),
 	}
 	tcp := &layers.TCP{
-		SrcPort: layers.TCPPort(80),
+		SrcPort: layers.TCPPort(src),
 		DstPort: layers.TCPPort(40000),
 		SYN:     syn,
 		ACK:     ack,
@@ -212,6 +216,30 @@ func TestHTTP01PauseExpires(t *testing.T) {
 	tcp := gopacket.NewPacket(out, layers.LayerTypeIPv4, gopacket.Default).Layer(layers.LayerTypeTCP).(*layers.TCP)
 	if tcp.Window != windowSa {
 		t.Fatalf("window %d", tcp.Window)
+	}
+}
+
+func TestWindowFollowsSourcePort(t *testing.T) {
+	setupLagranPortsForTest()
+	config.Lagran["window"] = map[string]uint16{
+		"80":  128,
+		"443": 1024,
+	}
+	out80, ok := tryRewriteOutboundTCP(buildIPv4TCPFrom(80, true, true, 65535))
+	if !ok {
+		t.Fatal("expected port 80 rewrite")
+	}
+	tcp80 := gopacket.NewPacket(out80, layers.LayerTypeIPv4, gopacket.Default).Layer(layers.LayerTypeTCP).(*layers.TCP)
+	if tcp80.Window != 128 {
+		t.Fatalf("port 80 window %d", tcp80.Window)
+	}
+	out443, ok := tryRewriteOutboundTCP(buildIPv4TCPFrom(443, true, true, 65535))
+	if !ok {
+		t.Fatal("expected port 443 rewrite")
+	}
+	tcp443 := gopacket.NewPacket(out443, layers.LayerTypeIPv4, gopacket.Default).Layer(layers.LayerTypeTCP).(*layers.TCP)
+	if tcp443.Window != 1024 {
+		t.Fatalf("port 443 window %d", tcp443.Window)
 	}
 }
 

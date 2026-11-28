@@ -47,6 +47,7 @@
 | `tls_addr` | HTTPS，默认 `0.0.0.0:443`。`""` 或 JSON `null` 关闭 HTTPS |
 | `api_listen` | 默认 `127.0.0.1:8080`（仅本机 Echo）；生产跳转走 80/443 同源 `/api.js`。非 loopback 须显式 `REDI_API_LISTEN_INSECURE=1`（生产禁止） |
 | `lagran.port` | 出站 TCP 源端口，给 iptables `--sport` 用。字符串 `"80,443"` 或数字 `80` |
+| `lagran.window` | 按源端口写窗口，整数 **1–65535**。`"80"` 和 `"443"` 各写一个。没写的端口用 **1**。同一端口上 SYN+ACK、ACK、PSH+ACK、FIN+ACK 共用这个数 |
 | `lagran.enabled` | 默认 **true**；仅本地调试可 `REDI_LAGRAN_DISABLED=1` 或设为 false |
 
 lagran 需要 root 或 `CAP_NET_ADMIN`（`deploy-node.sh` 会 `setcap`）。
