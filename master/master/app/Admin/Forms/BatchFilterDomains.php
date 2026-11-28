@@ -24,10 +24,20 @@ class BatchFilterDomains extends Form implements LazyRenderable
         $out = $runner->run($action, $filterRequest, (int) Admin::user()->id);
 
         if (! $out['ok']) {
-            return $this->response()->error($out['message']);
+            $response = $this->response()->error($out['message']);
+            if (str_contains($out['message'], "\n")) {
+                $response->alert();
+            }
+
+            return $response;
         }
 
-        return $this->response()->success($out['message'])->refresh();
+        $response = $this->response()->success($out['message'])->refresh();
+        if (str_contains($out['message'], "\n")) {
+            $response->alert();
+        }
+
+        return $response;
     }
 
     public function form()
@@ -43,6 +53,7 @@ class BatchFilterDomains extends Form implements LazyRenderable
             'disable' => __('redi-admin-domain.batch_filter.actions.disable'),
             'delete' => __('redi-admin-domain.batch_filter.actions.delete'),
             'set_skip_url' => __('redi-admin-domain.batch_filter.actions.set_skip_url'),
+            'force_https_on' => __('redi-admin-domain.batch_filter.actions.force_https_on'),
         ];
         if (AdminTenantContext::isPlatformAdministrator()) {
             $options = [

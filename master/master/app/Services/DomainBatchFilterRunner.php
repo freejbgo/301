@@ -20,6 +20,7 @@ class DomainBatchFilterRunner
         'disable',
         'delete',
         'set_skip_url',
+        'force_https_on',
     ];
 
     /**
@@ -49,7 +50,7 @@ class DomainBatchFilterRunner
             $ids = $capped['ids'];
             $filterTruncated = $capped['truncated'];
             $this->selectionMode = 'selected_rows';
-        } elseif (in_array($action, ['delete', 'disable', 'apply_cert', 'redeploy', 'enable', 'set_skip_url'], true)
+        } elseif (in_array($action, ['delete', 'disable', 'apply_cert', 'redeploy', 'enable', 'set_skip_url', 'force_https_on'], true)
             && ! DomainListFilter::hasAnyFilter($filterRequest)) {
             return [
                 'ok' => false,
@@ -156,6 +157,11 @@ class DomainBatchFilterRunner
                 $result = $mutator->setSkipUrlOwned($ids, $rawSkipUrl, $sessionAdminId, $isPlatform);
 
                 return $this->mutatorSummary($result, 'set_skip_url', $sessionAdminId, $filterTruncated, $filterRequest);
+
+            case 'force_https_on':
+                $result = $mutator->setForceHttpsOwned($ids, '1', $sessionAdminId, $isPlatform);
+
+                return $this->mutatorSummary($result, 'force_https_on', $sessionAdminId, $filterTruncated, $filterRequest);
         }
 
         return [
@@ -211,6 +217,7 @@ class DomainBatchFilterRunner
             $msg .= "\n".__('redi-admin-domain.actions.batch_mutator.partial_errors', [
                 'count' => count($result['errors']),
             ]);
+            $msg .= "\n".implode("\n", array_slice($result['errors'], 0, 6));
         }
 
         $msg = $this->finishSuccessMessage(
