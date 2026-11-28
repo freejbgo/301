@@ -58,14 +58,22 @@ class DomainBatchFilterRunnerTest extends TestCase
         $this->assertFalse($out['ok']);
     }
 
-    public function test_redeploy_requires_platform_administrator(): void
+    public function test_redeploy_is_available_to_the_domain_owner(): void
     {
+        Schema::create('redi_domain_certs', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('domain_id');
+            $table->string('status')->default('issued');
+            $table->timestamps();
+        });
+
         $runner = new DomainBatchFilterRunner();
         $request = Request::create('/admin/domain', 'POST', ['selected_ids' => '1']);
         $out = $runner->run('redeploy', $request, 1);
 
         $this->assertFalse($out['ok']);
-        $this->assertSame(__('redi-auth.admin_only'), $out['message']);
+        $this->assertNotSame(__('redi-auth.admin_only'), $out['message']);
+        $this->assertSame(__('redi-admin-domain.batch_filter.error_all.redeploy'), $out['message']);
     }
 
     public function test_force_https_on_without_filter_is_rejected(): void

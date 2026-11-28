@@ -2,7 +2,6 @@
 
 namespace App\Admin\Actions\Grid;
 
-use App\Admin\Concerns\AdminOnlyGridAction;
 use App\Models\RediAdminDomain;
 use App\Models\RediDomainCert;
 use App\Services\CertificateDeployService;
@@ -12,8 +11,6 @@ use Illuminate\Http\Request;
 
 class RedeployCertificate extends RowAction
 {
-    use AdminOnlyGridAction;
-
     public function title()
     {
         return __('redi-admin-domain.actions.redeploy.title');
@@ -26,10 +23,6 @@ class RedeployCertificate extends RowAction
 
     public function handle(Request $request)
     {
-        if ($deny = $this->ensureAdministratorResponse()) {
-            return $deny;
-        }
-
         // Dcat 只传入 Request，不会做方法注入。
         $deployService = app(CertificateDeployService::class);
         $domain = RediAdminDomain::query()->find($this->getKey());

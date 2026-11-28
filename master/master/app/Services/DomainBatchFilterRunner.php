@@ -36,14 +36,6 @@ class DomainBatchFilterRunner
             ];
         }
 
-        if ($action === 'redeploy' && ! AdminTenantContext::isPlatformAdministrator()) {
-            return [
-                'ok' => false,
-                'message' => __('redi-auth.admin_only'),
-                'count' => 0,
-            ];
-        }
-
         $explicitIds = $this->explicitSelectedIds($filterRequest);
         if ($explicitIds !== []) {
             $capped = BatchSelectionLimiter::intIdsCapped($explicitIds, DomainBatchMutator::MAX_IDS_PER_BATCH);
