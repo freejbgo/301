@@ -76,7 +76,7 @@ sudo bash scripts/centos7/deploy-master.sh
 sudo bash scripts/centos7/deploy-node.sh
 ```
 
-脚本会安装 firewalld、iptables、`setcap` 和 MySQL 客户端，尝试加载 `nfnetlink_queue`（编进内核时加载失败可以忽略），解压发布包（**不含**打包进 tar 的本机 `config.json`，从 `config.json.example` 生成），写 `env.sh`（没有 `export`，含 `REDI_CONFIG` 指向 `config.json`），更新 `config.json` 的 `server_ip`（与 `NODE_PUBLIC_IP` 一致，供验收；**二进制不读**）/ `default_redirect_url`、确保 **lagran 开启**，执行 `setcap cap_net_admin,cap_net_raw+ep`，启动后在校验 **cap_net_admin**、**cap_net_raw** 与 lagran 日志。防火墙只开放 22、80、443，不开放 8080。
+脚本会安装 firewalld、iptables、`setcap` 和 MySQL 客户端，尝试加载 `nfnetlink_queue`（编进内核时加载失败可以忽略），解压发布包（**不含**打包进 tar 的本机 `config.json`，从 `config.json.example` 生成），写 `env.sh`（没有 `export`，含 `REDI_CONFIG` 指向 `config.json`），更新 `config.json` 的 `server_ip`（与 `NODE_PUBLIC_IP` 一致，供验收；**二进制不读**）/ `default_redirect_url`、确保 **lagran 开启**，执行 `setcap cap_net_admin,cap_net_raw+ep`，启动后在校验 **cap_net_admin**、**cap_net_raw** 与 lagran 日志。防火墙只开放 22、80、443，不开放 8080。开关和窗口在主控「301设置」里改。再跑一遍本脚本会把本机 `lagran.enabled` 写成 true；后台已经关掉时，节点下次同步会改回来。
 
 Token 空着也可以把进程跑起来，但 Agent 不会向主控注册，证书同步也不会做。补上 Token 后再执行一次脚本。
 
@@ -125,7 +125,7 @@ sudo bash scripts/centos7/run-on-centos7-host.sh
 
 ## 8. 节点 lagran 运维（可选）
 
-被干扰域名场景默认开启 lagran（需 `cap_net_admin`、`cap_net_raw` 与 `nfnetlink_queue`）。节点上：
+被干扰域名场景默认开启 lagran（需 `cap_net_admin`、`cap_net_raw` 与 `nfnetlink_queue`）。开关和窗口在主控「301设置」里改。下面两个脚本只做检查和清理。节点上：
 
 ```bash
 bash scripts/centos7/lagran-diagnose.sh /opt/redi-multi/redi-multi

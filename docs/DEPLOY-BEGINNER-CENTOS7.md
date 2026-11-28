@@ -71,6 +71,8 @@ curl -fsSL https://github.com/freejbgo/301/raw/main/node.sh -o node.sh && chmod 
 4. **站点配置 → 域名管理**：添加客户域名，把页面上的 **CNAME 目标** 发给客户。客户把域名 CNAME 到这个目标。
 5. 预检显示已指向后，点 **申请证书**。
 
+窗口和开关不用登录节点去改。需要时打开 **站点配置 → 301设置** 再保存，在线节点会自己跟上。新装已经是默认值，不进这个页面也能跳转。
+
 客户不要把域名 A 到某一台节点的 IP。说明可直接转给客户：[CUSTOMER-CNAME-HTTPS.md](CUSTOMER-CNAME-HTTPS.md)。
 
 对外给客户用之前，主控要改成 **https 域名**（节点访问主控也改成 `https://`）。第一次安装为了能先打开后台，用的是 `http://IP`。改法见 [DEPLOY-centos7.md](../DEPLOY-centos7.md) 第 2 节末尾。上线前打勾用 [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md)。
