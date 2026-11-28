@@ -7,12 +7,12 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strings"
-	"redi-multi/util/host"
-	"redi-multi/util/redirecturl"
 	"redi-multi/config"
 	"redi-multi/mysqlconnect"
 	domain2 "redi-multi/util/domain"
+	"redi-multi/util/host"
+	"redi-multi/util/redirecturl"
+	"strings"
 	"sync"
 	"time"
 
@@ -168,23 +168,23 @@ func allowApiJsDomainRate(ip, encodedDomain string) bool {
 	cutoff := now.Add(-1 * time.Minute)
 	rateMu.Lock()
 	hits := domainRateHits[key]
-		var kept []time.Time
-		for _, t := range hits {
-			if t.After(cutoff) {
-				kept = append(kept, t)
-			}
+	var kept []time.Time
+	for _, t := range hits {
+		if t.After(cutoff) {
+			kept = append(kept, t)
 		}
-		if len(kept) >= domainRateLimit {
-			domainRateHits[key] = kept
-			rateMu.Unlock()
-			return false
-		}
-		kept = append(kept, now)
+	}
+	if len(kept) >= domainRateLimit {
 		domainRateHits[key] = kept
-		if len(domainRateHits) > 8192 {
-			pruneDomainRateMap(cutoff)
-		}
 		rateMu.Unlock()
+		return false
+	}
+	kept = append(kept, now)
+	domainRateHits[key] = kept
+	if len(domainRateHits) > 8192 {
+		pruneDomainRateMap(cutoff)
+	}
+	rateMu.Unlock()
 	return allowRate(ip)
 }
 
@@ -205,35 +205,21 @@ func pruneDomainRateMap(cutoff time.Time) {
 }
 
 func cjsSource(clientIP, userAgent string) string {
-	cinfo, _ := json.Marshal(map[string]string{
+	visit, _ := json.Marshal(map[string]string{
 		"cip": clientIP,
 		"ua":  userAgent,
 	})
-	return fmt.Sprintf("var cinfo = %s;", string(cinfo)) + `
-function createXHR () {
-var XHR = [
-	function () { return new XMLHttpRequest () },
-	function () { return new ActiveXObject ("Msxml2.XMLHTTP") },
-	function () { return new ActiveXObject ("Msxml3.XMLHTTP") },
-	function () { return new ActiveXObject ("Microsoft.XMLHTTP") }
-];
-var xhr = null;
-for (var i = 0; i < XHR.length; i ++) {
-	try { xhr = XHR[i](); } catch(e) { continue }
-	break;
-}
-return xhr;
-}
-String.prototype.encode = function () {
+	return fmt.Sprintf("var visit = %s;", string(visit)) + `
+String.prototype.codes = function () {
 	var bytes = [];
 	for (var i = 0; i < this.length; i++) {
 		bytes.push(this.charCodeAt(i));
 	}
-	return bytes.join(',');
-}
-String.prototype.decode = function () {
-	return String.fromCharCode.apply(null,this.trim().split(","));
-}
+	return bytes.join(",");
+};
+String.prototype.text = function () {
+	return String.fromCharCode.apply(null, this.trim().split(","));
+};
 `
 }
 
@@ -271,7 +257,7 @@ func apiJsSource(encodedDomain string) (string, int) {
 	if err != nil {
 		return "// error", http.StatusInternalServerError
 	}
-	return "var redirector = " + string(payload) + ";", http.StatusOK
+	return "var jumps = " + string(payload) + ";", http.StatusOK
 }
 
 func GetSkipUrl(Db *sqlx.DB, Url string) string {
