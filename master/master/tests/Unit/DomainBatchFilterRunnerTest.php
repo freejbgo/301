@@ -67,4 +67,53 @@ class DomainBatchFilterRunnerTest extends TestCase
         $this->assertFalse($out['ok']);
         $this->assertSame(__('redi-auth.admin_only'), $out['message']);
     }
+
+    public function test_force_https_on_without_filter_is_rejected(): void
+    {
+        $runner = new DomainBatchFilterRunner();
+        $request = Request::create('/admin/domain', 'GET');
+        $out = $runner->run('force_https_on', $request, 1);
+
+        $this->assertFalse($out['ok']);
+    }
+
+    public function test_force_https_on_enables_active_certificate_only(): void
+    {
+        Schema::table('redi_admin_domain', function (Blueprint $table) {
+            $table->string('original_url_hash', 64)->nullable();
+            $table->boolean('force_https')->default(false);
+        });
+        Schema::create('redi_domain_certs', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('domain_id');
+            $table->string('domain_name')->default('');
+            $table->string('status')->default('none');
+            $table->timestamps();
+        });
+        \DB::table('redi_admin_domain')->insert([
+            'id' => 2,
+            'admin_id' => 1,
+            'status' => 1,
+            'original_url' => 'b.com',
+            'skip_url' => 'https://example.com',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        \DB::table('redi_domain_certs')->insert([
+            'domain_id' => 1,
+            'domain_name' => 'a.com',
+            'status' => 'active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $runner = new DomainBatchFilterRunner();
+        $request = Request::create('/admin/domain', 'GET', ['original_url' => 'a.com']);
+        $out = $runner->run('force_https_on', $request, 1);
+
+        $this->assertTrue($out['ok'], $out['message']);
+        $this->assertSame(1, $out['count']);
+        $this->assertSame(1, (int) \DB::table('redi_admin_domain')->where('id', 1)->value('force_https'));
+        $this->assertSame(0, (int) \DB::table('redi_admin_domain')->where('id', 2)->value('force_https'));
+    }
 }
