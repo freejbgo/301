@@ -85,9 +85,34 @@ Dcat.ready(function () {
       }
     });
     var selected = collectSelectedIds().join(',');
-    modal.querySelectorAll('input[name="selected_ids"]').forEach(function (input) {
+    var inputs = modal.querySelectorAll('input[name="selected_ids"]');
+    if (!inputs.length) {
+      var form = modal.querySelector('form');
+      if (!form) {
+        return;
+      }
+      var created = document.createElement('input');
+      created.type = 'hidden';
+      created.name = 'selected_ids';
+      created.value = selected;
+      form.appendChild(created);
+      return;
+    }
+    inputs.forEach(function (input) {
       input.value = selected;
     });
+  }
+  if (window.jQuery && jQuery.fn && typeof jQuery.fn.ajaxSubmit === 'function' && !jQuery.fn.ajaxSubmit.__rediBatchFilter) {
+    var originalAjaxSubmit = jQuery.fn.ajaxSubmit;
+    var wrappedAjaxSubmit = function (options) {
+      var form = this && this[0];
+      if (form && form.closest && form.closest('#' + modalId)) {
+        syncBatchFilterFields();
+      }
+      return originalAjaxSubmit.apply(this, arguments);
+    };
+    wrappedAjaxSubmit.__rediBatchFilter = true;
+    jQuery.fn.ajaxSubmit = wrappedAjaxSubmit;
   }
   document.addEventListener('click', function (event) {
     var target = event.target;
