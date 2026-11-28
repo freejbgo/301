@@ -79,16 +79,18 @@ func buildMySQLConfig(userName, password, ipAddress, port, dbName, charset strin
 		}
 	}
 	// NewConfig 打开 AllowNativePasswords。直接写 Config{} 时该字段为零值 false，
-	// MariaDB 的 mysql_native_password 账号会被驱动拒绝，/api.js 一直 503。
+	// MariaDB 的 mysql_native_password 账号会被驱动拒绝。
+	// parseTime 是驱动自己的开关，不能放进 Params，否则会变成 SET parseTime=true，
+	// MariaDB 不认这个变量，连接失败，/api.js 一直 503。
 	cfg := mysql.NewConfig()
 	cfg.User = userName
 	cfg.Passwd = password
 	cfg.Net = "tcp"
 	cfg.Addr = fmt.Sprintf("%s:%s", ipAddress, port)
 	cfg.DBName = dbName
+	cfg.ParseTime = true
 	cfg.Params = map[string]string{
-		"charset":   charset,
-		"parseTime": "true",
+		"charset": charset,
 	}
 	cfg.Timeout = 5 * time.Second
 	cfg.ReadTimeout = 5 * time.Second
