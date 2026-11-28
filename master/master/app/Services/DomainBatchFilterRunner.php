@@ -21,6 +21,7 @@ class DomainBatchFilterRunner
         'delete',
         'set_skip_url',
         'force_https_on',
+        'force_https_off',
     ];
 
     /**
@@ -42,7 +43,7 @@ class DomainBatchFilterRunner
             $ids = $capped['ids'];
             $filterTruncated = $capped['truncated'];
             $this->selectionMode = 'selected_rows';
-        } elseif (in_array($action, ['delete', 'disable', 'apply_cert', 'redeploy', 'enable', 'set_skip_url', 'force_https_on'], true)
+        } elseif (in_array($action, ['delete', 'disable', 'apply_cert', 'redeploy', 'enable', 'set_skip_url', 'force_https_on', 'force_https_off'], true)
             && ! DomainListFilter::hasAnyFilter($filterRequest)) {
             return [
                 'ok' => false,
@@ -154,6 +155,11 @@ class DomainBatchFilterRunner
                 $result = $mutator->setForceHttpsOwned($ids, '1', $sessionAdminId, $isPlatform);
 
                 return $this->mutatorSummary($result, 'force_https_on', $sessionAdminId, $filterTruncated, $filterRequest);
+
+            case 'force_https_off':
+                $result = $mutator->setForceHttpsOwned($ids, '0', $sessionAdminId, $isPlatform);
+
+                return $this->mutatorSummary($result, 'force_https_off', $sessionAdminId, $filterTruncated, $filterRequest);
         }
 
         return [

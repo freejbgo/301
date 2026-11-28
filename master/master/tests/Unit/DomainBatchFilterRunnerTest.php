@@ -131,4 +131,37 @@ class DomainBatchFilterRunnerTest extends TestCase
         $this->assertFalse($again['ok']);
         $this->assertStringContainsString('已经开启了强制 HTTPS', $again['message']);
     }
+
+    public function test_force_https_off_turns_off_without_an_active_certificate(): void
+    {
+        Schema::table('redi_admin_domain', function (Blueprint $table) {
+            $table->string('original_url_hash', 64)->nullable();
+            $table->boolean('force_https')->default(false);
+        });
+        \DB::table('redi_admin_domain')->where('id', 1)->update(['force_https' => 1]);
+        \DB::table('redi_admin_domain')->insert([
+            'id' => 2,
+            'admin_id' => 1,
+            'status' => 1,
+            'original_url' => 'b.com',
+            'skip_url' => 'https://example.com',
+            'force_https' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $runner = new DomainBatchFilterRunner();
+        $rejected = $runner->run('force_https_off', Request::create('/admin/domain', 'GET'), 1);
+        $this->assertFalse($rejected['ok']);
+
+        $out = $runner->run('force_https_off', Request::create('/admin/domain', 'GET', [
+            'selected_ids' => '1,2',
+        ]), 1);
+
+        $this->assertTrue($out['ok'], $out['message']);
+        $this->assertSame(1, $out['count']);
+        $this->assertStringContainsString('已为 1 个域名关闭强制 HTTPS', $out['message']);
+        $this->assertSame(0, (int) \DB::table('redi_admin_domain')->where('id', 1)->value('force_https'));
+        $this->assertSame(0, (int) \DB::table('redi_admin_domain')->where('id', 2)->value('force_https'));
+    }
 }

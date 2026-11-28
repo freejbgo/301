@@ -177,6 +177,7 @@ return [
             'delete' => '批量刪除',
             'set_skip_url' => '批量修改跳轉地址',
             'force_https_on' => '批量開啟強制 HTTPS',
+            'force_https_off' => '批量關閉強制 HTTPS',
         ],
         'success' => [
             'apply_cert' => '已將 :count 個域名加入憑證隊列（篩選上限 :cap 條）',
@@ -186,6 +187,7 @@ return [
             'delete' => '已刪除 :count 個域名（篩選上限 :cap 條）',
             'set_skip_url' => '已將 :count 個域名的跳轉地址改為同一地址（上限 :cap 條）',
             'force_https_on' => '已為 :count 個域名開啟強制 HTTPS（上限 :cap 條）',
+            'force_https_off' => '已為 :count 個域名關閉強制 HTTPS（上限 :cap 條）',
         ],
         'error_none' => [
             'redeploy' => '篩選結果中沒有可重新下發的域名',
@@ -194,6 +196,7 @@ return [
             'delete' => '篩選結果中沒有可刪除的域名',
             'set_skip_url' => '這些域名的跳轉地址已經是這個值',
             'force_https_on' => '這些域名已經開啟了強制 HTTPS',
+            'force_https_off' => '這些域名已經關閉了強制 HTTPS',
         ],
         'error_all' => [
             'redeploy' => '篩選結果中的域名均無法重新下發（無憑證、未簽發或不可讀）',
@@ -202,6 +205,7 @@ return [
             'delete' => '篩選結果中的域名均未能刪除',
             'set_skip_url' => '這些域名的跳轉地址都沒能改成新地址',
             'force_https_on' => '這些域名都沒能開啟強制 HTTPS。憑證須為「已生效」才能開啟。',
+            'force_https_off' => '這些域名都沒能關閉強制 HTTPS',
         ],
         'errors' => [
             'action_invalid' => '無效操作',
@@ -209,7 +213,7 @@ return [
             'filter_required_sensitive' => '請先勾選要操作的域名，或在列表上方至少填寫一項篩選（避免誤操作整表前 500 條）',
         ],
         'confirm_title' => '確認按篩選批量操作',
-        'confirm_content' => '已勾選域名時只處理勾選的列。未勾選時使用列表篩選欄中已填寫的條件。沒有勾選、也沒有填寫篩選時不會執行，避免誤操作整表前 500 條。批量修改跳轉地址時，填寫的新地址會寫到這些域名上。批量開啟強制 HTTPS 時，只有憑證已生效的域名會打開。',
+        'confirm_content' => '已勾選域名時只處理勾選的列。未勾選時使用列表篩選欄中已填寫的條件。沒有勾選、也沒有填寫篩選時不會執行，避免誤操作整表前 500 條。批量修改跳轉地址時，填寫的新地址會寫到這些域名上。批量開啟強制 HTTPS 時，只有憑證已生效的域名會打開。批量關閉強制 HTTPS 會關掉已經打開的域名，不要求憑證已生效。',
     ],
     'export' => [
         'headers' => [
