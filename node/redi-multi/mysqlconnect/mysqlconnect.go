@@ -78,20 +78,22 @@ func buildMySQLConfig(userName, password, ipAddress, port, dbName, charset strin
 			return nil, fmt.Errorf("mysql: REDI_DB_* env contains invalid control characters")
 		}
 	}
-	cfg := &mysql.Config{
-		User:   userName,
-		Passwd: password,
-		Net:    "tcp",
-		Addr:   fmt.Sprintf("%s:%s", ipAddress, port),
-		DBName: dbName,
-		Params: map[string]string{
-			"charset":   charset,
-			"parseTime": "true",
-		},
-		Timeout:      5 * time.Second,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Second,
+	// NewConfig 打开 AllowNativePasswords。直接写 Config{} 时该字段为零值 false，
+	// MariaDB 的 mysql_native_password 账号会被驱动拒绝，/api.js 一直 503。
+	cfg := mysql.NewConfig()
+	cfg.User = userName
+	cfg.Passwd = password
+	cfg.Net = "tcp"
+	cfg.Addr = fmt.Sprintf("%s:%s", ipAddress, port)
+	cfg.DBName = dbName
+	cfg.Params = map[string]string{
+		"charset":   charset,
+		"parseTime": "true",
 	}
+	cfg.Timeout = 5 * time.Second
+	cfg.ReadTimeout = 5 * time.Second
+	cfg.WriteTimeout = 5 * time.Second
+	cfg.AllowNativePasswords = true
 	if err := applyTLSMode(cfg, os.Getenv("REDI_DB_TLS")); err != nil {
 		return nil, err
 	}

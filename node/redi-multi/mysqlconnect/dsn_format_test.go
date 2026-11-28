@@ -14,4 +14,7 @@ func TestMySQLConfigAcceptsSpecialPassword(t *testing.T) {
 	if _, err := mysql.NewConnector(cfg); err != nil {
 		t.Fatalf("connector: %v", err)
 	}
+	if !cfg.AllowNativePasswords {
+		t.Fatal("AllowNativePasswords must stay on for MariaDB mysql_native_password accounts")
+	}
 }
