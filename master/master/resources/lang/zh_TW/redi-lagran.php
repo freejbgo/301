@@ -2,18 +2,18 @@
 
 return [
     'page' => [
-        'title' => 'Lagran 設定',
+        'title' => '301設定',
         'description' => '全部節點共用。儲存後在線節點會自己重新載入',
     ],
     'cards' => [
-        'settings' => 'Lagran',
+        'settings' => '301設定',
     ],
     'sections' => [
         'windows' => '視窗',
         'confusion' => '額外 ACK',
     ],
     'fields' => [
-        'enabled' => '啟用 lagran',
+        'enabled' => '啟用',
         'syn_ack' => '改寫 SYN+ACK',
         'ack' => '改寫純 ACK',
         'window_80' => '80 埠視窗',
@@ -25,7 +25,7 @@ return [
         'window_confusion_last' => '最後一條額外 ACK 的視窗',
     ],
     'help' => [
-        'intro' => '儲存後，在線節點大約 5 秒內取走這份設定，並在本進程裡重新載入 lagran。不用登入每台機器，也不用把節點進程整個重啟。80 和 443 的視窗分開設定。本機 REDI_LAGRAN_DISABLED=1 仍然強制關閉。佇列號不在這裡改。更早的節點程式不會讀取這份設定，繼續用本機 config.json。',
+        'intro' => '儲存後，在線節點大約 5 秒內取走這份設定，並在本進程裡重新載入。不用登入每台機器，也不用把節點進程整個重啟。80 和 443 的視窗分開設定。某一台節點如果在環境裡單獨強制關閉，這一台仍然關閉。佇列號不在這裡改。更早的節點程式不會讀取這份設定，繼續用本機 config.json。',
         'enabled' => '關閉後，節點會卸掉自己裝上的 OUTPUT 規則。',
         'syn_ack' => '對應出站握手包。關閉後這類包不再改視窗。',
         'ack' => '對應不帶資料的純 ACK。關閉後不再按計次改視窗。',
@@ -38,11 +38,11 @@ return [
         'window_confusion_last' => '最後一條額外 ACK 的視窗。預設 65535。條數為 0 時用不到。',
     ],
     'messages' => [
-        'saved' => '已儲存。在線節點會在下一次同步時重新載入 lagran。',
-        'forbidden' => '只有超級管理員可以修改 Lagran 設定',
+        'saved' => '已儲存。在線節點會在下一次同步時重新載入。',
+        'forbidden' => '只有超級管理員可以修改301設定',
         'invalid' => '設定無效',
         'invalid_bool' => '開關的值無效',
-        'missing_table' => '還沒有 lagran 設定表，請先執行 php artisan migrate',
+        'missing_table' => '還沒有這份設定表，請先執行 php artisan migrate',
     ],
     'invalid' => [
         'window_scale' => 'Window Scale 須是 0 到 14 的整數',
