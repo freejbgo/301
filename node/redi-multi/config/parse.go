@@ -112,8 +112,12 @@ func validateNoControlChars(label, value string) {
 }
 
 func logStartupSummary() {
-	log.Printf("[config] http=%s tls=%s lagran.ports=%s lagran.windows=%s debug=%v",
-		Addr, tlsListenLabel(), LagranSport(), LagranWindowSummary(), Debug)
+	log.Printf("[config] http=%s tls=%s lagran.ports=%s lagran.windows=%s lagran.scale=%d lagran.confusion=%d lagran.split=%d debug=%v",
+		Addr, tlsListenLabel(), LagranSport(), LagranWindowSummary(),
+		LagranInt("window_scale", DefaultWindowScale),
+		LagranInt("confusion_times", DefaultConfusionTimes),
+		LagranInt("split_number", DefaultSplitNumber),
+		Debug)
 }
 
 func tlsListenLabel() string {

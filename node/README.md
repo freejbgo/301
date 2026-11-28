@@ -47,10 +47,16 @@
 | `tls_addr` | HTTPS，默认 `0.0.0.0:443`。`""` 或 JSON `null` 关闭 HTTPS |
 | `api_listen` | 默认 `127.0.0.1:8080`（仅本机 Echo）；生产跳转走 80/443 同源 `/api.js`。非 loopback 须显式 `REDI_API_LISTEN_INSECURE=1`（生产禁止） |
 | `lagran.port` | 出站 TCP 源端口，给 iptables `--sport` 用。字符串 `"80,443"` 或数字 `80` |
-| `lagran.window` | 按源端口写窗口，整数 **1–65535**。`"80"` 和 `"443"` 各写一个。没写的端口用 **1**。同一端口上 SYN+ACK、ACK、PSH+ACK、FIN+ACK 共用这个数 |
+| `lagran.window` | 按源端口写窗口，整数 **1–65535**。`"80"` 和 `"443"` 各写一个。没写的端口用 **1**。这是 SYN+ACK、混淆 ACK，以及尚未数满 `split_number` 的纯 ACK 使用的窗口 |
+| `lagran.window_scale` | 混淆 ACK 里的 Window Scale，默认 **7**，范围 **0–14** |
+| `lagran.confusion_times` | 每个 SYN+ACK 额外发出的 ACK 条数，默认 **7**。`0` 表示不发，最大 **64** |
+| `lagran.split_number` | 纯 ACK 的计次阈值，默认 **7**。计次达到这个数之后窗口改为 **28960** |
+| `lagran.syn_ack` / `lagran.ack` | 是否处理这两类出站包，默认 **true** |
 | `lagran.enabled` | 默认 **true**；仅本地调试可 `REDI_LAGRAN_DISABLED=1` 或设为 false |
 
-lagran 需要 root 或 `CAP_NET_ADMIN`（`deploy-node.sh` 会 `setcap`）。
+SYN+ACK 会去掉 TCP Window Scale。纯 ACK 按上表改窗口。PSH+ACK 和 FIN+ACK 不改，也不再挂 NFQUEUE。旧配置里的 `psh_ack` / `fin_ack` 仍能通过解析，但不起作用。每条流的计次保留 10 秒；新的 SYN+ACK 会把计次重置。
+
+lagran 需要 root，或同时具备 `CAP_NET_ADMIN` 与 `CAP_NET_RAW`（`deploy-node.sh` 会 `setcap`）。`CAP_NET_RAW` 用来发出混淆 ACK。
 
 HTTP/HTTPS 监听器在 `accept` 后对 socket 设置 **`SO_RCVBUF=1`**（见 `http/http.go`）：在 lagran 改写出站 TCP 窗口的场景下，刻意缩小入站接收缓冲，减轻对端灌包占满连接的风险；**不是配置笔误**。
 
