@@ -28,7 +28,8 @@ func normalizeLagranMap() {
 	}
 }
 
-// applyLagranGeneva 解析 window_scale、confusion_times、split_number。缺省用 geneva.py 的默认值。
+// applyLagranGeneva 解析 window_scale、confusion_times、split_number。
+// 缺省对应 geneva.py -s 7 -c 0 -n 7。
 // psh_ack / fin_ack 仍接受旧配置，但不再安装规则，也不再改这两类包。
 func applyLagranGeneva() error {
 	if Lagran == nil {

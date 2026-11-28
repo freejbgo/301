@@ -11,7 +11,7 @@
     "syn_ack": true,
     "ack": true,
     "window_scale": 7,
-    "confusion_times": 7,
+    "confusion_times": 0,
     "split_number": 7,
     "window": {
       "80": 1,

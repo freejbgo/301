@@ -118,6 +118,10 @@ func logStartupSummary() {
 		LagranInt("confusion_times", DefaultConfusionTimes),
 		LagranInt("split_number", DefaultSplitNumber),
 		Debug)
+	log.Printf("[config] lagran 相当于 geneva.py -w <lagran.window> -s %d -c %d -n %d；NFQUEUE 由本进程安装（SYN+ACK 1000:1127，ACK 2000:2127），不是 -q 100",
+		LagranInt("window_scale", DefaultWindowScale),
+		LagranInt("confusion_times", DefaultConfusionTimes),
+		LagranInt("split_number", DefaultSplitNumber))
 }
 
 func tlsListenLabel() string {

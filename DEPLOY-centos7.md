@@ -230,7 +230,7 @@ cd /opt/301/master && sudo -u nginx php artisan redi:health --json
 
 ### lagran 与防火墙
 
-lagran 在 **OUTPUT** 上按 TCP **源端口**（与 `addr` / `tls_addr` 合并后的 `lagran.port`）匹配 SYN+ACK 和 ACK，**不是**按节点公网地址。`iptables` 与 `ip6tables` 使用同一组 NFQUEUE 队列号（`1000:1127` 与 `2000:2127`）。IPv6 与 IPv4 走同一套处理：SYN+ACK 去掉 Window Scale，窗口写成 `lagran.window` 里该端口的值，并按 `confusion_times` 发出额外 ACK；纯 ACK 在计次达到 `split_number` 之前用这个窗口，之后改为 28960。PSH+ACK 和 FIN+ACK 不改。窗口例如 `"80": 1`、`"443": 1`；没写的端口用 1。需要 root，或同时具备 `cap_net_admin` 与 `cap_net_raw`。改完后重启 `redi-multi`，启动日志里的 `lagran.windows=` 会列出每个端口的窗口。自检：`bash scripts/centos7/lagran-diagnose.sh`；kill -9 遗留规则：`sudo bash scripts/centos7/lagran-cleanup-iptables.sh`。
+lagran 在 **OUTPUT** 上按 TCP **源端口**（与 `addr` / `tls_addr` 合并后的 `lagran.port`）匹配 SYN+ACK 和 ACK，**不是**按节点公网地址。`iptables` 与 `ip6tables` 使用同一组 NFQUEUE 队列号（`1000:1127` 与 `2000:2127`）。IPv6 与 IPv4 走同一套处理，对应 `geneva.py -w 1 -s 7 -c 0 -n 7`：SYN+ACK 去掉 Window Scale，窗口写成 `lagran.window` 里该端口的值。默认 `confusion_times` 为 0，不发额外 ACK。纯 ACK 在计次达到 `split_number` 之前用这个窗口，之后改为 28960。PSH+ACK 和 FIN+ACK 不改。窗口例如 `"80": 1`、`"443": 1`；没写的端口用 1。需要 root 或 `cap_net_admin`。`confusion_times` 大于 0 时才需要 `cap_net_raw`。改完后重启 `redi-multi`，启动日志里的 `lagran.windows=` 会列出每个端口的窗口。自检：`bash scripts/centos7/lagran-diagnose.sh`；kill -9 遗留规则：`sudo bash scripts/centos7/lagran-cleanup-iptables.sh`。
 
 开放 80/443 时继续用部署脚本已有的服务放行即可；**不要**为「只匹配 IPv4」单独加 firewalld rich rule 而把 IPv6 挡在池外（否则 `curl -6` 与 HTTP-01 会失败）。
 

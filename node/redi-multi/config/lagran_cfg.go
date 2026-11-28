@@ -1,9 +1,11 @@
 package config
 
 const (
-	// DefaultWindowScale、DefaultConfusionTimes、DefaultSplitNumber 与 geneva.py 的默认参数一致。
+	// 对应节点上的实际跑法：python3 geneva.py -q 100 -w 1 -s 7 -c 0 -n 7
+	// -q 100 不在这里：队列由本进程自己安装。-w 1 写在 lagran.window。
+	// -c 0 表示不发额外 ACK。脚本文件里的默认值（confusion 7 次）不是线上用法。
 	DefaultWindowScale    = 7
-	DefaultConfusionTimes = 7
+	DefaultConfusionTimes = 0
 	DefaultSplitNumber    = 7
 )
 
