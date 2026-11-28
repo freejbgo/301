@@ -17,4 +17,13 @@ func TestMySQLConfigAcceptsSpecialPassword(t *testing.T) {
 	if !cfg.AllowNativePasswords {
 		t.Fatal("AllowNativePasswords must stay on for MariaDB mysql_native_password accounts")
 	}
+	if !cfg.ParseTime {
+		t.Fatal("ParseTime must be set on the client config")
+	}
+	if _, ok := cfg.Params["parseTime"]; ok {
+		t.Fatal("parseTime must not be sent to MariaDB as a system variable")
+	}
+	if cfg.Params["charset"] != "utf8mb4" {
+		t.Fatalf("charset param = %q", cfg.Params["charset"])
+	}
 }
