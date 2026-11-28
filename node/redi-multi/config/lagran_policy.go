@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -111,11 +112,14 @@ func PersistLagranSection() error {
 		section[key] = val
 	}
 	payload["lagran"] = section
-	out, err := json.MarshalIndent(payload, "", "  ")
-	if err != nil {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(payload); err != nil {
 		return err
 	}
-	out = append(out, '\n')
+	out := buf.Bytes()
 	mode := os.FileMode(0644)
 	if info, statErr := os.Stat(path); statErr == nil {
 		mode = info.Mode()

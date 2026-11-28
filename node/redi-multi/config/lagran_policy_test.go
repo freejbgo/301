@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -59,7 +60,7 @@ func TestApplyLagranPolicyKeepsExtraPorts(t *testing.T) {
 func TestPersistLagranSectionKeepsPortAndOtherKeys(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
-	original := []byte("{\n  \"addr\": \"0.0.0.0:80\",\n  \"lagran\": {\n    \"enabled\": true,\n    \"port\": \"80,443\",\n    \"note\": \"keep\",\n    \"window\": {\"80\": 1, \"443\": 1, \"8080\": 9}\n  }\n}\n")
+	original := []byte("{\n  \"addr\": \"0.0.0.0:80\",\n  \"default_redirect_url\": \"https://example.com/?a=1&b=2\",\n  \"lagran\": {\n    \"enabled\": true,\n    \"port\": \"80,443\",\n    \"note\": \"keep\",\n    \"window\": {\"80\": 1, \"443\": 1, \"8080\": 9}\n  }\n}\n")
 	if err := os.WriteFile(path, original, 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -99,6 +100,12 @@ func TestPersistLagranSectionKeepsPortAndOtherKeys(t *testing.T) {
 	}
 	if payload["addr"] != "0.0.0.0:80" {
 		t.Fatalf("addr %v", payload["addr"])
+	}
+	if payload["default_redirect_url"] != "https://example.com/?a=1&b=2" {
+		t.Fatalf("redirect url %v", payload["default_redirect_url"])
+	}
+	if bytes.Contains(raw, []byte(`\u0026`)) {
+		t.Fatalf("config.json escaped ampersand: %s", raw)
 	}
 	section, _ := payload["lagran"].(map[string]interface{})
 	if section["port"] != "80,443" || section["note"] != "keep" {
