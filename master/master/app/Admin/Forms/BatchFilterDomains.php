@@ -54,6 +54,7 @@ class BatchFilterDomains extends Form implements LazyRenderable
             'delete' => __('redi-admin-domain.batch_filter.actions.delete'),
             'set_skip_url' => __('redi-admin-domain.batch_filter.actions.set_skip_url'),
             'force_https_on' => __('redi-admin-domain.batch_filter.actions.force_https_on'),
+            'force_https_off' => __('redi-admin-domain.batch_filter.actions.force_https_off'),
         ];
 
         $this->select('action', __('redi-admin-domain.batch_filter.fields.action'))

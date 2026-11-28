@@ -177,6 +177,7 @@ return [
             'delete' => 'Batch delete',
             'set_skip_url' => 'Batch set redirect URL',
             'force_https_on' => 'Batch enable force HTTPS',
+            'force_https_off' => 'Batch disable force HTTPS',
         ],
         'success' => [
             'apply_cert' => 'Queued :count domain(s) for certificates (filter cap :cap)',
@@ -186,6 +187,7 @@ return [
             'delete' => 'Deleted :count domain(s) (filter cap :cap)',
             'set_skip_url' => 'Set :count domain(s) to the same redirect URL (cap :cap)',
             'force_https_on' => 'Enabled force HTTPS on :count domain(s) (cap :cap)',
+            'force_https_off' => 'Disabled force HTTPS on :count domain(s) (cap :cap)',
         ],
         'error_none' => [
             'redeploy' => 'No domains to redeploy in filter results',
@@ -194,6 +196,7 @@ return [
             'delete' => 'No domains to delete in filter results',
             'set_skip_url' => 'Those domains already use this redirect URL',
             'force_https_on' => 'Force HTTPS is already on for those domains',
+            'force_https_off' => 'Force HTTPS is already off for those domains',
         ],
         'error_all' => [
             'redeploy' => 'All matching domains were skipped for redeploy',
@@ -202,6 +205,7 @@ return [
             'delete' => 'No domains could be deleted from filter results',
             'set_skip_url' => 'None of those domains could be changed to the new redirect URL',
             'force_https_on' => 'Force HTTPS could not be enabled. The certificate must be active.',
+            'force_https_off' => 'Force HTTPS could not be turned off',
         ],
         'errors' => [
             'action_invalid' => 'Invalid action',
@@ -209,7 +213,7 @@ return [
             'filter_required_sensitive' => 'Check the domains to change, or set at least one list filter (avoids touching the first 500 rows by mistake)',
         ],
         'confirm_title' => 'Confirm filter-based batch',
-        'confirm_content' => 'Checked domains are processed as selected. Otherwise the filled list filters are used. With neither a selection nor a filter, nothing runs, so the first 500 rows are not touched by mistake. Batch set redirect URL writes the new address onto those domains. Batch enable force HTTPS turns it on only when the certificate is active.',
+        'confirm_content' => 'Checked domains are processed as selected. Otherwise the filled list filters are used. With neither a selection nor a filter, nothing runs, so the first 500 rows are not touched by mistake. Batch set redirect URL writes the new address onto those domains. Batch enable force HTTPS turns it on only when the certificate is active. Batch disable force HTTPS turns it off for domains that have it on, and does not require an active certificate.',
     ],
     'export' => [
         'headers' => [
