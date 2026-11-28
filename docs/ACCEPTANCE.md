@@ -226,9 +226,9 @@ curl -sI -o /dev/null -w '%{http_code}\n' "http://127.0.0.1/"
 | 监听 | **80、443** 由进程占用；**8080** 仅本机/内网，**安全组不要对公网开放 8080** |
 | firewalld | 仅 `ssh` `http` `https` |
 | `config.json` `server_ip` | 等于 `5.6.7.8`（与后台节点 IP 一致，供对照；二进制不读） |
-| `lagran.enabled` | **true**（被干扰域名场景默认） |
+| `lagran.enabled` | **true**（默认。后台「301设置」关掉之后可以是 false） |
 | `getcap` | 含 `cap_net_admin` 和 `cap_net_raw` |
-| lagran 日志 | 无长期 `[lagran] disabled`（`deploy-node.sh` 也会校验） |
+| lagran 日志 | 后台未关闭时，无长期 `[lagran] disabled`（`deploy-node.sh` 也会校验） |
 | MySQL 从节点连主控 | 成功 |
 | 本机 HTTP | 有响应（可能 301/404，视配置而定） |
 

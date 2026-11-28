@@ -155,7 +155,8 @@ sed -i -E "s/\"server_ip\"[[:space:]]*:[[:space:]]*\"[^\"]*\"/\"server_ip\": \"$
 sed -i -E "s|\"default_redirect_url\"[[:space:]]*:[[:space:]]*\"[^\"]*\"|\"default_redirect_url\": \"${url_sed}\"|" "${APP}/config.json"
 grep -q "\"server_ip\": \"${NODE_PUBLIC_IP}\"" "${APP}/config.json" || die "未能写入 config.json 的 server_ip"
 
-# 被干扰域名场景：确保 lagran 开启（与 config.json.example 一致）
+# 新装默认开启。再跑本脚本会把本机 lagran.enabled 写成 true；
+# 主控「301设置」若已关掉，节点下次同步会改回来。
 redi_ensure_lagran_enabled "${APP}/config.json" || die "无法将 config.json 的 lagran.enabled 设为 true"
 
 setcap cap_net_admin,cap_net_raw+ep "${APP}/bin/redi-multi"
