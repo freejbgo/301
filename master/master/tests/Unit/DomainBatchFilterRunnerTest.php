@@ -108,12 +108,19 @@ class DomainBatchFilterRunnerTest extends TestCase
         ]);
 
         $runner = new DomainBatchFilterRunner();
-        $request = Request::create('/admin/domain', 'GET', ['original_url' => 'a.com']);
-        $out = $runner->run('force_https_on', $request, 1);
+        $mixed = $runner->run('force_https_on', Request::create('/admin/domain', 'GET', [
+            'selected_ids' => '1,2',
+        ]), 1);
 
-        $this->assertTrue($out['ok'], $out['message']);
-        $this->assertSame(1, $out['count']);
+        $this->assertTrue($mixed['ok'], $mixed['message']);
+        $this->assertSame(1, $mixed['count']);
+        $this->assertStringContainsString('b.com', $mixed['message']);
+        $this->assertStringContainsString('证书尚未生效', $mixed['message']);
         $this->assertSame(1, (int) \DB::table('redi_admin_domain')->where('id', 1)->value('force_https'));
         $this->assertSame(0, (int) \DB::table('redi_admin_domain')->where('id', 2)->value('force_https'));
+
+        $again = $runner->run('force_https_on', Request::create('/admin/domain', 'GET', ['original_url' => 'a.com']), 1);
+        $this->assertFalse($again['ok']);
+        $this->assertStringContainsString('已经开启了强制 HTTPS', $again['message']);
     }
 }

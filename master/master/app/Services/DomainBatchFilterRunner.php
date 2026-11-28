@@ -217,6 +217,7 @@ class DomainBatchFilterRunner
             $msg .= "\n".__('redi-admin-domain.actions.batch_mutator.partial_errors', [
                 'count' => count($result['errors']),
             ]);
+            $msg .= "\n".implode("\n", array_slice($result['errors'], 0, 6));
         }
 
         $msg = $this->finishSuccessMessage(

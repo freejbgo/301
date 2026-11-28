@@ -209,7 +209,7 @@ return [
             'filter_required_sensitive' => 'Check the domains to change, or set at least one list filter (avoids touching the first 500 rows by mistake)',
         ],
         'confirm_title' => 'Confirm filter-based batch',
-        'confirm_content' => 'Checked domains are processed as selected. Otherwise the filled list filters are used. Batch set redirect URL writes the new address onto those domains. Batch enable force HTTPS turns it on only when the certificate is active. With neither, nothing runs, so the first 500 rows are not touched by mistake.',
+        'confirm_content' => 'Checked domains are processed as selected. Otherwise the filled list filters are used. With neither a selection nor a filter, nothing runs, so the first 500 rows are not touched by mistake. Batch set redirect URL writes the new address onto those domains. Batch enable force HTTPS turns it on only when the certificate is active.',
     ],
     'export' => [
         'headers' => [
