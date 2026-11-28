@@ -7,6 +7,7 @@ use App\Models\RediAdminDomain;
 use App\Models\RediDomainCert;
 use App\Services\CertificateDeployService;
 use App\Support\AdminTenantContext;
+use App\Support\RediErrorMessage;
 use Dcat\Admin\Grid\RowAction;
 use Illuminate\Http\Request;
 
@@ -66,7 +67,12 @@ class RedeployCertificate extends RowAction
         }
 
         if (! $deployService->queueDeploy($cert)) {
-            return $this->response()->error((string) ($cert->fresh()->last_error ?: __('redi-admin-domain.actions.redeploy.error_queue')));
+            $fresh = $cert->fresh();
+            $shown = $fresh
+                ? RediErrorMessage::localize($fresh->last_error_code, $fresh->last_error)
+                : '';
+
+            return $this->response()->error($shown !== '' ? $shown : __('redi-admin-domain.actions.redeploy.error_queue'));
         }
 
         return $this->response()->success(__('redi-admin-domain.actions.redeploy.success'))->refresh();

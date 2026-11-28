@@ -21,6 +21,7 @@ use App\Services\CnamePrecheckService;
 use App\Services\TenantEdgeService;
 use App\Support\AdminTenantContext;
 use App\Support\OpsDisplaySanitizer;
+use App\Support\RediErrorMessage;
 use App\Admin\Actions\Grid\ApplyCertificate;
 use App\Admin\Actions\Grid\BatchApplyCertificate;
 use App\Admin\Actions\Grid\BatchDisableDomains;
@@ -208,8 +209,9 @@ JS
                 if ($cert->storedCredentialsUnreadable()) {
                     $label .= '<br><span class="text-danger">'.e(admin_trans_label('cert_decrypt_fail')).'</span>';
                 } elseif ($cert->last_error) {
+                    $shown = RediErrorMessage::localize($cert->last_error_code, $cert->last_error);
                     $label .= '<br><span class="text-danger">'.e(admin_trans_label('cert_last_error')).' '
-                        .e(OpsDisplaySanitizer::field($cert->last_error, '—', 500)).'</span>';
+                        .e(OpsDisplaySanitizer::field($shown, '—', 500)).'</span>';
                 }
                 if ($cert->expires_at) {
                     $exp = $cert->expires_at;
